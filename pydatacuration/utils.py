@@ -8,3 +8,10 @@ def list_files(startpath):
         subindent = ' ' * 4 * (level + 1)
         for f in files:
             print('{}{}'.format(subindent, f))
+
+# Create a new directory contains log files created
+def log_files_dir():
+    log_files_dir_path = r'./log_files' 
+    if not os.path.exists(log_files_dir_path):
+        os.makedirs(log_files_dir_path)
+    return log_files_dir_path
