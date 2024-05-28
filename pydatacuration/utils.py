@@ -8,3 +8,7 @@ def list_files(startpath):
         subindent = ' ' * 4 * (level + 1)
         for f in files:
             print('{}{}'.format(subindent, f))
+
+def mk_log_dir():
+    log_files_dir_path = r'./log_files/temp_data'
+    os.makedirs(log_files_dir_path, exist_ok=True)
