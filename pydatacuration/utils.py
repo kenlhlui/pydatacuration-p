@@ -9,9 +9,8 @@ def list_files(startpath):
         for f in files:
             print('{}{}'.format(subindent, f))
 
-# Create a new directory contains log files created
-def log_files_dir():
-    log_files_dir_path = r'./log_files' 
-    if not os.path.exists(log_files_dir_path):
-        os.makedirs(log_files_dir_path)
-    return log_files_dir_path
+
+def mk_log_dir():
+    log_files_dir_path = r'./log_files/temp_data'
+    os.makedirs(log_files_dir_path, exist_ok=True)
+
