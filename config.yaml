@@ -1,7 +1,15 @@
+project:
+  ticket-number: CUR-001
+
 curator:
-  name: Ken
-  last-name: Lui
+  name: Ken Lui
   email: kenlh.lui@utoronto.ca
   institution:
     name: University of Toronto
     department: Map & Data Library
+
+submission:
+  submitter:
+    name: First_Name Last_Name
+    email: example@utoronto.ca
+  date: 2024-0101
