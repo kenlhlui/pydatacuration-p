@@ -1,4 +1,8 @@
 # Config files directory
 config/
 data/
-log/
+log_files/
+dataset/
+conf/
+.env
+temp_data/

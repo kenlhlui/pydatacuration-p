@@ -9,7 +9,9 @@ curator:
     department: Map & Data Library
 
 submission:
+  dataset:
+    title: Dataset Title
   submitter:
     name: First_Name Last_Name
     email: example@utoronto.ca
-  date: 2024-0101
+  date: 2024-01-01
