@@ -1,2 +1,8 @@
-pyjanitor==0.27.0
-jmespath==1.0.1
+PyYAML == 6.0.2
+pandas == 2.2.3
+pyjanitor == 0.29.2
+pyDataverse == 0.3.4
+orjson == 3.10.7
+python-dotenv == 1.0.1
+deepdiff == 8.0.1
+ipykernel == 6.29.5
