@@ -18,7 +18,6 @@
 .xslt
 .js
 .es
-.csv
 .mp4
 .nc
 .R
