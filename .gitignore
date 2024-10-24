@@ -5,4 +5,5 @@ log_files/
 dataset/
 conf/
 .env
+.venv/
 temp_data/
