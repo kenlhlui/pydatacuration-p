@@ -1,5 +1,7 @@
 import os
 from pathlib import Path
+import re
+import sys
 class DirectoryManager:
     """This class is used to manage the directories in the project
     """
@@ -37,13 +39,96 @@ def list_files(startpath):
         for f in files:
             print('{}{}'.format(subindent, f))
 
-
-def get_file_name(file):
-    """Get the file name from the file path
+class FileNameFormatChecker:
+    """This class is used to check the file name format
     """
-    return Path(file).stem
 
-def get_file_extension(file):
-    """Get the file extension from the file path
+    def __init__(self):
+        pass
+
+    def check_special_char(self, file):
+        """Check if the file name contains special characters
+
+        Args:
+            file (str): The path to the file.
+        
+        Returns:
+            tuple: The file path and a boolean value.
+        """
+        if re.search(r'[^\w\s]', Path(file).stem):
+            return file, True
+        return file, False
+
+    def check_file_name_len(self, file, file_name_max_len: int):
+        """Check if the file name is longer than the maximum length
+
+        Args:
+            file (str): The path to the file.
+            file_name_max_len (int): The maximum length of the file name.
+        
+        Returns:
+            tuple: The file path and a boolean value.
+        """
+
+        if len(Path(file).stem) > file_name_max_len:
+            return file, True
+        return file, False
+
+    def check_file_ext(self, file):
+        """Check if the file has an extension
+
+        Args:
+            file (str): The path to the file.
+        
+        Returns:
+            tuple: The file path and a boolean value.
+        """
+
+        if Path(file).suffix:
+            return file, True
+        return file, False
+
+    def check_flie_preferred_format(self, file: str, preffered_file_formats_config: str):
+        """
+        Check if the file format is in the preferred file formats list.
+
+        Args:
+            file (str): The path to the file.
+        
+        Returns:
+            tuple: The file path and a boolean value.
+        """
+
+        def load_preferred_file_formats_list(preffered_file_formats_config: str):
+            """
+            Load the list of preferred file formats from the configuration .txt file.
+
+            Args:
+                file (str): The path to the text file.
+
+            Returns:
+                list: A list of lines in the text file without newline characters.
+            """
+            try:
+                with open(preffered_file_formats_config, 'r', encoding='utf-8') as f:
+                    return [line.strip() for line in f.readlines()]
+            except FileNotFoundError as e:
+                print(f"Error: {e}")
+                sys.exit(1)
+
+        if Path(file).suffix in load_preferred_file_formats_list(preffered_file_formats_config):
+            return file, True
+        return file, False
+
+def readme_file_checker(file: str):
+    """Check if the file is a README file
+
+    Args:
+        file (str): The path to the file.
+    
+    Returns:
+        tuple: The file path and a boolean value.
     """
-    return Path(file).suffix
+    if re.search(r'readme', file, re.IGNORECASE):
+        return file, True
+    return file, False
