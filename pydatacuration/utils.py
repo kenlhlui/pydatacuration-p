@@ -2,6 +2,8 @@ import os
 from pathlib import Path
 import re
 import sys
+import zipfile
+import glob
 import deepdiff
 class DirectoryManager:
     """This class is used to manage the directories in the project
@@ -150,7 +152,47 @@ def compare_files_and_metadata(dl_files_checksums, metadata_files_cehcksums):
         with open('log_files/diff.txt', 'w', encoding='utf-8') as f:
             f.write(str(diff))
         sys.exit(1)
-        
+
     else:
         print('The downloaded files and the file list metadata are the same.')
         return False
+
+def unzip_file(ds_zip_path: str, target_dir: str):
+    """Unzip the file
+
+    Args:
+        zip_file (str): The path to the zip file.
+        target_dir (str): The path to the target directory.
+    
+    Returns:
+        None
+    """
+
+    def move_maifest_file(target_dir: str):
+        """Move the MAIFEST.TXT file to the metadata directory
+
+        Args:
+            target_dir (str): The path to the target directory.
+        
+        Returns:
+            None
+        """
+        manifest_files = glob.glob(f'{target_dir}/MANIFEST.*', recursive=True)
+
+        if manifest_files:
+            manifest_file = manifest_files[0] # Take the first match
+            try:
+                os.replace(manifest_file, f'dataset/metadata/{Path(manifest_file).name}')
+            except FileNotFoundError as e:
+                print(f"Error: {e}")
+        else:
+            print("Error: MANIFEST file not found.")
+
+    try:
+        with zipfile.ZipFile(ds_zip_path, 'r') as zipf:
+            zipf.extractall(target_dir)
+            move_maifest_file(target_dir)
+    except FileNotFoundError as e:
+        print(f"Error: {e}")
+        print('The zip file does not exist.')
+        sys.exit(1)
