@@ -2,6 +2,7 @@ import os
 from pathlib import Path
 import re
 import sys
+import deepdiff
 class DirectoryManager:
     """This class is used to manage the directories in the project
     """
@@ -132,3 +133,24 @@ def readme_file_checker(file: str):
     if re.search(r'readme', file, re.IGNORECASE):
         return file, True
     return file, False
+
+def compare_files_and_metadata(dl_files_checksums, metadata_files_cehcksums):
+    """Compare the downloaded files checksums and the metadata JSON file checksums
+
+    Args:
+        dl_files_checksums (list): A list of dictionaries containing the file path and the checksum.
+        metadata_files_cehcksums (list): A list of dictionaries containing the file path and the checksum.
+
+    Returns:
+        bool: True if the downloaded files and the metadata JSON file checksums are the same, False otherwise.
+    """
+    diff = deepdiff.DeepDiff(dl_files_checksums, metadata_files_cehcksums, ignore_order=True)
+    if diff:
+        print('The downloaded files and the file list metadata are different.')
+        with open('log_files/diff.txt', 'w', encoding='utf-8') as f:
+            f.write(str(diff))
+        sys.exit(1)
+        
+    else:
+        print('The downloaded files and the file list metadata are the same.')
+        return False
