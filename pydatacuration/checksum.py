@@ -1,7 +1,7 @@
 import os
 import hashlib
 
-class Checksum():
+class Checksum:
     """This class is used to generate the checksum of the files in the dataset directory
     """
 
