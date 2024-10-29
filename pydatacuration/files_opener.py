@@ -16,8 +16,7 @@ class FilesOpener:
         file_ext = Path(self.file).suffix
         if file_ext and file_ext.lower() in image_file_list:
             try:
-                result = Image.open(self.file)
-                result.crop((0, 0, 100, 100))
+                Image.open(self.file)
                 return True
             except (ValueError, Image.UnidentifiedImageError, OSError):
                 return False
