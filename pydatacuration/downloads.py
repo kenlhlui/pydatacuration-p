@@ -3,10 +3,11 @@ import httpx
 import orjson
 
 class Downloads:
-    def __init__(self, base_url, api_token, pid):
+    def __init__(self, base_url, api_token, pid, download_dir):
         self.base_url = base_url
         self.api_token = api_token
         self.pid = pid
+        self.download_dir = download_dir
         self.client = httpx.Client(headers={'X-Dataverse-key': self.api_token}, timeout=None)
 
     def get_ds_metadata(self):
@@ -20,7 +21,7 @@ class Downloads:
             response = self.client.get(url)
             response.raise_for_status()  # Raise an exception for HTTP errors
 
-            with open('dataset/metadata/ds_metadata.json', 'w', encoding='utf-8') as f:
+            with open(f'{self.download_dir}/dataset/metadata/ds_metadata.json', 'w', encoding='utf-8') as f:
                 f.write(orjson.dumps(response.json(), option=orjson.OPT_INDENT_2).decode())
 
             return response.json()
@@ -38,7 +39,7 @@ class Downloads:
         Returns:
             str: Path to the downloaded zip file
         """
-        file_path = 'temp_data/ds.zip'
+        file_path = f'{self.download_dir}/temp_data/ds.zip'
         url = self.base_url + 'api/access/dataset/:persistentId/?persistentId=' + self.pid
 
         try:

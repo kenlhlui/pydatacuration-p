@@ -9,26 +9,49 @@ class DirectoryManager:
     """This class is used to manage the directories in the project
     """
 
-    def __init__(self):
-        self.log_files_dir_path = r'./log_files/temp_data'
-        self.dir_path_list = [r'./dataset', r'./dataset/files', r'./dataset/metadata']
-        self.temp_data_dir = r'./temp_data'
+    def __init__(self, workdir: str = None):
+        """Initialize the class
+
+        Args:
+            workdir (str): The working directory.
+        """
+        self._check_dir(workdir)
+
+    def _check_dir(self, dir_path: str):
+        """Check if the directory exists and update self.workdir.
+
+        Args:
+            dir_path (str): The path to the directory.
+        
+        This method updates self.workdir to a valid path (user's choice if valid, otherwise current directory).
+        """
+        self.workdir = dir_path if dir_path and os.path.exists(dir_path) else os.path.join(os.getcwd(), 'workdir')
+        if not os.path.exists(dir_path):
+            print(f"The user defined directory does not exist. The current directory will be used: {self.workdir}")
 
     def mk_log_dir(self):
         """Create the log directory
         """
-        os.makedirs(self.log_files_dir_path, exist_ok=True)
+        log_files_dir_path = os.path.join(self.workdir, 'log_files', 'temp_data')
+        os.makedirs(log_files_dir_path, exist_ok=True)
 
     def mk_ds_dir(self):
         """Create the dataset directory
         """
-        for dir_path in self.dir_path_list:
+        dir_path_list = [
+            os.path.join(self.workdir, 'dataset'),
+            os.path.join(self.workdir, 'dataset', 'files'),
+            os.path.join(self.workdir, 'dataset', 'metadata')
+        ]
+
+        for dir_path in dir_path_list:
             os.makedirs(dir_path, exist_ok=True)
 
     def mk_temp_dir(self):
         """Create the temp directory
         """
-        os.makedirs(self.temp_data_dir, exist_ok=True)
+        temp_data_dir = os.path.join(self.workdir, 'temp_data')
+        os.makedirs(temp_data_dir, exist_ok=True)
 
 # Export the structure ('tree') of a directory as plain text
 def list_files(startpath):
@@ -182,7 +205,8 @@ def unzip_file(ds_zip_path: str, target_dir: str):
         if manifest_files:
             manifest_file = manifest_files[0] # Take the first match
             try:
-                os.replace(manifest_file, f'dataset/metadata/{Path(manifest_file).name}')
+                parent_dir = os.path.dirname(target_dir)
+                os.replace(manifest_file, f'{parent_dir}/metadata/{Path(manifest_file).name}')
             except FileNotFoundError as e:
                 print(f"Error: {e}")
         else:
