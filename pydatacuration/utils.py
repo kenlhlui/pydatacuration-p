@@ -159,7 +159,7 @@ def readme_file_checker(file: str):
         return file, True
     return file, False
 
-def compare_files_and_metadata(dl_files_checksums, metadata_files_cehcksums):
+def compare_files_and_metadata(dl_files_checksums, metadata_files_cehcksums, workddir):
     """Compare the downloaded files checksums and the metadata JSON file checksums
 
     Args:
@@ -172,7 +172,7 @@ def compare_files_and_metadata(dl_files_checksums, metadata_files_cehcksums):
     diff = deepdiff.DeepDiff(dl_files_checksums, metadata_files_cehcksums, ignore_order=True)
     if diff:
         print('The downloaded files and the file list metadata are different.')
-        with open('log_files/diff.txt', 'w', encoding='utf-8') as f:
+        with open(f'{workddir}/log_files/diff.txt', 'w', encoding='utf-8') as f:
             f.write(str(diff))
         sys.exit(1)
 

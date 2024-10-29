@@ -20,9 +20,10 @@ class Checksum():
         """
         dl_file_checksum_nested_list = []
         os_walk_object = os.walk(target_dir)
+        target_dir = target_dir.replace('\\', '/') # Normalize the path
         for root, dirs, files in os_walk_object:
             for file in files:
-                file_path = os.path.join(root, file).replace('\\', '/').replace('dataset/files/', '')
+                file_path = os.path.join(root, file).replace('\\', '/').replace(target_dir, '')
                 dl_file_checksum_nested_list.append({
                     'file': file_path,
                     'md5_checksum': self._get_md5(rf'{root}/{file}')
