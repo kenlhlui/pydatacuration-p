@@ -3,6 +3,14 @@ import httpx
 import orjson
 
 class Downloads:
+    """Class to download a dataset from a Dataverse repository
+
+    Args:
+        base_url (str): Base URL of the Dataverse repository
+        api_token (str): API token of the Dataverse repository
+        pid (str): Persistent identifier of the dataset
+        download_dir (str): The master directory to save the downloaded files
+    """
     def __init__(self, base_url, api_token, pid, download_dir):
         self.base_url = base_url
         self.api_token = api_token
