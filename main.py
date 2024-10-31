@@ -87,37 +87,38 @@ def file_name_format_checker(file_list_metadata):
     file_name_format_checker = utils.FileNameFormatChecker()
 
     template_dict = read_template_json()
-
-    for file in file_list_metadata:
-        if file_name_format_checker.check_special_char(file['dataFile']['filename'])[1] == True:
-            print('\n')
-            print(f"Special characters found in the filename: {file['dataFile']['filename']}")
-            template_dict['special_characters']['status'] = {"SI": "X"}
-            template_dict['special_characters']['comments'].append({"file_name": file['dataFile']['filename']})
-        else:
-            if not template_dict['special_characters']['status']:
-                template_dict['special_characters']['status'] = {"Y": "X"}
+        
 
     for file in file_list_metadata:
         file_datafile_filename = file.get('dataFile').get('filename')
+        
+        if file_name_format_checker.check_special_char(file_datafile_filename)[1] == True:
+            print('\n')
+            print(f"Special characters found in the filename: {file_datafile_filename}")
+            template_dict['special_characters']['status'] = {"SI": "X"}
+            template_dict['special_characters']['comments'].append({"file_name": file_datafile_filename})
 
         if file_name_format_checker.check_file_name_len(file_datafile_filename, 32)[1] == True:
             print('\n')
-            print(f"Filename is longer than 32 character: {file['dataFile']['filename']}")
+            print(f"Filename is longer than 32 characters: {file_datafile_filename}")
             template_dict['long_file_length']['status'] = {"SI": "X"}
-            template_dict['long_file_length']['comments'].append({"file_name": file['dataFile']['filename']})
+            template_dict['long_file_length']['comments'].append({"file_name": file_datafile_filename})
 
         if file_name_format_checker.check_file_ext(file_datafile_filename)[1] == True:
             print('\n')
-            print(f"File extension does not found: {file['dataFile']['filename']}")
+            print(f"File extension does not found: {file_datafile_filename}")
             template_dict['file_ext']['status'] = {"SI": "X"}
-            template_dict['file_ext']['comments'].append({"file_name": file['dataFile']['filename']})
+            template_dict['file_ext']['comments'].append({"file_name": file_datafile_filename})
+        
+        if utils.readme_file_checker(file_datafile_filename)[1] == True:
+            print('\n')
+            print(f"README file found: {file_datafile_filename}")
+            template_dict['readme_file']['status'] = {"Y": "X"}
+            #template_dict['readme_file']['comments'].append({"file_name": file_datafile_filename})
 
-    for item in template_dict:
-        if not template_dict['long_file_length']['status']:
-            template_dict['long_file_length']['status'] = {"Y": "X"}
-        if not template_dict[item]['status']:
-            template_dict[item]['status'] = {"NA": "X"}
+    for key, value in template_dict.items():
+        if not template_dict[key]['status']:
+            template_dict[key]['status'] = {"NA": "X"}
 
     return template_dict
 
@@ -132,7 +133,7 @@ def generate_report(template_dict):
     rendered = report.render(template_dict=template_dict)
     with open('./workdir/log_files/temp_data/render_log.csv', 'w', encoding='utf-8') as f:
         f.write(rendered)
-    pd.read_csv('./workdir/log_files/temp_data/render_log.csv').to_excel('./workdir/log_files/render_log.xlsx', index=False)
+    pd.read_csv('./workdir/log_files/temp_data/render_log.csv', keep_default_na=False).to_excel('./workdir/log_files/render_log.xlsx', index=False, na_rep='NA')
     print('\nReport generated. See the workdir/log_files/render_log.xlsx file for the report.')
 
 @app.command()
