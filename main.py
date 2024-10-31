@@ -125,7 +125,7 @@ def generate_report(template_dict):
     template_string = read_csv_template('./res/template.csv')
     report = Template(template_string)
     rendered = report.render(template_dict=template_dict)
-    with open('./workdir/log_files/temp_data/render_log.csv', 'w') as f:
+    with open('./workdir/log_files/temp_data/render_log.csv', 'w', encoding='utf-8') as f:
         f.write(rendered)
     pd.read_csv('./workdir/log_files/temp_data/render_log.csv').to_excel('./workdir/log_files/render_log.xlsx', index=False)
 
