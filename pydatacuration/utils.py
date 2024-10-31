@@ -1,3 +1,4 @@
+# pylint: disable=C0301
 import os
 from pathlib import Path
 import re
@@ -5,30 +6,6 @@ import sys
 import zipfile
 import glob
 import deepdiff
-class DirectoryManager:
-    """This class is used to manage the directories in the project
-    """
-
-    def __init__(self):
-        self.log_files_dir_path = r'./log_files/temp_data'
-        self.dir_path_list = [r'./dataset', r'./dataset/files', r'./dataset/metadata']
-        self.temp_data_dir = r'./temp_data'
-
-    def mk_log_dir(self):
-        """Create the log directory
-        """
-        os.makedirs(self.log_files_dir_path, exist_ok=True)
-
-    def mk_ds_dir(self):
-        """Create the dataset directory
-        """
-        for dir_path in self.dir_path_list:
-            os.makedirs(dir_path, exist_ok=True)
-
-    def mk_temp_dir(self):
-        """Create the temp directory
-        """
-        os.makedirs(self.temp_data_dir, exist_ok=True)
 
 # Export the structure ('tree') of a directory as plain text
 def list_files(startpath):
@@ -136,7 +113,7 @@ def readme_file_checker(file: str):
         return file, True
     return file, False
 
-def compare_files_and_metadata(dl_files_checksums, metadata_files_cehcksums):
+def compare_files_and_metadata(dl_files_checksums, metadata_files_cehcksums, workddir):
     """Compare the downloaded files checksums and the metadata JSON file checksums
 
     Args:
@@ -149,7 +126,7 @@ def compare_files_and_metadata(dl_files_checksums, metadata_files_cehcksums):
     diff = deepdiff.DeepDiff(dl_files_checksums, metadata_files_cehcksums, ignore_order=True)
     if diff:
         print('The downloaded files and the file list metadata are different.')
-        with open('log_files/diff.txt', 'w', encoding='utf-8') as f:
+        with open(f'{workddir}/log_files/diff.txt', 'w', encoding='utf-8') as f:
             f.write(str(diff))
         sys.exit(1)
 
@@ -182,7 +159,8 @@ def unzip_file(ds_zip_path: str, target_dir: str):
         if manifest_files:
             manifest_file = manifest_files[0] # Take the first match
             try:
-                os.replace(manifest_file, f'dataset/metadata/{Path(manifest_file).name}')
+                parent_dir = os.path.dirname(target_dir)
+                os.replace(manifest_file, f'{parent_dir}/metadata/{Path(manifest_file).name}')
             except FileNotFoundError as e:
                 print(f"Error: {e}")
         else:

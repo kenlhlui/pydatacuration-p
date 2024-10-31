@@ -21,6 +21,9 @@ flask = "^3.0.3"
 jmespath = "^1.0.1"
 pyspellchecker = "^0.8.1"
 nltk = "^3.9.1"
+pillow = "^11.0.0"
+netcdf4 = "^1.7.2"
+chardet = "^5.2.0"
 
 
 [tool.poetry.group.dev.dependencies]
