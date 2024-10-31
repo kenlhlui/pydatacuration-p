@@ -6,6 +6,10 @@ Organization,*Submission is appropriate for U of T Dataverse,"1.	Is there a disc
 ,,"4.	Does the dataset conform to the policies and submission standards associated with the specific dataverse?",,,,,,,,
 ,"1.	Do all the files open properly?","1.	Do all the files open properly?",{{ template_dict.file_open.status.Y }},{{ template_dict.file_open.status.N }},{{ template_dict.file_open.status.SI }},{{ template_dict.file_open.status.NS }},{{ template_dict.file_open.status.NA }},,"{% for item in template_dict.file_open.comments %}
 Item {{ item.file_name }} cannot be opened.
+{% endfor %}
+
+{% for item in template_dict.file_open.not_checked %}
+Item {{ item.file_name }} is not checked by the script.
 {% endfor %}",semi-automated
 ,,"1.	Does none of the files contain special characters? (& , * % . # * ( ) ! @$ ^ ~ ‘ { } [ ] ? < >)?",{{ template_dict.special_characters.status.Y }},{{ template_dict.special_characters.status.N }},{{ template_dict.special_characters.status.SI }},{{ template_dict.special_characters.status.NS }},{{ template_dict.special_characters.status.NA }},,"{% for item in template_dict.special_characters.comments %}
 {{ item.file_name }} contains special characters
