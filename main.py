@@ -26,8 +26,9 @@ def load_env():
 
 
 def workdir_manager():
+    if os.path.exists('workdir'):
+        shutil.rmtree('workdir') 
     workdir = os.path.join(os.getcwd(), 'workdir')
-    shutil.rmtree('workdir')
     dm = directory_manager.DirectoryManager(workdir)
     dm.mk_log_dir()
     dm.mk_ds_dir()
