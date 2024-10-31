@@ -65,8 +65,8 @@ class FileNameFormatChecker:
         """
 
         if Path(file).suffix:
-            return file, True
-        return file, False
+            return file, False # TODO: unify the logic for returns
+        return file, True
 
     def check_flie_preferred_format(self, file: str, preffered_file_formats_config: str):
         """
@@ -174,3 +174,19 @@ def unzip_file(ds_zip_path: str, target_dir: str):
         print(f"Error: {e}")
         print('The zip file does not exist.')
         sys.exit(1)
+
+def parse_file_list_metadata(file_list_metadata):
+    file_list_metadata_nested_list = []
+    for file_meta in file_list_metadata:
+        if file_meta.get('directoryLabel'):
+            file_list_metadata_nested_list.append({
+                'file': f"{file_meta['directoryLabel']}/{file_meta['dataFile']['filename']}",
+                'md5_checksum': file_meta['dataFile']['md5']
+            })
+        else:
+            file_list_metadata_nested_list.append({
+                'file': file_meta['dataFile']['filename'],
+                'md5_checksum': file_meta['dataFile']['md5']
+            })
+
+    return file_list_metadata_nested_list
