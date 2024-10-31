@@ -4,30 +4,26 @@ import shutil
 import typer
 import dotenv
 import orjson
-from jinja2 import Environment, FileSystemLoader, Template
+from jinja2 import Template
+import pandas as pd
 import pydatacuration.utils as utils
 import pydatacuration.downloads as downloads
 import pydatacuration.checksum as checksum
 import pydatacuration.directory_manager as directory_manager
-import pandas as pd
+
 
 
 app = typer.Typer()
 
-@app.command()
+
 def load_env():
     dotenv.load_dotenv()
-    BASE_URL = os.getenv('BASE_URL')
-    API_TOKEN = os.getenv('API_TOKEN')
+    base_url = os.getenv('BASE_URL')
+    api_token = os.getenv('API_TOKEN')
     print('Environment variables loaded')
-    return BASE_URL, API_TOKEN
+    return base_url, api_token
 
-@app.command()
-def ask_user_doi():
-    doi = typer.prompt('\nEnter DOI')
-    return doi
 
-@app.command()
 def workdir_manager():
     workdir = os.path.join(os.getcwd(), 'workdir')
     shutil.rmtree('workdir')
@@ -37,7 +33,6 @@ def workdir_manager():
     dm.mk_temp_dir()
     print('\nWorkdir created')
     return workdir
-
 
 def parse_file_list_metadata(file_list_metadata):
     file_list_metadata_nested_list = []
@@ -55,7 +50,7 @@ def parse_file_list_metadata(file_list_metadata):
 
     return file_list_metadata_nested_list
 
-@app.command()
+
 def download_files(base_url, api_token, doi, workdir):
     download = downloads.Downloads(base_url, api_token, doi, workdir)
 
@@ -76,7 +71,7 @@ def download_files(base_url, api_token, doi, workdir):
 
     file_list_metadata = ds_metadata['data']['latestVersion']['files']
 
-    
+
     file_list_metadata_nested_list = parse_file_list_metadata(file_list_metadata)
 
     utils.compare_files_and_metadata(dl_file_checksum_nested_list, file_list_metadata_nested_list, workdir)
@@ -84,17 +79,17 @@ def download_files(base_url, api_token, doi, workdir):
     return file_list_metadata
 
 def read_template_json():
-    with open('./res/template.json', 'r') as file:
-        template = orjson.loads(file.read())
+    with open('./res/template.json', 'r', encoding='utf-8') as file:
+        template = orjson.loads(file.read()) # pylint: disable=E1101
     return template
 
-def FileNameFormatChecker(file_list_metadata):
-    FileNameFormatChecker = utils.FileNameFormatChecker()
+def file_name_format_checker(file_list_metadata):
+    file_name_format_checker = utils.FileNameFormatChecker()
 
     template_dict = read_template_json()
 
     for file in file_list_metadata:
-        if FileNameFormatChecker.check_special_char(file['dataFile']['filename'])[1] == True:
+        if file_name_format_checker.check_special_char(file['dataFile']['filename'])[1] == True:
             print('\n')
             print(f"Special characters found in the filename: {file['dataFile']['filename']}")
             template_dict['special_characters']['status'] = {"SI": "X"}
@@ -104,39 +99,53 @@ def FileNameFormatChecker(file_list_metadata):
                 template_dict['special_characters']['status'] = {"Y": "X"}
 
     for file in file_list_metadata:
-        if FileNameFormatChecker.check_file_name_len(file['dataFile']['filename'], 32)[1] == True:
+        file_datafile_filename = file.get('dataFile').get('filename')
+
+        if file_name_format_checker.check_file_name_len(file_datafile_filename, 32)[1] == True:
             print('\n')
             print(f"Filename is longer than 32 character: {file['dataFile']['filename']}")
             template_dict['long_file_length']['status'] = {"SI": "X"}
             template_dict['long_file_length']['comments'].append({"file_name": file['dataFile']['filename']})
-        else:
+
+        if file_name_format_checker.check_file_ext(file_datafile_filename)[1] == True:
+            print('\n')
+            print(f"File extension does not found: {file['dataFile']['filename']}")
+            template_dict['file_ext']['status'] = {"SI": "X"}
+            template_dict['file_ext']['comments'].append({"file_name": file['dataFile']['filename']})
+
+    for item in template_dict:
+        if not template_dict['long_file_length']['status']:
             template_dict['long_file_length']['status'] = {"Y": "X"}
-    
+        if not template_dict[item]['status']:
+            template_dict[item]['status'] = {"NA": "X"}
 
     return template_dict
 
-@app.command()
 def generate_report(template_dict):
     def read_csv_template(file):
         with open(file, 'r', encoding='ISO-8859-1') as f:
             content = f.read()
         return content
-    
+
     template_string = read_csv_template('./res/template.csv')
     report = Template(template_string)
     rendered = report.render(template_dict=template_dict)
     with open('./workdir/log_files/temp_data/render_log.csv', 'w', encoding='utf-8') as f:
         f.write(rendered)
     pd.read_csv('./workdir/log_files/temp_data/render_log.csv').to_excel('./workdir/log_files/render_log.xlsx', index=False)
-
-def main():
-    base_url, url = load_env()
-    doi = ask_user_doi()
-    workdir = workdir_manager()
-    file_list_metadata = download_files(base_url, url, doi, workdir)
-    template_dict = FileNameFormatChecker(file_list_metadata)
-    generate_report(template_dict)
     print('\nReport generated. See the workdir/log_files/render_log.xlsx file for the report.')
 
+@app.command()
+def main(
+    doi: str = typer.Option(None, prompt=('Input the Dataset Persistent Identifier (doi or hdl)'), help='Enter the Persistent Identifier of the dataset')
+):
+
+    base_url, api_token = load_env()
+    workdir = workdir_manager()
+    file_list_metadata = download_files(base_url, api_token, doi, workdir)
+    template_dict = file_name_format_checker(file_list_metadata)
+    generate_report(template_dict)
+
+
 if __name__ == "__main__":
-    main()
+    app()
