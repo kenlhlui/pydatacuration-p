@@ -12,10 +12,7 @@ import pydatacuration.checksum as checksum
 import pydatacuration.directory_manager as directory_manager
 import pydatacuration.files_opener as files_opener
 
-
-
 app = typer.Typer()
-
 
 def load_env():
     dotenv.load_dotenv()
