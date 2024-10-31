@@ -5,6 +5,10 @@ from PIL import Image
 import chardet
 import netCDF4 as nc
 
+IMAGE_FILE_EXTENSIONS = ['.jpg', '.jpeg', '.png', '.gif', '.bmp', '.tiff', '.tif']
+NETCDF_FILE_EXTENSIONS = ['.nc']
+# TEXT_FILE_EXTENSIONS = ['.txt', '.csv', '.tsv']  # Placeholder for text file extensions
+
 class FilesOpener:
     def __init__(self, file):
         self.file = file
@@ -29,7 +33,7 @@ class FilesOpener:
             return True, self.file
         except (ValueError, Image.UnidentifiedImageError, OSError):
             return False, self.file
-    
+
     def _open_netcdf_file(self):
         """Open a NetCDF file
         
@@ -46,16 +50,15 @@ class FilesOpener:
         """Open a file
         
         Returns:
-            str: The file object
+            tuple: (bool, str) indicating success and the file path.
         """
         if os.path.isfile(self.file):
-            file_ext = Path(self.file).suffix
-            image_file_list = ['.jpg', '.jpeg', '.png', '.gif', '.bmp', '.tiff', '.tif'] # TODO: 1. Add more image file extensions; 2. Use a function to allow import a list from a configuration file;
-            # text_file_list = ['.txt', '.csv', '.tsv'] TODO: Placeholder for text file extensions
-            netcdf_file_list = ['.nc']
-            if file_ext.lower() in image_file_list:
-                return self._open_image_file()
-
-            if file_ext.lower() in netcdf_file_list:
-                return self._open_netcdf_file()
+            file_ext = Path(self.file).suffix.lower()
+            if file_ext in IMAGE_FILE_EXTENSIONS:
+                status, file = self._open_image_file()
+                return status, file
+            elif file_ext in NETCDF_FILE_EXTENSIONS:
+                status, file = self._open_netcdf_file()
+                return status, file
+            # Add more file type checks here as needed
         return None, self.file
