@@ -10,6 +10,7 @@ import pydatacuration.utils as utils
 import pydatacuration.downloads as downloads
 import pydatacuration.checksum as checksum
 import pydatacuration.directory_manager as directory_manager
+import pydatacuration.files_opener as files_opener
 
 
 
@@ -115,6 +116,19 @@ def file_name_format_checker(file_list_metadata):
             print(f"README file found: {file_datafile_filename}")
             template_dict['readme_file']['status'] = {"Y": "X"}
             #template_dict['readme_file']['comments'].append({"file_name": file_datafile_filename})
+
+    file_list = []
+    for item in file_list_metadata:
+        file_list.append(os.path.join("./workdir/dataset/files", item.get('directoryLabel', ''), item.get('dataFile').get('filename')))
+
+    for file in file_list:
+        if files_opener.FilesOpener(file).open_file()[0] == False:
+            print(f"\nFile cannot be opened: {file}")
+            template_dict['file_open']['status'] = {"SI": "X"}
+            template_dict['file_open']['comments'].append({"file_name": file})
+        elif files_opener.FilesOpener(file).open_file()[0] == None:
+            print(f'\nFile is not a supported file: {file}')
+            template_dict['file_open']['not_checked'].append({"file_name": file})
 
     for key, value in template_dict.items():
         if not template_dict[key]['status']:
