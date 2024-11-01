@@ -1,0 +1,23 @@
+{
+    "file_open": {
+        "status": {},
+        "comments": [],
+        "not_checked": []
+    },
+    "special_characters": {
+        "status": {},
+        "comments": []
+    },
+    "long_file_length": {
+        "status": {},
+        "comments": []
+    },
+    "file_ext": {
+        "status": {},
+        "comments": []
+    },
+    "readme_file": {
+        "status": {},
+        "comments": []
+    }
+}
