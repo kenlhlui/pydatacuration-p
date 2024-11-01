@@ -190,3 +190,14 @@ def parse_file_list_metadata(file_list_metadata):
             })
 
     return file_list_metadata_nested_list
+
+def combine_list_items(item: list):
+    """Combine the list items into a single string
+
+    Args:
+        items (list): The list of items to combine.
+    
+    Returns:
+        str: The combined string.
+    """
+    return ' '.join(item)
