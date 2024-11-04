@@ -9,3 +9,4 @@ conf/
 temp_data/
 *.pyc
 workdir/
+temp.ipynb
