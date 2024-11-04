@@ -20,6 +20,8 @@ class MetadataChecker:
             sys.exit(1)
 
     def _read_metadata_cm_field(self, field, subfield=None):
+        # TODO: fix the logic of subfield
+
         if subfield:
             query_string = f"data.latestVersion.metadataBlocks.citation.fields[?typeName==`{field}`].value[].[{subfield}][].value" # pylint: disable=line-too-long
             result = jmespath.search(query_string, self.metadata)
@@ -28,7 +30,7 @@ class MetadataChecker:
             result = jmespath.search(query_string, self.metadata)
         return result
 
-    def check_metadata_field(self, field):
+    def check_metadata_cm_field(self, field) -> typing.Tuple[str, bool]:
         """
         Check if a metadata field exists in the metadata JSON file
 
