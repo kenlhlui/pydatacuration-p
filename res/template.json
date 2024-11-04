@@ -38,12 +38,16 @@
             "comments": []
         },        
         "author_name": {
-            "status": {},
+            "status": {"SI": "X"},
             "comments": []
         },
         "author_affiliation": {
             "status": {},
             "comments": []
         }
+    },
+    "researcher_id": {
+        "status": {},
+        "comments": []
     }
 }
