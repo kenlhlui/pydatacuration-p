@@ -1,73 +1,67 @@
+# pylint: disable=C0301
+import os
+import re
 import string
+from typing import Union
 from spellchecker import SpellChecker
-import nltk
 
 class SpellCheckerCustomized():
     def __init__(self):
         self.spell = SpellChecker()
+        self.spell.word_frequency.load_text_file('./res/spellcheck_exclusions.txt') # Load the list of words to exclude from the spell check.
+    #TODO: Add a function/amend clean_text function to remove the html tags, if appeared.
+    #TODO: Error handling if the input is not a string/list.
 
-    def clean_text(self, text):
+    def _clean_text(self, text: Union[str, list]) -> list:
         """
         Clean the text by removing special characters, numbers, and stop words.
 
         Args:
-            text (str): The text to clean.
+            text (text | list): The text to clean.
         
         Returns:
-            list: The cleaned text.
+            list: The cleaned text, sperated word by word.
         """
+        # Join the list of words acorrss items if the input is a list.
+        if isinstance(text, list):
+            text = ' '.join(text)
 
-        # Trun text in to list
-        translator = str.maketrans('', '', string.punctuation)
-        text = text.translate(translator)
-        
-        text = text.split()
+        # Split the text according to the punctuation [.,!;] and remove the spaces.
+        text = re.split(r'(?<=[.!?;])\s+', text)
 
-        # Remove the words in Capital letters
-        text = [word for word in text if not word.isupper()]
+        cleaned_sentences = []
+        for sentence in text:
+            # Split each sentence into words
+            words = sentence.split()
+
+            # Keep the first word (even if it starts with a capital letter) and filter out other capitalized words, and append them to cleaned_sentences
+            cleaned_words = [words[0]] + [word for word in words[1:] if not (word[0].isupper())]
+
+            # Extend the cleaned_words to cleaned_sentences
+            cleaned_sentences.extend(cleaned_words)
+
+        # Remove punctuation
+        cleaned_sentences = [word.translate(str.maketrans('', '', string.punctuation)) for word in cleaned_sentences]
 
         # Remove words starting with special characters
-        text = [word for word in text if not word.startswith(('#', '@', '$', '%', '&', '*'))]
-
-        # Remove words starts with Capital letter
-        text = [word for word in text if not word.istitle()]
+        cleaned_sentences = [word for word in cleaned_sentences if not word.startswith(('#', '@', '$', '%', '&', '*'))]
 
         # Remove numbers
-        text = [word for word in text if not word.isdigit()]
+        cleaned_sentences = [word for word in cleaned_sentences if not word.isdigit()]
 
-        # Load stop words
-        stop_words = nltk.corpus.stopwords.words('english')
+        return cleaned_sentences
 
-        # Remove stop words
-        text_filtered = [word for word in text if word.lower() not in stop_words]
-
-        return text_filtered
-
-    def check_spelling(self, list_of_words):
+    def check_spelling(self, list_of_words: Union[str, list]) -> tuple:
         """
         Check the spelling of the text.
         
         Args:
-            list_of_words (list): The text to check.
+            list_of_words (str | list): The string or list of words to check the spelling.
         
         Returns:
-            bool: True if there are misspelled words, False otherwise.
+            tuple: A tuple containing the misspelled words in set and a boolean value indicating if there are misspelled words.
         """
+        list_of_words = self._clean_text(list_of_words)
         misspelled_words = self.spell.unknown(list_of_words)
 
-        print(misspelled_words)
         return misspelled_words, bool(misspelled_words)
-
-    def main(self, list_of_words: list):
-        """
-        Check the spelling of the text.
-        
-        Args:
-            text (str): The text to check.
-        
-        Returns:
-            bool: True if there are misspelled words, False otherwise.
-        """
-        list_of_words = self.clean_text(list_of_words)
-        return self.check_spelling(list_of_words)
-
