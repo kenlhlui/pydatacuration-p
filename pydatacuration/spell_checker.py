@@ -8,6 +8,7 @@ from spellchecker import SpellChecker
 class SpellCheckerCustomized():
     def __init__(self):
         self.spell = SpellChecker()
+        self.spell.word_frequency.load_text_file('./res/spellcheck_exclusions.txt') # Load the list of words to exclude from the spell check.
     #TODO: Add a function/amend clean_text function to remove the html tags, if appeared.
     #TODO: Error handling if the input is not a string/list.
 
@@ -24,7 +25,6 @@ class SpellCheckerCustomized():
         # Join the list of words acorrss items if the input is a list.
         if isinstance(text, list):
             text = ' '.join(text)
-
 
         # Split the text according to the punctuation [.,!;] and remove the spaces.
         text = re.split(r'(?<=[.!?;])\s+', text)
