@@ -40,6 +40,10 @@
         "author": {
             "status": {},
             "comments": []
+        },
+        "researcher_id": {
+            "status": {},
+            "comments": []
         }
     }
 }

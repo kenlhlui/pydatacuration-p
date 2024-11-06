@@ -87,46 +87,41 @@ def file_name_format_checker(file_list_metadata):
     for file in file_list_metadata:
         file_datafile_filename = file.get('dataFile').get('filename')
 
-        if file_name_format_checker.check_special_char(file_datafile_filename)[1] == True:
+        if file_name_format_checker.check_special_char(file_datafile_filename)[1] is True:
             print('\n')
             print(f"Special characters found in the filename: {file_datafile_filename}")
-            template_dict['special_characters']['status'] = {"SI": "X"}
             template_dict['special_characters']['comments'].append({"file_name": file_datafile_filename})
 
-        if file_name_format_checker.check_file_name_len(file_datafile_filename, 32)[1] == True:
+        if file_name_format_checker.check_file_name_len(file_datafile_filename, 32)[1] is True:
             print('\n')
             print(f"Filename is longer than 32 characters: {file_datafile_filename}")
-            template_dict['long_file_length']['status'] = {"SI": "X"}
             template_dict['long_file_length']['comments'].append({"file_name": file_datafile_filename})
 
-        if file_name_format_checker.check_file_ext(file_datafile_filename)[1] == True:
+        if file_name_format_checker.check_file_ext(file_datafile_filename)[1] is True:
             print('\n')
             print(f"File extension does not found: {file_datafile_filename}")
-            template_dict['file_ext']['status'] = {"SI": "X"}
             template_dict['file_ext']['comments'].append({"file_name": file_datafile_filename})
-        
-        if utils.readme_file_checker(file_datafile_filename)[1] == True:
+
+        if utils.readme_file_checker(file_datafile_filename)[1] is True:
             print('\n')
             print(f"README file found: {file_datafile_filename}")
-            template_dict['readme_file']['status'] = {"Y": "X"}
-            #template_dict['readme_file']['comments'].append({"file_name": file_datafile_filename})
+            template_dict['readme_file']['comments'].append({"file_name": file_datafile_filename})
 
     file_list = []
     for item in file_list_metadata:
         file_list.append(os.path.join("./workdir/dataset/files", item.get('directoryLabel', ''), item.get('dataFile').get('filename')))
 
     for file in file_list:
-        if files_opener.FilesOpener(file).open_file()[0] == False:
+        if files_opener.FilesOpener(file).open_file()[0] is False:
             print(f"\nFile cannot be opened: {file}")
-            template_dict['file_open']['status'] = {"SI": "X"}
             template_dict['file_open']['comments'].append({"file_name": file})
-        elif files_opener.FilesOpener(file).open_file()[0] == None:
+        elif files_opener.FilesOpener(file).open_file()[0] is None:
             print(f'\nFile is not a supported file: {file}')
             template_dict['file_open']['not_checked'].append({"file_name": file})
 
-    for key, value in template_dict.items():
-        if not template_dict[key]['status']:
-            template_dict[key]['status'] = {"NA": "X"}
+    # for key, value in template_dict.items():
+    #     if not template_dict[key]['status']: # FIXME: Not to use 'status' anymore
+    #         template_dict[key]['status'] = {"NA": "X"}
 
     return template_dict
 
