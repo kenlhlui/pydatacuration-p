@@ -140,42 +140,6 @@ def checker(file_list_metadata):
                 print(f"\nSpelling mistake found in the {field}: {result[0]}")
                 template_dict['typo']['comments'].append({field: result[0]})
 
-        # # Check spelling of the title
-        # return_value = mc.check_metadata_cm_field('title')
-        # result = sc.check_spelling(return_value[0])
-        # if result[1] is True:
-        #     print(f"\nSpelling mistake found in the title: {result[0]}")
-        #     template_dict['typo']['title']['comments'].append({"title": result[0]})
-
-        # # Check spelling of the subtitle (if available)
-        # return_value = mc.check_metadata_cm_field('subtitle')
-        # result = sc.check_spelling(return_value[0])
-        # if result[1] is True:
-        #     print(f"\nSpelling mistake found in the subtitle: {result[0]}")
-        #     template_dict['typo']['subtitle']['comments'].append({"subtitle": result[0]})
-
-        # # Check spelling of the alternativeTitle
-        # return_value = mc.check_metadata_cm_field('alternativeTitle')
-        # result = sc.check_spelling(return_value[0])
-        # if result[1] is True:
-        #     print(f"\nSpelling mistake found in the alternative title: {result[0]}")
-        #     template_dict['typo']['alternativeTitle']['comments'].append({"alternative_title": result[0]})
-
-        # # Check spelling of the dsDescriptionValue (description)
-        # return_value = mc.check_metadata_cm_field('dsDescription.dsDescriptionValue')
-        # result = sc.check_spelling(return_value[0])
-        # if result[1] is True:
-        #     print(f"\nSpelling mistake found in the description: {result[0]}")
-        #     template_dict['typo']['description']['comments'].append({"description": result[0]})
-
-        # # Check the spelling of the notesText (note)
-        # field = 'notesText'
-        # return_value = mc.check_metadata_cm_field(field)
-        # result = sc.check_spelling(return_value[0])
-        # if result[1] is True:
-        #     print(f"\nSpelling mistake found in the note: {result[0]}")
-        #     template_dict['typo']['comments'].append(f'{field}: {result[0]}')
-
         return template_dict
 
     template_dict_new = _check_file_name_format(file_list_metadata, template_dict)

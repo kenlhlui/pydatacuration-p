@@ -19,5 +19,31 @@
     "readme_file": {
         "status": {},
         "comments": []
+    },
+    "typo": {
+        "status": {},
+        "comments": []
+    },
+    "missing_field": {
+        "title": {
+            "status": {},
+            "comments": []
+        },
+        "description": {
+            "status": {},
+            "comments": []
+        },
+        "subject": {
+            "status": {},
+            "comments": []
+        },        
+        "author": {
+            "status": {},
+            "comments": []
+        },
+        "researcher_id": {
+            "status": {},
+            "comments": []
+        }
     }
 }
