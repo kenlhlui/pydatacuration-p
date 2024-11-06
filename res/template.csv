@@ -22,7 +22,9 @@ Item {{ item.file_name }} is not checked by the script.
 {% endfor %}",automated
 Documentation,Dataset includes a README file,1. Does the dataset include a (seperate) README file?,{% if template_dict.readme_file.comments is not none %}X{% endif %},{% if template_dict.readme_file.comments is none %}X{% endif %},,,,,{% for item in template_dict.readme_file.comments %}README file found: {{ item.file_name }}{% endfor %},automated
 Metadata,,,,,,,,,,
-,Requirement: Check typos and correct use of metadata fields,Any typo across the metadata fields on dataverse?,{{ template_dict.typo.status.Y }},{{ template_dict.typo.status.N }},{{ template_dict.typo.status.SI }},{{ template_dict.typo.status.NS }},{{ template_dict.typo.status.NA }},,,automated
+,Requirement: Check typos and correct use of metadata fields,Any typo across the metadata fields on dataverse?,{% if template_dict.typo.comments is none %}X{% endif %},,{% if template_dict.typo.comments is not none %}X{% endif %},,,,"{% for item in template_dict.typo.comments %}
+{{ item }}
+{% endfor %}",automated
 ,"Requirement: Check Title, Description, Subject, Author Name & Affiliation, Dataset Contact metadata fields are included.","Any missing necessary fields for citation metadata? (Title, Description, Subject, Author Name & Affiliation, Dataset Contact)",,,,,,,,
 ,,1. Title,{{ template_dict.missing_field.title.status.Y }},{{ template_dict.missing_field.title.status.N }},{{ template_dict.missing_field.title.status.SI }},{{ template_dict.missing_field.title.status.NS }},{{ template_dict.missing_field.title.status.NA }},,,
 ,,2. Description,{{ template_dict.missing_field.description.status.Y }},{{ template_dict.missing_field.description.status.N }},{{ template_dict.missing_field.description.status.SI }},{{ template_dict.missing_field.description.status.NS }},{{ template_dict.missing_field.description.status.NA }},,,
