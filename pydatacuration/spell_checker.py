@@ -17,7 +17,7 @@ class SpellCheckerCustomized():
         Clean the text by removing special characters, numbers, and stop words.
 
         Args:
-            text (text | list): The text to clean.
+            text (str | list): The text to clean.
         
         Returns:
             list: The cleaned text, sperated word by word.
@@ -35,16 +35,15 @@ class SpellCheckerCustomized():
             words = sentence.split()
 
             # Keep the first word (even if it starts with a capital letter) and filter out other capitalized words, and append them to cleaned_sentences
-            cleaned_words = [words[0]] + [word for word in words[1:] if not (word[0].isupper())]
-
+            cleaned_words = [words[0]] + [word for word in words[1:] if not word[0].isupper()]
             # Extend the cleaned_words to cleaned_sentences
             cleaned_sentences.extend(cleaned_words)
 
+        # Remove words starting with special characters
+        cleaned_sentences = [word for word in cleaned_sentences if not word.startswith(("#", "@", "$", "%", "&", "*", "+", "=", "<", ">", "?", "/", "\\", "|", "~", "`", "'"))]
+
         # Remove punctuation
         cleaned_sentences = [word.translate(str.maketrans('', '', string.punctuation)) for word in cleaned_sentences]
-
-        # Remove words starting with special characters
-        cleaned_sentences = [word for word in cleaned_sentences if not word.startswith(('#', '@', '$', '%', '&', '*'))]
 
         # Remove numbers
         cleaned_sentences = [word for word in cleaned_sentences if not word.isdigit()]
@@ -59,9 +58,9 @@ class SpellCheckerCustomized():
             list_of_words (str | list): The string or list of words to check the spelling.
         
         Returns:
-            tuple: A tuple containing the misspelled words in set and a boolean value indicating if there are misspelled words.
+            tuple: A tuple containing the misspelled words in list and a boolean value indicating if there are misspelled words.
         """
         list_of_words = self._clean_text(list_of_words)
-        misspelled_words = self.spell.unknown(list_of_words)
+        misspelled_words = self.spell.unknown(list_of_words) # Retruns a set of misspelled words.
 
-        return misspelled_words, bool(misspelled_words)
+        return list(misspelled_words), bool(misspelled_words)
