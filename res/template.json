@@ -37,17 +37,9 @@
             "status": {},
             "comments": []
         },        
-        "author_name": {
-            "status": {"SI": "X"},
-            "comments": []
-        },
-        "author_affiliation": {
+        "author": {
             "status": {},
             "comments": []
         }
-    },
-    "researcher_id": {
-        "status": {},
-        "comments": []
     }
 }
