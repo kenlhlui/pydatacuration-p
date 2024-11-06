@@ -27,7 +27,7 @@ class MetadataChecker:
             query_string = f"data.latestVersion.metadataBlocks.citation.fields[?typeName==`{field}`].value[].[{subfield}][].value" # pylint: disable=line-too-long
             result = jmespath.search(query_string, self.metadata)
         else:
-            query_string = f"data.latestVersion.metadataBlocks.citation.fields[?typeName==`{field}`]" # pylint: disable=line-too-long
+            query_string = f"data.latestVersion.metadataBlocks.citation.fields[?typeName==`{field}`].value[]" # pylint: disable=line-too-long
             result = jmespath.search(query_string, self.metadata)
         return result
 
