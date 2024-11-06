@@ -4,32 +4,34 @@ Organization,*Submission is appropriate for U of T Dataverse,"1.	Is there a disc
 ,,2. Has the researcher (or their research group) previously created or submitted to a dataverse?,,,,,,,,
 ,,"3.	Does the dataset require its own dataverse or is there an associated dataverse to which it belongs?",,,,,,,,
 ,,"4.	Does the dataset conform to the policies and submission standards associated with the specific dataverse?",,,,,,,,
-,"1.	Do all the files open properly?","1.	Do all the files open properly?",{{ template_dict.file_open.status.Y }},{{ template_dict.file_open.status.N }},{{ template_dict.file_open.status.SI }},{{ template_dict.file_open.status.NS }},{{ template_dict.file_open.status.NA }},,"{% for item in template_dict.file_open.comments %}
+,"1.	Do all the files open properly?","1.	Do all the files open properly?",{% if template_dict.file_open.comments is none %}X{% endif %},,{% if template_dict.file_open.comments is not none %}X{% endif %},,,,"{% for item in template_dict.file_open.comments %}
 Item {{ item.file_name }} cannot be opened.
 {% endfor %}
 
 {% for item in template_dict.file_open.not_checked %}
 Item {{ item.file_name }} is not checked by the script.
 {% endfor %}",semi-automated
-,,"1.	Does none of the files contain special characters? (& , * % . # * ( ) ! @$ ^ ~ ‘ { } [ ] ? < >)?",{{ template_dict.special_characters.status.Y }},{{ template_dict.special_characters.status.N }},{{ template_dict.special_characters.status.SI }},{{ template_dict.special_characters.status.NS }},{{ template_dict.special_characters.status.NA }},,"{% for item in template_dict.special_characters.comments %}
+,,"1.	Does none of the files contain special characters? (& , * % . # * ( ) ! @$ ^ ~ ‘ { } [ ] ? < >)?",{% if template_dict.special_characters.comments is none %}X{% endif %},,{% if template_dict.special_characters.comments is not none %}X{% endif %},,,,"{% for item in template_dict.special_characters.comments %}
 {{ item.file_name }} contains special characters
 {% endfor %}",automated
-,,"2.	Does none of the file names contain more than 32 characters?",{{ template_dict.long_file_length.status.Y }},{{ template_dict.long_file_length.status.N }},{{ template_dict.long_file_length.status.SI }},{{ template_dict.long_file_length.status.NS }},{{ template_dict.long_file_length.status.NA }},,"{% for item in template_dict.long_file_length.comments %}
+,,"2.	Does none of the file names contain more than 32 characters?",{% if template_dict.long_file_length.comments is none %}X{% endif %},,{% if template_dict.long_file_length.comments is not none %}X{% endif %},,,,"{% for item in template_dict.long_file_length.comments %}
 {{ item.file_name }} file name contains more than 32 characters
 {% endfor %}",automated
-,,3. Do all the files contain file extensions?,{{ template_dict.file_ext.status.Y }},{{ template_dict.file_ext.status.N }},{{ template_dict.file_ext.status.SI }},{{ template_dict.file_ext.status.NS }},{{ template_dict.file_ext.status.NA }},,"{% for item in template_dict.file_ext.comments %}
-{{ item.file_name }} does have a file extension
+,,3. Do all the files contain file extensions?,{% if template_dict.file_ext.comments is none %}X{% endif %},,{% if template_dict.file_ext.comments is not none %}X{% endif %},,,,"{% for item in template_dict.file_ext.comments %}
+{{ item.file_name }} does not have a file extension
 {% endfor %}",automated
-Documentation,Dataset includes a README file,1. Does the dataset include a (seperate) README file?,{{ template_dict.readme_file.status.Y }},{{ template_dict.readme_file.status.N }},{{ template_dict.readme_file.status.SI }},{{ template_dict.readme_file.status.NS }},{{ template_dict.readme_file.status.NA }},,"{% for item in template_dict.readme_file.comments %}
-The dataset does not contain an individual README file.
-{% endfor %}",automated
+Documentation,Dataset includes a README file,1. Does the dataset include a (seperate) README file?,{% if template_dict.readme_file.comments is not none %}X{% endif %},{% if template_dict.readme_file.comments is none %}X{% endif %},,,,,{% for item in template_dict.readme_file.comments %}README file found: {{ item.file_name }}{% endfor %},automated
 Metadata,,,,,,,,,,
 ,Requirement: Check typos and correct use of metadata fields,Any typo across the metadata fields on dataverse?,{{ template_dict.typo.status.Y }},{{ template_dict.typo.status.N }},{{ template_dict.typo.status.SI }},{{ template_dict.typo.status.NS }},{{ template_dict.typo.status.NA }},,,automated
 ,"Requirement: Check Title, Description, Subject, Author Name & Affiliation, Dataset Contact metadata fields are included.","Any missing necessary fields for citation metadata? (Title, Description, Subject, Author Name & Affiliation, Dataset Contact)",,,,,,,,
 ,,1. Title,{{ template_dict.missing_field.title.status.Y }},{{ template_dict.missing_field.title.status.N }},{{ template_dict.missing_field.title.status.SI }},{{ template_dict.missing_field.title.status.NS }},{{ template_dict.missing_field.title.status.NA }},,,
 ,,2. Description,{{ template_dict.missing_field.description.status.Y }},{{ template_dict.missing_field.description.status.N }},{{ template_dict.missing_field.description.status.SI }},{{ template_dict.missing_field.description.status.NS }},{{ template_dict.missing_field.description.status.NA }},,,
 ,,3. Subject,{{ template_dict.missing_field.subject.status.Y }},{{ template_dict.missing_field.subject.status.N }},{{ template_dict.missing_field.subject.status.SI }},{{ template_dict.missing_field.subject.status.NS }},{{ template_dict.missing_field.subject.status.NA }},,,
-,,4. Author Name & Affiliation,{{ template_dict.missing_field.author_name.status.Y }},{{ template_dict.missing_field.author_name.status.N }},{{ template_dict.missing_field.author_name.status.SI }},{{ template_dict.missing_field.author_name.status.NS }},{{ template_dict.missing_field.author_name.status.NA }},,,
-,,5. Author Affiliation,{{ template_dict.missing_field.author_affiliation.status.Y }},{{ template_dict.missing_field.author_affiliation.status.N }},{{ template_dict.missing_field.author_affiliation.status.SI }},{{ template_dict.missing_field.author_affiliation.status.NS }},{{ template_dict.missing_field.author_affiliation.status.NA }},,,
+,,4. Author Name,,,,,,,,
+,,5. Author Affiliation,,,,,,,,
 Additional optional metadata,"Researcher ID (ORCiD, ResearcherID, etc.) is included for each author",,,,,,,,,
-,"Recommendation: Recommend researchers input ORCID iDs, if applicable and unfilled",Does the dataset include Researcher IDs for each researcher?,{{ template_dict.researcher_id.status.Y }},{{ template_dict.researcher_id.status.N }},{{ template_dict.researcher_id.status.SI }},{{ template_dict.researcher_id.status.NS }},{{ template_dict.researcher_id.status.NA }},,,
+,"Recommendation: Recommend researchers input ORCID iDs, if applicable and unfilled",Does the dataset include Researcher IDs for each researcher?,{% if template_dict.missing_field.researcher_id.comments is none %}X{% endif %},,{% if template_dict.missing_field.researcher_id.comments is not none %}X{% endif %},,,,"{% for item in template_dict.missing_field.researcher_id.comments %}   
+    {% if item.researcher_id is none %}
+        {{ item.authorName }} does not have a researcher id (e.g. ORCID)
+    {% endif %}
+{% endfor %}",

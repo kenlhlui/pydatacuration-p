@@ -37,17 +37,13 @@
             "status": {},
             "comments": []
         },        
-        "author_name": {
-            "status": {"SI": "X"},
+        "author": {
+            "status": {},
             "comments": []
         },
-        "author_affiliation": {
+        "researcher_id": {
             "status": {},
             "comments": []
         }
-    },
-    "researcher_id": {
-        "status": {},
-        "comments": []
     }
 }
