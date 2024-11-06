@@ -1,9 +1,9 @@
 # pylint --disable=C0301
 import sys
+import re
 import typing
 import orjson
 import jmespath
-import re
 
 class MetadataChecker:
     def __init__(self, metadata_json_path):
