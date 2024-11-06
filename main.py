@@ -11,6 +11,9 @@ import pydatacuration.downloads as downloads
 import pydatacuration.checksum as checksum
 import pydatacuration.directory_manager as directory_manager
 import pydatacuration.files_opener as files_opener
+import pydatacuration.template_generation as template_generation
+import pydatacuration.spell_checker as spell_checker
+import pydatacuration.metadata_checker as metadata_checker
 
 app = typer.Typer()
 
@@ -77,88 +80,120 @@ def download_files(base_url, api_token, doi, workdir):
 
     return file_list_metadata
 
-def read_template_json():
-    with open('./res/template.json', 'r', encoding='utf-8') as file:
-        template = orjson.loads(file.read()) # pylint: disable=E1101
-    return template
+def checker(file_list_metadata):
+    template_dict = template_generation.read_template_json()
 
-def file_name_format_checker(file_list_metadata):
-    file_name_format_checker = utils.FileNameFormatChecker()
+    def _check_file_name_format(file_list_metadata, template_dict: dict):
 
-    template_dict = read_template_json()
-        
+        file_name_format_checker = utils.FileNameFormatChecker()
+        for file in file_list_metadata:
+            file_datafile_filename = file.get('dataFile').get('filename')
 
-    for file in file_list_metadata:
-        file_datafile_filename = file.get('dataFile').get('filename')
-        
-        if file_name_format_checker.check_special_char(file_datafile_filename)[1] == True:
-            print('\n')
-            print(f"Special characters found in the filename: {file_datafile_filename}")
-            template_dict['special_characters']['status'] = {"SI": "X"}
-            template_dict['special_characters']['comments'].append({"file_name": file_datafile_filename})
+            if file_name_format_checker.check_special_char(file_datafile_filename)[1] is True:
+                print('\n')
+                print(f"Special characters found in the filename: {file_datafile_filename}")
+                template_dict['special_characters']['comments'].append({"file_name": file_datafile_filename})
 
-        if file_name_format_checker.check_file_name_len(file_datafile_filename, 32)[1] == True:
-            print('\n')
-            print(f"Filename is longer than 32 characters: {file_datafile_filename}")
-            template_dict['long_file_length']['status'] = {"SI": "X"}
-            template_dict['long_file_length']['comments'].append({"file_name": file_datafile_filename})
+            if file_name_format_checker.check_file_name_len(file_datafile_filename, 32)[1] is True:
+                print('\n')
+                print(f"Filename is longer than 32 characters: {file_datafile_filename}")
+                template_dict['long_file_length']['comments'].append({"file_name": file_datafile_filename})
 
-        if file_name_format_checker.check_file_ext(file_datafile_filename)[1] == True:
-            print('\n')
-            print(f"File extension does not found: {file_datafile_filename}")
-            template_dict['file_ext']['status'] = {"SI": "X"}
-            template_dict['file_ext']['comments'].append({"file_name": file_datafile_filename})
-        
-        if utils.readme_file_checker(file_datafile_filename)[1] == True:
-            print('\n')
-            print(f"README file found: {file_datafile_filename}")
-            template_dict['readme_file']['status'] = {"Y": "X"}
-            #template_dict['readme_file']['comments'].append({"file_name": file_datafile_filename})
+            if file_name_format_checker.check_file_ext(file_datafile_filename)[1] is True:
+                print('\n')
+                print(f"File extension does not found: {file_datafile_filename}")
+                template_dict['file_ext']['comments'].append({"file_name": file_datafile_filename})
 
-    file_list = []
-    for item in file_list_metadata:
-        file_list.append(os.path.join("./workdir/dataset/files", item.get('directoryLabel', ''), item.get('dataFile').get('filename')))
+            if utils.readme_file_checker(file_datafile_filename)[1] is True:
+                print('\n')
+                print(f"README file found: {file_datafile_filename}")
+                template_dict['readme_file']['comments'].append({"file_name": file_datafile_filename})
 
-    for file in file_list:
-        if files_opener.FilesOpener(file).open_file()[0] == False:
-            print(f"\nFile cannot be opened: {file}")
-            template_dict['file_open']['status'] = {"SI": "X"}
-            template_dict['file_open']['comments'].append({"file_name": file})
-        elif files_opener.FilesOpener(file).open_file()[0] == None:
-            print(f'\nFile is not a supported file: {file}')
-            template_dict['file_open']['not_checked'].append({"file_name": file})
+        file_list = []
+        for item in file_list_metadata:
+            file_list.append(os.path.join("./workdir/dataset/files", item.get('directoryLabel', ''), item.get('dataFile').get('filename')))
 
-    for key, value in template_dict.items():
-        if not template_dict[key]['status']:
-            template_dict[key]['status'] = {"NA": "X"}
+        for file in file_list:
+            if files_opener.FilesOpener(file).open_file()[0] is False:
+                print(f"\nFile cannot be opened: {file}")
+                template_dict['file_open']['comments'].append({"file_name": file})
+            elif files_opener.FilesOpener(file).open_file()[0] is None:
+                print(f'\nFile is not a supported file: {file}')
+                template_dict['file_open']['not_checked'].append({"file_name": file})
 
-    return template_dict
+        # for key, value in template_dict.items():
+        #     if not template_dict[key]['status']: # FIXME: Not to use 'status' anymore
+        #         template_dict[key]['status'] = {"NA": "X"}
 
-def generate_report(template_dict):
-    def read_csv_template(file):
-        with open(file, 'r', encoding='ISO-8859-1') as f:
-            content = f.read()
-        return content
+        return template_dict
 
-    template_string = read_csv_template('./res/template.csv')
-    report = Template(template_string)
-    rendered = report.render(template_dict=template_dict)
-    with open('./workdir/log_files/temp_data/render_log.csv', 'w', encoding='utf-8') as f:
-        f.write(rendered)
-    pd.read_csv('./workdir/log_files/temp_data/render_log.csv', keep_default_na=False).to_excel('./workdir/log_files/render_log.xlsx', index=False, na_rep='NA')
-    print('\nReport generated. See the workdir/log_files/render_log.xlsx file for the report.')
+    def _check_spelling(template_dict: dict):
+        sc = spell_checker.SpellCheckerCustomized()
+        mc = metadata_checker.MetadataChecker('./workdir/dataset/metadata/ds_metadata.json')
+
+        field_list = ['title', 'subtitle', 'alternativeTitle', 'dsDescription.dsDescriptionValue', 'notesText']
+
+        for field in field_list:
+            return_value = mc.check_metadata_cm_field(field)
+            result = sc.check_spelling(return_value[0])
+            if result[1] is True:
+                print(f"\nSpelling mistake found in the {field}: {result[0]}")
+                template_dict['typo']['comments'].append({field: result[0]})
+
+        # # Check spelling of the title
+        # return_value = mc.check_metadata_cm_field('title')
+        # result = sc.check_spelling(return_value[0])
+        # if result[1] is True:
+        #     print(f"\nSpelling mistake found in the title: {result[0]}")
+        #     template_dict['typo']['title']['comments'].append({"title": result[0]})
+
+        # # Check spelling of the subtitle (if available)
+        # return_value = mc.check_metadata_cm_field('subtitle')
+        # result = sc.check_spelling(return_value[0])
+        # if result[1] is True:
+        #     print(f"\nSpelling mistake found in the subtitle: {result[0]}")
+        #     template_dict['typo']['subtitle']['comments'].append({"subtitle": result[0]})
+
+        # # Check spelling of the alternativeTitle
+        # return_value = mc.check_metadata_cm_field('alternativeTitle')
+        # result = sc.check_spelling(return_value[0])
+        # if result[1] is True:
+        #     print(f"\nSpelling mistake found in the alternative title: {result[0]}")
+        #     template_dict['typo']['alternativeTitle']['comments'].append({"alternative_title": result[0]})
+
+        # # Check spelling of the dsDescriptionValue (description)
+        # return_value = mc.check_metadata_cm_field('dsDescription.dsDescriptionValue')
+        # result = sc.check_spelling(return_value[0])
+        # if result[1] is True:
+        #     print(f"\nSpelling mistake found in the description: {result[0]}")
+        #     template_dict['typo']['description']['comments'].append({"description": result[0]})
+
+        # # Check the spelling of the notesText (note)
+        # field = 'notesText'
+        # return_value = mc.check_metadata_cm_field(field)
+        # result = sc.check_spelling(return_value[0])
+        # if result[1] is True:
+        #     print(f"\nSpelling mistake found in the note: {result[0]}")
+        #     template_dict['typo']['comments'].append(f'{field}: {result[0]}')
+
+        return template_dict
+
+    template_dict_new = _check_file_name_format(file_list_metadata, template_dict)
+    template_dict_new = _check_spelling(template_dict_new)
+
+    return template_dict_new
 
 @app.command()
 def main(
+
     doi: str = typer.Option(None, prompt=('Input the Dataset Persistent Identifier (doi or hdl)'), help='Enter the Persistent Identifier of the dataset')
 ):
 
     base_url, api_token = load_env()
     workdir = workdir_manager()
     file_list_metadata = download_files(base_url, api_token, doi, workdir)
-    template_dict = file_name_format_checker(file_list_metadata)
-    generate_report(template_dict)
-
+    template_dict = checker(file_list_metadata)
+    template_generation.generate_report(template_dict)
 
 if __name__ == "__main__":
     app()
