@@ -3,9 +3,6 @@ import os
 import shutil
 import typer
 import dotenv
-import orjson
-from jinja2 import Template
-import pandas as pd
 import pydatacuration.utils as utils
 import pydatacuration.downloads as downloads
 import pydatacuration.checksum as checksum
@@ -120,10 +117,6 @@ def checker(file_list_metadata):
             elif files_opener.FilesOpener(file).open_file()[0] is None:
                 print(f'\nFile is not a supported file: {file}')
                 template_dict['file_open']['not_checked'].append({"file_name": file})
-
-        # for key, value in template_dict.items():
-        #     if not template_dict[key]['status']: # FIXME: Not to use 'status' anymore
-        #         template_dict[key]['status'] = {"NA": "X"}
 
         return template_dict
 
