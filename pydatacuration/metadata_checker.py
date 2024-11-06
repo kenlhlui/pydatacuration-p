@@ -1,3 +1,4 @@
+# pylint --disable=C0301
 import sys
 import typing
 import orjson
@@ -53,3 +54,9 @@ class MetadataChecker:
             return result, True
 
         return None, False
+
+    def check_author_cm_field(self):
+        query_string = 'data.latestVersion.metadataBlocks.citation.fields[?typeName==`author`].value[].{authorName:authorName.value, authorAffiliation: authorAffiliation.value, authorIdentifierScheme: authorIdentifierScheme.value, authorIdentifier:authorIdentifier.value}'
+        result = jmespath.search(query_string, self.metadata)
+
+        return result
