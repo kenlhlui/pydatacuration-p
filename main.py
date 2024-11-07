@@ -144,15 +144,16 @@ def checker(file_list_metadata):
         mc = metadata_checker.MetadataChecker('./workdir/dataset/metadata/ds_metadata.json')
 
         field_list = ['title', 'subtitle', 'alternativeTitle', 'dsDescription.dsDescriptionValue', 'notesText']
-
         for field in field_list:
-            return_value = mc.check_metadata_cm_field(field)
-            if return_value[1] is True:
-                result = sc.check_spelling(return_value[0])
-                if result[1] is True:
-                    for item in result[0]:
-                        print(f"\nSpelling mistake found in the {field}: {item}")
-                        template_dict['typo']['comments'].append(f'Typo found in {field}: `{item}`')
+            return_value, field_exists = mc.check_metadata_cm_field(field)
+
+            if field_exists:
+                typos, has_typos = sc.check_spelling(return_value[0])
+                if has_typos:
+                    typo_messages = [f"Typo found in {field}: `{item}`" for item in typos]
+                    for message in typo_messages:
+                        print(f"\nSpelling mistake found in the {field}: {message}")
+                    template_dict['typo']['comments'].extend(typo_messages)
 
         return template_dict
 
