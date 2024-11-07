@@ -71,7 +71,7 @@ class Downloads:
             str: Path to the downloaded zip file
         """
         file_path = os.path.join(self._files_dir(), 'ds.zip')
-        url = self.base_url + 'api/access/dataset/:persistentId/?persistentId=' + self.pid
+        url = self.base_url + 'api/access/dataset/:persistentId/?persistentId=' + self.pid + '&format=original'
 
         try:
             with self.client.stream("GET", url) as response:
