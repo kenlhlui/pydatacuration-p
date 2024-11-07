@@ -36,16 +36,14 @@ def workdir_manager():
 def parse_file_list_metadata(file_list_metadata):
     file_list_metadata_nested_list = []
     for file_meta in file_list_metadata:
-        if file_meta.get('directoryLabel'):
-            file_list_metadata_nested_list.append({
-                'file': f"{file_meta['directoryLabel']}/{file_meta['dataFile']['filename']}",
-                'md5_checksum': file_meta['dataFile']['md5']
-            })
-        else:
-            file_list_metadata_nested_list.append({
-                'file': file_meta['dataFile']['filename'],
-                'md5_checksum': file_meta['dataFile']['md5']
-            })
+        # Add originalFileName if it exists
+        filename = file_meta.get('dataFile', {}).get('originalFileName') or file_meta.get('dataFile', {}).get('filename')
+        directoryLabel = file_meta.get('directoryLabel', '')
+        file_full_path = os.path.join(directoryLabel, filename)
+        file_list_metadata_nested_list.append({
+            'file': file_full_path,
+            'md5_checksum': file_meta['dataFile']['md5']
+        })
 
     return file_list_metadata_nested_list
 
