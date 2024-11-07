@@ -41,7 +41,15 @@
             "status": {},
             "comments": []
         },
-        "researcher_id": {
+        "authorAffiliation": {
+            "status": {},
+            "comments": []
+        },
+        "authorIdentifierScheme": {
+            "status": {},
+            "comments": []
+        },
+        "authorIdentifier": {
             "status": {},
             "comments": []
         }

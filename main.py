@@ -129,6 +129,14 @@ def checker(file_list_metadata):
                 print(f"\nMissing metadata found in the {field}")
                 template_dict['missing_field'][field]['comments'].append(f'Missing metadata in {field} field')
         #TODO: Add checking for author name and affiliation
+        field_list_author = ['authorAffiliation', 'authorIdentifierScheme', 'authorIdentifier']
+        result = mc.check_author_cm_field()
+        for item in result:
+            author_name = item.get('authorName')
+            for field in field_list_author:
+                if item.get(field) is None:
+                    print(f"\nMissing metadata found in {field} field for author: {author_name}")
+                    template_dict['missing_field'][field]['comments'].append(f'Missing metadata in {field} field for author: {author_name}')
 
         return template_dict
 
