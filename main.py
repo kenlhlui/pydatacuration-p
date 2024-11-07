@@ -120,6 +120,27 @@ def checker(file_list_metadata):
 
         return template_dict
 
+    def _check_missing_metadata(template_dict: dict):
+        mc = metadata_checker.MetadataChecker('./workdir/dataset/metadata/ds_metadata.json')
+
+        field_list = ['title', 'dsDescription', 'subject']
+        for field in field_list:
+            return_value = mc.check_metadata_cm_field(field)
+            if return_value[1] is False:
+                print(f"\nMissing metadata found in the {field}")
+                template_dict['missing_field'][field]['comments'].append(f'Missing metadata in {field} field')
+        #TODO: Add checking for author name and affiliation
+        field_list_author = ['authorAffiliation', 'authorIdentifierScheme', 'authorIdentifier']
+        result = mc.check_author_cm_field()
+        for item in result:
+            author_name = item.get('authorName')
+            for field in field_list_author:
+                if item.get(field) is None:
+                    print(f"\nMissing metadata found in {field} field for author: {author_name}")
+                    template_dict['missing_field'][field]['comments'].append(f'Missing metadata in {field} field for author: {author_name}')
+
+        return template_dict
+
     def _check_spelling(template_dict: dict):
         sc = spell_checker.SpellCheckerCustomized()
         mc = metadata_checker.MetadataChecker('./workdir/dataset/metadata/ds_metadata.json')
@@ -137,6 +158,7 @@ def checker(file_list_metadata):
         return template_dict
 
     template_dict_new = _check_file_name_format(file_list_metadata, template_dict)
+    template_dict_new = _check_missing_metadata(template_dict_new)
     template_dict_new = _check_spelling(template_dict_new)
 
     return template_dict_new
