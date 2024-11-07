@@ -36,7 +36,6 @@ def workdir_manager():
 def parse_file_list_metadata(file_list_metadata):
     file_list_metadata_nested_list = []
     for file_meta in file_list_metadata:
-        # Add originalFileName if it exists
         filename = file_meta.get('dataFile', {}).get('originalFileName') or file_meta.get('dataFile', {}).get('filename')
         directoryLabel = file_meta.get('directoryLabel', '')
         file_full_path = os.path.join(directoryLabel, filename)
@@ -82,7 +81,7 @@ def checker(file_list_metadata):
 
         file_name_format_checker = utils.FileNameFormatChecker()
         for file in file_list_metadata:
-            file_datafile_filename = file.get('dataFile').get('filename')
+            file_datafile_filename = file.get('dataFile', {}).get('originalFileName') or file.get('dataFile', {}).get('filename')
 
             if file_name_format_checker.check_special_char(file_datafile_filename)[1] is True:
                 print('\n')
@@ -106,7 +105,8 @@ def checker(file_list_metadata):
 
         file_list = []
         for item in file_list_metadata:
-            file_list.append(os.path.join("./workdir/dataset/files", item.get('directoryLabel', ''), item.get('dataFile').get('filename')))
+            file_name = item.get('dataFile', {}).get('originalFileName') or item.get('dataFile', {}).get('filename')
+            file_list.append(os.path.join("./workdir/dataset/files", item.get('directoryLabel', ''), file_name))
 
         for file in file_list:
             if files_opener.FilesOpener(file).open_file()[0] is False:
