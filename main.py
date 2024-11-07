@@ -147,11 +147,12 @@ def checker(file_list_metadata):
 
         for field in field_list:
             return_value = mc.check_metadata_cm_field(field)
-            result = sc.check_spelling(return_value[0])
-            if result[1] is True:
-                for item in result[0]:
-                    print(f"\nSpelling mistake found in the {field}: {item}")
-                    template_dict['typo']['comments'].append(f'Typo found in {field}: `{item}`')
+            if return_value[1] is True:
+                result = sc.check_spelling(return_value[0])
+                if result[1] is True:
+                    for item in result[0]:
+                        print(f"\nSpelling mistake found in the {field}: {item}")
+                        template_dict['typo']['comments'].append(f'Typo found in {field}: `{item}`')
 
         return template_dict
 
