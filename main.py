@@ -37,8 +37,8 @@ def parse_file_list_metadata(file_list_metadata):
     file_list_metadata_nested_list = []
     for file_meta in file_list_metadata:
         filename = file_meta.get('dataFile', {}).get('originalFileName') or file_meta.get('dataFile', {}).get('filename')
-        directoryLabel = file_meta.get('directoryLabel', '')
-        file_full_path = os.path.join(directoryLabel, filename)
+        directory_label = file_meta.get('directoryLabel', '')
+        file_full_path = os.path.join(directory_label, filename)
         file_list_metadata_nested_list.append({
             'file': file_full_path,
             'md5_checksum': file_meta['dataFile']['md5']
@@ -122,13 +122,12 @@ def checker(file_list_metadata):
         mc = metadata_checker.MetadataChecker('./workdir/dataset/metadata/ds_metadata.json')
 
         field_list = ['title', 'dsDescription', 'subject']
-
         for field in field_list:
             return_value = mc.check_metadata_cm_field(field)
             if return_value[1] is False:
                 print(f"\nMissing metadata found in the {field}")
                 template_dict['missing_field'][field]['comments'].append(f'Missing metadata in {field} field')
-        #TODO: Add checking for author name and affiliation
+
         field_list_author = ['authorAffiliation', 'authorIdentifierScheme', 'authorIdentifier']
         result = mc.check_author_cm_field()
         for item in result:
