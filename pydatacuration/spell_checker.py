@@ -39,14 +39,9 @@ class SpellCheckerCustomized():
             # Extend the cleaned_words to cleaned_sentences
             cleaned_sentences.extend(cleaned_words)
 
-        # Remove words starting with special characters
-        cleaned_sentences = [word for word in cleaned_sentences if not word.startswith(("#", "@", "$", "%", "&", "*", "+", "=", "<", ">", "?", "/", "\\", "|", "~", "`", "'"))]
-
-        # Remove punctuation
-        cleaned_sentences = [word.translate(str.maketrans('', '', string.punctuation)) for word in cleaned_sentences]
-
-        # Remove numbers
-        cleaned_sentences = [word for word in cleaned_sentences if not word.isdigit()]
+        # Remove words containing special characters and numbers
+        pattern = r'^[a-zA-Z]+$'  # Only allow letters from a-z and A-Z 
+        cleaned_sentences = [word for word in cleaned_sentences if re.match(pattern, word)]
 
         return cleaned_sentences
 
