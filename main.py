@@ -1,6 +1,7 @@
 # pylint: disable=C0114, C0301, C0116
 import os
 import shutil
+import sys
 import typer
 import dotenv
 import pydatacuration.utils as utils
@@ -14,17 +15,24 @@ import pydatacuration.metadata_checker as metadata_checker
 
 app = typer.Typer()
 
-def load_env():
+# TODO: Change this to a class and return the value, and put it to the default value of the main function
+def load_env(base_url, api_token):
     dotenv.load_dotenv()
-    base_url = os.getenv('BASE_URL')
-    api_token = os.getenv('API_TOKEN')
+    if base_url is None:
+        base_url = os.getenv('BASE_URL')
+        if base_url is None:
+            sys.exit('BASE_URL not found in the environment variables. Exiting...')
+    if api_token is None:
+        api_token = os.getenv('API_TOKEN')
+        if api_token is None:
+            sys.exit('API_TOKEN not found in the environment variables. Exiting...')
     print('Environment variables loaded')
     return base_url, api_token
 
 
 def workdir_manager():
     if os.path.exists('workdir'):
-        shutil.rmtree('workdir') 
+        shutil.rmtree('workdir')
     workdir = os.path.join(os.getcwd(), 'workdir')
     dm = directory_manager.DirectoryManager(workdir)
     dm.mk_log_dir()
@@ -168,10 +176,18 @@ def checker(file_list_metadata):
 @app.command()
 def main(
 
-    doi: str = typer.Option(None, prompt=('Input the Dataset Persistent Identifier (doi or hdl)'), help='Enter the Persistent Identifier of the dataset')
+    doi: str = typer.Option(None, prompt=('Input the Dataset Persistent Identifier (doi or hdl)'), help='Enter the Persistent Identifier of the dataset'),
+    base_url: str = typer.Option(None,
+                                 help='The base URL of the Dataverse installation',
+                                 envvar='BASE_URL'),
+    api_token: str = typer.Option(None,
+                                  help='The API token for the Dataverse installation',
+                                  hide_input=True,
+                                  prompt = '\nEnter the API token',
+                                  envvar='API_TOKEN')
 ):
 
-    base_url, api_token = load_env()
+    base_url, api_token = load_env(base_url, api_token)
     workdir = workdir_manager()
     file_list_metadata = download_files(base_url, api_token, doi, workdir)
     template_dict = checker(file_list_metadata)
