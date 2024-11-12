@@ -123,7 +123,7 @@ def checker(file_list_metadata):
                 print(f"\nFile cannot be opened: {file}")
                 template_dict['file_open']['comments'].append({"file_name": file})
             elif files_opener.FilesOpener(file).open_file()[0] is None:
-                print(f'\nFile is not a supported file: {file}')
+                print(f'\nFile is not a supported file format (not checked by the script): {file}')
                 template_dict['file_open']['not_checked'].append({"file_name": file})
 
         return template_dict
