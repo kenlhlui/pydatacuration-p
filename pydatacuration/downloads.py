@@ -65,6 +65,7 @@ class Downloads:
 
     def get_ds_zip(self):
         # TODO: Change to 'Download By Dataset By Version' API, if possible (it's not working now)
+        # TODO: To use async download files if detected that files are large or more than X files (to avoid server-side zipping that takes a long time)
         """Get a dataset as a zip file
 
         Returns:
