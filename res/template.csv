@@ -11,7 +11,7 @@ Item {{ item.file_name }} cannot be opened.
 {% for item in template_dict.file_open.not_checked %}
 Item {{ item.file_name }} is not checked by the script.
 {% endfor %}",semi-automated
-,,"1.	Does none of the files contain special characters? (& , * % . # * ( ) ! @$ ^ ~ â€˜ { } [ ] ? < >)?",{% if template_dict.special_characters.comments|length == 0 %}X{% endif %},,{% if template_dict.special_characters.comments|length > 0 %}X{% endif %},,,,"{% for item in template_dict.special_characters.comments %}
+,,"1.	Does none of the files contain special characters? (& , * % . # * ( ) ! @$ ^ ~ ‘ { } [ ] ? < >)?",{% if template_dict.special_characters.comments|length == 0 %}X{% endif %},,{% if template_dict.special_characters.comments|length > 0 %}X{% endif %},,,,"{% for item in template_dict.special_characters.comments %}
 {{ item.file_name }} contains special characters
 {% endfor %}",automated
 ,,"2.	Does none of the file names contain more than 32 characters?",{% if template_dict.long_file_length.comments|length == 0 %}X{% endif %},,{% if template_dict.long_file_length.comments|length > 0 %}X{% endif %},,,,"{% for item in template_dict.long_file_length.comments %}
@@ -35,14 +35,11 @@ Metadata,,,,,,,,,,
 ,,3. Subject,{% if template_dict.missing_field.subject.comments|length == 0 %}X{% endif %},{% if template_dict.missing_field.subject.comments|length > 0 %}X{% endif %},,,,,"{% for item in template_dict.missing_field.subject.comments %}
 {{ item }}
 {% endfor %}",
-,,4. Author Name,,,,,,,,
-,,5. Author Affiliation,,,,,,,,
+,,4. Author Name,{% if template_dict.missing_field.author.comments|length == 0 %}X{% endif %},{% if template_dict.missing_field.author.comments|length > 0 %}X{% endif %},,,,,,
+,,5. Author Affiliation,{% if template_dict.missing_field.authorAffiliation.comments|length == 0 %}X{% endif %},{% if template_dict.missing_field.authorAffiliation.comments|length > 0 %}X{% endif %},,,,,,
 Additional optional metadata,"Researcher ID (ORCiD, ResearcherID, etc.) is included for each author",,,,,,,,,
-,"Recommendation: Recommend researchers input ORCID iDs, if applicable and unfilled",Does the dataset include Researcher IDs for each researcher?,{% if template_dict.missing_field.researcher_id.comments is none %}X{% endif %},,{% if template_dict.missing_field.researcher_id.comments is not none %}X{% endif %},,,,"{% for item in template_dict.missing_field.researcher_id.comments %}   
-    {% if item.researcher_id is none %}
-        {{ item.authorName }} does not have a researcher id (e.g. ORCID)
-    {% endif %}
-{% endfor %}",
+,"Recommendation: Recommend researchers input ORCID iDs, if applicable and unfilled",Does the dataset include Researcher IDs for each researcher?,{% if template_dict.missing_field.authorIdentifier.comments | length == 0 and template_dict.missing_field.authorIdentifierScheme.comments | length == 0 %}X{% endif %},,{% if template_dict.missing_field.authorIdentifier.comments | length > 0 and template_dict.missing_field.authorIdentifierScheme.comments | length > 0 %}X{% endif %},,,,"{% for item in template_dict.missing_field.authorIdentifier.comments %}{{ item }}{% endfor %}
+{% for item in template_dict.missing_field.authorIdentifierScheme.comments %}{{ item }}{% endfor %}",
 "Sensitive Data and IP
 (Confirmed by researcher)",,,,,,,,,,
 ,*Data is free of any licensing and intellectual property (IP) issues,,,,,,,,,

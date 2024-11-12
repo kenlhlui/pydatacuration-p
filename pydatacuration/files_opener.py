@@ -1,13 +1,20 @@
 # pylint: disable=C0301
 import os
 from pathlib import Path
+import csv
 from PIL import Image
 import chardet
 import netCDF4 as nc
+from pyreadstat import pyreadstat, ReadstatError
+import pyreadr
 
 IMAGE_FILE_EXTENSIONS = ['.jpg', '.jpeg', '.png', '.gif', '.bmp', '.tiff', '.tif']
 NETCDF_FILE_EXTENSIONS = ['.nc']
 # TEXT_FILE_EXTENSIONS = ['.txt', '.csv', '.tsv']  # Placeholder for text file extensions
+SAV_FILE_EXTENSIONS = ['.sav']  # Placeholder for SPSS file extensions
+CSV_FILE_EXTENSIONS = ['.csv']  # Placeholder for CSV file extensions
+DTA_FILE_EXTENSIONS = ['.dta']  # Placeholder for Stata file extensions
+RDATA_FILE_EXTENSIONS = ['.rdata', '.rds']  # Placeholder for R file extensions
 
 class FilesOpener:
     def __init__(self, file):
@@ -38,12 +45,61 @@ class FilesOpener:
         """Open a NetCDF file
         
         Returns:
-            str: The NetCDF file object.
+            tuple: (bool, str) indicating success and the file path.
         """
         try:
             nc.Dataset(self.file, 'r')
             return True, self.file
         except (Exception, OSError):
+            return False, self.file
+    def _open_sav_file(self):
+        """Open an sav (SPSS) file
+        
+        Returns:
+            tuple: (bool, str) indicating success and the file path.
+        """
+        try:
+            sav_file = pyreadstat.read_sav(self.file)
+            return True, sav_file
+        except (ReadstatError, OSError):
+            return False, self.file
+    
+    def _open_csv_file(self):
+        """Open a CSV file
+        
+        Returns:
+            tuple: (bool, str) indicating success and the file path.
+        """
+        try:
+            with open(self.file, 'r') as f:
+                csv_reader = csv.reader(f)
+                for row in csv_reader:
+                    pass
+            return True, self.file
+        except (csv.Error, UnicodeDecodeError):
+            return False, self.file
+    def _open_dta_file(self):
+        """Open a DTA (Stata) file
+        
+        Returns:
+            tuple: (bool, str) indicating success and the file path.
+        """
+        try:
+            dta_file = pyreadstat.read_dta(self.file)
+            return True, dta_file
+        except (ReadstatError, OSError):
+            return False, self.file
+
+    def _open_rdata_file(self):
+        """Open an RData file
+        
+        Returns:
+            tuple: (bool, str) indicating success and the file path.
+        """
+        try:
+            rdata_file = pyreadr.read_r(self.file)
+            return True, rdata_file
+        except (pyreadr.custom_errors.PyreadrError, pyreadr.custom_errors.LibrdataError, OSError):
             return False, self.file
 
     def open_file(self):
@@ -57,8 +113,20 @@ class FilesOpener:
             if file_ext in IMAGE_FILE_EXTENSIONS:
                 status, file = self._open_image_file()
                 return status, file
-            elif file_ext in NETCDF_FILE_EXTENSIONS:
+            if file_ext in NETCDF_FILE_EXTENSIONS:
                 status, file = self._open_netcdf_file()
+                return status, file
+            if file_ext in SAV_FILE_EXTENSIONS:
+                status, file = self._open_sav_file()
+                return status, file
+            if file_ext in CSV_FILE_EXTENSIONS:
+                status, file = self._open_csv_file()
+                return status, file
+            if file_ext in DTA_FILE_EXTENSIONS:
+                status, file = self._open_dta_file()
+                return status, file
+            if file_ext in RDATA_FILE_EXTENSIONS:
+                status, file = self._open_rdata_file()
                 return status, file
             # Add more file type checks here as needed
         return None, self.file
