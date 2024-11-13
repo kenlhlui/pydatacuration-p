@@ -1,9 +1,10 @@
 # pylint: disable=C0301
 import sys
 import os
+import asyncio
 import httpx
 import orjson
-import asyncio
+import jmespath
 
 class Downloads:
     """Class to download a dataset from a Dataverse repository
@@ -21,23 +22,23 @@ class Downloads:
         self.download_dir = download_dir
         self.client = httpx.Client(headers={'X-Dataverse-key': self.api_token}, timeout=None, follow_redirects=True)
         self.async_client = httpx.AsyncClient(headers={'X-Dataverse-key': self.api_token}, timeout=None, follow_redirects=True)
+        self.semaphore = asyncio.Semaphore(5)
 
     def _metadata_dir(self):
         """Create the metadata directory
         """
-        if not os.path.exists(f'{self.download_dir}/dataset/metadata'):
-            os.makedirs(f'{self.download_dir}/dataset/metadata', exist_ok=True)
-        metadata_dir = f'{self.download_dir}/dataset/metadata'
+        metadata_dir = os.path.join(self.download_dir, 'dataset', 'metadata')
+        if not os.path.exists(metadata_dir):
+            os.makedirs(metadata_dir, exist_ok=True)
 
         return metadata_dir
 
     def _files_dir(self):
         """Create the files directory
         """
-        if not os.path.exists(f'{self.download_dir}/temp_data'):
-            os.makedirs(f'{self.download_dir}/temp_data', exist_ok=True)
-
-        files_dir = f'{self.download_dir}/temp_data'
+        files_dir = os.path.join(self.download_dir, 'dataset', 'files')
+        if not os.path.exists(files_dir):
+            os.makedirs(files_dir, exist_ok=True)
 
         return files_dir
 
@@ -60,6 +61,32 @@ class Downloads:
             print(f"HTTP error occurred: {e}")
             sys.exit(1)
 
+    def _get_file_list(self, metadata):
+        file_list =[]
+
+        query_string = 'data.latestVersion.files[*].{file_id:dataFile.id, file_name:dataFile.filename, originalFileName:dataFile.originalFileName, directoryLabel: directoryLabel, md5: dataFile.md5}'
+        temp_file_list = jmespath.search(query_string, metadata)
+        for item in temp_file_list:
+            file_id = item.get('file_id')
+            directory_label = item.get('directoryLabel') if item.get('directoryLabel') else ''
+            file_name = item.get('originalFileName') if item.get('originalFileName') else item.get('file_name')
+            file_path = os.path.join(directory_label, file_name)
+            file_list.append((file_id, file_path))
+        return file_list
+
+    def _get_dir_list(self, metadata):
+        query_string = 'data.latestVersion.files[].directoryLabel'
+        return jmespath.search(query_string, metadata)
+
+    def _make_dir_structure(self, metadata):
+        # Make the directory structure
+        dir_list = self._get_dir_list(metadata)
+        if dir_list:
+            dir_set = set(dir_list)
+            for directory in dir_set:
+                directory = os.path.join(self._files_dir(), directory)
+                os.makedirs(directory, exist_ok=True)
+
     async def _get_data_file_async(self, file_id, file_path):
         """Get the data file of the dataset asynchronously
         
@@ -67,17 +94,28 @@ class Downloads:
             str: Path to the downloaded data file
         """
         url = f'{self.base_url}/api/access/datafile/{file_id}'
-        file_path = f'{self.download_dir}/temp_data/{file_path}'
+        file_path = os.path.join(self._files_dir(), file_path)
+
         try:
-            async with self.async_client.stream("GET", url, params={'format': 'original'}) as response:
-                if response.status_code == 200:
-                    with open(file_path, 'wb') as f:
-                        async for chunk in response.aiter_bytes():
-                            f.write(chunk)
-                return file_path
+            async with self.semaphore:
+                async with self.async_client.stream("GET", url, params={'format': 'original'}) as response:
+                    if response.status_code == 200:
+                        with open(file_path, mode='wb') as f:
+                            async for chunk in response.aiter_bytes(chunk_size=8192):
+                                f.write(chunk)
+                    return file_path
         except httpx.HTTPStatusError as e:
             print(f"HTTP error occurred: {e}")
-            sys.exit(1)
+
+    async def save_files_async(self, file_list):
+        """Download the files of the dataset asynchronously
+        """
+        async with self.async_client:
+            tasks = [self._get_data_file_async(file_id, file_path) for file_id, file_path in file_list]
+            results = await asyncio.gather(*tasks, return_exceptions=True)
+
+            successful = [r for r in results if r is not None]
+            return successful
 
     def _get_ds_metadata(self):
         """Get metadata of a dataset
@@ -137,7 +175,7 @@ class Downloads:
             print(f"An error occurred: {e}")
             sys.exit(1)
 
-    async def async_get_ds_zip(self):
+    async def get_ds_zip_async(self):
         """Get a dataset as a zip file asynchronously
 
         Returns:

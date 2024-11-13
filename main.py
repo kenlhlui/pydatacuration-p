@@ -5,6 +5,7 @@ import sys
 import asyncio
 import typer
 import dotenv
+import jmespath
 import pydatacuration.utils as utils
 import pydatacuration.downloads as downloads
 import pydatacuration.checksum as checksum
@@ -67,11 +68,13 @@ async def download_files(base_url, api_token, doi, workdir):
     print('Dataset metadata downloaded\n')
 
     # Download the dataset as a zip file using the 'Basic Download By Dataset' API
-    print('\nDownloading dataset in zip format...')
-    ds_zip_path = await download.async_get_ds_zip()
-    print('Dataset in zip format downloaded\n')
-    # Unzip the file and move the MANIFEST file to the 'dataset/metadata' directory
-    utils.unzip_file(ds_zip_path, f'{os.path.join(workdir, "dataset", "files")}')
+    print('\nDownloading data files...')
+
+    file_list = download._get_file_list(ds_metadata)
+    download._make_dir_structure(ds_metadata)
+
+    await download.save_files_async(file_list)
+    print('Data files downloaded\n')
 
     # Check the checksum of the downloaded files
     checksums = checksum.Checksum()
