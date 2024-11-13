@@ -20,6 +20,7 @@ class Downloads:
         self.pid = pid
         self.download_dir = download_dir
         self.client = httpx.Client(headers={'X-Dataverse-key': self.api_token}, timeout=None, follow_redirects=True)
+        self.async_client = httpx.AsyncClient(headers={'X-Dataverse-key': self.api_token}, timeout=None, follow_redirects=True)
 
     def _metadata_dir(self):
         """Create the metadata directory
@@ -53,6 +54,25 @@ class Downloads:
                 if response.status_code == 200:
                     with open(file_path, 'wb') as f:
                         for chunk in response.iter_bytes():
+                            f.write(chunk)
+                return file_path
+        except httpx.HTTPStatusError as e:
+            print(f"HTTP error occurred: {e}")
+            sys.exit(1)
+
+    async def _get_data_file_async(self, file_id, file_path):
+        """Get the data file of the dataset asynchronously
+        
+        Returns:
+            str: Path to the downloaded data file
+        """
+        url = f'{self.base_url}/api/access/datafile/{file_id}'
+        file_path = f'{self.download_dir}/temp_data/{file_path}'
+        try:
+            async with self.async_client.stream("GET", url, params={'format': 'original'}) as response:
+                if response.status_code == 200:
+                    with open(file_path, 'wb') as f:
+                        async for chunk in response.aiter_bytes():
                             f.write(chunk)
                 return file_path
         except httpx.HTTPStatusError as e:
@@ -106,6 +126,31 @@ class Downloads:
                 response.raise_for_status()
                 with open(file_path, 'wb') as f:
                     for chunk in response.iter_bytes():
+                        f.write(chunk)
+            return file_path
+
+        except httpx.HTTPStatusError as e:
+            print(f"HTTP error occurred: {e}")
+            sys.exit(1)
+
+        except Exception as e:
+            print(f"An error occurred: {e}")
+            sys.exit(1)
+
+    async def async_get_ds_zip(self):
+        """Get a dataset as a zip file asynchronously
+
+        Returns:
+            str: Path to the downloaded zip file
+        """
+        file_path = os.path.join(self._files_dir(), 'ds.zip')
+        url = self.base_url + 'api/access/dataset/:persistentId/?persistentId=' + self.pid + '&format=original'
+
+        try:
+            async with self.async_client.stream("GET", url) as response:
+                response.raise_for_status()
+                with open(file_path, 'wb') as f:
+                    async for chunk in response.aiter_bytes():
                         f.write(chunk)
             return file_path
 

@@ -2,6 +2,7 @@
 import os
 import shutil
 import sys
+import asyncio
 import typer
 import dotenv
 import pydatacuration.utils as utils
@@ -55,7 +56,7 @@ def parse_file_list_metadata(file_list_metadata):
     return file_list_metadata_nested_list
 
 
-def download_files(base_url, api_token, doi, workdir):
+async def download_files(base_url, api_token, doi, workdir):
     download = downloads.Downloads(base_url, api_token, doi, workdir)
 
     # Initiating the downloads
@@ -67,7 +68,7 @@ def download_files(base_url, api_token, doi, workdir):
 
     # Download the dataset as a zip file using the 'Basic Download By Dataset' API
     print('\nDownloading dataset in zip format...')
-    ds_zip_path = download.get_ds_zip()
+    ds_zip_path = await download.async_get_ds_zip()
     print('Dataset in zip format downloaded\n')
     # Unzip the file and move the MANIFEST file to the 'dataset/metadata' directory
     utils.unzip_file(ds_zip_path, f'{os.path.join(workdir, "dataset", "files")}')
@@ -191,7 +192,7 @@ def main(
 
     base_url, api_token = load_env(base_url, api_token)
     workdir = workdir_manager()
-    file_list_metadata = download_files(base_url, api_token, doi, workdir)
+    file_list_metadata = asyncio.run(download_files(base_url, api_token, doi, workdir))
     template_dict = checker(file_list_metadata)
     template_generation.generate_report(template_dict)
 
