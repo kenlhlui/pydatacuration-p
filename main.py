@@ -60,7 +60,9 @@ def download_files(base_url, api_token, doi, workdir):
 
     # Initiating the downloads
     print('\nDownloading dataset metadata...')
-    ds_metadata = download.get_ds_metadata()
+    ds_metadata = download._get_ds_metadata().json()
+    download.save_ds_metadata()
+
     print('Dataset metadata downloaded\n')
 
     # Download the dataset as a zip file using the 'Basic Download By Dataset' API

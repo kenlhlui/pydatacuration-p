@@ -3,6 +3,7 @@ import sys
 import os
 import httpx
 import orjson
+import asyncio
 
 class Downloads:
     """Class to download a dataset from a Dataverse repository
@@ -18,7 +19,7 @@ class Downloads:
         self.api_token = api_token
         self.pid = pid
         self.download_dir = download_dir
-        self.client = httpx.Client(headers={'X-Dataverse-key': self.api_token}, timeout=None)
+        self.client = httpx.Client(headers={'X-Dataverse-key': self.api_token}, timeout=None, follow_redirects=True)
 
     def _metadata_dir(self):
         """Create the metadata directory
@@ -39,23 +40,37 @@ class Downloads:
 
         return files_dir
 
-    def get_ds_metadata(self):
+    def _get_data_file(self, file_id, file_path):
+        """Get the data file of the dataset
+        
+        Returns:
+            str: Path to the downloaded data file
+        """
+        url = f'{self.base_url}/api/access/datafile/{file_id}'
+        file_path = f'{self.download_dir}/temp_data/{file_path}'
+        try:
+            with self.client.stream("GET", url, params={'format': 'original'}) as response:
+                if response.status_code == 200:
+                    with open(file_path, 'wb') as f:
+                        for chunk in response.iter_bytes():
+                            f.write(chunk)
+                return file_path
+        except httpx.HTTPStatusError as e:
+            print(f"HTTP error occurred: {e}")
+            sys.exit(1)
+
+    def _get_ds_metadata(self):
         """Get metadata of a dataset
         
         Returns:
             dict: Metadata of the dataset
         """
-        file_path = os.path.join(self._metadata_dir(), 'ds_metadata.json')
         url = f"{self.base_url}/api/datasets/:persistentId/?persistentId={self.pid}"
 
         try:
             response = self.client.get(url)
             response.raise_for_status()  # Raise an exception for HTTP errors
-
-            with open(file_path, 'w', encoding='utf-8') as f:
-                f.write(orjson.dumps(response.json(), option=orjson.OPT_INDENT_2).decode())
-
-            return response.json()
+            return response
         except httpx.HTTPStatusError as e:
             print(f"HTTP error occurred: {e}")
             sys.exit(1)
@@ -63,9 +78,21 @@ class Downloads:
             print(f"An error occurred: {e}")
             sys.exit(1)
 
+    def save_ds_metadata(self):
+        """Save the dataset metadata to a JSON file
+        """
+        file_path = os.path.join(self._metadata_dir(), 'ds_metadata.json')
+        try:
+            response = self._get_ds_metadata()
+            if response.status_code == 200:
+                with open(file_path, 'w', encoding='utf-8') as f:
+                    f.write(orjson.dumps(response.json(), option=orjson.OPT_INDENT_2).decode())
+        except Exception as e:
+            print(f" An error occurred: {e}")
+            sys.exit(1)
+
     def get_ds_zip(self):
         # TODO: Change to 'Download By Dataset By Version' API, if possible (it's not working now)
-        # TODO: To use async download files if detected that files are large or more than X files (to avoid server-side zipping that takes a long time)
         """Get a dataset as a zip file
 
         Returns:
