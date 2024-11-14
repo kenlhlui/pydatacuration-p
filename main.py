@@ -2,8 +2,10 @@
 import os
 import shutil
 import sys
+import asyncio
 import typer
 import dotenv
+import jmespath
 import pydatacuration.utils as utils
 import pydatacuration.downloads as downloads
 import pydatacuration.checksum as checksum
@@ -55,20 +57,24 @@ def parse_file_list_metadata(file_list_metadata):
     return file_list_metadata_nested_list
 
 
-def download_files(base_url, api_token, doi, workdir):
+async def download_files(base_url, api_token, doi, workdir):
     download = downloads.Downloads(base_url, api_token, doi, workdir)
 
     # Initiating the downloads
     print('\nDownloading dataset metadata...')
-    ds_metadata = download.get_ds_metadata()
+    ds_metadata = download._get_ds_metadata().json()
+    download.save_ds_metadata()
+
     print('Dataset metadata downloaded\n')
 
-    # Download the dataset as a zip file using the 'Basic Download By Dataset' API
-    print('\nDownloading dataset in zip format...')
-    ds_zip_path = download.get_ds_zip()
-    print('Dataset in zip format downloaded\n')
-    # Unzip the file and move the MANIFEST file to the 'dataset/metadata' directory
-    utils.unzip_file(ds_zip_path, f'{os.path.join(workdir, "dataset", "files")}')
+    # Download the data files using async method
+    print('\nDownloading data files...')
+
+    file_list = download._get_file_list(ds_metadata)
+    download._make_dir_structure(ds_metadata)
+
+    await download.save_files_async(file_list)
+    print('Data files downloaded\n')
 
     # Check the checksum of the downloaded files
     checksums = checksum.Checksum()
@@ -189,7 +195,7 @@ def main(
 
     base_url, api_token = load_env(base_url, api_token)
     workdir = workdir_manager()
-    file_list_metadata = download_files(base_url, api_token, doi, workdir)
+    file_list_metadata = asyncio.run(download_files(base_url, api_token, doi, workdir))
     template_dict = checker(file_list_metadata)
     template_generation.generate_report(template_dict)
 
