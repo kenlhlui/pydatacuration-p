@@ -1,5 +1,4 @@
-Categories,Action Items,Remarks,Status,Status,Status,Status,Status,Instructions,Comments,Time Spent
-,,,Y,N,SI,NS,NA,,,
+Categories,Action Items,Remarks,Status.Y,Status.N,Status.SI,Status.NS,Status.NA,Instructions,Comments,Time Spent
 Organization,*Submission is appropriate for U of T Dataverse,"1.	Is there a disciplinary repository for this type of data that should be deposited? If so, do we also accept a copy?",,,,,,,,
 ,,2. Has the researcher (or their research group) previously created or submitted to a dataverse?,,,,,,,,
 ,,"3.	Does the dataset require its own dataverse or is there an associated dataverse to which it belongs?",,,,,,,,
@@ -35,7 +34,7 @@ Metadata,,,,,,,,,,
 ,,4. Author Name,{% if template_dict.missing_field.author.comments|length == 0 %}X{% endif %},{% if template_dict.missing_field.author.comments|length > 0 %}X{% endif %},,,,,,
 ,,5. Author Affiliation,{% if template_dict.missing_field.authorAffiliation.comments|length == 0 %}X{% endif %},{% if template_dict.missing_field.authorAffiliation.comments|length > 0 %}X{% endif %},,,,,,
 Additional optional metadata,"Researcher ID (ORCiD, ResearcherID, etc.) is included for each author",,,,,,,,,
-,"Recommendation: Recommend researchers input ORCID iDs, if applicable and unfilled",Does the dataset include Researcher IDs for each researcher?,{% if template_dict.missing_field.authorIdentifier.comments | length == 0 and template_dict.missing_field.authorIdentifierScheme.comments | length == 0 %}X{% endif %},,{% if template_dict.missing_field.authorIdentifier.comments | length > 0 and template_dict.missing_field.authorIdentifierScheme.comments | length > 0 %}X{% endif %},,,,"{% for item in template_dict.missing_field.authorIdentifier.comments %}{{ item }}{% endfor %}
+,"Recommendation: Recommend researchers input ORCID iDs, if applicable and unfilled",1. Does the dataset include Researcher IDs for each researcher?,{% if template_dict.missing_field.authorIdentifier.comments | length == 0 and template_dict.missing_field.authorIdentifierScheme.comments | length == 0 %}X{% endif %},,{% if template_dict.missing_field.authorIdentifier.comments | length > 0 or template_dict.missing_field.authorIdentifierScheme.comments | length > 0 %}X{% endif %},,,,"{% for item in template_dict.missing_field.authorIdentifier.comments %}{{ item }}{% endfor %}
 {% for item in template_dict.missing_field.authorIdentifierScheme.comments %}{{ item }}{% endfor %}",
 "Sensitive Data and IP
 (Confirmed by researcher)",,,,,,,,,,
