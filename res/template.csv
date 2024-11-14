@@ -14,9 +14,6 @@ Item {{ item.file_name }} is not checked by the script.
 ,,"1.	Does none of the files contain special characters? (& , * % . # * ( ) ! @$ ^ ~ ‘ { } [ ] ? < >)?",{% if template_dict.special_characters.comments|length == 0 %}X{% endif %},,{% if template_dict.special_characters.comments|length > 0 %}X{% endif %},,,,"{% for item in template_dict.special_characters.comments %}
 {{ item.file_name }} contains special characters
 {% endfor %}",automated
-,,"2.	Does none of the file names contain more than 32 characters?",{% if template_dict.long_file_length.comments|length == 0 %}X{% endif %},,{% if template_dict.long_file_length.comments|length > 0 %}X{% endif %},,,,"{% for item in template_dict.long_file_length.comments %}
-{{ item.file_name }} file name contains more than 32 characters
-{% endfor %}",automated
 ,,3. Do all the files contain file extensions?,{% if template_dict.file_ext.comments|length == 0 %}X{% endif %},,{% if template_dict.file_ext.comments|length > 0 %}X{% endif %},,,,"{% for item in template_dict.file_ext.comments %}
 {{ item.file_name }} does not have a file extension
 {% endfor %}",automated
@@ -24,7 +21,7 @@ Documentation,Dataset includes a README file,1. Does the dataset include a (sepe
 Metadata,,,,,,,,,,
 ,Requirement: Check typos and correct use of metadata fields,Correct spelling for words across the metadata fields on dataverse?,{% if template_dict.typo.comments|length == 0 %}X{% endif %},,{% if template_dict.typo.comments|length > 0 %}X{% endif %},,,,"{% for item in template_dict.typo.comments %}
 {{ item }}
-{% endfor %}",automated
+{% endfor %}",semi-automated
 ,"Requirement: Check Title, Description, Subject, Author Name & Affiliation, Dataset Contact metadata fields are included.","Contains necessary fields for citation metadata? (Title, Description, Subject, Author Name & Affiliation, Dataset Contact)",,,,,,,,
 ,,1. Title,{% if template_dict.missing_field.title.comments|length == 0 %}X{% endif %},{% if template_dict.missing_field.title.comments|length > 0 %}X{% endif %},,,,,"{% for item in template_dict.missing_field.title.comments %}
 {{ item }}

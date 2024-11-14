@@ -104,11 +104,6 @@ def checker(file_list_metadata):
                 print(f"Special characters found in the filename: {file_datafile_filename}")
                 template_dict['special_characters']['comments'].append({"file_name": file_datafile_filename})
 
-            if file_name_format_checker.check_file_name_len(file_datafile_filename, 32)[1] is True:
-                print('\n')
-                print(f"Filename is longer than 32 characters: {file_datafile_filename}")
-                template_dict['long_file_length']['comments'].append({"file_name": file_datafile_filename})
-
             if file_name_format_checker.check_file_ext(file_datafile_filename)[1] is True:
                 print('\n')
                 print(f"File extension does not found: {file_datafile_filename}")
@@ -192,7 +187,9 @@ def main(
                                   prompt = '\nEnter the API token',
                                   envvar='API_TOKEN')
 ):
-
+    """
+    This script downloads the dataset files and metadata from a Dataverse instance and checks the files and metadata for data curation, and generates a curatuion report in spreadsheet (.xlsx) format.
+    """
     base_url, api_token = load_env(base_url, api_token)
     workdir = workdir_manager()
     file_list_metadata = asyncio.run(download_files(base_url, api_token, doi, workdir))
