@@ -67,7 +67,7 @@ async def download_files(base_url, api_token, doi, workdir):
 
     print('Dataset metadata downloaded\n')
 
-    # Download the dataset as a zip file using the 'Basic Download By Dataset' API
+    # Download the data files using async method
     print('\nDownloading data files...')
 
     file_list = download._get_file_list(ds_metadata)

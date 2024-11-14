@@ -66,10 +66,11 @@ class Downloads:
 
         query_string = 'data.latestVersion.files[*].{file_id:dataFile.id, file_name:dataFile.filename, originalFileName:dataFile.originalFileName, directoryLabel: directoryLabel, md5: dataFile.md5}'
         temp_file_list = jmespath.search(query_string, metadata)
+        
         for item in temp_file_list:
             file_id = item.get('file_id')
-            directory_label = item.get('directoryLabel') if item.get('directoryLabel') else ''
-            file_name = item.get('originalFileName') if item.get('originalFileName') else item.get('file_name')
+            directory_label = item.get('directoryLabel', None) or ''
+            file_name = item.get('originalFileName', None) or item.get('file_name')
             file_path = os.path.join(directory_label, file_name)
             file_list.append((file_id, file_path))
         return file_list
@@ -89,6 +90,10 @@ class Downloads:
 
     async def _get_data_file_async(self, file_id, file_path):
         """Get the data file of the dataset asynchronously
+
+        Args:
+            file_id (str): The file ID
+            file_path (str): The relative path of the file
         
         Returns:
             str: Path to the downloaded data file
@@ -109,6 +114,12 @@ class Downloads:
 
     async def save_files_async(self, file_list):
         """Download the files of the dataset asynchronously
+
+        Args:
+            file_list (list): List of tuples containing the file ID and the relative path of the file
+        
+        Returns:
+            list: List of successful downloads
         """
         async with self.async_client:
             tasks = [self._get_data_file_async(file_id, file_path) for file_id, file_path in file_list]
@@ -146,18 +157,17 @@ class Downloads:
                 with open(file_path, 'w', encoding='utf-8') as f:
                     f.write(orjson.dumps(response.json(), option=orjson.OPT_INDENT_2).decode())
         except Exception as e:
-            print(f" An error occurred: {e}")
+            print(f" An error occurred: {e}\n Program exiting...")
             sys.exit(1)
 
     def get_ds_zip(self):
-        # TODO: Change to 'Download By Dataset By Version' API, if possible (it's not working now)
         """Get a dataset as a zip file
 
         Returns:
             str: Path to the downloaded zip file
         """
         file_path = os.path.join(self._files_dir(), 'ds.zip')
-        url = self.base_url + 'api/access/dataset/:persistentId/?persistentId=' + self.pid + '&format=original'
+        url = self.base_url + 'api/access/dataset/:persistentId/?persistentId=' + self.pid
 
         try:
             with self.client.stream("GET", url) as response:
