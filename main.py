@@ -31,18 +31,6 @@ def load_env(base_url, api_token):
     print('Environment variables loaded')
     return base_url, api_token
 
-
-def workdir_manager():
-    if os.path.exists('workdir'):
-        shutil.rmtree('workdir')
-    workdir = os.path.join(os.getcwd(), 'workdir')
-    dm = directory_manager.DirectoryManager(workdir)
-    dm.mk_log_dir()
-    dm.mk_ds_dir()
-    dm.mk_temp_dir()
-    print('\nWorkdir created')
-    return workdir
-
 def parse_file_list_metadata(file_list_metadata):
     file_list_metadata_nested_list = []
     for file_meta in file_list_metadata:
@@ -71,7 +59,7 @@ async def download_files(base_url, api_token, doi, workdir):
     print('\nDownloading data files...')
 
     file_list = download._get_file_list(ds_metadata)
-    download._make_dir_structure(ds_metadata)
+    download.make_dir_structure(ds_metadata)
 
     await download.save_files_async(file_list)
     print('Data files downloaded\n')
@@ -191,10 +179,11 @@ def main(
     This script downloads the dataset files and metadata from a Dataverse instance and checks the files and metadata for data curation, and generates a curatuion report in spreadsheet (.xlsx) format.
     """
     base_url, api_token = load_env(base_url, api_token)
-    workdir = workdir_manager()
+    workdir, log_files_dir, ds_dir, temp_data_dir = directory_manager.DirectoryManager('workdir').make_dirs()
     file_list_metadata = asyncio.run(download_files(base_url, api_token, doi, workdir))
     template_dict = checker(file_list_metadata)
     template_generation.generate_report(template_dict)
+    utils.gen_tree_diagram(workdir, log_files_dir)
 
 if __name__ == "__main__":
     app()

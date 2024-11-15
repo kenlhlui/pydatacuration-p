@@ -79,7 +79,7 @@ class Downloads:
         query_string = 'data.latestVersion.files[].directoryLabel'
         return jmespath.search(query_string, metadata)
 
-    def _make_dir_structure(self, metadata):
+    def make_dir_structure(self, metadata):
         # Make the directory structure
         dir_list = self._get_dir_list(metadata)
         if dir_list:
