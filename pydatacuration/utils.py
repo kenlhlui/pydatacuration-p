@@ -6,6 +6,7 @@ import sys
 import zipfile
 import glob
 import deepdiff
+import seedir as sd
 
 # Export the structure ('tree') of a directory as plain text
 def list_files(startpath):
@@ -185,3 +186,31 @@ def combine_list_items(item: list):
         str: The combined string.
     """
     return ' '.join(item)
+
+def gen_tree_diagram(target_dir, save_path):
+    """Generate the tree diagram of the directory
+
+    Args:
+        target_dir (str): The path to the target directory.
+        save_path (str): The path to save the tree diagram text (.txt) file`.
+    
+    Returns:
+        None
+    """
+    try:
+        if os.path.exists(target_dir):
+            result = sd.seedir(target_dir, style='lines', printout=False, first='files')
+
+            ds_tree_file_path = os.path.join(save_path, 'ds_tree.txt')
+
+            with open(ds_tree_file_path, 'w', encoding='utf-8') as f:
+                f.write(result)
+
+            print(f'Folder tree diagrams saved at: {ds_tree_file_path}')
+        else:
+            print('The target directory does not exist. Exiting...')
+            sys.exit(1)
+
+    except Exception as e:
+        print(f"Error: {e}")
+        sys.exit(1)
