@@ -7,6 +7,8 @@ import chardet
 import netCDF4 as nc
 from pyreadstat import pyreadstat, ReadstatError
 import pyreadr
+import ffmpeg
+from pydatacuration.ffmepg_file_formats import FFmpegFileFormats
 
 IMAGE_FILE_EXTENSIONS = ['.jpg', '.jpeg', '.png', '.gif', '.bmp', '.tiff', '.tif']
 NETCDF_FILE_EXTENSIONS = ['.nc']
@@ -15,6 +17,7 @@ SAV_FILE_EXTENSIONS = ['.sav']  # Placeholder for SPSS file extensions
 CSV_FILE_EXTENSIONS = ['.csv']  # Placeholder for CSV file extensions
 DTA_FILE_EXTENSIONS = ['.dta']  # Placeholder for Stata file extensions
 RDATA_FILE_EXTENSIONS = ['.rdata', '.rds']  # Placeholder for R file extensions
+FFMEPG_FILE_EXTENSIONS = FFmpegFileFormats.get_ffmpeg_formats()
 
 class FilesOpener:
     def __init__(self, file):
@@ -102,6 +105,23 @@ class FilesOpener:
         except (pyreadr.custom_errors.PyreadrError, pyreadr.custom_errors.LibrdataError, OSError):
             return False, self.file
 
+    def _open_audiovisual_file(self):
+        try:
+            stderr = (
+                ffmpeg
+                .input(self.file)
+                .output('null', f='null')
+                .global_args('-v', 'error')
+                .run(capture_stdout=False, capture_stderr=True)
+            )
+
+            if stderr[1] == b'':
+                return True, self.file
+            return False, self.file
+
+        except ffmpeg.Error:
+            return False, self.file
+
     def open_file(self):
         """Open a file
         
@@ -128,5 +148,7 @@ class FilesOpener:
             if file_ext in RDATA_FILE_EXTENSIONS:
                 status, file = self._open_rdata_file()
                 return status, file
-            # Add more file type checks here as needed
+            if file_ext in FFMEPG_FILE_EXTENSIONS:
+                status, file = self._open_audiovisual_file()
+                return status, file
         return None, self.file
