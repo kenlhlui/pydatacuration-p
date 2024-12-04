@@ -187,12 +187,12 @@ def combine_list_items(item: list):
     """
     return ' '.join(item)
 
-def gen_tree_diagram(target_dir, save_path):
+def gen_tree_diagram(target_dir, save_dir):
     """Generate the tree diagram of the directory
 
     Args:
-        target_dir (str): The path to the target directory.
-        save_path (str): The path to save the tree diagram text (.txt) file`.
+        target_dir (str): The directory path to the target directory.
+        save_dir (str): The directory path to save the tree diagram text (.txt) file`.
     
     Returns:
         None
@@ -201,16 +201,17 @@ def gen_tree_diagram(target_dir, save_path):
         if os.path.exists(target_dir):
             result = sd.seedir(target_dir, style='lines', printout=False, first='files')
 
-            ds_tree_file_path = os.path.join(save_path, 'ds_tree.txt')
+            ds_tree_file_path = os.path.join(save_dir, 'ds_tree.txt')
 
             with open(ds_tree_file_path, 'w', encoding='utf-8') as f:
                 f.write(result)
 
-            print(f'Folder tree diagram saved at: {ds_tree_file_path}')
+            print(f'Folder tree diagram text file saved at: {ds_tree_file_path}')
         else:
             print('The target directory does not exist. Exiting...')
             sys.exit(1)
 
     except Exception as e:
         print(f"Error: {e}")
+        print('An error occurred while generating the folder tree diagram. Exiting...')
         sys.exit(1)
