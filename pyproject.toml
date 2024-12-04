@@ -27,6 +27,8 @@ typer = "^0.12.5"
 openpyxl = "^3.1.5"
 pyreadstat = "^1.2.8"
 pyreadr = "^0.5.2"
+ffmpeg-python = "^0.2.0"
+seedir = "^0.5.0"
 
 
 [tool.poetry.group.dev.dependencies]
