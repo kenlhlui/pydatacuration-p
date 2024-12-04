@@ -206,7 +206,7 @@ def gen_tree_diagram(target_dir, save_dir):
             with open(ds_tree_file_path, 'w', encoding='utf-8') as f:
                 f.write(result)
 
-            print(f'Folder tree diagram saved at: {ds_tree_file_path}')
+            print(f'Folder tree diagram text file saved at: {ds_tree_file_path}')
         else:
             print('The target directory does not exist. Exiting...')
             sys.exit(1)
