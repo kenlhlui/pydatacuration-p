@@ -183,7 +183,7 @@ def main(
     file_list_metadata = asyncio.run(download_files(base_url, api_token, doi, workdir))
     template_dict = checker(file_list_metadata)
     template_generation.generate_report(template_dict)
-    utils.gen_tree_diagram(workdir, log_files_dir)
+    utils.gen_tree_diagram(os.path.join(workdir, 'dataset', 'files'), log_files_dir)
 
 if __name__ == "__main__":
     app()
