@@ -5,8 +5,15 @@ import csv
 from PIL import Image
 import chardet
 import netCDF4 as nc
+import pypdf.errors
 from pyreadstat import pyreadstat, ReadstatError
 import pyreadr
+import ffmpeg
+import shapefile
+import pandas as pd
+import pypdf
+import logging
+from pydatacuration.ffmepg_file_formats import FFmpegFileFormats
 
 IMAGE_FILE_EXTENSIONS = ['.jpg', '.jpeg', '.png', '.gif', '.bmp', '.tiff', '.tif']
 NETCDF_FILE_EXTENSIONS = ['.nc']
@@ -15,10 +22,16 @@ SAV_FILE_EXTENSIONS = ['.sav']  # Placeholder for SPSS file extensions
 CSV_FILE_EXTENSIONS = ['.csv']  # Placeholder for CSV file extensions
 DTA_FILE_EXTENSIONS = ['.dta']  # Placeholder for Stata file extensions
 RDATA_FILE_EXTENSIONS = ['.rdata', '.rds']  # Placeholder for R file extensions
+FFMEPG_FILE_EXTENSIONS = FFmpegFileFormats().get_ffmpeg_formats()
+SHAPE_FILE_EXTENSIONS = ['.shp', '.shx', '.dbf', '.prj', '.sbn', '.sbx', '.shp.xml', '.cpg']
+SPREADSHEET_FILE_EXTENSIONS = ['.xls', '.xlsx', '.xlsm', '.xlsb', '.odf', '.ods', '.odt']
+PDF_FILE_EXTENSIONS = ['.pdf']
 
 class FilesOpener:
+    """Open different file types"""
     def __init__(self, file):
         self.file = file
+        self.pypdf_logger = logging.getLogger('pypdf').setLevel(logging.ERROR)
 
     def _get_file_encoding(self):
         """Check the file encoding
@@ -102,6 +115,64 @@ class FilesOpener:
         except (pyreadr.custom_errors.PyreadrError, pyreadr.custom_errors.LibrdataError, OSError):
             return False, self.file
 
+    def _open_audiovisual_file(self):
+        try:
+            stderr = (
+                ffmpeg
+                .input(self.file)
+                .output('null', f='null')
+                .global_args('-v', 'error')
+                .run(capture_stdout=False, capture_stderr=True)
+            )
+
+            if stderr[1] == b'':
+                return True, self.file
+            return False, self.file
+
+        except ffmpeg.Error:
+            return False, self.file
+
+    def _open_shape_file(self):
+        """Open a shape file
+
+        Returns:
+            tuple: (bool, str) indicating success and the file path.
+        """
+        try:
+            result = shapefile.Reader(self.file)
+            if result:
+                return True, result
+
+            return False, self.file
+
+        except shapefile.ShapefileException:
+            return False, self.file
+
+    def _open_spreadsheet_file(self):
+        """Open a spreadsheet file
+        
+        Returns:
+            tuple: (bool, str) indicating success and the file path.
+        """
+        try:
+            df = pd.read_excel(self.file)
+            if df is not None:
+                return True, self.file
+            return False, self.file
+        except (pd.errors.ParserError, OSError, ValueError):
+            return False, self.file
+    def _open_pdf_file(self):
+        """Open a PDF file
+        
+        Returns:
+            tuple: (bool, str) indicating success and the file path.
+        """
+        try:
+            pypdf.PdfReader(self.file, strict=True)
+            return True, self.file
+        except pypdf.errors.PdfReadError:
+            return False, self.file
+
     def open_file(self):
         """Open a file
         
@@ -111,22 +182,33 @@ class FilesOpener:
         if os.path.isfile(self.file):
             file_ext = Path(self.file).suffix.lower()
             if file_ext in IMAGE_FILE_EXTENSIONS:
-                status, file = self._open_image_file()
-                return status, file
+                status, file_path = self._open_image_file()
+                return status, file_path
             if file_ext in NETCDF_FILE_EXTENSIONS:
-                status, file = self._open_netcdf_file()
-                return status, file
+                status, file_path = self._open_netcdf_file()
+                return status, file_path
             if file_ext in SAV_FILE_EXTENSIONS:
-                status, file = self._open_sav_file()
-                return status, file
+                status, file_path = self._open_sav_file()
+                return status, file_path
             if file_ext in CSV_FILE_EXTENSIONS:
-                status, file = self._open_csv_file()
-                return status, file
+                status, file_path = self._open_csv_file()
+                return status, file_path
             if file_ext in DTA_FILE_EXTENSIONS:
-                status, file = self._open_dta_file()
-                return status, file
+                status, file_path = self._open_dta_file()
+                return status, file_path
             if file_ext in RDATA_FILE_EXTENSIONS:
-                status, file = self._open_rdata_file()
-                return status, file
-            # Add more file type checks here as needed
+                status, file_path = self._open_rdata_file()
+                return status, file_path
+            if file_ext in FFMEPG_FILE_EXTENSIONS:
+                status, file_path = self._open_audiovisual_file()
+                return status, file_path
+            if file_ext in SHAPE_FILE_EXTENSIONS:
+                status, file_path = self._open_shape_file()
+                return status, file_path
+            if file_ext in SPREADSHEET_FILE_EXTENSIONS:
+                status, file_path = self._open_spreadsheet_file()
+                return status, file_path
+            if file_ext in PDF_FILE_EXTENSIONS:
+                status, file_path = self._open_pdf_file()
+                return status, file_path
         return None, self.file
