@@ -30,6 +30,7 @@ pyreadr = "^0.5.2"
 ffmpeg-python = "^0.2.0"
 seedir = "^0.5.0"
 pyshp = "^2.3.1"
+pypdf = "^5.1.0"
 
 
 [tool.poetry.group.dev.dependencies]

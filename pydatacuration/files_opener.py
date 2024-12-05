@@ -5,11 +5,14 @@ import csv
 from PIL import Image
 import chardet
 import netCDF4 as nc
+import pypdf.errors
 from pyreadstat import pyreadstat, ReadstatError
 import pyreadr
 import ffmpeg
 import shapefile
 import pandas as pd
+import pypdf
+import logging
 from pydatacuration.ffmepg_file_formats import FFmpegFileFormats
 
 IMAGE_FILE_EXTENSIONS = ['.jpg', '.jpeg', '.png', '.gif', '.bmp', '.tiff', '.tif']
@@ -22,11 +25,13 @@ RDATA_FILE_EXTENSIONS = ['.rdata', '.rds']  # Placeholder for R file extensions
 FFMEPG_FILE_EXTENSIONS = FFmpegFileFormats().get_ffmpeg_formats()
 SHAPE_FILE_EXTENSIONS = ['.shp', '.shx', '.dbf', '.prj', '.sbn', '.sbx', '.shp.xml', '.cpg']
 SPREADSHEET_FILE_EXTENSIONS = ['.xls', '.xlsx', '.xlsm', '.xlsb', '.odf', '.ods', '.odt']
+PDF_FILE_EXTENSIONS = ['.pdf']
 
 class FilesOpener:
     """Open different file types"""
     def __init__(self, file):
         self.file = file
+        self.pypdf_logger = logging.getLogger('pypdf').setLevel(logging.ERROR)
 
     def _get_file_encoding(self):
         """Check the file encoding
@@ -156,6 +161,17 @@ class FilesOpener:
             return False, self.file
         except (pd.errors.ParserError, OSError, ValueError):
             return False, self.file
+    def _open_pdf_file(self):
+        """Open a PDF file
+        
+        Returns:
+            tuple: (bool, str) indicating success and the file path.
+        """
+        try:
+            pypdf.PdfReader(self.file, strict=True)
+            return True, self.file
+        except pypdf.errors.PdfReadError:
+            return False, self.file
 
     def open_file(self):
         """Open a file
@@ -191,5 +207,8 @@ class FilesOpener:
                 return status, file_path
             if file_ext in SPREADSHEET_FILE_EXTENSIONS:
                 status, file_path = self._open_spreadsheet_file()
+                return status, file_path
+            if file_ext in PDF_FILE_EXTENSIONS:
+                status, file_path = self._open_pdf_file()
                 return status, file_path
         return None, self.file
