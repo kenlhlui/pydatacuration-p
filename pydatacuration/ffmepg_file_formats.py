@@ -3,7 +3,7 @@ import subprocess
 
 class FFmpegFileFormats:
     """Get the FFmpeg file formats"""
-    def get_ffmpeg_formats() -> list:
+    def get_ffmpeg_formats(self) -> list:
         """Get the FFmpeg file formats
 
         Returns:
@@ -41,7 +41,8 @@ class FFmpegFileFormats:
                 ['ffmpeg', '-formats', '-hide_banner'],
                 stdout=subprocess.PIPE,
                 stderr=subprocess.STDOUT,
-                universal_newlines=True
+                universal_newlines=True,
+                check=False
             )
             output = result.stdout
             formats = parse_ffmpeg_formats(output)
@@ -52,8 +53,10 @@ class FFmpegFileFormats:
 
             return format_extensions
         except FileNotFoundError:
-            print("FFmpeg is not installed or not found in the system PATH.")
+            print('FFmpeg is not installed or not found in the system PATH.')
+            print('Exiting...')
             sys.exit(1)
         except Exception as e:
-            print(f"An error occurred: {e}")
+            print(f'An error occurred: {e}')
+            print('Exiting...')
             sys.exit(1)
