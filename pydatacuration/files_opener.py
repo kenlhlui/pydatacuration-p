@@ -9,6 +9,7 @@ from pyreadstat import pyreadstat, ReadstatError
 import pyreadr
 import ffmpeg
 import shapefile
+import pandas as pd
 from pydatacuration.ffmepg_file_formats import FFmpegFileFormats
 
 IMAGE_FILE_EXTENSIONS = ['.jpg', '.jpeg', '.png', '.gif', '.bmp', '.tiff', '.tif']
@@ -20,6 +21,7 @@ DTA_FILE_EXTENSIONS = ['.dta']  # Placeholder for Stata file extensions
 RDATA_FILE_EXTENSIONS = ['.rdata', '.rds']  # Placeholder for R file extensions
 FFMEPG_FILE_EXTENSIONS = FFmpegFileFormats().get_ffmpeg_formats()
 SHAPE_FILE_EXTENSIONS = ['.shp', '.shx', '.dbf', '.prj', '.sbn', '.sbx', '.shp.xml', '.cpg']
+SPREADSHEET_FILE_EXTENSIONS = ['.xls', '.xlsx', '.xlsm', '.xlsb', '.odf', '.ods', '.odt']
 
 class FilesOpener:
     """Open different file types"""
@@ -124,7 +126,7 @@ class FilesOpener:
 
         except ffmpeg.Error:
             return False, self.file
-    
+
     def _open_shape_file(self):
         """Open a shape file
 
@@ -139,6 +141,20 @@ class FilesOpener:
             return False, self.file
 
         except shapefile.ShapefileException:
+            return False, self.file
+
+    def _open_spreadsheet_file(self):
+        """Open a spreadsheet file
+        
+        Returns:
+            tuple: (bool, str) indicating success and the file path.
+        """
+        try:
+            df = pd.read_excel(self.file)
+            if df is not None:
+                return True, self.file
+            return False, self.file
+        except (pd.errors.ParserError, OSError, ValueError):
             return False, self.file
 
     def open_file(self):
@@ -172,5 +188,8 @@ class FilesOpener:
                 return status, file_path
             if file_ext in SHAPE_FILE_EXTENSIONS:
                 status, file_path = self._open_shape_file()
+                return status, file_path
+            if file_ext in SPREADSHEET_FILE_EXTENSIONS:
+                status, file_path = self._open_spreadsheet_file()
                 return status, file_path
         return None, self.file
