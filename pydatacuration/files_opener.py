@@ -8,6 +8,7 @@ import netCDF4 as nc
 from pyreadstat import pyreadstat, ReadstatError
 import pyreadr
 import ffmpeg
+import shapefile
 from pydatacuration.ffmepg_file_formats import FFmpegFileFormats
 
 IMAGE_FILE_EXTENSIONS = ['.jpg', '.jpeg', '.png', '.gif', '.bmp', '.tiff', '.tif']
@@ -17,9 +18,11 @@ SAV_FILE_EXTENSIONS = ['.sav']  # Placeholder for SPSS file extensions
 CSV_FILE_EXTENSIONS = ['.csv']  # Placeholder for CSV file extensions
 DTA_FILE_EXTENSIONS = ['.dta']  # Placeholder for Stata file extensions
 RDATA_FILE_EXTENSIONS = ['.rdata', '.rds']  # Placeholder for R file extensions
-FFMEPG_FILE_EXTENSIONS = FFmpegFileFormats.get_ffmpeg_formats()
+FFMEPG_FILE_EXTENSIONS = FFmpegFileFormats().get_ffmpeg_formats()
+SHAPE_FILE_EXTENSIONS = ['.shp', '.shx', '.dbf', '.prj', '.sbn', '.sbx', '.shp.xml', '.cpg']
 
 class FilesOpener:
+    """Open different file types"""
     def __init__(self, file):
         self.file = file
 
@@ -121,6 +124,22 @@ class FilesOpener:
 
         except ffmpeg.Error:
             return False, self.file
+    
+    def _open_shape_file(self):
+        """Open a shape file
+
+        Returns:
+            tuple: (bool, str) indicating success and the file path.
+        """
+        try:
+            result = shapefile.Reader(self.file)
+            if result:
+                return True, result
+
+            return False, self.file
+
+        except shapefile.ShapefileException:
+            return False, self.file
 
     def open_file(self):
         """Open a file
@@ -131,24 +150,27 @@ class FilesOpener:
         if os.path.isfile(self.file):
             file_ext = Path(self.file).suffix.lower()
             if file_ext in IMAGE_FILE_EXTENSIONS:
-                status, file = self._open_image_file()
-                return status, file
+                status, file_path = self._open_image_file()
+                return status, file_path
             if file_ext in NETCDF_FILE_EXTENSIONS:
-                status, file = self._open_netcdf_file()
-                return status, file
+                status, file_path = self._open_netcdf_file()
+                return status, file_path
             if file_ext in SAV_FILE_EXTENSIONS:
-                status, file = self._open_sav_file()
-                return status, file
+                status, file_path = self._open_sav_file()
+                return status, file_path
             if file_ext in CSV_FILE_EXTENSIONS:
-                status, file = self._open_csv_file()
-                return status, file
+                status, file_path = self._open_csv_file()
+                return status, file_path
             if file_ext in DTA_FILE_EXTENSIONS:
-                status, file = self._open_dta_file()
-                return status, file
+                status, file_path = self._open_dta_file()
+                return status, file_path
             if file_ext in RDATA_FILE_EXTENSIONS:
-                status, file = self._open_rdata_file()
-                return status, file
+                status, file_path = self._open_rdata_file()
+                return status, file_path
             if file_ext in FFMEPG_FILE_EXTENSIONS:
-                status, file = self._open_audiovisual_file()
-                return status, file
+                status, file_path = self._open_audiovisual_file()
+                return status, file_path
+            if file_ext in SHAPE_FILE_EXTENSIONS:
+                status, file_path = self._open_shape_file()
+                return status, file_path
         return None, self.file
