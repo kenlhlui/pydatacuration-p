@@ -129,6 +129,7 @@ def compare_files_and_metadata(dl_files_checksums, metadata_files_cehcksums, wor
         print('The downloaded files and the file list metadata are different.')
         with open(f'{workddir}/log_files/diff.txt', 'w', encoding='utf-8') as f:
             f.write(str(diff))
+        print(f'See the {workddir}/log_files/diff.txt file for the differences.')
         sys.exit(1)
 
     else:
