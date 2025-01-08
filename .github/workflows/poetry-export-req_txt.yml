@@ -1,0 +1,44 @@
+name: Poetry export requirements.txt
+on:
+  push:
+    branches:
+      - '*'  # Trigger on any push to any branch
+jobs:
+  poetry-export-req_txt:
+    strategy:
+      fail-fast: false
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+        with:
+          fetch-depth: 0  # Fetch all history for all branches and tags
+      - uses: actions/setup-python@v5
+        with:
+          python-version: 3.12
+      - name: Install poetry
+        uses: abatilo/actions-poetry@v4
+        with:
+          poetry-version: 'latest'
+      - name: Install the poetry-plugin-export
+        run: poetry self add poetry-plugin-export
+      - name: Export the project dependencies to requirements.txt
+        run: |
+          poetry export -f requirements.txt --output requirements.txt
+      - name: Get branch name
+        shell: bash
+        run: echo "BRANCH_NAME=${GITHUB_REF#refs/heads/}" >> $GITHUB_ENV
+      - name: Pull latest changes
+        run: |
+          git pull origin ${{ env.BRANCH_NAME }}
+      - name: Commit files
+        run: |
+          git config --local user.email "github-actions[bot]@users.noreply.github.com"
+          git config --local user.name "github-actions[bot]"
+          git add requirements.txt
+          git commit --amend --no-edit  # Amend the previous commit without changing the message
+      - name: Force Push changes
+        uses: ad-m/github-push-action@master
+        with:
+          branch: ${{ env.BRANCH_NAME }} # Push to the same branch
+          force: true  # Required for amended commits
+          github_token: ${{ secrets.GITHUB_TOKEN }}
