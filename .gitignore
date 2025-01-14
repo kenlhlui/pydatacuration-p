@@ -10,3 +10,7 @@ temp_data/
 *.pyc
 workdir/
 temp.ipynb
+
+# Ignore all __pycache__ directories
+__pycache__/
+**/__pycache__/
