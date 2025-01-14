@@ -2,7 +2,7 @@ name: Poetry export requirements.txt
 on:
   push:
     branches:
-      - '*'  # Trigger on any push to any branch
+      - 'main'  # Trigger on any push to any branch
 jobs:
   poetry-export-req_txt:
     strategy:
