@@ -1,6 +1,5 @@
 """This module is used to manage the directories in the project."""
 
-import os
 from pathlib import Path
 
 
@@ -76,5 +75,5 @@ class DirectoryManager:
         log_files_dir = self._mk_log_dir()
         ds_dir = self._mk_ds_dir()
         temp_data_dir = self._mk_temp_dir()
-        print('\nWorkdir created')
+        print('\nworkdir created')
         return self.workdir, log_files_dir, ds_dir, temp_data_dir
