@@ -1,0 +1,53 @@
+{
+    "file_open": {
+        "status": {},
+        "comments": [],
+        "not_checked": []
+    },
+    "special_characters": {
+        "status": {},
+        "comments": []
+    },
+    "file_ext": {
+        "status": {},
+        "comments": []
+    },
+    "readme_file": {
+        "status": {},
+        "comments": []
+    },
+    "typo": {
+        "status": {},
+        "comments": []
+    },
+    "missing_field": {
+        "title": {
+            "status": {},
+            "comments": []
+        },
+        "dsDescription": {
+            "status": {},
+            "comments": []
+        },
+        "subject": {
+            "status": {},
+            "comments": []
+        },        
+        "author": {
+            "status": {},
+            "comments": []
+        },
+        "authorAffiliation": {
+            "status": {},
+            "comments": []
+        },
+        "authorIdentifierScheme": {
+            "status": {},
+            "comments": []
+        },
+        "authorIdentifier": {
+            "status": {},
+            "comments": []
+        }
+    }
+}

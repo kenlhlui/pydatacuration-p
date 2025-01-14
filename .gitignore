@@ -1,4 +1,12 @@
 # Config files directory
 config/
 data/
-log/
+log_files/
+dataset/
+conf/
+.env
+.venv/
+temp_data/
+*.pyc
+workdir/
+temp.ipynb
