@@ -1,32 +1,42 @@
-import os
+"""This module is used to generate the checksum of the files in the dataset directory."""
+
 import hashlib
+from pathlib import Path
+
 
 class Checksum:
-    """This class is used to generate the checksum of the files in the dataset directory
-    """
+    """This class is used to generate the checksum of the files in the dataset directory."""
 
-    def _get_md5(self, file):
-        with open(file, 'rb') as f:
+    @staticmethod
+    def _get_md5(file_path: Path) -> str:
+        """Generate the MD5 checksum for a given file."""
+        with Path(file_path).open('rb') as f:
             return hashlib.md5(f.read()).hexdigest()
 
-    def gen_ds_files_checksum(self, target_dir):
-        """Generate the checksum of the files in the dataset directory
+    def gen_ds_files_checksum(self, target_dir: str) -> list:
+        """Generate the checksum of the files in the dataset directory.
 
         Args:
             target_dir (str): The path to the dataset directory.
-        
+
         Returns:
             list: A list of dictionaries containing the file path and the checksum.
         """
         dl_file_checksum_nested_list = []
-        os_walk_object = os.walk(target_dir)
-        target_dir = target_dir.replace('\\', '/') # Normalize the path
-        for root, dirs, files in os_walk_object:
-            for file in files:
-                file_path = os.path.join(root, file).replace('\\', '/').replace(target_dir, '')
+
+        # Normalize target_dir to a Path object and resolve to an absolute path
+        target_dir_path = Path(target_dir).resolve()
+
+        # Iterate through all files in the directory and subdirectories
+        for file_path in target_dir_path.rglob('*'):
+            if file_path.is_file():  # Only process files
+                # Get the relative path from target_dir_path
+                relative_file_path = file_path.relative_to(target_dir_path)
+
+                # Append the relative file path and its MD5 checksum to the result list
                 dl_file_checksum_nested_list.append({
-                    'file': file_path,
-                    'md5_checksum': self._get_md5(rf'{root}/{file}')
+                    'file': str(relative_file_path).replace('\\', '/'),
+                    'md5_checksum': self._get_md5(file_path)
                 })
 
         return dl_file_checksum_nested_list
