@@ -1,19 +1,20 @@
-# pylint: disable=C0114, C0301, C0116
-import os
-import shutil
-import sys
 import asyncio
-import typer
+import os
+import sys
+from pathlib import Path
+
 import dotenv
-import jmespath
-import pydatacuration.utils as utils
-import pydatacuration.downloads as downloads
+import typer
+
 import pydatacuration.checksum as checksum
 import pydatacuration.directory_manager as directory_manager
+import pydatacuration.downloads as downloads
 import pydatacuration.files_opener as files_opener
-import pydatacuration.template_generation as template_generation
-import pydatacuration.spell_checker as spell_checker
 import pydatacuration.metadata_checker as metadata_checker
+import pydatacuration.spell_checker as spell_checker
+import pydatacuration.template_generation as template_generation
+import pydatacuration.utils as utils
+
 
 app = typer.Typer()
 
@@ -183,7 +184,7 @@ def main(
     file_list_metadata = asyncio.run(download_files(base_url, api_token, doi, workdir))
     template_dict = checker(file_list_metadata)
     template_generation.generate_report(template_dict)
-    utils.gen_tree_diagram(os.path.join(workdir, 'dataset', 'files'), log_files_dir)
+    utils.gen_tree_diagram(Path(workdir, 'dataset', 'files'), log_files_dir)
 
 if __name__ == "__main__":
     app()
