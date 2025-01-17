@@ -3,6 +3,10 @@ on:
   push:
     branches:
       - 'main'  # Trigger on any push to any branch
+    paths:
+      - 'requirements.txt'
+      - 'pyproject.toml'
+      - 'poetry.lock'
 jobs:
   poetry-export-req_txt:
     strategy:
