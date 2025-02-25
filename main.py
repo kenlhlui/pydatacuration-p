@@ -31,7 +31,7 @@ def gen_file_list_metadata(workdir: str, ds_metadata: dict) -> list:
     # Check the checksum of the downloaded files
     checksums = checksum.Checksum()
 
-    dl_file_checksum_nested_list = checksums.gen_ds_files_checksum(os.path.join(workdir, 'dataset', 'files/'))
+    dl_file_checksum_nested_list = checksums.gen_ds_files_checksum(Path(workdir, 'dataset', 'files'))
 
     file_list_metadata = ds_metadata['data']['latestVersion']['files']
 
@@ -145,7 +145,7 @@ def main(
 
     file_list_metadata = gen_file_list_metadata('workdir', ds_metadata)
     template_dict = checker(file_list_metadata)
-    template_generation.generate_report(template_dict)
+    template_generation.generate_report(template_dict, workdir)
     utils.gen_tree_diagram(Path(workdir, 'dataset', 'files'), Path(log_files_dir))
 
 if __name__ == "__main__":
