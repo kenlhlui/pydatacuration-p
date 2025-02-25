@@ -1,12 +1,15 @@
 # pylint: disable=C0301
+import glob
 import os
-from pathlib import Path
 import re
 import sys
 import zipfile
-import glob
+from pathlib import Path
+
 import deepdiff
+import dotenv
 import seedir as sd
+
 
 # Export the structure ('tree') of a directory as plain text
 def list_files(startpath):
@@ -214,3 +217,16 @@ def gen_tree_diagram(target_dir: Path, save_dir: Path) -> None:
         print(f'Error: {e}')
         print('An error occurred while generating the folder tree diagram. Exiting...')
         sys.exit(1)
+
+def load_env(base_url, api_token):
+    dotenv.load_dotenv()
+    if base_url is None:
+        base_url = os.getenv('BASE_URL')
+        if base_url is None:
+            sys.exit('BASE_URL not found in the environment variables. Exiting...')
+    if api_token is None:
+        api_token = os.getenv('API_TOKEN')
+        if api_token is None:
+            sys.exit('API_TOKEN not found in the environment variables. Exiting...')
+    print('Environment variables loaded')
+    return base_url, api_token

@@ -18,20 +18,6 @@ import pydatacuration.utils as utils
 
 app = typer.Typer()
 
-# TODO: Change this to a class and return the value, and put it to the default value of the main function
-def load_env(base_url, api_token):
-    dotenv.load_dotenv()
-    if base_url is None:
-        base_url = os.getenv('BASE_URL')
-        if base_url is None:
-            sys.exit('BASE_URL not found in the environment variables. Exiting...')
-    if api_token is None:
-        api_token = os.getenv('API_TOKEN')
-        if api_token is None:
-            sys.exit('API_TOKEN not found in the environment variables. Exiting...')
-    print('Environment variables loaded')
-    return base_url, api_token
-
 def parse_file_list_metadata(file_list_metadata):
     file_list_metadata_nested_list = []
     for file_meta in file_list_metadata:
@@ -179,7 +165,7 @@ def main(
     """
     This script downloads the dataset files and metadata from a Dataverse instance and checks the files and metadata for data curation, and generates a curatuion report in spreadsheet (.xlsx) format.
     """
-    base_url, api_token = load_env(base_url, api_token)
+    base_url, api_token = utils.load_env(base_url, api_token)
     workdir, log_files_dir, ds_dir, temp_data_dir = directory_manager.DirectoryManager('workdir').make_dirs()
     file_list_metadata = asyncio.run(download_files(base_url, api_token, doi, workdir))
     template_dict = checker(file_list_metadata)
