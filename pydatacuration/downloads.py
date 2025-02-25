@@ -261,5 +261,5 @@ class Downloads:
         self.make_dir_structure(ds_metadata_json)
 
         await self.save_files_async(file_list)
-        print('Data files downloaded\n')
+        print('\nData files downloaded')
         return ds_metadata_json

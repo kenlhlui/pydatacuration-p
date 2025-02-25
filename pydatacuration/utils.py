@@ -27,7 +27,6 @@ class FileNameFormatChecker:
 
     def __init__(self) -> None:
         """Initialize the class."""
-        pass
 
     @staticmethod
     def check_special_char(file: str) -> tuple:
@@ -50,7 +49,7 @@ class FileNameFormatChecker:
         Args:
             file (str): The path to the file.
             file_name_max_len (int): The maximum length of the file name.
-        
+
         Returns:
             tuple: The file path and a boolean value.
         """
@@ -69,7 +68,7 @@ class FileNameFormatChecker:
             tuple: The file path and a boolean value.
         """
         if Path(file).suffix:
-            return file, False # TODO: unify the logic for returns
+            return file, False  # TODO: unify the logic for returns
         return file, True
 
     @staticmethod
@@ -153,8 +152,8 @@ def unzip_file(ds_zip_path: str, target_dir: str):
         None
     """
 
-    def move_maifest_file(target_dir: str):
-        """Move the MAIFEST.TXT file to the metadata directory.
+    def move_manifest_file(target_dir: str):
+        """Move the MANIFEST.TXT file to the metadata directory.
 
         Args:
             target_dir (str): The path to the target directory.
@@ -177,13 +176,14 @@ def unzip_file(ds_zip_path: str, target_dir: str):
     try:
         with zipfile.ZipFile(ds_zip_path, 'r') as zipf:
             zipf.extractall(target_dir)
-            move_maifest_file(target_dir)
+            move_manifest_file(target_dir)
     except FileNotFoundError as e:
         print(f'Error: {e}')
         print('The zip file does not exist.')
         sys.exit(1)
 
-def combine_list_items(item: list):
+
+def combine_list_items(items: list) -> str:
     """Combine the list items into a single string.
 
     Args:
@@ -192,7 +192,7 @@ def combine_list_items(item: list):
     Returns:
         str: The combined string.
     """
-    return ' '.join(item)
+    return ' '.join(items)
 
 
 def gen_tree_diagram(target_dir: Path, save_dir: Path) -> None:
@@ -247,11 +247,11 @@ def parse_file_list_metadata(file_list_metadata: list) -> list:
     """
     file_list_metadata_nested_list = []
     for file_meta in file_list_metadata:
-        filename = file_meta.get('dataFile', {}).get('originalFileName') or file_meta.get('dataFile', {}).get('filename')
+        filename = file_meta.get('dataFile', {}).get('originalFileName') or file_meta.get('dataFile', {}).get('filename')  # noqa: E501
         directory_label = file_meta.get('directoryLabel', '')
-        file_full_path = os.path.join(directory_label, filename)
+        file_full_path_obj = Path(directory_label, filename)
         file_list_metadata_nested_list.append({
-            'file': file_full_path,
+            'file': str(file_full_path_obj),
             'md5_checksum': file_meta['dataFile']['md5']
         })
 
