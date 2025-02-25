@@ -1,9 +1,8 @@
+# ruff: noqa: E501, W505
 import asyncio
 import os
-import sys
 from pathlib import Path
 
-import dotenv
 import typer
 
 import pydatacuration.checksum as checksum
@@ -20,14 +19,21 @@ app = typer.Typer()
 
 
 def gen_file_list_metadata(workdir: str, ds_metadata: dict) -> list:
+    """Generate the file list metadata.
 
+    Args:
+        workdir (str): The working directory.
+        ds_metadata (dict): The dataset metadata.
+
+    Returns:
+        list: The file list metadata.
+    """
     # Check the checksum of the downloaded files
     checksums = checksum.Checksum()
 
     dl_file_checksum_nested_list = checksums.gen_ds_files_checksum(os.path.join(workdir, 'dataset', 'files/'))
 
     file_list_metadata = ds_metadata['data']['latestVersion']['files']
-
 
     file_list_metadata_nested_list = utils.parse_file_list_metadata(file_list_metadata)
 
@@ -46,31 +52,31 @@ def checker(file_list_metadata):
 
             if file_name_format_checker.check_special_char(file_datafile_filename)[1] is True:
                 print('\n')
-                print(f"Special characters found in the filename: {file_datafile_filename}")
-                template_dict['special_characters']['comments'].append({"file_name": file_datafile_filename})
+                print(f'Special characters found in the filename: {file_datafile_filename}')
+                template_dict['special_characters']['comments'].append({'file_name': file_datafile_filename})
 
             if file_name_format_checker.check_file_ext(file_datafile_filename)[1] is True:
                 print('\n')
-                print(f"File extension does not found: {file_datafile_filename}")
-                template_dict['file_ext']['comments'].append({"file_name": file_datafile_filename})
+                print(f'File extension does not found: {file_datafile_filename}')
+                template_dict['file_ext']['comments'].append({'file_name': file_datafile_filename})
 
             if utils.readme_file_checker(file_datafile_filename)[1] is True:
                 print('\n')
-                print(f"README file found: {file_datafile_filename}")
-                template_dict['readme_file']['comments'].append({"file_name": file_datafile_filename})
+                print(f'README file found: {file_datafile_filename}')
+                template_dict['readme_file']['comments'].append({'file_name': file_datafile_filename})
 
         file_list = []
         for item in file_list_metadata:
             file_name = item.get('dataFile', {}).get('originalFileName') or item.get('dataFile', {}).get('filename')
-            file_list.append(os.path.join("./workdir/dataset/files", item.get('directoryLabel', ''), file_name))
+            file_list.append(os.path.join('./workdir/dataset/files', item.get('directoryLabel', ''), file_name))
 
         for file in file_list:
             if files_opener.FilesOpener(file).open_file()[0] is False:
-                print(f"\nFile cannot be opened: {file}")
+                print(f'\nFile cannot be opened: {file}')
                 template_dict['file_open']['comments'].append({"file_name": file})
             elif files_opener.FilesOpener(file).open_file()[0] is None:
                 print(f'\nFile is not a supported file format (not checked by the script): {file}')
-                template_dict['file_open']['not_checked'].append({"file_name": file})
+                template_dict['file_open']['not_checked'].append({'file_name': file})
 
         return template_dict
 
@@ -81,7 +87,7 @@ def checker(file_list_metadata):
         for field in field_list:
             return_value = mc.check_metadata_cm_field(field)
             if return_value[1] is False:
-                print(f"\nMissing metadata found in the {field}")
+                print(f'\nMissing metadata found in the {field}')
                 template_dict['missing_field'][field]['comments'].append(f'Missing metadata in {field} field')
 
         field_list_author = ['authorAffiliation', 'authorIdentifierScheme', 'authorIdentifier']
@@ -90,7 +96,7 @@ def checker(file_list_metadata):
             author_name = item.get('authorName')
             for field in field_list_author:
                 if item.get(field) is None:
-                    print(f"\nMissing metadata found in {field} field for author: {author_name}")
+                    print(f'\nMissing metadata found in {field} field for author: {author_name}')
                     template_dict['missing_field'][field]['comments'].append(f'Missing metadata in {field} field for author: {author_name}')
 
         return template_dict
@@ -106,9 +112,9 @@ def checker(file_list_metadata):
             if field_exists:
                 typos, has_typos = sc.check_spelling(return_value[0])
                 if has_typos:
-                    typo_messages = [f"Typo found in {field}: `{item}`" for item in typos]
+                    typo_messages = [f'Typo found in {field}: `{item}`' for item in typos]
                     for message in typo_messages:
-                        print(f"\nSpelling mistake found in the {field}: {message}")
+                        print(f'\nSpelling mistake found in the {field}: {message}')
                     template_dict['typo']['comments'].extend(typo_messages)
 
         return template_dict
@@ -131,10 +137,8 @@ def main(
                                   hide_input=True,
                                   prompt = '\nEnter the API token',
                                   envvar='API_TOKEN')
-):
-    """
-    This script downloads the dataset files and metadata from a Dataverse instance and checks the files and metadata for data curation, and generates a curatuion report in spreadsheet (.xlsx) format.
-    """
+) -> None:
+    """This script downloads the dataset files and metadata from a Dataverse instance and checks the files and metadata for data curation, and generates a curation report in spreadsheet (.xlsx) format."""  # noqa: E501, W505
     base_url, api_token = utils.load_env(base_url, api_token)
     workdir, log_files_dir, ds_dir, temp_data_dir = directory_manager.DirectoryManager('workdir').make_dirs()
     ds_metadata = asyncio.run(downloads.Downloads(base_url, api_token, doi, workdir).downloader())
