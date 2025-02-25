@@ -146,7 +146,7 @@ def main(
     file_list_metadata = gen_file_list_metadata('workdir', ds_metadata)
     template_dict = checker(file_list_metadata)
     template_generation.generate_report(template_dict)
-    utils.gen_tree_diagram(Path(workdir, 'dataset', 'files'), log_files_dir)
+    utils.gen_tree_diagram(Path(workdir, 'dataset', 'files'), Path(log_files_dir))
 
 if __name__ == "__main__":
     app()

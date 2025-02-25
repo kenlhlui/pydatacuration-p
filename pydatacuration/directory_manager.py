@@ -36,7 +36,7 @@ class DirectoryManager:
         log_files_dir = Path(self.workdir, 'log_files', 'temp_data')
         log_files_dir.mkdir(parents=True, exist_ok=True)
 
-        return log_files_dir.resolve()
+        return str(log_files_dir.resolve())
 
     def _mk_ds_dir(self) -> str:
         """Create the dataset directory.
@@ -53,7 +53,7 @@ class DirectoryManager:
         for dir_path in dir_path_list:
             Path.mkdir(dir_path, parents=True, exist_ok=True)
 
-        return dir_path_list[0]
+        return str(dir_path_list[0])
 
     def _mk_temp_dir(self) -> str:
         """Create the temp directory.
@@ -64,7 +64,7 @@ class DirectoryManager:
         temp_data_dir = Path(self.workdir, 'temp_data')
         Path.mkdir(temp_data_dir, parents=True, exist_ok=True)
 
-        return temp_data_dir.resolve()
+        return str(temp_data_dir.resolve())
 
     def make_dirs(self) -> tuple:
         """Create the directories.
