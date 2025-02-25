@@ -213,12 +213,15 @@ class Downloads:
 
     async def downloader(self) -> dict:
         """Download the dataset as a zip file asynchronously.
+
+        Returns:
+            dict: Metadata of the dataset
         """
         # Initiating the downloads
         print('\nDownloading dataset metadata...')
         ds_metadata = self._get_ds_metadata().json()
         self.save_ds_metadata()
-        print('Dataset metadata downloaded\n')
+        print('\nDataset metadata downloaded')
 
         # Download the data files using async method
         print('\nDownloading data files...')

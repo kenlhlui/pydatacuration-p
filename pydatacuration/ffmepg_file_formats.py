@@ -1,21 +1,32 @@
-import sys
+"""Get the FFmpeg file formats."""
 import subprocess
+import sys
+
 
 class FFmpegFileFormats:
-    """Get the FFmpeg file formats"""
-    def get_ffmpeg_formats(self) -> list:
-        """Get the FFmpeg file formats
+    """Get the FFmpeg file formats."""
+    @staticmethod
+    def get_ffmpeg_formats() -> list:
+        """Get the FFmpeg file formats.
 
         Returns:
             list: The FFmpeg file formats.
         """
-        def parse_ffmpeg_formats(output):
+        def parse_ffmpeg_formats(output) -> list:
+            """Parse the FFmpeg formats output.
+
+            Args:
+                output (str): The FFmpeg formats output.
+
+            Returns:
+                list: The FFmpeg file formats.
+            """
             formats = []
             lines = output.splitlines()
             parsing_formats = False
 
             for line in lines:
-                if line.strip().startswith("--"):
+                if line.strip().startswith('--'):
                     parsing_formats = True
                     continue
 
@@ -25,10 +36,10 @@ class FFmpegFileFormats:
                 if parsing_formats:
                     if line.strip().startswith(('D', 'E', 'DE')):
                         parts = line.strip().split(None, 2)
-                        if len(parts) >= 2:
+                        if len(parts) >= 2: # noqa
                             direction = parts[0]
                             format_name = parts[1]
-                            description = parts[2] if len(parts) > 2 else ''
+                            description = parts[2] if len(parts) > 2 else '' # noqa
                             formats.append({
                                 'direction': direction,
                                 'format_name': format_name,
@@ -47,11 +58,10 @@ class FFmpegFileFormats:
             output = result.stdout
             formats = parse_ffmpeg_formats(output)
 
-            format_extensions = [ f['format_name'] for f in formats ]
+            format_extensions = [f['format_name'] for f in formats]
             # Add '.' prefix to the format extensions
-            format_extensions = [ '.' + ext for ext in format_extensions ]
+            return ['.' + ext for ext in format_extensions]
 
-            return format_extensions
         except FileNotFoundError:
             print('FFmpeg is not installed or not found in the system PATH.')
             print('Exiting...')
