@@ -18,38 +18,8 @@ import pydatacuration.utils as utils
 
 app = typer.Typer()
 
-def parse_file_list_metadata(file_list_metadata):
-    file_list_metadata_nested_list = []
-    for file_meta in file_list_metadata:
-        filename = file_meta.get('dataFile', {}).get('originalFileName') or file_meta.get('dataFile', {}).get('filename')
-        directory_label = file_meta.get('directoryLabel', '')
-        file_full_path = os.path.join(directory_label, filename)
-        file_list_metadata_nested_list.append({
-            'file': file_full_path,
-            'md5_checksum': file_meta['dataFile']['md5']
-        })
 
-    return file_list_metadata_nested_list
-
-
-async def download_files(base_url, api_token, doi, workdir):
-    download = downloads.Downloads(base_url, api_token, doi, workdir)
-
-    # Initiating the downloads
-    print('\nDownloading dataset metadata...')
-    ds_metadata = download._get_ds_metadata().json()
-    download.save_ds_metadata()
-
-    print('Dataset metadata downloaded\n')
-
-    # Download the data files using async method
-    print('\nDownloading data files...')
-
-    file_list = download._get_file_list(ds_metadata)
-    download.make_dir_structure(ds_metadata)
-
-    await download.save_files_async(file_list)
-    print('Data files downloaded\n')
+def gen_file_list_metadata(workdir: str, ds_metadata: dict) -> list:
 
     # Check the checksum of the downloaded files
     checksums = checksum.Checksum()
@@ -59,7 +29,7 @@ async def download_files(base_url, api_token, doi, workdir):
     file_list_metadata = ds_metadata['data']['latestVersion']['files']
 
 
-    file_list_metadata_nested_list = parse_file_list_metadata(file_list_metadata)
+    file_list_metadata_nested_list = utils.parse_file_list_metadata(file_list_metadata)
 
     utils.compare_files_and_metadata(dl_file_checksum_nested_list, file_list_metadata_nested_list, workdir)
 
@@ -167,7 +137,9 @@ def main(
     """
     base_url, api_token = utils.load_env(base_url, api_token)
     workdir, log_files_dir, ds_dir, temp_data_dir = directory_manager.DirectoryManager('workdir').make_dirs()
-    file_list_metadata = asyncio.run(download_files(base_url, api_token, doi, workdir))
+    ds_metadata = asyncio.run(downloads.Downloads(base_url, api_token, doi, workdir).downloader())
+
+    file_list_metadata = gen_file_list_metadata('workdir', ds_metadata)
     template_dict = checker(file_list_metadata)
     template_generation.generate_report(template_dict)
     utils.gen_tree_diagram(Path(workdir, 'dataset', 'files'), log_files_dir)

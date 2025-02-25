@@ -230,3 +230,16 @@ def load_env(base_url, api_token):
             sys.exit('API_TOKEN not found in the environment variables. Exiting...')
     print('Environment variables loaded')
     return base_url, api_token
+
+def parse_file_list_metadata(file_list_metadata):
+    file_list_metadata_nested_list = []
+    for file_meta in file_list_metadata:
+        filename = file_meta.get('dataFile', {}).get('originalFileName') or file_meta.get('dataFile', {}).get('filename')
+        directory_label = file_meta.get('directoryLabel', '')
+        file_full_path = os.path.join(directory_label, filename)
+        file_list_metadata_nested_list.append({
+            'file': file_full_path,
+            'md5_checksum': file_meta['dataFile']['md5']
+        })
+
+    return file_list_metadata_nested_list

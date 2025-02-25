@@ -1,13 +1,15 @@
 # pylint: disable=C0301
-import sys
-import os
 import asyncio
+import os
+import sys
+
 import httpx
-import orjson
 import jmespath
+import orjson
+
 
 class Downloads:
-    """Class to download a dataset from a Dataverse repository
+    """Class to download a dataset from a Dataverse repository.
 
     Args:
         base_url (str): Base URL of the Dataverse repository
@@ -24,16 +26,15 @@ class Downloads:
         self.async_client = httpx.AsyncClient(headers={'X-Dataverse-key': self.api_token}, timeout=None, follow_redirects=True)
         self.semaphore = asyncio.Semaphore(5)
 
-    def _metadata_dir(self):
-        """Create the metadata directory
-        """
+    def _metadata_dir(self) -> str:
+        """Create the metadata directory."""
         metadata_dir = os.path.join(self.download_dir, 'dataset', 'metadata')
         if not os.path.exists(metadata_dir):
             os.makedirs(metadata_dir, exist_ok=True)
 
         return metadata_dir
 
-    def _files_dir(self):
+    def _files_dir(self) -> str:
         """Create the files directory
         """
         files_dir = os.path.join(self.download_dir, 'dataset', 'files')
@@ -43,8 +44,8 @@ class Downloads:
         return files_dir
 
     def _get_data_file(self, file_id, file_path):
-        """Get the data file of the dataset
-        
+        """Get the data file of the dataset.
+
         Returns:
             str: Path to the downloaded data file
         """
@@ -58,7 +59,7 @@ class Downloads:
                             f.write(chunk)
                 return file_path
         except httpx.HTTPStatusError as e:
-            print(f"HTTP error occurred: {e}")
+            print(f'HTTP error occurred: {e}')
             sys.exit(1)
 
     def _get_file_list(self, metadata):
@@ -186,7 +187,7 @@ class Downloads:
             sys.exit(1)
 
     async def get_ds_zip_async(self):
-        """Get a dataset as a zip file asynchronously
+        """Get a dataset as a zip file asynchronously.
 
         Returns:
             str: Path to the downloaded zip file
@@ -195,7 +196,7 @@ class Downloads:
         url = self.base_url + 'api/access/dataset/:persistentId/?persistentId=' + self.pid + '&format=original'
 
         try:
-            async with self.async_client.stream("GET", url) as response:
+            async with self.async_client.stream('GET', url) as response:
                 response.raise_for_status()
                 with open(file_path, 'wb') as f:
                     async for chunk in response.aiter_bytes():
@@ -203,9 +204,27 @@ class Downloads:
             return file_path
 
         except httpx.HTTPStatusError as e:
-            print(f"HTTP error occurred: {e}")
+            print(f'HTTP error occurred: {e}')
             sys.exit(1)
 
         except Exception as e:
-            print(f"An error occurred: {e}")
+            print(f'An error occurred: {e}')
             sys.exit(1)
+
+    async def downloader(self) -> dict:
+        """Download the dataset as a zip file asynchronously.
+        """
+        # Initiating the downloads
+        print('\nDownloading dataset metadata...')
+        ds_metadata = self._get_ds_metadata().json()
+        self.save_ds_metadata()
+        print('Dataset metadata downloaded\n')
+
+        # Download the data files using async method
+        print('\nDownloading data files...')
+        file_list = self._get_file_list(ds_metadata)
+        self.make_dir_structure(ds_metadata)
+
+        await self.save_files_async(file_list)
+        print('Data files downloaded\n')
+        return ds_metadata
