@@ -122,7 +122,7 @@ class Downloads:
             for directory in dir_set:
                 Path.mkdir(Path(self._files_dir(), directory), parents=True, exist_ok=True)
 
-    async def _get_data_file_async(self, file_id: str, file_path: str) -> str:
+    async def _get_data_file_async(self, file_id: str, file_path: str) -> str | None:
         """Get the data file of the dataset asynchronously.
 
         Args:
@@ -151,7 +151,7 @@ class Downloads:
 
         Args:
             file_list (list): List of tuples containing the file ID and the relative path of the file
-        
+
         Returns:
             list: List of successful downloads
         """
@@ -162,7 +162,7 @@ class Downloads:
             successful = [r for r in results if r is not None]
             return successful
 
-    def _get_ds_metadata(self) -> dict:
+    def _get_ds_metadata(self) -> dict | None:
         """Get metadata of a dataset.
 
         Returns:
@@ -173,7 +173,8 @@ class Downloads:
         try:
             response = self.sync_client.get(url)
             response.raise_for_status()
-            return response
+            if response.status_code == 200 and response.json():
+                return response.json()
         except httpx.HTTPStatusError as e:
             print(f'HTTP error occurred: {e}')
             sys.exit(1)
@@ -185,10 +186,9 @@ class Downloads:
         """Save the dataset metadata to a JSON file."""
         file_path_obj = Path(self._metadata_dir(), 'ds_metadata.json')
         try:
-            response = self._get_ds_metadata()
-            if response.status_code == 200:
-                with file_path_obj.open('w', encoding='utf-8') as f:
-                    f.write(orjson.dumps(response.json(), option=orjson.OPT_INDENT_2).decode())
+            response_json = self._get_ds_metadata()
+            with file_path_obj.open('w', encoding='utf-8') as f:
+                f.write(orjson.dumps(response_json, option=orjson.OPT_INDENT_2).decode())
         except Exception as e:
             print(f' An error occurred: {e}\n Program exiting...')
             sys.exit(1)
@@ -251,15 +251,15 @@ class Downloads:
         """
         # Initiating the downloads
         print('\nDownloading dataset metadata...')
-        ds_metadata = self._get_ds_metadata().json()
+        ds_metadata_json = self._get_ds_metadata()
         self.save_ds_metadata()
         print('\nDataset metadata downloaded')
 
         # Download the data files using async method
         print('\nDownloading data files...')
-        file_list = self._get_file_list(ds_metadata)
-        self.make_dir_structure(ds_metadata)
+        file_list = self._get_file_list(ds_metadata_json)
+        self.make_dir_structure(ds_metadata_json)
 
         await self.save_files_async(file_list)
         print('Data files downloaded\n')
-        return ds_metadata
+        return ds_metadata_json
