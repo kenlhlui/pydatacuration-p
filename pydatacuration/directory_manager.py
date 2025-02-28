@@ -12,20 +12,7 @@ class DirectoryManager:
         Args:
             workdir (str): The working directory.
         """
-        self._check_dir(workdir)
-
-    def _check_dir(self, dir_path: str):
-        """Check if the directory exists and update self.workdir.
-
-        Args:
-            dir_path (str): The path to the directory.
-
-        This method updates self.workdir to a valid path (user's choice if valid, otherwise current directory).
-        """
-        dir_path = Path(dir_path)  # Ensure dir_path is a Path object
-        self.workdir = dir_path if dir_path.exists() else Path(Path.cwd(), 'workdir')
-        if not dir_path.exists():
-            print(f'The user defined directory does not exist. The current directory will be used: {self.workdir}')
+        self.workdir = Path(workdir) if workdir else Path.cwd()
 
     def _mk_log_dir(self) -> str:
         """Create the log directory.

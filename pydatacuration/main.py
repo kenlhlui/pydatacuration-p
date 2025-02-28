@@ -40,7 +40,7 @@ def gen_file_list_metadata(workdir: str, ds_metadata: dict) -> list:
 
     return file_list_metadata
 
-def checker(file_list_metadata):
+def checker(file_list_metadata, workdir):
     template_dict = template_generation.read_template_json()
 
     def _check_file_name_format(file_list_metadata, template_dict: dict):
@@ -67,20 +67,20 @@ def checker(file_list_metadata):
         file_list = []
         for item in file_list_metadata:
             file_name = item.get('dataFile', {}).get('originalFileName') or item.get('dataFile', {}).get('filename')
-            file_list.append(os.path.join('./workdir/dataset/files', item.get('directoryLabel', ''), file_name))
+            file_list.append(str(Path(workdir, 'dataset', 'files', item.get('directoryLabel', ''), file_name)))
 
         for file in file_list:
             if files_opener.FilesOpener(file).open_file()[0] is False:
                 print(f'\nFile cannot be opened: {file}')
-                template_dict['file_open']['comments'].append({"file_name": file})
+                template_dict['file_open']['comments'].append({'file_name': file})
             elif files_opener.FilesOpener(file).open_file()[0] is None:
                 print(f'\nFile is not a supported file format (not checked by the script): {file}')
                 template_dict['file_open']['not_checked'].append({'file_name': file})
 
         return template_dict
 
-    def _check_missing_metadata(template_dict: dict):
-        mc = metadata_checker.MetadataChecker('./workdir/dataset/metadata/ds_metadata.json')
+    def _check_missing_metadata(template_dict: dict, workdir: Path):
+        mc = metadata_checker.MetadataChecker(workdir.joinpath('dataset', 'metadata', 'ds_metadata.json'))
 
         field_list = ['title', 'dsDescription', 'subject']
         for field in field_list:
@@ -102,7 +102,7 @@ def checker(file_list_metadata):
 
     def _check_spelling(template_dict: dict):
         sc = spell_checker.SpellCheckerCustomized()
-        mc = metadata_checker.MetadataChecker('./workdir/dataset/metadata/ds_metadata.json')
+        mc = metadata_checker.MetadataChecker(Path(workdir, 'dataset', 'metadata', 'ds_metadata.json'))
 
         field_list = ['title', 'subtitle', 'alternativeTitle', 'dsDescription.dsDescriptionValue', 'notesText']
         for field in field_list:
@@ -119,10 +119,11 @@ def checker(file_list_metadata):
         return template_dict
 
     template_dict_new = _check_file_name_format(file_list_metadata, template_dict)
-    template_dict_new = _check_missing_metadata(template_dict_new)
+    template_dict_new = _check_missing_metadata(template_dict_new, workdir)
     template_dict_new = _check_spelling(template_dict_new)
 
     return template_dict_new
+
 
 @app.command()
 def main(
@@ -135,15 +136,17 @@ def main(
                                   help='The API token for the Dataverse installation',
                                   hide_input=True,
                                   prompt = '\nEnter the API token',
-                                  envvar='API_TOKEN')
-) -> None:
+                                  envvar='API_TOKEN'),
+    workdir: str = typer.Option('workdir',
+                                help='The working directory'
+                                )) -> None:
     """This script downloads the dataset files and metadata from a Dataverse instance and checks the files and metadata for data curation, and generates a curation report in spreadsheet (.xlsx) format."""  # noqa: E501, W505
     base_url, api_token = utils.load_env(base_url, api_token)
-    workdir, log_files_dir, ds_dir, temp_data_dir = directory_manager.DirectoryManager('workdir').make_dirs()
+    workdir, log_files_dir, ds_dir, temp_data_dir = directory_manager.DirectoryManager(workdir).make_dirs()
     ds_metadata = asyncio.run(downloads.Downloads(base_url, api_token, doi, workdir).downloader())
 
-    file_list_metadata = gen_file_list_metadata('workdir', ds_metadata)
-    template_dict = checker(file_list_metadata)
+    file_list_metadata = gen_file_list_metadata(workdir, ds_metadata)
+    template_dict = checker(file_list_metadata, workdir)
     template_generation.generate_report(template_dict, workdir)
     utils.gen_tree_diagram(Path(workdir, 'dataset', 'files'), Path(log_files_dir))
 
