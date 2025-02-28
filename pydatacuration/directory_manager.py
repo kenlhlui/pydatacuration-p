@@ -62,5 +62,5 @@ class DirectoryManager:
         log_files_dir = self._mk_log_dir()
         ds_dir = self._mk_ds_dir()
         temp_data_dir = self._mk_temp_dir()
-        print('\nworkdir created')
+        print(f'The working directory is: {self.workdir}')
         return self.workdir, log_files_dir, ds_dir, temp_data_dir
