@@ -15,7 +15,7 @@ from PIL import Image
 from pyreadstat import ReadstatError
 from pyreadstat import pyreadstat
 
-from pydatacuration.ffmepg_file_formats import FFmpegFileFormats
+from ffmepg_file_formats import FFmpegFileFormats
 
 
 IMAGE_FILE_EXTENSIONS = ['.jpg', '.jpeg', '.png', '.gif', '.bmp', '.tiff', '.tif']

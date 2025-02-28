@@ -3,16 +3,15 @@ import asyncio
 import os
 from pathlib import Path
 
+import checksum
+import directory_manager
+import downloads
+import files_opener
+import metadata_checker
+import spell_checker
+import template_generation
 import typer
-
-import pydatacuration.checksum as checksum
-import pydatacuration.directory_manager as directory_manager
-import pydatacuration.downloads as downloads
-import pydatacuration.files_opener as files_opener
-import pydatacuration.metadata_checker as metadata_checker
-import pydatacuration.spell_checker as spell_checker
-import pydatacuration.template_generation as template_generation
-import pydatacuration.utils as utils
+import utils
 
 
 app = typer.Typer()
