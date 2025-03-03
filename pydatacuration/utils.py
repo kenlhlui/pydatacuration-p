@@ -1,10 +1,9 @@
-# pylint: disable=C0301
-import glob
+"""This module contains utility functions for data curation tasks."""
 import os
 import re
 import sys
-import zipfile
 from pathlib import Path
+from pathlib import PurePosixPath
 
 import deepdiff
 import dotenv
@@ -12,15 +11,16 @@ import seedir as sd
 
 
 # Export the structure ('tree') of a directory as plain text
-def list_files(startpath) -> None:
-    """List the files in the directory."""
-    for root, _dirs, files in os.walk(startpath):
-        level = root.replace(startpath, '').count(os.sep)
-        indent = ' ' * 4 * (level)
-        print(f'{indent}{os.path.basename(root)}/')
-        subindent = ' ' * 4 * (level + 1)
-        for f in files:
-            print(f'{subindent}{f}')
+def list_files(startpath: Path | str) -> None:
+    """List the files in the directory using pathlib."""
+    startpath = Path(startpath)
+    for path in sorted(startpath.rglob('*')):
+        depth = len(path.relative_to(startpath).parts)
+        indent = ' ' * 4 * depth
+        if path.is_dir():
+            print(f'{indent}{path.name}/')
+        else:
+            print(f'{indent}{path.name}')
 
 class FileNameFormatChecker:
     """This class is used to check the file name format."""
@@ -94,7 +94,7 @@ class FileNameFormatChecker:
                 list: A list of lines in the text file without newline characters.
             """
             try:
-                with open(preferred_file_formats_config, encoding='utf-8') as f:
+                with Path(preferred_file_formats_config).open(encoding='utf-8') as f:
                     return [line.strip() for line in f.readlines()]
             except FileNotFoundError as e:
                 print(f'Error: {e}')
@@ -142,47 +142,6 @@ def compare_files_and_metadata(dl_files_checksums, metadata_file_checksums, work
     else:
         print('\nThe downloaded files and the file list metadata are the same.')
         return False
-
-def unzip_file(ds_zip_path: str, target_dir: str):
-    """Unzip the file.
-
-    Args:
-        zip_file (str): The path to the zip file.
-        target_dir (str): The path to the target directory.
-
-    Returns:
-        None
-    """
-
-    def move_manifest_file(target_dir: str):
-        """Move the MANIFEST.TXT file to the metadata directory.
-
-        Args:
-            target_dir (str): The path to the target directory.
-
-        Returns:
-            None
-        """
-        manifest_files = glob.glob(f'{target_dir}/MANIFEST.*', recursive=True)
-
-        if manifest_files:
-            manifest_file = manifest_files[0]  # Take the first match
-            try:
-                parent_dir = os.path.dirname(target_dir)
-                os.replace(manifest_file, f'{parent_dir}/metadata/{Path(manifest_file).name}')
-            except FileNotFoundError as e:
-                print(f'Error: {e}')
-        else:
-            print('Error: MANIFEST file not found.')
-
-    try:
-        with zipfile.ZipFile(ds_zip_path, 'r') as zipf:
-            zipf.extractall(target_dir)
-            move_manifest_file(target_dir)
-    except FileNotFoundError as e:
-        print(f'Error: {e}')
-        print('The zip file does not exist.')
-        sys.exit(1)
 
 
 def combine_list_items(items: list) -> str:
@@ -253,7 +212,7 @@ def parse_file_list_metadata(file_list_metadata: list) -> list:
         directory_label = file_meta.get('directoryLabel', '')
         file_full_path_obj = Path(directory_label, filename)
         file_list_metadata_nested_list.append({
-            'file': str(file_full_path_obj),
+            'file': str(PurePosixPath(file_full_path_obj)),
             'md5_checksum': file_meta['dataFile']['md5']
         })
 

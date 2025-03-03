@@ -128,7 +128,7 @@ class Downloads:
             file_path (str): The relative path of the file
 
         Returns:
-            str(file_path_obj): Path to the downloaded data file
+            Path | None: Path to the downloaded data file or None if failed
         """
         url = f'{self.base_url}/api/access/datafile/{file_id}'
         file_path_obj = Path(self._files_dir(), file_path)
@@ -191,7 +191,7 @@ class Downloads:
             print(f' An error occurred: {e}\n Program exiting...')
             sys.exit(1)
 
-    def get_ds_zip(self):
+    def get_ds_zip(self) -> Path:
         """Get a dataset as a zip file.
 
         Returns:
@@ -206,7 +206,7 @@ class Downloads:
                 with file_path.open('wb') as f:
                     for chunk in response.iter_bytes():
                         f.write(chunk)
-            return str(file_path)
+            return file_path
 
         except httpx.HTTPStatusError as e:
             print(f'HTTP error occurred: {e}')
@@ -216,22 +216,22 @@ class Downloads:
             print(f'An error occurred: {e}')
             sys.exit(1)
 
-    async def get_ds_zip_async(self):
+    async def get_ds_zip_async(self) -> Path:
         """Get a dataset as a zip file asynchronously.
 
         Returns:
             str: Path to the downloaded zip file
         """
-        file_path_obj = Path(self._files_dir(), 'ds.zip')
+        file_path = Path(self._files_dir(), 'ds.zip')
         url = self.base_url + 'api/access/dataset/:persistentId/?persistentId=' + self.pid + '&format=original'
 
         try:
             async with self.async_client.stream('GET', url) as response:
                 response.raise_for_status()
-                with file_path_obj.open('wb') as f:
+                with file_path.open('wb') as f:
                     async for chunk in response.aiter_bytes():
                         f.write(chunk)
-            return str(file_path_obj)
+            return file_path
 
         except httpx.HTTPStatusError as e:
             print(f'HTTP error occurred: {e}')

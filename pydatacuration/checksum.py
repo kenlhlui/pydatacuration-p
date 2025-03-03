@@ -2,6 +2,7 @@
 
 import hashlib
 from pathlib import Path
+from pathlib import PurePosixPath
 
 
 class Checksum:
@@ -35,7 +36,7 @@ class Checksum:
 
                 # Append the relative file path and its MD5 checksum to the result list
                 dl_file_checksum_nested_list.append({
-                    'file': str(relative_file_path).replace('\\', '/'),
+                    'file': str(PurePosixPath(relative_file_path)),
                     'md5_checksum': self._get_md5(file_path)
                 })
 

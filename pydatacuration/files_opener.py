@@ -94,7 +94,7 @@ class FilesOpener:
             tuple: (bool, str) indicating success and the file path.
         """
         try:
-            with open(self.file, 'r') as f:
+            with Path(self.file).open('r') as f:
                 csv_reader = csv.reader(f)
                 for row in csv_reader:
                     pass

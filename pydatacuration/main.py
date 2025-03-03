@@ -67,7 +67,7 @@ def checker(file_list_metadata, workdir: Path) -> dict:
         file_list = []
         for item in file_list_metadata:
             file_name = item.get('dataFile', {}).get('originalFileName') or item.get('dataFile', {}).get('filename')
-            file_path = str(Path(workdir, 'dataset', 'files', item.get('directoryLabel', ''), file_name))
+            file_path = Path(workdir, 'dataset', 'files', item.get('directoryLabel', ''), file_name)
             file_list.append(file_path)
 
         for file in file_list:
@@ -80,7 +80,7 @@ def checker(file_list_metadata, workdir: Path) -> dict:
 
         return template_dict
 
-    def _check_missing_metadata(template_dict: dict, workdir: Path):
+    def _check_missing_metadata(template_dict: dict, workdir: Path) -> dict:
         mc = metadata_checker.MetadataChecker(workdir.joinpath('dataset', 'metadata', 'ds_metadata.json'))
 
         field_list = ['title', 'dsDescription', 'subject']
@@ -101,7 +101,7 @@ def checker(file_list_metadata, workdir: Path) -> dict:
 
         return template_dict
 
-    def _check_spelling(template_dict: dict):
+    def _check_spelling(template_dict: dict) -> dict:
         sc = spell_checker.SpellCheckerCustomized()
         mc = metadata_checker.MetadataChecker(Path(workdir, 'dataset', 'metadata', 'ds_metadata.json'))
 
@@ -136,7 +136,7 @@ def main(
     api_token: str = typer.Option(None,
                                   help='The API token for the Dataverse installation',
                                   hide_input=True,
-                                  prompt = '\nEnter the API token',
+                                  prompt='\nEnter the API token',
                                   envvar='API_TOKEN'),
     workdir: str = typer.Option('workdir',
                                 help='The working directory'
