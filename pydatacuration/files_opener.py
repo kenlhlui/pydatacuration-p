@@ -32,11 +32,11 @@ PDF_FILE_EXTENSIONS = ['.pdf']
 
 class FilesOpener:
     """Open different file types."""
-    def __init__(self, file: str) -> None:
+    def __init__(self, file: str | Path) -> None:
         """Initialize the FilesOpener class.
 
         Args:
-            file (str): The file path to open.
+            file (str | Path): The file path to open.
         """
         self.file = file
         self.pypdf_logger = logging.getLogger('pypdf').setLevel(logging.ERROR)
@@ -47,7 +47,7 @@ class FilesOpener:
         Returns:
             dict | None: The file encoding.
         """
-        with open(self.file, 'rb') as f:
+        with Path(self.file).open('rb') as f:
             return chardet.detect(f.read()).get('encoding', None)
 
     def _open_image_file(self) -> tuple:

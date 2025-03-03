@@ -119,12 +119,13 @@ def readme_file_checker(file: str) -> tuple:
     return file, False
 
 
-def compare_files_and_metadata(dl_files_checksums, metadata_file_checksums, workddir):
+def compare_files_and_metadata(dl_files_checksums, metadata_file_checksums, workddir: Path):
     """Compare the downloaded files checksums and the metadata JSON file checksums.
 
     Args:
         dl_files_checksums (list): A list of dictionaries containing the file path and the checksum.
         metadata_files_cehcksums (list): A list of dictionaries containing the file path and the checksum.
+        workddir (Path): The working directory.
 
     Returns:
         bool: True if the downloaded files and the metadata JSON file checksums are the same, False otherwise.
@@ -132,9 +133,10 @@ def compare_files_and_metadata(dl_files_checksums, metadata_file_checksums, work
     diff = deepdiff.DeepDiff(dl_files_checksums, metadata_file_checksums, ignore_order=True)
     if diff:
         print('\nThe downloaded files and the file list metadata are different.')
-        with open(f'{workddir}/log_files/diff.txt', 'w', encoding='utf-8') as f:
+        diff_log_path = Path(workddir, 'log_files', 'diff.txt').resolve()
+        with diff_log_path.open('w', encoding='utf-8') as f:
             f.write(str(diff))
-        print(f'See the {workddir}/log_files/diff.txt file for the differences.')
+        print(f'See the {str(diff_log_path)} file for the differences.')
         sys.exit(1)
 
     else:

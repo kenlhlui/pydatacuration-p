@@ -9,22 +9,15 @@ import orjson
 
 
 class Downloads:
-    """Class to download a dataset from a Dataverse repository.
-
-    Args:
-        base_url (str): Base URL of the Dataverse repository
-        api_token (str): API token of the Dataverse repository
-        pid (str): Persistent identifier of the dataset
-        download_dir (str): The master directory to save the downloaded files
-    """
-    def __init__(self, base_url: str, api_token: str, pid: str, download_dir: str) -> None:
+    """Class to download a dataset from a Dataverse repository."""
+    def __init__(self, base_url: str, api_token: str, pid: str, download_dir: Path) -> None:
         """Initialize the class.
 
         Args:
             base_url (str): Base URL of the Dataverse repository
             api_token (str): API token of the Dataverse repository
             pid (str): Persistent identifier of the dataset
-            download_dir (str): The parent directory to save the downloaded files
+            download_dir (Path): The parent directory to save the downloaded files
         """
         self.base_url = base_url
         self.api_token = api_token
@@ -40,46 +33,51 @@ class Downloads:
             follow_redirects=True)
         self.semaphore = asyncio.Semaphore(5)
 
-    def _metadata_dir(self) -> str:
-        """Create the metadata directory."""
+    def _metadata_dir(self) -> Path:
+        """Create the metadata directory.
+        
+        Returns:
+            metadata_dir (Path): Path to the metadata directory
+        """
         metadata_dir = Path(self.download_dir, 'dataset', 'metadata')
         metadata_dir.mkdir(parents=True, exist_ok=True)
 
-        return str(metadata_dir)
+        return metadata_dir
 
-    def _files_dir(self) -> str:
+    def _files_dir(self) -> Path:
         """Create the files directory.
 
         Returns:
-            str: Path to the files directory
+            files_dir (Path): Path to the files directory
         """
         files_dir = Path(self.download_dir, 'dataset', 'files')
         files_dir.mkdir(parents=True, exist_ok=True)
 
-        return str(files_dir)
+        return files_dir
 
-    def _get_data_file(self, file_id: str | int, file_path: str) -> str:
-        """Get the data file of the dataset.
+    # def _get_data_file(self, file_id: str | int, file_path: str) -> str:
+    #     """Get the data file of the dataset.
 
-        Args:
-            file_id (str): The file ID
-            file_path (str): The relative path of the file
+    #     Args:
+    #         file_id (str): The file ID
+    #         file_path (str): The relative path of the file
 
-        Returns:
-            str: Path to the downloaded data file
-        """
-        url = f'{self.base_url}/api/access/datafile/{file_id}'
-        file_path_obj = Path(self._files_dir(), 'temp_data', file_path)
-        try:
-            with self.sync_client.stream('GET', url, params={'format': 'original'}) as response:
-                if response.status_code == 200:
-                    with file_path_obj.open('wb') as f:
-                        for chunk in response.iter_bytes():
-                            f.write(chunk)
-                return str(file_path_obj)
-        except httpx.HTTPStatusError as e:
-            print(f'HTTP error occurred: {e}')
-            sys.exit(1)
+    #     Returns:
+    #         str: Path to the downloaded data file
+    #     """
+    #     url = f'{self.base_url}/api/access/datafile/{file_id}'
+
+    #     file_path_obj = Path(self._files_dir(), 'temp_data', file_path)
+    #     try:
+    #         with self.sync_client.stream('GET', url, params={'format': 'original'}) as response:
+    #             if response.status_code == 200:
+    #                 with file_path_obj.open('wb') as f:
+    #                     for chunk in response.iter_bytes():
+    #                         f.write(chunk)
+    #             return str(file_path_obj)
+    #     except httpx.HTTPStatusError as e:
+    #         print(f'HTTP error occurred: {e}')
+    #         sys.exit(1)
 
     @staticmethod
     def _get_file_list(metadata: dict) -> list:
@@ -122,7 +120,7 @@ class Downloads:
             for directory in dir_set:
                 Path.mkdir(Path(self._files_dir(), directory), parents=True, exist_ok=True)
 
-    async def _get_data_file_async(self, file_id: str, file_path: str) -> str | None:
+    async def _get_data_file_async(self, file_id: str, file_path: str) -> Path | None:
         """Get the data file of the dataset asynchronously.
 
         Args:
@@ -142,7 +140,7 @@ class Downloads:
                         with file_path_obj.open('wb') as f:
                             async for chunk in response.aiter_bytes(chunk_size=8192):
                                 f.write(chunk)
-                    return str(file_path_obj)
+                    return file_path_obj
         except httpx.HTTPStatusError as e:
             print(f'HTTP error occurred: {e}')
 
@@ -184,10 +182,10 @@ class Downloads:
 
     def save_ds_metadata(self) -> None:
         """Save the dataset metadata to a JSON file."""
-        file_path_obj = Path(self._metadata_dir(), 'ds_metadata.json')
+        file_path = Path(self._metadata_dir(), 'ds_metadata.json')
         try:
             response_json = self._get_ds_metadata()
-            with file_path_obj.open('w', encoding='utf-8') as f:
+            with file_path.open('w', encoding='utf-8') as f:
                 f.write(orjson.dumps(response_json, option=orjson.OPT_INDENT_2).decode())
         except Exception as e:
             print(f' An error occurred: {e}\n Program exiting...')
@@ -199,16 +197,16 @@ class Downloads:
         Returns:
             str: Path to the downloaded zip file
         """
-        file_path_obj = Path(self._files_dir(), 'ds.zip')
+        file_path = Path(self._files_dir(), 'ds.zip')
         url = self.base_url + 'api/access/dataset/:persistentId/?persistentId=' + self.pid
 
         try:
             with self.sync_client.stream('GET', url) as response:
                 response.raise_for_status()
-                with file_path_obj.open('wb') as f:
+                with file_path.open('wb') as f:
                     for chunk in response.iter_bytes():
                         f.write(chunk)
-            return str(file_path_obj)
+            return str(file_path)
 
         except httpx.HTTPStatusError as e:
             print(f'HTTP error occurred: {e}')

@@ -17,11 +17,11 @@ import utils
 app = typer.Typer()
 
 
-def gen_file_list_metadata(workdir: str, ds_metadata: dict) -> list:
+def gen_file_list_metadata(workdir: Path, ds_metadata: dict) -> list:
     """Generate the file list metadata.
 
     Args:
-        workdir (str): The working directory.
+        workdir (Path): The working directory.
         ds_metadata (dict): The dataset metadata.
 
     Returns:
@@ -30,7 +30,7 @@ def gen_file_list_metadata(workdir: str, ds_metadata: dict) -> list:
     # Check the checksum of the downloaded files
     checksums = checksum.Checksum()
 
-    dl_file_checksum_nested_list = checksums.gen_ds_files_checksum(Path(workdir, 'dataset', 'files'))
+    dl_file_checksum_nested_list = checksums.gen_ds_files_checksum(workdir)
 
     file_list_metadata = ds_metadata['data']['latestVersion']['files']
 
@@ -40,7 +40,7 @@ def gen_file_list_metadata(workdir: str, ds_metadata: dict) -> list:
 
     return file_list_metadata
 
-def checker(file_list_metadata, workdir):
+def checker(file_list_metadata, workdir: Path) -> dict:
     template_dict = template_generation.read_template_json()
 
     def _check_file_name_format(file_list_metadata, template_dict: dict):
@@ -67,7 +67,8 @@ def checker(file_list_metadata, workdir):
         file_list = []
         for item in file_list_metadata:
             file_name = item.get('dataFile', {}).get('originalFileName') or item.get('dataFile', {}).get('filename')
-            file_list.append(str(Path(workdir, 'dataset', 'files', item.get('directoryLabel', ''), file_name)))
+            file_path = str(Path(workdir, 'dataset', 'files', item.get('directoryLabel', ''), file_name))
+            file_list.append(file_path)
 
         for file in file_list:
             if files_opener.FilesOpener(file).open_file()[0] is False:
