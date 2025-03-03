@@ -7,6 +7,7 @@ from jinja2 import Template
 
 RES_DIR = Path('res')
 
+
 def read_template_json() -> dict:
     """Reads the template.json file and returns it as a dictionary.
 
@@ -16,11 +17,13 @@ def read_template_json() -> dict:
     with RES_DIR.joinpath('template.json').open(encoding='utf-8') as file:
         return orjson.loads(file.read())
 
+
 def generate_report(template_dict: dict, workdir: Path) -> None:
     """Generates a report based on the provided template dictionary.
 
     Args:
         template_dict (dict): The template dictionary.
+        workdir (Path): The working directory.
     """
     # Read the template.csv file
     with RES_DIR.joinpath('template.csv').open(encoding='ISO-8859-1') as f:

@@ -1,51 +1,64 @@
 # pylint --disable=C0301
-import sys
 import re
+import sys
 import typing
-import orjson
+from pathlib import Path
+
 import jmespath
+import orjson
+
 
 class MetadataChecker:
-    def __init__(self, metadata_json_path):
-        self.metadata_json_path = metadata_json_path
-        self.metadata = self._read_json(metadata_json_path)
+    def __init__(self, metadata_json_path: Path | str) -> None:
+        """Initialize the MetadataChecker class.
 
-    def _read_json(self, json_file):
+        Args:
+            metadata_json_path (Path | str): Path to the metadata JSON file.
+            metadata (dict): Metadata from the JSON file.
+        """
+        self.metadata_json_path = metadata_json_path
+        self.metadata = self._read_json()
+
+    def _read_json(self) -> dict:
+        """Read the JSON file and return the data.
+
+        Returns:
+            data (dict): Data from the JSON file.
+        """
         try:
-            with open(json_file, 'r', encoding='utf-8') as f:
+            with Path(self.metadata_json_path).open('r', encoding='utf-8') as f:
                 data = orjson.loads(f.read())
             return data
         except Exception as e:
-            print(f"Error reading JSON file: {e}")
-            print("Exiting...")
+            print(f'Error reading JSON file: {e}')
+            print('Exiting...')
             sys.exit(1)
 
-    def _read_metadata_cm_field(self, field, subfield=None):
+    def _read_metadata_cm_field(self, field: str, subfield=None):
         # TODO: fix the logic of subfield
 
         if subfield:
-            query_string = f"data.latestVersion.metadataBlocks.citation.fields[?typeName==`{field}`].value[].[{subfield}][].value" # pylint: disable=line-too-long
+            query_string = f'data.latestVersion.metadataBlocks.citation.fields[?typeName==`{field}`].value[].[{subfield}][].value'  # noqa: E501
             result = jmespath.search(query_string, self.metadata)
         else:
-            query_string = f"data.latestVersion.metadataBlocks.citation.fields[?typeName==`{field}`].value[]" # pylint: disable=line-too-long
+            query_string = f'data.latestVersion.metadataBlocks.citation.fields[?typeName==`{field}`].value[]'
             result = jmespath.search(query_string, self.metadata)
         return result
 
-    def check_metadata_cm_field(self, field) -> typing.Tuple[str, bool]:
-        """
-        Check if a metadata field exists in the metadata JSON file
+    def check_metadata_cm_field(self, field: str) -> tuple[str, bool]:
+        r"""Check if a metadata field exists in the metadata JSON file.
 
         Args:
             field (str): Metadata field to check.\n
             Use '.' to specify subfields; e.g. "title", "author.authorName"
-        
+
         Returns:
             result (str): Value of the metadata field\n
             exists (bool): True if the metadata field exists, False otherwise
         """
         # Check the input of field has . in it and split it into field and subfield
-        if "." in field:
-            field, subfield = field.split(".")
+        if '.' in field:
+            field, subfield = field.split('.')
         else:
             subfield = None
 
@@ -55,7 +68,12 @@ class MetadataChecker:
 
         return None, False
 
-    def check_author_cm_field(self):
+    def check_author_cm_field(self) -> list[dict]:
+        r"""Check if the author metadata fields exist in the metadata JSON file.
+
+        Returns:
+            result (list[dict]): List of dictionaries containing author metadata fields
+        """
         query_string = 'data.latestVersion.metadataBlocks.citation.fields[?typeName==`author`].value[].{authorName:authorName.value, authorAffiliation: authorAffiliation.value, authorIdentifierScheme: authorIdentifierScheme.value, authorIdentifier:authorIdentifier.value}'
         result = jmespath.search(query_string, self.metadata)
 
