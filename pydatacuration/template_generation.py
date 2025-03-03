@@ -25,8 +25,8 @@ def generate_report(template_dict: dict, workdir: Path) -> None:
         template_dict (dict): The template dictionary.
         workdir (Path): The working directory.
     """
-    # Read the template.csv file
-    with RES_DIR.joinpath('template.csv').open(encoding='ISO-8859-1') as f:
+    # Read the template.csv file #TEMP: Change to template_new.csv
+    with RES_DIR.joinpath('template_new.csv').open(encoding='ISO-8859-1') as f:
         template_string = f.read()
     report = Template(template_string)
 
