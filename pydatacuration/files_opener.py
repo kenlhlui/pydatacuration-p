@@ -48,6 +48,7 @@ class FilesOpener:
             dict | None: The file encoding.
         """
         with Path(self.file).open('rb') as f:
+
             return chardet.detect(f.read()).get('encoding', None)
 
     def _open_image_file(self) -> tuple:

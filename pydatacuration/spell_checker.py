@@ -12,8 +12,7 @@ class SpellCheckerCustomized:
     def __init__(self) -> None:
         """Initialize the SpellCheckerCustomized class."""
         self.spell = SpellChecker()
-        self.spell.word_frequency.load_text_file(RES_DIR /
-                                                 'spellcheck_exclusions.txt')  # Load the list of words to exclude from the spell check.
+        self.spell.word_frequency.load_text_file('./res/spellcheck_exclusions.txt') # Load the list of words to exclude from the spell check.
     # TODO: Add a function/amend clean_text function to remove the html tags, if appeared.
     # TODO: Error handling if the input is not a string/list.
 
