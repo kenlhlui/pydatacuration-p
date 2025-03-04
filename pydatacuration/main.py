@@ -140,7 +140,7 @@ def main(
                                   envvar='API_TOKEN'),
     workdir: str = typer.Option('workdir',
                                 help='The working directory'
-                                )) -> None:
+                                )):
     """This script downloads the dataset files and metadata from a Dataverse instance and checks the files and metadata for data curation, and generates a curation report in spreadsheet (.xlsx) format."""  # noqa: E501, W505
     base_url, api_token = utils.load_env(base_url, api_token)
     workdir, log_files_dir, ds_dir, temp_data_dir = directory_manager.DirectoryManager(workdir).make_dirs()
@@ -148,8 +148,10 @@ def main(
 
     file_list_metadata = gen_file_list_metadata(workdir, ds_metadata)
     template_dict = checker(file_list_metadata, workdir)
-    template_generation.generate_report(template_dict, workdir)
+    # template_generation.generate_report(template_dict, workdir) # Old method, to be removed
+    template_generation.generate_report_xlsx(template_dict, workdir)
     utils.gen_tree_diagram(Path(workdir, 'dataset', 'files'), Path(log_files_dir))
 
-if __name__ == "__main__":
+
+if __name__ == '__main__':
     app()

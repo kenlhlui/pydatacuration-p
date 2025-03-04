@@ -6,7 +6,7 @@ from pathlib import Path
 class DirectoryManager:
     """This class is used to manage the directories in the project."""
 
-    def __init__(self, workdir: str | None = None) -> None:
+    def __init__(self, workdir: str) -> None:
         """Initialize the class.
 
         Args:

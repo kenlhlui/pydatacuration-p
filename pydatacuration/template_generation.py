@@ -1,9 +1,12 @@
 """Generates a report based on a template and data from a JSON file."""
 from pathlib import Path
 
+import jinja2
 import orjson
 import pandas as pd
 from jinja2 import Template
+from openpyxl import load_workbook
+
 
 RES_DIR = Path('res')
 
@@ -40,4 +43,37 @@ def generate_report(template_dict: dict, workdir: Path) -> None:
     excel_path_obj = workdir.joinpath('log_files', 'render_log.xlsx')
     pd.read_csv(csv_path_obj, keep_default_na=False).to_excel(excel_path_obj, index=False, na_rep='NA')
 
+    print(f'\nReport generated. See the {str(excel_path_obj)} file for the report.')
+
+
+def generate_report_xlsx(template_dict: dict, workdir: Path) -> None:
+    """Fill a formatted Excel template with data using Jinja2 for variable replacement.
+
+    Args:
+        template_dict (dict): Dictionary of data to inject into the template
+        workdir (Path): Path to the generated log file
+    """
+    # Load the workbook with formatting
+    template_path = Path(RES_DIR, 'template_new.xlsx')
+    workbook = load_workbook(template_path)
+    sheet = workbook.active
+
+    # Create Jinja2 environment
+    env = jinja2.Environment()
+
+    # Process each cell in the worksheet to replace Jinja2 variables
+    for row in sheet.iter_rows():
+        for cell in row:
+            if cell.value and isinstance(cell.value, str) and '{%' in cell.value:
+                # This cell contains a Jinja2 template
+                template = env.from_string(cell.value)
+                try:
+                    # Render the template with our data
+                    cell.value = template.render(template_dict=template_dict)
+                except Exception as e:
+                    print(f'Error rendering template in cell {cell.coordinate}: {e}')
+
+    # Save the modified workbook
+    excel_path_obj = workdir.joinpath('log_files', 'render_log_new.xlsx')
+    workbook.save(excel_path_obj)
     print(f'\nReport generated. See the {str(excel_path_obj)} file for the report.')
