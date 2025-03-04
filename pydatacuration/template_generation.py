@@ -4,6 +4,7 @@ from pathlib import Path
 import jinja2
 import orjson
 import pandas as pd
+from docxtpl import DocxTemplate
 from jinja2 import Template
 from openpyxl import load_workbook
 
@@ -76,4 +77,24 @@ def generate_report_xlsx(template_dict: dict, workdir: Path) -> None:
     # Save the modified workbook
     excel_path_obj = workdir.joinpath('log_files', 'render_log_new.xlsx')
     workbook.save(excel_path_obj)
-    print(f'\nReport generated. See the {str(excel_path_obj)} file for the report.')
+    print(f'\nReport generated. See the {str(excel_path_obj)} file for the spreadsheet report.')
+
+
+def generate_report_doc(template_dict: dict, workdir: Path) -> None:
+    """Generates a report based on the provided template dictionary.
+
+    Args:
+        template_dict (dict): The template dictionary.
+        workdir (Path): The working directory.
+    """
+    # Load the template
+    template_path = Path(RES_DIR, 'template_new.docx')
+    doc = DocxTemplate(template_path)
+
+    # Render the template with the template_dict
+    doc.render({'template_dict': template_dict})  # TEMP fix. Need to restructure the template_dict
+
+    # Save the rendered document
+    doc_path = workdir.joinpath('log_files', 'render_log.docx')
+    doc.save(doc_path)
+    print(f'\nReport generated. See the {str(doc_path)} file for the docx report.')

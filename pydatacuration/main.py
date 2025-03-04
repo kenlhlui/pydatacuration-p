@@ -149,6 +149,7 @@ def main(
     template_dict = checker(file_list_metadata, workdir_path)
     # template_generation.generate_report(template_dict, workdir) # Old method, to be removed
     template_generation.generate_report_xlsx(template_dict, workdir_path)
+    template_generation.generate_report_doc(template_dict, workdir_path)
     utils.gen_tree_diagram(Path(workdir_path, 'dataset', 'files'), Path(log_files_dir))
 
 
