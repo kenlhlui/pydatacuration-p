@@ -53,7 +53,7 @@ class DirectoryManager:
 
         return temp_data_dir.resolve()
 
-    def make_dirs(self) -> tuple:
+    def make_dirs(self) -> tuple[Path, Path, Path, Path]:
         """Create the directories.
 
         Returns:

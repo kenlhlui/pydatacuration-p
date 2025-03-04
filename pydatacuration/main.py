@@ -138,19 +138,18 @@ def main(
                                   hide_input=True,
                                   prompt='\nEnter the API token',
                                   envvar='API_TOKEN'),
-    workdir: str = typer.Option('workdir',
+    workdir_input: str = typer.Option('workdir',
                                 help='The working directory'
                                 )):
     """This script downloads the dataset files and metadata from a Dataverse instance and checks the files and metadata for data curation, and generates a curation report in spreadsheet (.xlsx) format."""  # noqa: E501, W505
     base_url, api_token = utils.load_env(base_url, api_token)
-    workdir, log_files_dir, ds_dir, temp_data_dir = directory_manager.DirectoryManager(workdir).make_dirs()
-    ds_metadata = asyncio.run(downloads.Downloads(base_url, api_token, doi, workdir).downloader())
-
-    file_list_metadata = gen_file_list_metadata(workdir, ds_metadata)
-    template_dict = checker(file_list_metadata, workdir)
+    workdir_path, log_files_dir, ds_dir, temp_data_dir = directory_manager.DirectoryManager(workdir_input).make_dirs()
+    ds_metadata = asyncio.run(downloads.Downloads(base_url, api_token, doi, workdir_path).downloader())
+    file_list_metadata = gen_file_list_metadata(workdir_path, ds_metadata)
+    template_dict = checker(file_list_metadata, workdir_path)
     # template_generation.generate_report(template_dict, workdir) # Old method, to be removed
-    template_generation.generate_report_xlsx(template_dict, workdir)
-    utils.gen_tree_diagram(Path(workdir, 'dataset', 'files'), Path(log_files_dir))
+    template_generation.generate_report_xlsx(template_dict, workdir_path)
+    utils.gen_tree_diagram(Path(workdir_path, 'dataset', 'files'), Path(log_files_dir))
 
 
 if __name__ == '__main__':
