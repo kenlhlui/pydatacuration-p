@@ -44,15 +44,15 @@
 
    5. To re-enter the WSL Ubuntu environment, simply open a Terminal and type `wsl.exe -d Ubuntu`. You may also consider installing the [Windows Terminal app](https://learn.microsoft.com/en-us/windows/terminal/) for better user experience.
 2. [Git](https://git-scm.com/)
-      > [!NOTE]
-      > WSL Ubuntu should by default comes with Git. 
-      > Type `git --version` to check.
-      > Or run `sudo apt update && sudo apt install git` to install.
+> [!NOTE]
+> WSL Ubuntu should by default comes with Git. 
+> Type `git --version` to check.
+> Or run `sudo apt update && sudo apt install git` to install.
    
 3. [Python3.10^](https://www.python.org/downloads/release/python-3100/)
-   > [!NOTE]
-   > WSL Ubuntu should by default comes with Python3.12.
-   > Type `python3 --version` to check.
+> [!NOTE]
+> WSL Ubuntu should by default comes with Python3.12.
+> Type `python3 --version` to check.
 4. [FFmpeg](https://trac.ffmpeg.org/wiki/CompilationGuide/Ubuntu)
    1. Run the following command to install FFmpeg. You will be prompted to ask for your password and confirmation.
    ```sh
