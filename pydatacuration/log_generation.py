@@ -22,8 +22,8 @@ class GenerateLog:
 
         Args:
             workdir (Path): The working directory.
-            ds_metadata (dict): The dataset metadata.
             base_url (str): The base URL of the repository.
+            ds_metadata (dict): The dataset metadata.
         """
         self.workdir = workdir
         # self.config = self._read_config_yaml()
