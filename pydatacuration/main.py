@@ -41,7 +41,7 @@ def gen_file_list_metadata(workdir: Path, ds_metadata: dict) -> list:
     return file_list_metadata
 
 def checker(file_list_metadata, workdir: Path) -> dict:
-    template_dict = template_generation.read_template_json()
+    template_dict = template_generation.GenerateReport.read_template_json()
 
     def _check_file_name_format(file_list_metadata, template_dict: dict):
 
@@ -148,8 +148,9 @@ def main(
     file_list_metadata = gen_file_list_metadata(workdir_path, ds_metadata)
     template_dict = checker(file_list_metadata, workdir_path)
     # template_generation.generate_report(template_dict, workdir) # Old method, to be removed
-    template_generation.generate_report_xlsx(template_dict, workdir_path)
-    template_generation.generate_report_doc(template_dict, workdir_path)
+    template_generation.GenerateReport(workdir_path).generate_report_xlsx(template_dict)
+    template_generation.GenerateReport(workdir_path).generate_report_doc(template_dict)
+
     utils.gen_tree_diagram(Path(workdir_path, 'dataset', 'files'), Path(log_files_dir))
 
 
