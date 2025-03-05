@@ -6,10 +6,8 @@ from pathlib import Path
 import jinja2
 import jmespath
 import orjson
-import pandas as pd
 import yaml
 from docxtpl import DocxTemplate
-from jinja2 import Template
 from openpyxl import load_workbook
 
 
