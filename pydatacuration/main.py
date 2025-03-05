@@ -147,8 +147,8 @@ def main(
     ds_metadata = asyncio.run(downloads.Downloads(base_url, api_token, doi, workdir_path).downloader())
     file_list_metadata = gen_file_list_metadata(workdir_path, ds_metadata)
     template_dict = checker(file_list_metadata, workdir_path)
-    log_generation.GenerateLog(workdir_path).generate_report_xlsx(template_dict)
-    log_generation.GenerateLog(workdir_path).generate_report_doc(template_dict)
+    log_generation.GenerateLog(workdir_path, base_url, ds_metadata).generate_report_xlsx(template_dict)
+    log_generation.GenerateLog(workdir_path, base_url, ds_metadata).generate_report_doc(template_dict)
 
     utils.gen_tree_diagram(Path(workdir_path, 'dataset', 'files'), Path(log_files_dir))
 
