@@ -61,16 +61,15 @@ class GenerateLog:
 
         return dataset_info_dict
 
+    @staticmethod
+    def _get_config_info() -> dict:
+        """Reads the config.yaml file and returns it as a dictionary.
 
-    # @staticmethod
-    # def _read_config_yaml() -> dict:
-    #     """Reads the config.yaml file and returns it as a dictionary.
-
-    #     Returns:
-    #         dict: The config as a dictionary.
-    #     """
-    #     with RES_DIR.joinpath('config.yaml').open(encoding='utf-8') as file:
-    #         return yaml.safe_load(file)
+        Returns:
+            dict: The config as a dictionary.
+        """
+        with RES_DIR.joinpath('config.yaml').open(encoding='utf-8') as file:
+            return yaml.safe_load(file)
 
     @staticmethod
     def read_template_json() -> dict:
@@ -124,9 +123,13 @@ class GenerateLog:
         doc = DocxTemplate(template_path)
 
         # Render the document with the provided context
-        doc.render({'template_dict': template_dict,
+        doc.render({'template_dict': template_dict,  # TEMP fix. Need to restructure the template_dict
                     'timestamp': self.timestamp,
-                    'dataset': self.dataset_info_dict})  # TEMP fix. Need to restructure the template_dict
+                    'dataset': self.dataset_info_dict,
+                    'curator_info': self._get_config_info()})
+
+        # TEMP: Print the _get_config_info to check the output
+        print(self._get_config_info)
 
         # Save the rendered document
         doc_path = self.workdir.joinpath('log_files', 'render_log.docx')
