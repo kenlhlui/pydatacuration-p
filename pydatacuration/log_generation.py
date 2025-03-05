@@ -12,11 +12,11 @@ from openpyxl import load_workbook
 RES_DIR = Path('res')
 
 
-class GenerateReport:
+class GenerateLog:
     """Generates a report based on a template and data from a JSON file."""
 
     def __init__(self, workdir: Path) -> None:
-        """Initializes the GenerateReport class.
+        """Initializes the GenerateLog class.
 
         Args:
             workdir (Path): The working directory.
