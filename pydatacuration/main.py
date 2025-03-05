@@ -7,9 +7,9 @@ import checksum
 import directory_manager
 import downloads
 import files_opener
+import log_generation
 import metadata_checker
 import spell_checker
-import template_generation
 import typer
 import utils
 
@@ -41,7 +41,7 @@ def gen_file_list_metadata(workdir: Path, ds_metadata: dict) -> list:
     return file_list_metadata
 
 def checker(file_list_metadata, workdir: Path) -> dict:
-    template_dict = template_generation.read_template_json()
+    template_dict = log_generation.GenerateLog.read_template_json()
 
     def _check_file_name_format(file_list_metadata, template_dict: dict):
 
@@ -138,18 +138,20 @@ def main(
                                   hide_input=True,
                                   prompt='\nEnter the API token',
                                   envvar='API_TOKEN'),
-    workdir: str = typer.Option('workdir',
+    workdir_input: str = typer.Option('workdir',
                                 help='The working directory'
-                                )) -> None:
+                                )):
     """This script downloads the dataset files and metadata from a Dataverse instance and checks the files and metadata for data curation, and generates a curation report in spreadsheet (.xlsx) format."""  # noqa: E501, W505
     base_url, api_token = utils.load_env(base_url, api_token)
-    workdir, log_files_dir, ds_dir, temp_data_dir = directory_manager.DirectoryManager(workdir).make_dirs()
-    ds_metadata = asyncio.run(downloads.Downloads(base_url, api_token, doi, workdir).downloader())
+    workdir_path, log_files_dir, ds_dir, temp_data_dir = directory_manager.DirectoryManager(workdir_input).make_dirs()
+    ds_metadata = asyncio.run(downloads.Downloads(base_url, api_token, doi, workdir_path).downloader())
+    file_list_metadata = gen_file_list_metadata(workdir_path, ds_metadata)
+    template_dict = checker(file_list_metadata, workdir_path)
+    log_generation.GenerateLog(workdir_path, base_url, ds_metadata).generate_report_xlsx(template_dict)
+    log_generation.GenerateLog(workdir_path, base_url, ds_metadata).generate_report_doc(template_dict)
 
-    file_list_metadata = gen_file_list_metadata(workdir, ds_metadata)
-    template_dict = checker(file_list_metadata, workdir)
-    template_generation.generate_report(template_dict, workdir)
-    utils.gen_tree_diagram(Path(workdir, 'dataset', 'files'), Path(log_files_dir))
+    utils.gen_tree_diagram(Path(workdir_path, 'dataset', 'files'), Path(log_files_dir))
 
-if __name__ == "__main__":
+
+if __name__ == '__main__':
     app()

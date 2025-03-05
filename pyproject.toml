@@ -31,6 +31,8 @@ ffmpeg-python = "^0.2.0"
 seedir = "^0.5.0"
 pyshp = "^2.3.1"
 pypdf = "^5.1.0"
+python-docx = "^1.1.2"
+docxtpl = "^0.19.1"
 
 
 [tool.poetry.group.dev.dependencies]
