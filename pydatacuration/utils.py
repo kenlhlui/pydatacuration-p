@@ -10,18 +10,6 @@ import dotenv
 import seedir as sd
 
 
-# Export the structure ('tree') of a directory as plain text
-def list_files(startpath: Path | str) -> None:
-    """List the files in the directory using pathlib."""
-    startpath = Path(startpath)
-    for path in sorted(startpath.rglob('*')):
-        depth = len(path.relative_to(startpath).parts)
-        indent = ' ' * 4 * depth
-        if path.is_dir():
-            print(f'{indent}{path.name}/')
-        else:
-            print(f'{indent}{path.name}')
-
 class FileNameFormatChecker:
     """This class is used to check the file name format."""
 
@@ -172,9 +160,9 @@ def gen_tree_diagram(target_dir: Path, save_dir: Path) -> None:
                 with Path(ds_tree_file_path).open('w', encoding='utf-8') as f:
                     f.write(result)
 
-                print(f'Folder tree diagram text file saved at: {str(ds_tree_file_path)}')
+                print(f'\nFolder tree diagram text file saved at: {str(ds_tree_file_path)}')
         else:
-            print('The target directory does not exist. Exiting...')
+            print('\nThe target directory does not exist. Exiting...')
             sys.exit(1)
 
     except Exception as e:

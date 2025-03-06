@@ -1,17 +1,19 @@
 # ruff: noqa: E501, W505
 import asyncio
-import os
 from pathlib import Path
 
 import checksum
 import directory_manager
 import downloads
 import files_opener
+import httpx
+import jmespath
+import log_generation
 import metadata_checker
 import spell_checker
-import template_generation
 import typer
 import utils
+import orjson
 
 
 app = typer.Typer()
@@ -40,8 +42,9 @@ def gen_file_list_metadata(workdir: Path, ds_metadata: dict) -> list:
 
     return file_list_metadata
 
-def checker(file_list_metadata, workdir: Path) -> dict:
-    template_dict = template_generation.read_template_json()
+
+def checker(base_url: str, api_token: str, ds_metadata: dict, file_list_metadata: list, workdir: Path) -> dict:
+    template_dict = log_generation.GenerateLog.read_template_json()
 
     def _check_file_name_format(file_list_metadata, template_dict: dict):
 
@@ -52,17 +55,17 @@ def checker(file_list_metadata, workdir: Path) -> dict:
             if file_name_format_checker.check_special_char(file_datafile_filename)[1] is True:
                 print('\n')
                 print(f'Special characters found in the filename: {file_datafile_filename}')
-                template_dict['special_characters']['comments'].append({'file_name': file_datafile_filename})
+                template_dict['special_characters']['comments'].append({'file_name': str(file_datafile_filename)})
 
             if file_name_format_checker.check_file_ext(file_datafile_filename)[1] is True:
                 print('\n')
                 print(f'File extension does not found: {file_datafile_filename}')
-                template_dict['file_ext']['comments'].append({'file_name': file_datafile_filename})
+                template_dict['file_ext']['comments'].append({'file_name': str(file_datafile_filename)})
 
             if utils.readme_file_checker(file_datafile_filename)[1] is True:
                 print('\n')
                 print(f'README file found: {file_datafile_filename}')
-                template_dict['readme_file']['comments'].append({'file_name': file_datafile_filename})
+                template_dict['readme_file']['comments'].append({'file_name': str(file_datafile_filename)})
 
         file_list = []
         for item in file_list_metadata:
@@ -73,10 +76,10 @@ def checker(file_list_metadata, workdir: Path) -> dict:
         for file in file_list:
             if files_opener.FilesOpener(file).open_file()[0] is False:
                 print(f'\nFile cannot be opened: {file}')
-                template_dict['file_open']['comments'].append({'file_name': file})
+                template_dict['file_open']['comments'].append({'file_name': str(file)})
             elif files_opener.FilesOpener(file).open_file()[0] is None:
                 print(f'\nFile is not a supported file format (not checked by the script): {file}')
-                template_dict['file_open']['not_checked'].append({'file_name': file})
+                template_dict['file_open']['not_checked'].append({'file_name': str(file)})
 
         return template_dict
 
@@ -119,9 +122,27 @@ def checker(file_list_metadata, workdir: Path) -> dict:
 
         return template_dict
 
+    def _check_dv_record(template_dict: dict) -> dict:
+        query_string = 'data.latestVersion.metadataBlocks.citation.fields[?typeName==`author`].value[*].authorName.value[]'
+        author_list = jmespath.search(query_string, ds_metadata)
+
+        dv_list = []
+        if isinstance(author_list, list):
+            for author in author_list:
+                # Remove all non-alphanumeric characters from the author name
+                author = ''.join(char for char in author if char.isalpha() or char.isspace())
+                # Check if the author has record by search API
+                response = httpx.get(f'{base_url}/api/search?q={author}&type=dataset&per_page=100', headers={'X-Dataverse-key': api_token})
+                if response.status_code == 200 and response.json():
+                    name_of_dataverse_result = list(set(jmespath.search('data.items[*].name_of_dataverse', response.json())))
+                    template_dict['dv_record']['comments'].append({author: name_of_dataverse_result})
+
+        return template_dict
+
     template_dict_new = _check_file_name_format(file_list_metadata, template_dict)
     template_dict_new = _check_missing_metadata(template_dict_new, workdir)
     template_dict_new = _check_spelling(template_dict_new)
+    template_dict_new = _check_dv_record(template_dict_new)
 
     return template_dict_new
 
@@ -138,18 +159,23 @@ def main(
                                   hide_input=True,
                                   prompt='\nEnter the API token',
                                   envvar='API_TOKEN'),
-    workdir: str = typer.Option('workdir',
+    workdir_input: str = typer.Option('workdir',
                                 help='The working directory'
-                                )) -> None:
+                                )):
     """This script downloads the dataset files and metadata from a Dataverse instance and checks the files and metadata for data curation, and generates a curation report in spreadsheet (.xlsx) format."""  # noqa: E501, W505
     base_url, api_token = utils.load_env(base_url, api_token)
-    workdir, log_files_dir, ds_dir, temp_data_dir = directory_manager.DirectoryManager(workdir).make_dirs()
-    ds_metadata = asyncio.run(downloads.Downloads(base_url, api_token, doi, workdir).downloader())
+    workdir_path, log_files_dir, ds_dir, temp_data_dir = directory_manager.DirectoryManager(workdir_input).make_dirs()
+    ds_metadata = asyncio.run(downloads.Downloads(base_url, api_token, doi, workdir_path).downloader())
+    file_list_metadata = gen_file_list_metadata(workdir_path, ds_metadata)
+    template_dict = checker(base_url, api_token, ds_metadata, file_list_metadata, workdir_path)
+    log_generation.GenerateLog(workdir_path, base_url, ds_metadata).generate_report_xlsx(template_dict)
+    log_generation.GenerateLog(workdir_path, base_url, ds_metadata).generate_report_doc(template_dict)
+    # Export the template dict to JSON for debugging purposes
+    with temp_data_dir.joinpath('template_dict.json').open('w') as f:
+        f.write(orjson.dumps(template_dict, option=orjson.OPT_INDENT_2).decode())
 
-    file_list_metadata = gen_file_list_metadata(workdir, ds_metadata)
-    template_dict = checker(file_list_metadata, workdir)
-    template_generation.generate_report(template_dict, workdir)
-    utils.gen_tree_diagram(Path(workdir, 'dataset', 'files'), Path(log_files_dir))
+    utils.gen_tree_diagram(Path(workdir_path, 'dataset', 'files'), Path(log_files_dir))
 
-if __name__ == "__main__":
+
+if __name__ == '__main__':
     app()
