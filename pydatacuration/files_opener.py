@@ -58,7 +58,8 @@ class FilesOpener:
             tuple: (bool, str) indicating success and the file path.
         """
         try:
-            Image.open(self.file)
+            with Image.open(self.file) as _img:
+                pass
             return True, self.file
         except (ValueError, Image.UnidentifiedImageError, OSError):
             return False, self.file
