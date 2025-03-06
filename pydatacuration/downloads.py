@@ -160,7 +160,7 @@ class Downloads:
             successful = [r for r in results if r is not None]
             return successful
 
-    def _get_ds_metadata(self) -> dict | None:
+    def _get_ds_metadata(self) -> dict:
         """Get metadata of a dataset.
 
         Returns:
@@ -173,6 +173,9 @@ class Downloads:
             response.raise_for_status()
             if response.status_code == 200 and response.json():
                 return response.json()
+            sys.exit(1)
+            return {}
+
         except httpx.HTTPStatusError as e:
             print(f'HTTP error occurred: {e}')
             sys.exit(1)
@@ -211,10 +214,13 @@ class Downloads:
         except httpx.HTTPStatusError as e:
             print(f'HTTP error occurred: {e}')
             sys.exit(1)
+            return {}
 
         except Exception as e:
             print(f'An error occurred: {e}')
+
             sys.exit(1)
+            return {}
 
     async def get_ds_zip_async(self) -> Path:
         """Get a dataset as a zip file asynchronously.

@@ -108,7 +108,7 @@ class GenerateLog:
         # Save the modified workbook
         excel_path_obj = self.workdir.joinpath('log_files', 'render_log_new.xlsx')
         workbook.save(excel_path_obj)
-        print(f'\nReport generated. See the {str(excel_path_obj)} file for the spreadsheet report.')
+        print(f'\nExcel Spreadsheet curation log saved at: {str(excel_path_obj)}')
 
     def generate_report_doc(self, template_dict: dict) -> None:
         """Generates a report based on the provided template dictionary.
@@ -129,4 +129,4 @@ class GenerateLog:
         # Save the rendered document
         doc_path = self.workdir.joinpath('log_files', 'render_log.docx')
         doc.save(doc_path)
-        print(f'\nReport generated. See the {str(doc_path)} file for the docx report.')
+        print(f'\nWord curation log saved at: {str(doc_path)}')
