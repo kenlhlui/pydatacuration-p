@@ -59,6 +59,37 @@
    sudo apt update && sudo apt-get install ffmpeg.
    ```
 
+## Configure Git authentication by GitHub CLI in WSL Ubuntu
+Since this is a private repository, it is necessary to have authentication to clone (download) to your machine. You will first need a GitHub account.
+The following will use the [GitHub CLI](https://cli.github.com/) for authentication. The official installation guide for Linux is [here](https://github.com/cli/cli/blob/trunk/docs/install_linux.md).
+1. Run the following command in the WSL Ubuntu Terminal to install
+   ```sh
+   (type -p wget >/dev/null || (sudo apt update && sudo apt-get install wget -y)) \
+	&& sudo mkdir -p -m 755 /etc/apt/keyrings \
+        && out=$(mktemp) && wget -nv -O$out https://cli.github.com/packages/githubcli-archive-keyring.gpg \
+        && cat $out | sudo tee /etc/apt/keyrings/githubcli-archive-keyring.gpg > /dev/null \
+	&& sudo chmod go+r /etc/apt/keyrings/githubcli-archive-keyring.gpg \
+	&& echo "deb [arch=$(dpkg --print-architecture) signed-by=/etc/apt/keyrings/githubcli-archive-keyring.gpg] https://cli.github.com/packages stable main" | sudo tee /etc/apt/sources.list.d/github-cli.list > /dev/null \
+	&& sudo apt update \
+	&& sudo apt install gh -y
+   ```
+2. Check whether GitHub CLI (with alias `gh`) has been successfully installed.
+   ```sh
+   gh --version
+   ```
+3. To login, run
+   ```sh
+   gh auth login
+   ```
+4. Follow the prompts. Choose the following options when prompted
+   ```
+   1. Where do you use GitHub?  ->  GitHub.com
+   2. What is your preferred protocol for Git operations on this host?  ->  HTTPS
+   3. How would you like to authenticate GitHub CLI?  ->  Login with a web browser
+   ```
+   You should then be prompted to log in with your web browser. You will also see an 8-digit one-time code.
+   Press enter to open the browser. Fill in the credentials.
+   
 
 ## Steps to run the script
 1. Clone the repository
