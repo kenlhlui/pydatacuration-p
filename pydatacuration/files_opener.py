@@ -1,19 +1,22 @@
-# pylint: disable=C0301
+import csv
+import logging
 import os
 from pathlib import Path
-import csv
-from PIL import Image
+
 import chardet
-import netCDF4 as nc
-import pypdf.errors
-from pyreadstat import pyreadstat, ReadstatError
-import pyreadr
 import ffmpeg
-import shapefile
+import netCDF4 as nc
 import pandas as pd
 import pypdf
-import logging
-from pydatacuration.ffmepg_file_formats import FFmpegFileFormats
+import pypdf.errors
+import pyreadr
+import shapefile
+from PIL import Image
+from pyreadstat import ReadstatError
+from pyreadstat import pyreadstat
+
+from ffmepg_file_formats import FFmpegFileFormats
+
 
 IMAGE_FILE_EXTENSIONS = ['.jpg', '.jpeg', '.png', '.gif', '.bmp', '.tiff', '.tif']
 NETCDF_FILE_EXTENSIONS = ['.nc']
@@ -28,35 +31,42 @@ SPREADSHEET_FILE_EXTENSIONS = ['.xls', '.xlsx', '.xlsm', '.xlsb', '.odf', '.ods'
 PDF_FILE_EXTENSIONS = ['.pdf']
 
 class FilesOpener:
-    """Open different file types"""
-    def __init__(self, file):
+    """Open different file types."""
+    def __init__(self, file: str | Path) -> None:
+        """Initialize the FilesOpener class.
+
+        Args:
+            file (str | Path): The file path to open.
+        """
         self.file = file
         self.pypdf_logger = logging.getLogger('pypdf').setLevel(logging.ERROR)
 
-    def _get_file_encoding(self):
-        """Check the file encoding
-        
+    def _get_file_encoding(self) -> dict | None:
+        """Check the file encoding.
+
         Returns:
-            str: The file encoding.
+            dict | None: The file encoding.
         """
-        with open(self.file, 'rb') as f:
+        with Path(self.file).open('rb') as f:
+
             return chardet.detect(f.read()).get('encoding', None)
 
-    def _open_image_file(self):
-        """Open an image file
-        
+    def _open_image_file(self) -> tuple:
+        """Open an image file.
+
         Returns:
-            Image: The image object.
+            tuple: (bool, str) indicating success and the file path.
         """
         try:
-            Image.open(self.file)
+            with Image.open(self.file) as _img:
+                pass
             return True, self.file
         except (ValueError, Image.UnidentifiedImageError, OSError):
             return False, self.file
 
-    def _open_netcdf_file(self):
-        """Open a NetCDF file
-        
+    def _open_netcdf_file(self) -> tuple:
+        """Open a NetCDF file.
+
         Returns:
             tuple: (bool, str) indicating success and the file path.
         """
@@ -65,9 +75,10 @@ class FilesOpener:
             return True, self.file
         except (Exception, OSError):
             return False, self.file
-    def _open_sav_file(self):
-        """Open an sav (SPSS) file
-        
+
+    def _open_sav_file(self) -> tuple:
+        """Open an sav (SPSS) file.
+
         Returns:
             tuple: (bool, str) indicating success and the file path.
         """
@@ -76,24 +87,25 @@ class FilesOpener:
             return True, sav_file
         except (ReadstatError, OSError):
             return False, self.file
-    
-    def _open_csv_file(self):
-        """Open a CSV file
-        
+
+    def _open_csv_file(self) -> tuple:
+        """Open a CSV file.
+
         Returns:
             tuple: (bool, str) indicating success and the file path.
         """
         try:
-            with open(self.file, 'r') as f:
+            with Path(self.file).open('r') as f:
                 csv_reader = csv.reader(f)
                 for row in csv_reader:
                     pass
             return True, self.file
         except (csv.Error, UnicodeDecodeError):
             return False, self.file
+
     def _open_dta_file(self):
-        """Open a DTA (Stata) file
-        
+        """Open a DTA (Stata) file.
+
         Returns:
             tuple: (bool, str) indicating success and the file path.
         """
@@ -103,9 +115,9 @@ class FilesOpener:
         except (ReadstatError, OSError):
             return False, self.file
 
-    def _open_rdata_file(self):
-        """Open an RData file
-        
+    def _open_rdata_file(self) -> tuple:
+        """Open an RData file.
+
         Returns:
             tuple: (bool, str) indicating success and the file path.
         """
@@ -115,7 +127,7 @@ class FilesOpener:
         except (pyreadr.custom_errors.PyreadrError, pyreadr.custom_errors.LibrdataError, OSError):
             return False, self.file
 
-    def _open_audiovisual_file(self):
+    def _open_audiovisual_file(self) -> tuple:
         try:
             stderr = (
                 ffmpeg
@@ -132,8 +144,8 @@ class FilesOpener:
         except ffmpeg.Error:
             return False, self.file
 
-    def _open_shape_file(self):
-        """Open a shape file
+    def _open_shape_file(self) -> tuple:
+        """Open a shape file.
 
         Returns:
             tuple: (bool, str) indicating success and the file path.
@@ -148,9 +160,9 @@ class FilesOpener:
         except shapefile.ShapefileException:
             return False, self.file
 
-    def _open_spreadsheet_file(self):
-        """Open a spreadsheet file
-        
+    def _open_spreadsheet_file(self) -> tuple:
+        """Open a spreadsheet file.
+
         Returns:
             tuple: (bool, str) indicating success and the file path.
         """
@@ -161,9 +173,10 @@ class FilesOpener:
             return False, self.file
         except (pd.errors.ParserError, OSError, ValueError):
             return False, self.file
-    def _open_pdf_file(self):
-        """Open a PDF file
-        
+
+    def _open_pdf_file(self) -> tuple:
+        """Open a PDF file.
+
         Returns:
             tuple: (bool, str) indicating success and the file path.
         """
@@ -174,12 +187,12 @@ class FilesOpener:
             return False, self.file
 
     def open_file(self):
-        """Open a file
-        
+        """Open a file.
+
         Returns:
             tuple: (bool, str) indicating success and the file path.
         """
-        if os.path.isfile(self.file):
+        if Path.is_file(Path(self.file)):
             file_ext = Path(self.file).suffix.lower()
             if file_ext in IMAGE_FILE_EXTENSIONS:
                 status, file_path = self._open_image_file()

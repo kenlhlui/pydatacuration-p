@@ -1,23 +1,21 @@
 {
     "file_open": {
-        "status": {},
         "comments": [],
         "not_checked": []
     },
     "special_characters": {
-        "status": {},
         "comments": []
     },
     "file_ext": {
-        "status": {},
         "comments": []
     },
     "readme_file": {
-        "status": {},
         "comments": []
     },
     "typo": {
-        "status": {},
+        "comments": []
+    },
+    "dv_record": {
         "comments": []
     },
     "missing_field": {
