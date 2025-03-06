@@ -60,8 +60,8 @@
    ```
 
 ## Configure Git authentication by GitHub CLI in WSL Ubuntu
-Since this is a private repository, it is necessary to have authentication to clone (download) to your machine. You will first need a GitHub account.
-The following will use the [GitHub CLI](https://cli.github.com/) for authentication. The official installation guide for Linux is [here](https://github.com/cli/cli/blob/trunk/docs/install_linux.md).
+To clone (download) a private repository, authentication is required. You must first create a GitHub account.
+The following will use the [GitHub CLI](https://cli.github.com/) for authentication. The official Linux (incl. WSL Ubuntu) installation guide is [here](https://github.com/cli/cli/blob/trunk/docs/install_linux.md).
 1. Run the following command in the WSL Ubuntu Terminal to install
    ```sh
    (type -p wget >/dev/null || (sudo apt update && sudo apt-get install wget -y)) \
@@ -89,7 +89,12 @@ The following will use the [GitHub CLI](https://cli.github.com/) for authenticat
    ```
    You should then be prompted to log in with your web browser. You will also see an 8-digit one-time code.
    Press enter to open the browser. Fill in the credentials.
-   
+   Once the web browser shows: 'Congratulations, you're all set!', you can close the browser window.
+   Wait for a bit, the Terminal should eventually show `✓ Authentication complete.` 
+6. Lastly, you have to set the Git credentials, by running the following command.
+   ```sh
+   gh auth setup-git
+   ```
 
 ## Steps to run the script
 1. Clone the repository
@@ -135,7 +140,7 @@ The following will use the [GitHub CLI](https://cli.github.com/) for authenticat
    ```sh
    python3 pydatacuration/main.py --doi $DOI  # (e.g. --doi doi:10.80240/FK2/U2VZH9)
    ```
-   You may also define the working directory (directory that stores the metadata JSON, data files, and curation log) by adding a `--workdir` flag following with the path.
+   You may also define the working directory (directory that stores the metadata JSON, data files, and curation log) by adding a `--workdir-input` flag following with the path.
 
    For example, if you wish to create a `download` directory inside the `pydatacuration-p` directory:
    ```sh
