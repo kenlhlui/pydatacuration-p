@@ -89,12 +89,24 @@ The following will use the [GitHub CLI](https://cli.github.com/) for authenticat
    4. How would you like to authenticate GitHub CLI?  ->  Login with a web browser
    ```
    You should then be prompted to log in with your web browser. You will also see an 8-digit one-time code.
+
    Press enter to open the browser. Fill in the credentials.
+
    Once the web browser shows: 'Congratulations, you're all set!', you can close the browser window.
-   Wait for a bit, the Terminal should eventually show `✓ Authentication complete.` 
-6. Lastly, you have to set the Git credentials, by running the following command.
+
+   Wait for a bit, the Terminal should eventually show `✓ Authentication complete.`
+   
+> [!NOTE]
+> If it shows `! Failed opening a web browser`, try to type the `gh auth login` again. 
+When the terminal prompts to `Press Enter to open https://github.com/login/device in your browser...`, try to press the control key (CTTL) then click on the https://github.com/login/device link, and enter the one-time code.
+   
+5. Lastly, you have to set the Git credentials, by running the following command.
    ```sh
    gh auth setup-git
+   ```
+6. You may also check the correct configuration of GitHub login by running the following command
+   ```sh
+   gh auth status
    ```
 
 ## Steps to run the script
