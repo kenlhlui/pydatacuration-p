@@ -85,7 +85,8 @@ The following will use the [GitHub CLI](https://cli.github.com/) for authenticat
    ```
    1. Where do you use GitHub?  ->  GitHub.com
    2. What is your preferred protocol for Git operations on this host?  ->  HTTPS
-   3. How would you like to authenticate GitHub CLI?  ->  Login with a web browser
+   3. Authenticate Git with your GitHub credentials?  ->  Yes
+   4. How would you like to authenticate GitHub CLI?  ->  Login with a web browser
    ```
    You should then be prompted to log in with your web browser. You will also see an 8-digit one-time code.
    Press enter to open the browser. Fill in the credentials.
