@@ -144,7 +144,7 @@ The following will use the [GitHub CLI](https://cli.github.com/) for authenticat
 
    For example, if you wish to create a `download` directory inside the `pydatacuration-p` directory:
    ```sh
-   python3 pydatacuration/main.py --doi $DOI  --workdir 'download'
+   python3 pydatacuration/main.py --doi $DOI  --workdir-input 'download'
    ```
    What you will get:
    ```sh
