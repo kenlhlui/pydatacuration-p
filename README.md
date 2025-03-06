@@ -56,7 +56,7 @@
 4. [FFmpeg](https://trac.ffmpeg.org/wiki/CompilationGuide/Ubuntu)
    1. Run the following command to install FFmpeg. You will be prompted to ask for your password and confirmation.
    ```sh
-   sudo apt update && sudo apt-get install ffmpeg.
+   sudo apt update && sudo apt-get install ffmpeg
    ```
 
 ## Configure Git authentication by GitHub CLI in WSL Ubuntu
