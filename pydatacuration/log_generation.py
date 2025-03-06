@@ -126,9 +126,6 @@ class GenerateLog:
                     'dataset': self.dataset_info_dict,
                     'curator_info': self._get_config_info()})
 
-        # TEMP: Print the _get_config_info to check the output
-        print(self._get_config_info)
-
         # Save the rendered document
         doc_path = self.workdir.joinpath('log_files', 'render_log.docx')
         doc.save(doc_path)

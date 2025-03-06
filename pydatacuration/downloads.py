@@ -35,7 +35,7 @@ class Downloads:
 
     def _metadata_dir(self) -> Path:
         """Create the metadata directory.
-        
+
         Returns:
             metadata_dir (Path): Path to the metadata directory
         """
