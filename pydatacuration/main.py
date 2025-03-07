@@ -115,7 +115,7 @@ def checker(base_url: str, api_token: str, ds_metadata: dict, file_list_metadata
             if field_exists:
                 typos, has_typos = sc.check_spelling(return_value[0])
                 if has_typos:
-                    typo_messages = [f'Typo found in {field}: `{item}`' for item in typos]
+                    typo_messages = [f'{field}: `{item}`' for item in typos]
                     for message in typo_messages:
                         print(f'\nSpelling mistake found in the {field}: {message}')
                     template_dict['typo']['comments'].extend(typo_messages)
