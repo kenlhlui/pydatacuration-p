@@ -139,10 +139,26 @@ def checker(base_url: str, api_token: str, ds_metadata: dict, file_list_metadata
 
         return template_dict
 
+    def _check_dv_collection(template_dict: dict) -> dict:
+        ds_version_id = ds_metadata.get('data', {}).get('latestVersion', {}).get('id')
+        if ds_version_id:
+            # See https://github.com/IQSS/dataverse/issues/2038 for fq field;
+            # Also check the source code the the available fq fields https://github.com/IQSS/dataverse/blob/366d7ac6907a405421fe1ebdaad21b636e3b74f7/src/main/java/edu/harvard/iq/dataverse/search/SearchFields.java#L4
+            # Use 'datasetVersionId' here; in ds_metadata it is data.latestVersion.id
+            # Don't mess up with data.id or data.latestVersion.datasetId which are the same and is the persistent id in the dataverse system
+            response = httpx.get(f'{base_url}/api/search?q=*&type=dataset&per_page=1&fq=datasetVersionId:{ds_version_id}',
+                                 headers={'X-Dataverse-key': api_token})
+            if response.status_code == 200 and response.json():
+                name_of_dataverse = response.json().get('data', {}).get('items', [{}])[0].get('name_of_dataverse', None)
+                template_dict['name_name_of_dataverse'] = name_of_dataverse
+
+        return template_dict
+
     template_dict_new = _check_file_name_format(file_list_metadata, template_dict)
     template_dict_new = _check_missing_metadata(template_dict_new, workdir)
     template_dict_new = _check_spelling(template_dict_new)
     template_dict_new = _check_dv_record(template_dict_new)
+    template_dict_new = _check_dv_collection(template_dict_new)
 
     return template_dict_new
 
