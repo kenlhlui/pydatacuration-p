@@ -120,15 +120,13 @@ When the terminal prompts to `Press Enter to open https://github.com/login/devic
    cd ./pydatacuration-p
    ```
 
-3. Create an environment file (`.env`)
+3. Create an environment file (`.env`) and enter the `nano` editor
    ```sh
-   touch .env  # For Unix
-   nano .env   # or vim .env, or your preferred editor
+   touch .env && nano .env
    ```
 
-4. Configure the environment (`.env`) file using the text editor of your choice.
+4. Configure the environment (`.env`) file.
    ```sh
-   # .env file
    BASE_URL = "TARGET_REPO_URL"  # Base URL of the repository; e.g., "https://demo.borealisdata.ca/"
    API_TOKEN = "YOUR_API_TOKEN"      # Found in your Dataverse account settings.
    ```
@@ -137,6 +135,11 @@ When the terminal prompts to `Press Enter to open https://github.com/login/devic
    BASE_URL = "https://demo.borealisdata.ca/"
    API_TOKEN = "XXXXXXXX-XXXX-XXXX-XXXX-XXXXXXXX"
    ```
+   Press control (CTRL) + S to save the file. 
+   
+   Once you saved the file, you should see [ Wrote 3 lines ] in the middle bottom. 
+   
+   Press CTRL + X to leave the editor.
 
 5. Set up virtual environment (recommended)
    ```sh
@@ -149,7 +152,10 @@ When the terminal prompts to `Press Enter to open https://github.com/login/devic
    pip install -r requirements.txt
    ```
 
-7. Open a terminal, run the script with the following command
+## Run the tool
+You have finished the configuration. Now is time to run the tool.
+
+1. Open a terminal, run the script with the following command
    ```sh
    python3 pydatacuration/main.py --doi $DOI  # (e.g. --doi doi:10.80240/FK2/U2VZH9)
    ```
@@ -171,3 +177,13 @@ When the terminal prompts to `Press Enter to open https://github.com/login/devic
    ├── requirements.txt
    ├── res
    ```
+
+## View the files
+To view the files in Windows File Explorer, run the command below in the Terminal. The Explorer window should be prompted.
+```sh
+explore.exe $PATH
+```
+For example, if you use `--workdir-input 'download'` (same as the example above), type the following command
+```sh
+explore.exe download
+``` 
