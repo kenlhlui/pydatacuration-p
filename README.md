@@ -153,17 +153,17 @@ When the terminal prompts to `Press Enter to open https://github.com/login/devic
    ```
 
 >[!TIP]
->If you prefer Graphical User Interface (GUI), you can run the following command
+>If you prefer a Graphical User Interface (GUI), you can run the following command
 >```sh
 >explore.exe .
 >```
 > A Windows File Explorer should appear, and you can edit, copy, delete, or move files using the GUI.
 
 ## ℹ️Curator info
-You can configure the curation project by modifying the `res/config.yaml` file. 
+You can configure the curation project information by modifying the `res/config.yaml` file. 
 
 You can modify it with Notepad (GUI) or nano editor (Terminal).
-1. Open and edit the config.yaml file
+1. Open and edit the config.yaml file.
    ```sh
    nano res/config.yaml
    ```
