@@ -1,7 +1,7 @@
 # Data curation script
 
 
-## Prerequisite
+## ⚙️Prerequisite
 1. [Linux on Windows with WSL (Ubuntu)](https://learn.microsoft.com/en-us/windows/wsl/setup/environment)
    1. Run the following command in a Windows Powershell Terminal (with administrative access). You might need to restart your computer once the execution is finished.
       ```powershell
@@ -59,7 +59,7 @@
    sudo apt update && sudo apt-get install ffmpeg
    ```
 
-## Configure Git authentication by GitHub CLI in WSL Ubuntu
+## 🔐Configure Git authentication by GitHub CLI in WSL Ubuntu
 To clone (download) a private repository, authentication is required. You must first create a GitHub account.
 The following will use the [GitHub CLI](https://cli.github.com/) for authentication. The official Linux (incl. WSL Ubuntu) installation guide is [here](https://github.com/cli/cli/blob/trunk/docs/install_linux.md).
 1. Run the following command in the WSL Ubuntu Terminal to install
@@ -109,7 +109,7 @@ When the terminal prompts to `Press Enter to open https://github.com/login/devic
    gh auth status
    ```
 
-## Steps to run the script
+## 🪛Install
 1. Clone the repository
    ```sh
    git clone https://github.com/kenlhlui/pydatacuration-p
@@ -152,14 +152,36 @@ When the terminal prompts to `Press Enter to open https://github.com/login/devic
    pip install -r requirements.txt
    ```
 
-## Run the tool
+>[!TIP]
+>If you prefer Graphical User Interface (GUI), you can run the following command
+>```sh
+>explore.exe .
+>```
+> A Windows File Explorer should appear, and you can edit, copy, delete, or move files using the GUI.
+
+## ℹ️Curator info
+You can configure the curation project by modifying the `res/config.yaml` file. 
+
+You can modify it with Notepad (GUI) or nano editor (Terminal).
+1. Open and edit the config.yaml file
+   ```sh
+   nano res/config.yaml
+   ```
+2. Fill in the relevant information
+   ```yaml
+   ticket_number:
+   curator_name:
+   curator_email:
+   ```
+
+## 🏃Run the tool
 You have finished the configuration. Now is time to run the tool.
 
 1. Open a terminal, run the script with the following command
    ```sh
    python3 pydatacuration/main.py --doi $DOI  # (e.g. --doi doi:10.80240/FK2/U2VZH9)
    ```
-   You may also define the working directory (directory that stores the metadata JSON, data files, and curation log) by adding a `--workdir-input` flag following with the path.
+   You may also define the working directory (the directory that stores the metadata JSON, data files, and curation log) by adding a `--workdir-input` flag following the path.
 
    For example, if you wish to create a `download` directory inside the `pydatacuration-p` directory:
    ```sh
@@ -178,7 +200,7 @@ You have finished the configuration. Now is time to run the tool.
    ├── res
    ```
 
-## View the files
+## 👀View the files
 To view the files in Windows File Explorer, run the command below in the Terminal. The Explorer window should be prompted.
 ```sh
 explore.exe $PATH
