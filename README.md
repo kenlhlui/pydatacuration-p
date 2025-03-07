@@ -56,7 +56,7 @@
 4. [FFmpeg](https://trac.ffmpeg.org/wiki/CompilationGuide/Ubuntu)
    1. Run the following command to install FFmpeg. You will be prompted to ask for your password and confirmation.
    ```sh
-   sudo apt update && sudo apt-get install ffmpeg.
+   sudo apt update && sudo apt-get install ffmpeg
    ```
 
 ## Configure Git authentication by GitHub CLI in WSL Ubuntu
@@ -85,15 +85,28 @@ The following will use the [GitHub CLI](https://cli.github.com/) for authenticat
    ```
    1. Where do you use GitHub?  ->  GitHub.com
    2. What is your preferred protocol for Git operations on this host?  ->  HTTPS
-   3. How would you like to authenticate GitHub CLI?  ->  Login with a web browser
+   3. Authenticate Git with your GitHub credentials?  ->  Yes
+   4. How would you like to authenticate GitHub CLI?  ->  Login with a web browser
    ```
    You should then be prompted to log in with your web browser. You will also see an 8-digit one-time code.
+
    Press enter to open the browser. Fill in the credentials.
+
    Once the web browser shows: 'Congratulations, you're all set!', you can close the browser window.
-   Wait for a bit, the Terminal should eventually show `✓ Authentication complete.` 
-6. Lastly, you have to set the Git credentials, by running the following command.
+
+   Wait for a bit, the Terminal should eventually show `✓ Authentication complete.`
+   
+> [!NOTE]
+> If it shows `! Failed opening a web browser`, try to type the `gh auth login` again. 
+When the terminal prompts to `Press Enter to open https://github.com/login/device in your browser...`, try to press the control key (CTTL) then click on the https://github.com/login/device link, and enter the one-time code.
+   
+5. Lastly, you have to set the Git credentials, by running the following command.
    ```sh
    gh auth setup-git
+   ```
+6. You may also check the correct configuration of GitHub login by running the following command
+   ```sh
+   gh auth status
    ```
 
 ## Steps to run the script
@@ -144,7 +157,7 @@ The following will use the [GitHub CLI](https://cli.github.com/) for authenticat
 
    For example, if you wish to create a `download` directory inside the `pydatacuration-p` directory:
    ```sh
-   python3 pydatacuration/main.py --doi $DOI  --workdir 'download'
+   python3 pydatacuration/main.py --doi $DOI  --workdir-input 'download'
    ```
    What you will get:
    ```sh
