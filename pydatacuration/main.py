@@ -1,5 +1,7 @@
+"""The main module of the pydatacuration CLI application."""
 # ruff: noqa: E501, W505
 import asyncio
+import os
 from pathlib import Path
 
 import checksum
@@ -10,10 +12,15 @@ import httpx
 import jmespath
 import log_generation
 import metadata_checker
+import orjson
 import spell_checker
 import typer
 import utils
-import orjson
+from dotenv import load_dotenv
+
+
+# Load environment variables from .env file
+load_dotenv(override=True)
 
 
 app = typer.Typer()
@@ -166,20 +173,24 @@ def checker(base_url: str, api_token: str, ds_metadata: dict, file_list_metadata
 @app.command()
 def main(
 
-    doi: str = typer.Option(None, prompt=('Input the Dataset Persistent Identifier (doi or hdl)'), help='Enter the Persistent Identifier of the dataset'),
+    doi: str = typer.Option(None,
+                            prompt=('Input the Dataset Persistent Identifier (doi or hdl)'),
+                            help='Enter the Persistent Identifier of the dataset'),
     base_url: str = typer.Option(None,
                                  help='The base URL of the Dataverse installation',
+                                 prompt=('Input the base URL of the Dataverse installation'),
+                                 prompt_required=True,
                                  envvar='BASE_URL'),
     api_token: str = typer.Option(None,
                                   help='The API token for the Dataverse installation',
+                                  prompt=('Input the API token for the Dataverse installation'),
                                   hide_input=True,
-                                  prompt='\nEnter the API token',
+                                  prompt_required=True,
                                   envvar='API_TOKEN'),
     workdir_input: str = typer.Option('workdir',
                                 help='The working directory'
-                                )):
+                                )) -> None:
     """This script downloads the dataset files and metadata from a Dataverse instance and checks the files and metadata for data curation, and generates a curation report in spreadsheet (.xlsx) format."""  # noqa: E501, W505
-    base_url, api_token = utils.load_env(base_url, api_token)
     workdir_path, log_files_dir, ds_dir, temp_data_dir = directory_manager.DirectoryManager(workdir_input).make_dirs()
     ds_metadata = asyncio.run(downloads.Downloads(base_url, api_token, doi, workdir_path).downloader())
     file_list_metadata = gen_file_list_metadata(workdir_path, ds_metadata)
