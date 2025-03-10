@@ -25,7 +25,7 @@ class DirectoryManager:
         """
         if self.parent_dir:
             return Path(self.parent_dir, self.ticket_number).resolve()
-        return Path(Path.cwd(), self.ticket_number)
+        return Path(Path.cwd(), 'workdir', self.ticket_number)
 
     def _mk_log_dir(self) -> Path:
         """Create the log directory.

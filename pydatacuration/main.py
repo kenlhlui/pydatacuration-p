@@ -189,8 +189,9 @@ def main(
                                   hide_input=True,
                                   prompt_required=True,
                                   envvar='API_TOKEN'),
-    parent_dir: str = typer.Option(None,
-                                help='The working directory'
+    parent_dir: str = typer.Option('workdir',
+                                help='The working directory. If not specified, a directory "workdir" will be created in the current directory',
+                                show_default=True,
                                 ),
     ticket_number: str = typer.Option(None,
                                       help='The ticket number for the curation report; Also the directory name created under the working directory',
