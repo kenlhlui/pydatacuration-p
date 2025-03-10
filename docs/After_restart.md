@@ -2,4 +2,4 @@
 
 1. Open Terminal
 
-![Description](img/02_cd.gif|width=100)
+<img src="img/02_cd.gif" width="250" height="250"/>
