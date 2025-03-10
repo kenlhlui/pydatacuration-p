@@ -204,8 +204,12 @@ def main(
     ds_metadata = asyncio.run(downloads.Downloads(base_url, api_token, doi, workdir_path).downloader())
     file_list_metadata = gen_file_list_metadata(workdir_path, ds_metadata)
     template_dict = checker(base_url, api_token, ds_metadata, file_list_metadata, workdir_path)
-    log_generation.GenerateLog(workdir_path, base_url, ds_metadata).generate_report_xlsx(template_dict)
-    log_generation.GenerateLog(workdir_path, base_url, ds_metadata).generate_report_doc(template_dict)
+    
+    # Generate the report
+    generate_log = log_generation.GenerateLog(workdir_path, base_url, ds_metadata, ticket_number)
+    generate_log.generate_report_xlsx(template_dict)
+    generate_log.generate_report_doc(template_dict)
+
     # Export the template dict to JSON for debugging purposes
     with temp_data_dir.joinpath('template_dict.json').open('w') as f:
         f.write(orjson.dumps(template_dict, option=orjson.OPT_INDENT_2).decode())

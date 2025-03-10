@@ -17,20 +17,21 @@ RES_DIR = Path('res')
 class GenerateLog:
     """Generates a report based on a template and data from a JSON file."""
 
-    def __init__(self, workdir: Path, base_url: str, ds_metadata: dict) -> None:
+    def __init__(self, workdir: Path, base_url: str, ds_metadata: dict, ticket_number: str) -> None:
         """Initializes the GenerateLog class.
 
         Args:
             workdir (Path): The working directory.
             base_url (str): The base URL of the repository.
             ds_metadata (dict): The dataset metadata.
+            ticket_number (str): The ticket number.
         """
         self.workdir = workdir
-        # self.config = self._read_config_yaml()
         self.timestamp = self._get_timestamp()
         self.ds_metadata = ds_metadata
         self.base_url = base_url
         self.dataset_info_dict = self._get_dataset_info()
+        self.ticket_number = ticket_number
 
     @staticmethod
     def _get_timestamp() -> str:
@@ -124,7 +125,8 @@ class GenerateLog:
         doc.render({'template_dict': template_dict,  # TEMP fix. Need to restructure the template_dict
                     'timestamp': self.timestamp,
                     'dataset': self.dataset_info_dict,
-                    'curator_info': self._get_config_info()})
+                    'curator_info': self._get_config_info(),
+                    'ticket_number': self.ticket_number})
 
         # Save the rendered document
         doc_path = self.workdir.joinpath('log_files', 'render_log.docx')
