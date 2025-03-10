@@ -209,6 +209,7 @@ def main(
     generate_log = log_generation.GenerateLog(workdir_path, base_url, ds_metadata, ticket_number)
     generate_log.generate_report_xlsx(template_dict)
     generate_log.generate_report_doc(template_dict)
+    generate_log.generate_project_metadata()
 
     # Export the template dict to JSON for debugging purposes
     with temp_data_dir.joinpath('template_dict.json').open('w') as f:
@@ -216,6 +217,8 @@ def main(
 
     utils.gen_tree_diagram(Path(workdir_path, 'dataset', 'files'), Path(log_files_dir))
 
+    # Print the end message
+    print(f'\n✅ Curation report generated successfully. \n\nType (or copy) the following (without quotes) in the terminal to view the files: \n\n`explorer.exe {workdir_path}`')
 
 if __name__ == '__main__':
     app()

@@ -61,16 +61,6 @@ class GenerateLog:
         return dataset_info_dict
 
     @staticmethod
-    def _get_config_info() -> dict:
-        """Reads the config.yaml file and returns it as a dictionary.
-
-        Returns:
-            dict: The config as a dictionary.
-        """
-        with RES_DIR.joinpath('config.yaml').open(encoding='utf-8') as file:
-            return yaml.safe_load(file)
-
-    @staticmethod
     def read_template_json() -> dict:
         """Reads the template.json file and returns it as a dictionary.
 
@@ -79,6 +69,18 @@ class GenerateLog:
         """
         with RES_DIR.joinpath('template.json').open(encoding='utf-8') as file:
             return orjson.loads(file.read())
+
+    def _get_config_info(self) -> dict:
+        """Reads the config.yaml file and returns it as a dictionary.
+
+        Returns:
+            dict: The config as a dictionary.
+        """
+        with RES_DIR.joinpath('config.yaml').open(encoding='utf-8') as file:
+            config_dict = yaml.safe_load(file)
+            # Add the ticket number to the config dictionary
+            config_dict['ticket_number'] = self.ticket_number
+            return config_dict
 
     def generate_report_xlsx(self, template_dict: dict) -> None:
         """Fill a formatted Excel template with data using Jinja2 for variable replacement.
@@ -125,10 +127,16 @@ class GenerateLog:
         doc.render({'template_dict': template_dict,  # TEMP fix. Need to restructure the template_dict
                     'timestamp': self.timestamp,
                     'dataset': self.dataset_info_dict,
-                    'curator_info': self._get_config_info(),
-                    'ticket_number': self.ticket_number})
+                    'project_info': self._get_config_info()})
 
         # Save the rendered document
         doc_path = self.workdir.joinpath('log_files', 'render_log.docx')
         doc.save(doc_path)
         print(f'\nWord curation log saved at: {str(doc_path)}')
+
+    def generate_project_metadata(self) -> None:
+        """Generates project metadata (project_info) to JSON file."""
+        meta_path = self.workdir.joinpath('log_files', 'project_info.json')
+        with meta_path.open('w', encoding='utf-8') as file:
+            file.write(orjson.dumps(self._get_config_info(), option=orjson.OPT_INDENT_2).decode('utf-8'))
+            print(f'\nProject metadata saved at: {str(meta_path)}')
