@@ -171,20 +171,6 @@ def gen_tree_diagram(target_dir: Path, save_dir: Path) -> None:
         sys.exit(1)
 
 
-def load_env(base_url: str, api_token: str) -> tuple:
-    dotenv.load_dotenv()
-    if base_url is None:
-        base_url = os.getenv('BASE_URL')
-        if base_url is None:
-            sys.exit('BASE_URL not found in the environment variables. Exiting...')
-    if api_token is None:
-        api_token = os.getenv('API_TOKEN')
-        if api_token is None:
-            sys.exit('API_TOKEN not found in the environment variables. Exiting...')
-    print('Environment variables loaded')
-    return base_url, api_token
-
-
 def parse_file_list_metadata(file_list_metadata: list) -> list:
     """Parse the file list metadata.
 
