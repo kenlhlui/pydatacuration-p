@@ -24,7 +24,7 @@ class DirectoryManager:
             Path: The path object of the working directory.
         """
         if self.parent_dir:
-            return Path(self.parent_dir, self.ticket_number)
+            return Path(self.parent_dir, self.ticket_number).resolve()
         return Path(Path.cwd(), self.ticket_number)
 
     def _mk_log_dir(self) -> Path:
