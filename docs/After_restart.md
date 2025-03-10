@@ -21,7 +21,7 @@
    python3 pydatacuration/main.py --doi $DOI  # (e.g. --doi doi:10.80240/FK2/U2VZH9)
    ```
 
-For example:
-   ```sh
-   python3 pydatacuration/main.py --doi doi:10.80240/FH2/U2VCH9
-   ```
+   For example:
+      ```sh
+      python3 pydatacuration/main.py --doi doi:10.80240/FH2/U2VCH9
+      ```
