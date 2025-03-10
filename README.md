@@ -98,7 +98,7 @@ The following will use the [GitHub CLI](https://cli.github.com/) for authenticat
    
 > [!NOTE]
 > If it shows `! Failed opening a web browser`, try to type the `gh auth login` again. 
-When the terminal prompts to `Press Enter to open https://github.com/login/device in your browser...`, try to press the control key (CTTL) then click on the https://github.com/login/device link, and enter the one-time code.
+When the terminal prompts to `Press Enter to open https://github.com/login/device in your browser...`, try to press the control key (CTRL) then click on the https://github.com/login/device link, and enter the one-time code.
    
 5. Lastly, you have to set the Git credentials, by running the following command.
    ```sh
@@ -177,6 +177,10 @@ You can modify it with Notepad (GUI) or nano editor (Terminal).
 
 ## 🏃Run the tool
 You have finished the configuration. Now is time to run the tool.
+
+>[!TIP]
+>See [here](docs/After_restart.md) if want to see a step-by-step guide after restart
+
 
 1. Open a terminal, run the script with the following command
    ```sh
