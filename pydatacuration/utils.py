@@ -4,10 +4,13 @@ import re
 import sys
 from pathlib import Path
 from pathlib import PurePosixPath
+from typing import Optional
 
 import deepdiff
 import dotenv
 import seedir as sd
+import typer
+from typing_extensions import Annotated
 
 
 class FileNameFormatChecker:
@@ -191,3 +194,25 @@ def parse_file_list_metadata(file_list_metadata: list) -> list:
         })
 
     return file_list_metadata_nested_list
+
+
+def check_ticket_num_input(ticket_num: str) -> str:
+    """Check if the ticket number is without any special characters or spaces.
+
+    Args:
+        ticket_num (str): The ticket number to check.
+
+    Returns:
+        str: The validated ticket number.
+    """
+    # Check if the ticket number is empty
+    if not ticket_num:
+        msg = 'Ticket number cannot be empty.'
+        raise typer.BadParameter(msg)
+
+    # Check if the ticket number contains any special characters or spaces
+    if re.search(r'[^a-zA-Z0-9_\-]', ticket_num):
+        msg = '⚠️ Ticket number must only contain letters, numbers, hyphens, and underscores.'
+        raise typer.BadParameter(msg)
+
+    return ticket_num

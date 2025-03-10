@@ -3,6 +3,7 @@
 import asyncio
 import os
 from pathlib import Path
+from typing import Optional
 
 import checksum
 import directory_manager
@@ -17,6 +18,7 @@ import spell_checker
 import typer
 import utils
 from dotenv import load_dotenv
+from typing_extensions import Annotated
 
 
 # Load environment variables from .env file
@@ -187,11 +189,17 @@ def main(
                                   hide_input=True,
                                   prompt_required=True,
                                   envvar='API_TOKEN'),
-    workdir_input: str = typer.Option('workdir',
+    parent_dir: str = typer.Option(None,
                                 help='The working directory'
-                                )) -> None:
+                                ),
+    ticket_number: str = typer.Option(None,
+                                      help='The ticket number for the curation report; Also the directory name created under the working directory',
+                                      prompt=('Input the ticket number for the curation report'),
+                                      prompt_required=True,
+                                      callback=utils.check_ticket_num_input,
+                                      )) -> None:
     """This script downloads the dataset files and metadata from a Dataverse instance and checks the files and metadata for data curation, and generates a curation report in spreadsheet (.xlsx) format."""  # noqa: E501, W505
-    workdir_path, log_files_dir, ds_dir, temp_data_dir = directory_manager.DirectoryManager(workdir_input).make_dirs()
+    workdir_path, log_files_dir, ds_dir, temp_data_dir = directory_manager.DirectoryManager(ticket_number, parent_dir).make_dirs()
     ds_metadata = asyncio.run(downloads.Downloads(base_url, api_token, doi, workdir_path).downloader())
     file_list_metadata = gen_file_list_metadata(workdir_path, ds_metadata)
     template_dict = checker(base_url, api_token, ds_metadata, file_list_metadata, workdir_path)
