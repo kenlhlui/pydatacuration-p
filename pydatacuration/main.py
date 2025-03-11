@@ -102,14 +102,21 @@ def checker(base_url: str, api_token: str, ds_metadata: dict, file_list_metadata
                 print(f'\nMissing metadata found in the {field}')
                 template_dict['missing_field'][field]['comments'].append(f'Missing metadata in {field} field')
 
+        # Check any associated fields for an author (affiliation, identifier & scheme) are missing
         field_list_author = ['authorAffiliation', 'authorIdentifierScheme', 'authorIdentifier']
-        result = mc.check_author_cm_field()
-        for item in result:
+        author_info_dict = mc.check_author_cm_field()
+        for item in author_info_dict:
             author_name = item.get('authorName')
             for field in field_list_author:
                 if item.get(field) is None:
                     print(f'\nMissing metadata found in {field} field for author: {author_name}')
                     template_dict['missing_field'][field]['comments'].append(f'Missing metadata in {field} field for author: {author_name}')
+
+        # Check if at least one author has authorAffiliation
+        author_affiliation_num = len([item for item in author_info_dict if item.get('authorAffiliation') is not None])
+        if author_affiliation_num == 0:
+            print('\nNone of the authors have an institutional affiliation listed')
+            template_dict['none_author_affiliation'] = True
 
         return template_dict
 

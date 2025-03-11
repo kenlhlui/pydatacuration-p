@@ -19,6 +19,7 @@
         "comments": []
     },
     "name_name_of_dataverse": null,
+    "none_author_affiliation": false,
     "missing_field": {
         "title": {
             "status": {},
