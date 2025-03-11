@@ -21,8 +21,14 @@
     "restricted_files": {
         "comments": []
     },
-    "name_name_of_dataverse": null,
+    "name_of_dataverse": null,
     "none_author_affiliation": false,
+    "terms_license": {
+        "termsOfUse": null,
+        "termsOfAccess": null,
+        "licenseName": null
+        
+    },
     "missing_field": {
         "title": {
             "comments": []

@@ -166,7 +166,7 @@ def checker(base_url: str, api_token: str, ds_metadata: dict, file_list_metadata
                                  headers={'X-Dataverse-key': api_token})
             if response.status_code == 200 and response.json():
                 name_of_dataverse = response.json().get('data', {}).get('items', [{}])[0].get('name_of_dataverse', None)
-                template_dict['name_name_of_dataverse'] = name_of_dataverse
+                template_dict['name_of_dataverse'] = name_of_dataverse
 
         return template_dict
 
@@ -181,12 +181,31 @@ def checker(base_url: str, api_token: str, ds_metadata: dict, file_list_metadata
 
         return template_dict
 
+    def _check_terms_license(template_dict: dict) -> dict:
+        # Check if the terms of use and license are present
+        terms_of_use = ds_metadata.get('data', {}).get('latestVersion', {}).get('termsOfUse', None)
+        terms_of_access = ds_metadata.get('data', {}).get('latestVersion', {}).get('termsOfAccess', None)
+        license_name = ds_metadata.get('data', {}).get('latestVersion', {}).get('license', {}).get('name', None)
+
+        template_dict['terms_license']['termsOfUse'] = terms_of_use
+        template_dict['terms_license']['termsOfAccess'] = terms_of_access
+        template_dict['terms_license']['licenseName'] = license_name
+
+        if license_name == 'CC0 1.0':
+            print('\n The license is CC0 1.0')
+
+        if len(template_dict['restricted_files']['comments']) > 0 and (terms_of_use is None or terms_of_access is None):
+            print('\n The terms of use and access are missing')
+
+        return template_dict
+
     template_dict_new = _check_file_name_format(file_list_metadata, template_dict)
     template_dict_new = _check_missing_metadata(template_dict_new, workdir)
     template_dict_new = _check_spelling(template_dict_new)
     template_dict_new = _check_dv_record(template_dict_new)
     template_dict_new = _check_dv_collection(template_dict_new)
     template_dict_new = _check_restricted_files(file_list_metadata, template_dict_new)
+    template_dict_new = _check_terms_license(template_dict_new)
 
     return template_dict_new
 
