@@ -22,15 +22,12 @@
     "none_author_affiliation": false,
     "missing_field": {
         "title": {
-            "status": {},
             "comments": []
         },
         "dsDescription": {
-            "status": {},
             "comments": []
         },
         "subject": {
-            "status": {},
             "comments": []
         },        
         "author": {
@@ -38,15 +35,12 @@
             "comments": []
         },
         "authorAffiliation": {
-            "status": {},
             "comments": []
         },
         "authorIdentifierScheme": {
-            "status": {},
             "comments": []
         },
         "authorIdentifier": {
-            "status": {},
             "comments": []
         }
     }
