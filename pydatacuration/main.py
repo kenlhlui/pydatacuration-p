@@ -55,7 +55,7 @@ def gen_file_list_metadata(workdir: Path, ds_metadata: dict) -> list:
 def checker(base_url: str, api_token: str, ds_metadata: dict, file_list_metadata: list, workdir: Path) -> dict:
     template_dict = log_generation.GenerateLog.read_template_json()
 
-    def _check_file_name_format(file_list_metadata, template_dict: dict):
+    def _check_file_name_format(file_list_metadata: list, template_dict: dict):
 
         file_name_format_checker = utils.FileNameFormatChecker()
         for file in file_list_metadata:
@@ -170,11 +170,23 @@ def checker(base_url: str, api_token: str, ds_metadata: dict, file_list_metadata
 
         return template_dict
 
+    def _check_restricted_files(file_list_metadata: list, template_dict: dict) -> dict:
+        # Check and return file path if restricted
+        for item in file_list_metadata:
+            if item.get('restricted') is True:
+                file_name = item.get('dataFile', {}).get('originalFileName') or item.get('dataFile', {}).get('filename')
+                file_path = Path(item.get('directoryLabel', ''), file_name)
+                print(f'\nRestricted file found: {file_path}')
+                template_dict['restricted_files']['comments'].append({'file_name': str(file_path)})
+
+        return template_dict
+
     template_dict_new = _check_file_name_format(file_list_metadata, template_dict)
     template_dict_new = _check_missing_metadata(template_dict_new, workdir)
     template_dict_new = _check_spelling(template_dict_new)
     template_dict_new = _check_dv_record(template_dict_new)
     template_dict_new = _check_dv_collection(template_dict_new)
+    template_dict_new = _check_restricted_files(file_list_metadata, template_dict_new)
 
     return template_dict_new
 
@@ -211,7 +223,7 @@ def main(
     ds_metadata = asyncio.run(downloads.Downloads(base_url, api_token, doi, workdir_path).downloader())
     file_list_metadata = gen_file_list_metadata(workdir_path, ds_metadata)
     template_dict = checker(base_url, api_token, ds_metadata, file_list_metadata, workdir_path)
-    
+
     # Generate the report
     generate_log = log_generation.GenerateLog(workdir_path, base_url, ds_metadata, ticket_number)
     generate_log.generate_report_xlsx(template_dict)
