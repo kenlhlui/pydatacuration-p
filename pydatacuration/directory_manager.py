@@ -6,13 +6,26 @@ from pathlib import Path
 class DirectoryManager:
     """This class is used to manage the directories in the project."""
 
-    def __init__(self, workdir: str) -> None:
+    def __init__(self, ticket_number: str, parent_dir: str | None = None) -> None:
         """Initialize the class.
 
         Args:
-            workdir (str): The working directory.
+            ticket_number (str): The name ticket number, also the name of the working directory.
+            parent_dir (str | None): The parent directory where the working directory will be created.
         """
-        self.workdir = Path(workdir) if workdir else Path.cwd()
+        self.ticket_number = ticket_number
+        self.parent_dir = parent_dir
+        self.workdir = self._define_workdir()
+
+    def _define_workdir(self) -> Path:
+        """Define the working directory. Combine the ticket number with the path.
+
+        Returns:
+            Path: The path object of the working directory.
+        """
+        if self.parent_dir:
+            return Path(self.parent_dir, self.ticket_number).resolve()
+        return Path(Path.cwd(), 'workdir', self.ticket_number)
 
     def _mk_log_dir(self) -> Path:
         """Create the log directory.

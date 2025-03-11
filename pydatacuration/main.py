@@ -3,6 +3,7 @@
 import asyncio
 import os
 from pathlib import Path
+from typing import Optional
 
 import checksum
 import directory_manager
@@ -17,6 +18,7 @@ import spell_checker
 import typer
 import utils
 from dotenv import load_dotenv
+from typing_extensions import Annotated
 
 
 # Load environment variables from .env file
@@ -187,22 +189,36 @@ def main(
                                   hide_input=True,
                                   prompt_required=True,
                                   envvar='API_TOKEN'),
-    workdir_input: str = typer.Option('workdir',
-                                help='The working directory'
-                                )) -> None:
-    """This script downloads the dataset files and metadata from a Dataverse instance and checks the files and metadata for data curation, and generates a curation report in spreadsheet (.xlsx) format."""  # noqa: E501, W505
-    workdir_path, log_files_dir, ds_dir, temp_data_dir = directory_manager.DirectoryManager(workdir_input).make_dirs()
+    parent_dir: str = typer.Option('workdir',
+                                help='The working directory. If not specified, a directory "workdir" will be created in the current directory',
+                                show_default=True,
+                                ),
+    ticket_number: str = typer.Option(None,
+                                      help='The ticket number for the curation report; Also the directory name created under the working directory',
+                                      prompt=('Input the ticket number for the curation report'),
+                                      prompt_required=True,
+                                      callback=utils.check_ticket_num_input,
+                                      )) -> None:
+    """This script downloads the dataset files and metadata from a Dataverse instance and checks the files and metadata for data curation, and generates a curation report in spreadsheet (.xlsx) and world (.docx) format."""  # noqa: E501, W505
+    workdir_path, log_files_dir, ds_dir, temp_data_dir = directory_manager.DirectoryManager(ticket_number, parent_dir).make_dirs()
     ds_metadata = asyncio.run(downloads.Downloads(base_url, api_token, doi, workdir_path).downloader())
     file_list_metadata = gen_file_list_metadata(workdir_path, ds_metadata)
     template_dict = checker(base_url, api_token, ds_metadata, file_list_metadata, workdir_path)
-    log_generation.GenerateLog(workdir_path, base_url, ds_metadata).generate_report_xlsx(template_dict)
-    log_generation.GenerateLog(workdir_path, base_url, ds_metadata).generate_report_doc(template_dict)
+    
+    # Generate the report
+    generate_log = log_generation.GenerateLog(workdir_path, base_url, ds_metadata, ticket_number)
+    generate_log.generate_report_xlsx(template_dict)
+    generate_log.generate_report_doc(template_dict)
+    generate_log.generate_project_metadata()
+
     # Export the template dict to JSON for debugging purposes
     with temp_data_dir.joinpath('template_dict.json').open('w') as f:
         f.write(orjson.dumps(template_dict, option=orjson.OPT_INDENT_2).decode())
 
     utils.gen_tree_diagram(Path(workdir_path, 'dataset', 'files'), Path(log_files_dir))
 
+    # Print the end message
+    print(f'\n✅ Curation report generated successfully. \n\nType (or copy) the following (without quotes) in the terminal to view the files: \n\n`explorer.exe {workdir_path}`')
 
 if __name__ == '__main__':
     app()
