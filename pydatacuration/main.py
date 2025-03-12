@@ -156,7 +156,7 @@ def checker(base_url: str, api_token: str, ds_metadata: dict, file_list_metadata
         ds_version_id = ds_metadata.get('data', {}).get('latestVersion', {}).get('id')
         if ds_version_id:
             # See https://github.com/IQSS/dataverse/issues/2038 for fq field;
-            # Also check the source code the the available fq fields https://github.com/IQSS/dataverse/blob/366d7ac6907a405421fe1ebdaad21b636e3b74f7/src/main/java/edu/harvard/iq/dataverse/search/SearchFields.java#L4
+            # Also check the source code the the available fq fields https://github.com/IQSS/dataverse/blob/develop/src/main/java/edu/harvard/iq/dataverse/search/SearchFields.java
             # Use 'datasetVersionId' here; in ds_metadata it is data.latestVersion.id
             # Don't mess up with data.id or data.latestVersion.datasetId which are the same and is the persistent id in the dataverse system
             response = httpx.get(f'{base_url}/api/search?q=*&type=dataset&per_page=1&fq=datasetVersionId:{ds_version_id}',
