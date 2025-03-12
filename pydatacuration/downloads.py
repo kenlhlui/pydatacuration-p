@@ -6,6 +6,7 @@ from pathlib import Path
 import httpx
 import jmespath
 import orjson
+from custom_logging import CustomLogger
 
 
 class Downloads:
@@ -32,6 +33,7 @@ class Downloads:
             timeout=None,
             follow_redirects=True)
         self.semaphore = asyncio.Semaphore(5)
+        self.logger = CustomLogger.get_logger(__name__)
 
     def _metadata_dir(self) -> Path:
         """Create the metadata directory.
@@ -142,7 +144,7 @@ class Downloads:
                                 f.write(chunk)
                     return file_path_obj
         except httpx.HTTPStatusError as e:
-            print(f'HTTP error occurred: {e}')
+            self.logger.print(f'HTTP error occurred: {e}')
 
     async def save_files_async(self, file_list: list) -> list:
         """Download the files of the dataset asynchronously.
@@ -177,10 +179,10 @@ class Downloads:
             return {}
 
         except httpx.HTTPStatusError as e:
-            print(f'HTTP error occurred: {e}')
+            self.logger.print(f'HTTP error occurred: {e}')
             sys.exit(1)
         except Exception as e:
-            print(f'An error occurred: {e}')
+            self.logger.print(f'An error occurred: {e}')
             sys.exit(1)
 
     def save_ds_metadata(self) -> None:
@@ -191,7 +193,7 @@ class Downloads:
             with file_path.open('w', encoding='utf-8') as f:
                 f.write(orjson.dumps(response_json, option=orjson.OPT_INDENT_2).decode())
         except Exception as e:
-            print(f' An error occurred: {e}\n Program exiting...')
+            self.logger.print(f' An error occurred: {e}\n Program exiting...')
             sys.exit(1)
 
     def get_ds_zip(self) -> Path:
@@ -212,12 +214,12 @@ class Downloads:
             return file_path
 
         except httpx.HTTPStatusError as e:
-            print(f'HTTP error occurred: {e}')
+            self.logger.print(f'HTTP error occurred: {e}')
             sys.exit(1)
             return {}
 
         except Exception as e:
-            print(f'An error occurred: {e}')
+            self.logger.print(f'An error occurred: {e}')
 
             sys.exit(1)
             return {}
@@ -240,11 +242,11 @@ class Downloads:
             return file_path
 
         except httpx.HTTPStatusError as e:
-            print(f'HTTP error occurred: {e}')
+            self.logger.print(f'HTTP error occurred: {e}')
             sys.exit(1)
 
         except Exception as e:
-            print(f'An error occurred: {e}')
+            self.logger.print(f'An error occurred: {e}')
             sys.exit(1)
 
     async def downloader(self) -> dict | None:
@@ -254,16 +256,16 @@ class Downloads:
             dict: Metadata of the dataset
         """
         # Initiating the downloads
-        print('\nDownloading dataset metadata...')
+        self.logger.print('\nDownloading dataset metadata...')
         ds_metadata_json = self._get_ds_metadata()
         self.save_ds_metadata()
-        print('\nDataset metadata downloaded')
+        self.logger.print('\nDataset metadata downloaded')
 
         # Download the data files using async method
-        print('\nDownloading data files...')
+        self.logger.print('\nDownloading data files...')
         file_list = self._get_file_list(ds_metadata_json)
         self.make_dir_structure(ds_metadata_json)
 
         await self.save_files_async(file_list)
-        print('\nData files downloaded')
+        self.logger.print('\nData files downloaded')
         return ds_metadata_json

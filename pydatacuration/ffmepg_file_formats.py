@@ -1,12 +1,16 @@
 """Get the FFmpeg file formats."""
 import subprocess
 import sys
+from custom_logging import CustomLogger
 
 
 class FFmpegFileFormats:
     """Get the FFmpeg file formats."""
-    @staticmethod
-    def get_ffmpeg_formats() -> list:
+    def __init__(self) -> None:
+        """Initialize the FFmpegFileFormats class."""
+        self.logger = CustomLogger.get_logger(__name__)
+
+    def get_ffmpeg_formats(self) -> list:
         """Get the FFmpeg file formats.
 
         Returns:
@@ -63,10 +67,10 @@ class FFmpegFileFormats:
             return ['.' + ext for ext in format_extensions]
 
         except FileNotFoundError:
-            print('FFmpeg is not installed or not found in the system PATH.')
-            print('Exiting...')
+            self.logger.error('FFmpeg is not installed or not found in the system PATH.')
+            self.logger.info('Exiting...')
             sys.exit(1)
         except Exception as e:
-            print(f'An error occurred: {e}')
-            print('Exiting...')
+            self.logger.error(f'An error occurred: {e}')
+            self.logger.info('Exiting...')
             sys.exit(1)
