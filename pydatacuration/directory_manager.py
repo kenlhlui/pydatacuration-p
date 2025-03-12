@@ -1,7 +1,7 @@
 """This module is used to manage the directories in the project."""
 
 from pathlib import Path
-
+from custom_logging import CustomLogger
 
 class DirectoryManager:
     """This class is used to manage the directories in the project."""
@@ -16,6 +16,8 @@ class DirectoryManager:
         self.ticket_number = ticket_number
         self.parent_dir = parent_dir
         self.workdir = self._define_workdir()
+        self.logger = CustomLogger.get_logger(__name__)
+
 
     def _define_workdir(self) -> Path:
         """Define the working directory. Combine the ticket number with the path.
@@ -33,7 +35,7 @@ class DirectoryManager:
         Returns:
             Path: The path to the log directory.
         """
-        log_files_dir = Path(self.workdir, 'log_files', 'temp_data')
+        log_files_dir = Path(self.workdir, 'log_files')
         log_files_dir.mkdir(parents=True, exist_ok=True)
 
         return log_files_dir.resolve()  # The path object of the log directory.
@@ -75,5 +77,6 @@ class DirectoryManager:
         log_files_dir = self._mk_log_dir()
         ds_dir = self._mk_ds_dir()
         temp_data_dir = self._mk_temp_dir()
-        print(f'\nThe working directory is: {self.workdir}')
+        CustomLogger.setup_logging(log_file_dir=log_files_dir)
+        self.logger.print(f'\nThe working directory is: {self.workdir}')
         return self.workdir, log_files_dir, ds_dir, temp_data_dir

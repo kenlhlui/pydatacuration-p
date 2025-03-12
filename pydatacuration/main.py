@@ -1,9 +1,7 @@
 """The main module of the pydatacuration CLI application."""
 # ruff: noqa: E501, W505
 import asyncio
-import os
 from pathlib import Path
-from typing import Optional
 
 import checksum
 import directory_manager
@@ -17,13 +15,12 @@ import orjson
 import spell_checker
 import typer
 import utils
+from custom_logging import CustomLogger
 from dotenv import load_dotenv
-from typing_extensions import Annotated
 
 
 # Load environment variables from .env file
 load_dotenv(override=True)
-
 
 app = typer.Typer()
 
@@ -238,7 +235,16 @@ def main(
                                       callback=utils.check_ticket_num_input,
                                       )) -> None:
     """This script downloads the dataset files and metadata from a Dataverse instance and checks the files and metadata for data curation, and generates a curation report in spreadsheet (.xlsx) and world (.docx) format."""  # noqa: E501, W505
+    # Set up the directory structure
     workdir_path, log_files_dir, ds_dir, temp_data_dir = directory_manager.DirectoryManager(ticket_number, parent_dir).make_dirs()
+
+    # Initialize the custom logger
+    CustomLogger.setup_logging(Path(log_files_dir, 'cli.log'))
+    logger = CustomLogger.get_logger('main')
+
+    # print the start message
+    logger.print('\nStarting the pydatacuration script...')
+
     ds_metadata = asyncio.run(downloads.Downloads(base_url, api_token, doi, workdir_path).downloader())
     file_list_metadata = gen_file_list_metadata(workdir_path, ds_metadata)
     template_dict = checker(base_url, api_token, ds_metadata, file_list_metadata, workdir_path)
@@ -256,7 +262,7 @@ def main(
     utils.gen_tree_diagram(Path(workdir_path, 'dataset', 'files'), Path(log_files_dir))
 
     # Print the end message
-    print(f'\n✅ Curation report generated successfully. \n\nType (or copy) the following (without quotes) in the terminal to view the files: \n\n`explorer.exe {workdir_path}`')
+    logger.print(f'\n✅ Curation report generated successfully. \n\nType (or copy) the following (without quotes) in the terminal to view the files: \n\n`explorer.exe {workdir_path}`')
 
 if __name__ == '__main__':
     app()

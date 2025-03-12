@@ -1,11 +1,10 @@
-# pylint --disable=C0301
-import re
+"""MetadataChecker class for checking metadata fields in a JSON file."""
 import sys
-import typing
 from pathlib import Path
 
 import jmespath
 import orjson
+from custom_logging import CustomLogger
 
 
 class MetadataChecker:
@@ -18,6 +17,7 @@ class MetadataChecker:
         """
         self.metadata_json_path = metadata_json_path
         self.metadata = self._read_json()
+        self.logger = CustomLogger.get_logger(__name__)
 
     def _read_json(self) -> dict:
         """Read the JSON file and return the data.
@@ -30,8 +30,8 @@ class MetadataChecker:
                 data = orjson.loads(f.read())
             return data
         except Exception as e:
-            print(f'Error reading JSON file: {e}')
-            print('Exiting...')
+            self.logger.error(f'Error reading JSON file: {e}')
+            self.logger.print('Exiting...')
             sys.exit(1)
 
     def _read_metadata_cm_field(self, field: str, subfield=None):

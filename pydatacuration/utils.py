@@ -4,14 +4,15 @@ import re
 import sys
 from pathlib import Path
 from pathlib import PurePosixPath
-from typing import Optional
 
 import deepdiff
-import dotenv
 import seedir as sd
 import typer
-from typing_extensions import Annotated
+from custom_logging import CustomLogger
 
+
+# Initialize the logger
+logger = CustomLogger.get_logger(__name__)
 
 class FileNameFormatChecker:
     """This class is used to check the file name format."""
@@ -123,15 +124,15 @@ def compare_files_and_metadata(dl_files_checksums, metadata_file_checksums, work
     """
     diff = deepdiff.DeepDiff(dl_files_checksums, metadata_file_checksums, ignore_order=True)
     if diff:
-        print('\nThe downloaded files and the file list metadata are different.')
+        logger.warning('\nThe downloaded files and the file list metadata are different.')
         diff_log_path = Path(workddir, 'log_files', 'diff.txt').resolve()
         with diff_log_path.open('w', encoding='utf-8') as f:
             f.write(str(diff))
-        print(f'See the {str(diff_log_path)} file for the differences.')
+        logger.warning(f'See the {str(diff_log_path)} file for the differences.')
         sys.exit(1)
 
     else:
-        print('\nThe downloaded files and the file list metadata are the same.')
+        logger.print('\nThe downloaded files and the file list metadata are the same.')
         return False
 
 
@@ -163,14 +164,14 @@ def gen_tree_diagram(target_dir: Path, save_dir: Path) -> None:
                 with Path(ds_tree_file_path).open('w', encoding='utf-8') as f:
                     f.write(result)
 
-                print(f'\nFolder tree diagram text file saved at: {str(ds_tree_file_path)}')
+                logger.print(f'\nFolder tree diagram text file saved at: {str(ds_tree_file_path)}')
         else:
-            print('\nThe target directory does not exist. Exiting...')
+            logger.print('\nThe target directory does not exist. Exiting...')
             sys.exit(1)
 
     except Exception as e:
-        print(f'Error: {e}')
-        print('An error occurred while generating the folder tree diagram. Exiting...')
+        logger.print(f'Error: {e}')
+        logger.print('An error occurred while generating the folder tree diagram. Exiting...')
         sys.exit(1)
 
 
