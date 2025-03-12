@@ -55,7 +55,7 @@ def gen_file_list_metadata(workdir: Path, ds_metadata: dict) -> list:
 def checker(base_url: str, api_token: str, ds_metadata: dict, file_list_metadata: list, workdir: Path) -> dict:
     template_dict = log_generation.GenerateLog.read_template_json()
 
-    def _check_file_name_format(file_list_metadata, template_dict: dict):
+    def _check_file_name_format(file_list_metadata: list, template_dict: dict):
 
         file_name_format_checker = utils.FileNameFormatChecker()
         for file in file_list_metadata:
@@ -102,14 +102,21 @@ def checker(base_url: str, api_token: str, ds_metadata: dict, file_list_metadata
                 print(f'\nMissing metadata found in the {field}')
                 template_dict['missing_field'][field]['comments'].append(f'Missing metadata in {field} field')
 
+        # Check any associated fields for an author (affiliation, identifier & scheme) are missing
         field_list_author = ['authorAffiliation', 'authorIdentifierScheme', 'authorIdentifier']
-        result = mc.check_author_cm_field()
-        for item in result:
+        author_info_dict = mc.check_author_cm_field()
+        for item in author_info_dict:
             author_name = item.get('authorName')
             for field in field_list_author:
                 if item.get(field) is None:
                     print(f'\nMissing metadata found in {field} field for author: {author_name}')
                     template_dict['missing_field'][field]['comments'].append(f'Missing metadata in {field} field for author: {author_name}')
+
+        # Check if at least one author has authorAffiliation
+        author_affiliation_num = len([item for item in author_info_dict if item.get('authorAffiliation') is not None])
+        if author_affiliation_num == 0:
+            print('\nNone of the authors have an institutional affiliation listed')
+            template_dict['none_author_affiliation'] = True
 
         return template_dict
 
@@ -159,7 +166,36 @@ def checker(base_url: str, api_token: str, ds_metadata: dict, file_list_metadata
                                  headers={'X-Dataverse-key': api_token})
             if response.status_code == 200 and response.json():
                 name_of_dataverse = response.json().get('data', {}).get('items', [{}])[0].get('name_of_dataverse', None)
-                template_dict['name_name_of_dataverse'] = name_of_dataverse
+                template_dict['name_of_dataverse'] = name_of_dataverse
+
+        return template_dict
+
+    def _check_restricted_files(file_list_metadata: list, template_dict: dict) -> dict:
+        # Check and return file path if restricted
+        for item in file_list_metadata:
+            if item.get('restricted') is True:
+                file_name = item.get('dataFile', {}).get('originalFileName') or item.get('dataFile', {}).get('filename')
+                file_path = Path(item.get('directoryLabel', ''), file_name)
+                print(f'\nRestricted file found: {file_path}')
+                template_dict['restricted_files']['comments'].append({'file_name': str(file_path)})
+
+        return template_dict
+
+    def _check_terms_license(template_dict: dict) -> dict:
+        # Check if the terms of use and license are present
+        terms_of_use = ds_metadata.get('data', {}).get('latestVersion', {}).get('termsOfUse', None)
+        terms_of_access = ds_metadata.get('data', {}).get('latestVersion', {}).get('termsOfAccess', None)
+        license_name = ds_metadata.get('data', {}).get('latestVersion', {}).get('license', {}).get('name', None)
+
+        template_dict['terms_license']['termsOfUse'] = terms_of_use
+        template_dict['terms_license']['termsOfAccess'] = terms_of_access
+        template_dict['terms_license']['licenseName'] = license_name
+
+        if license_name == 'CC0 1.0':
+            print('\n The license is CC0 1.0')
+
+        if len(template_dict['restricted_files']['comments']) > 0 and (terms_of_use is None or terms_of_access is None):
+            print('\n The terms of use and access are missing')
 
         return template_dict
 
@@ -168,6 +204,8 @@ def checker(base_url: str, api_token: str, ds_metadata: dict, file_list_metadata
     template_dict_new = _check_spelling(template_dict_new)
     template_dict_new = _check_dv_record(template_dict_new)
     template_dict_new = _check_dv_collection(template_dict_new)
+    template_dict_new = _check_restricted_files(file_list_metadata, template_dict_new)
+    template_dict_new = _check_terms_license(template_dict_new)
 
     return template_dict_new
 
@@ -204,7 +242,7 @@ def main(
     ds_metadata = asyncio.run(downloads.Downloads(base_url, api_token, doi, workdir_path).downloader())
     file_list_metadata = gen_file_list_metadata(workdir_path, ds_metadata)
     template_dict = checker(base_url, api_token, ds_metadata, file_list_metadata, workdir_path)
-    
+
     # Generate the report
     generate_log = log_generation.GenerateLog(workdir_path, base_url, ds_metadata, ticket_number)
     generate_log.generate_report_xlsx(template_dict)
