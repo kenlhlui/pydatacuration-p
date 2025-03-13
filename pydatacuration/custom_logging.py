@@ -33,7 +33,7 @@ class CustomLogger:
 
         # Configure root logger
         root_logger = logging.getLogger()
-        root_logger.setLevel(log_level)
+        root_logger.setLevel(logging.NOTSET)
 
         # Remove any existing handlers to prevent duplicates
         for handler in root_logger.handlers[:]:
@@ -48,6 +48,7 @@ class CustomLogger:
         console_handler = logging.StreamHandler()
         console_handler.setLevel(CustomLogger.PRINT_LEVEL)
         console_handler.setFormatter(console_formatter)
+
         root_logger.addHandler(console_handler)
 
         # Create file handler if log_file_dir is provided
@@ -57,6 +58,7 @@ class CustomLogger:
             file_handler = logging.FileHandler(filename=str(log_file_path),
                                               mode='a', encoding='utf-8')
             file_handler.setFormatter(file_formatter)
+            file_handler.setLevel(logging.NOTSET)
             root_logger.addHandler(file_handler)
 
         CustomLogger._setup_done = True

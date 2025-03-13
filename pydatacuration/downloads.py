@@ -249,7 +249,7 @@ class Downloads:
             self.logger.print(f'An error occurred: {e}')
             sys.exit(1)
 
-    async def downloader(self) -> dict | None:
+    async def downloader(self) -> dict:
         """Download the dataset as a zip file asynchronously.
 
         Returns:
