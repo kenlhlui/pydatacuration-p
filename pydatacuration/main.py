@@ -64,8 +64,6 @@ def main(
     # Run the checker
     checker = Checker(base_url, api_token, ds_metadata, workdir_path)
     template_dict = checker.run_checks()
-    # file_list_metadata = gen_file_list_metadata(workdir_path, ds_metadata)
-    # template_dict = checker(base_url, api_token, ds_metadata, file_list_metadata, workdir_path)
 
     # Generate the report
     generate_log = log_generation.GenerateLog(workdir_path, base_url, ds_metadata, ticket_number)
