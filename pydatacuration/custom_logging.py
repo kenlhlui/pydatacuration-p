@@ -40,13 +40,15 @@ class CustomLogger:
             root_logger.removeHandler(handler)
 
         # Create formatter
-        formatter = logging.Formatter(fmt='%(asctime)s - %(name)s - %(levelname)s - %(message)s',
+        console_formatter = logging.Formatter(fmt='%(asctime)s - %(message)s', datefmt='%Y-%m-%d %H:%M:%S')
+        file_formatter = logging.Formatter(fmt='%(asctime)s - %(name)s - %(levelname)s - %(message)s',
                                       datefmt='%Y-%m-%d %H:%M:%S')
 
         # Create console handler
         console_handler = logging.StreamHandler()
         console_handler.setLevel(CustomLogger.PRINT_LEVEL)
-        console_handler.setFormatter(formatter)
+        console_handler.setFormatter(console_formatter)
+
         root_logger.addHandler(console_handler)
 
         # Create file handler if log_file_dir is provided
@@ -55,8 +57,8 @@ class CustomLogger:
             log_file_path.parent.mkdir(parents=True, exist_ok=True)
             file_handler = logging.FileHandler(filename=str(log_file_path),
                                               mode='a', encoding='utf-8')
+            file_handler.setFormatter(file_formatter)
             file_handler.setLevel(logging.NOTSET)
-            file_handler.setFormatter(formatter)
             root_logger.addHandler(file_handler)
 
         CustomLogger._setup_done = True
