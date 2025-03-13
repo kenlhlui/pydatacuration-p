@@ -4,6 +4,8 @@ import logging
 from pathlib import Path
 from typing import Any
 
+from rich.logging import RichHandler
+
 
 class CustomLogger:
     """Custom logger class that extends the standard logging module."""
@@ -44,10 +46,18 @@ class CustomLogger:
         file_formatter = logging.Formatter(fmt='%(asctime)s - %(name)s - %(levelname)s - %(message)s',
                                       datefmt='%Y-%m-%d %H:%M:%S')
 
-        # Create console handler
-        console_handler = logging.StreamHandler()
-        console_handler.setLevel(CustomLogger.PRINT_LEVEL)
-        console_handler.setFormatter(console_formatter)
+        # Create console handler using the RichHandler
+        console_handler = RichHandler(
+            level=CustomLogger.PRINT_LEVEL,
+            rich_tracebacks=True,
+            show_time=True,
+            show_path=False,
+            show_level=False,
+            omit_repeated_times=False,
+            markup=True,
+            log_time_format='[%Y-%m-%d %H:%M:%S]'
+        )
+
 
         root_logger.addHandler(console_handler)
 

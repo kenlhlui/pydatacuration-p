@@ -5,8 +5,6 @@ from pathlib import Path
 
 import httpx
 import jmespath
-import log_generation
-import orjson
 from checksum import Checksum
 from custom_logging import CustomLogger
 from files_opener import FilesOpener
@@ -72,18 +70,15 @@ class Checker:
             file_datafile_filename = file.get('dataFile', {}).get('originalFileName') or file.get('dataFile', {}).get('filename')
 
             if file_name_format_checker.check_special_char(file_datafile_filename)[1] is True:
-                print('\n')
-                print(f'Special characters found in the filename: {file_datafile_filename}')
+                self.logger.print(f'Special characters found in the filename: {file_datafile_filename}')
                 self.template_dict['special_characters']['comments'].append({'file_name': str(file_datafile_filename)})
 
             if file_name_format_checker.check_file_ext(file_datafile_filename)[1] is True:
-                print('\n')
-                print(f'File extension does not found: {file_datafile_filename}')
+                self.logger.print(f'File extension does not found: {file_datafile_filename}')
                 self.template_dict['file_ext']['comments'].append({'file_name': str(file_datafile_filename)})
 
             if readme_file_checker(file_datafile_filename)[1] is True:
-                print('\n')
-                print(f'README file found: {file_datafile_filename}')
+                self.logger.print(f'README file found: {file_datafile_filename}')
                 self.template_dict['readme_file']['comments'].append({'file_name': str(file_datafile_filename)})
 
         file_list = []
@@ -95,10 +90,10 @@ class Checker:
 
         for file in file_list:
             if self.files_opener(file).open_file()[0] is False:
-                print(f'\nFile cannot be opened: {file}')
+                self.logger.print(f'File cannot be opened: {file}')
                 self.template_dict['file_open']['comments'].append({'file_name': str(file)})
             elif self.files_opener(file).open_file()[0] is None:
-                print(f'\nFile is not a supported file format (not checked by the script): {file}')
+                self.logger.print(f'File is not a supported file format (not checked by the script): {file}')
                 self.template_dict['file_open']['not_checked'].append({'file_name': str(file)})
 
 
@@ -108,7 +103,7 @@ class Checker:
         for field in field_list:
             return_value = self.metadata_checker.check_metadata_cm_field(field)
             if return_value[1] is False:
-                print(f'\nMissing metadata found in the {field}')
+                self.logger.print(f'Missing metadata found in the {field}')
                 self.template_dict['missing_field'][field]['comments'].append(f'Missing metadata in {field} field')
 
         # Check any associated fields for an author (affiliation, identifier & scheme) are missing
@@ -118,13 +113,13 @@ class Checker:
             author_name = item.get('authorName')
             for field in field_list_author:
                 if item.get(field) is None:
-                    print(f'\nMissing metadata found in {field} field for author: {author_name}')
-                    self.template_dict['missing_field'][field]['comments'].append(f'Missing metadata in {field} field for author: {author_name}')
+                    self.logger.print(f'Missing metadata found in {field} field for author: {author_name}')
+                    self.template_dict['missing_field'][field]['comments'].append(f'Missing metadata in {field} field for author: {author_name}')  # noqa: E501
 
         # Check if at least one author has authorAffiliation
         author_affiliation_num = len([item for item in author_info_dict if item.get('authorAffiliation') is not None])
         if author_affiliation_num == 0:
-            print('\nNone of the authors have an institutional affiliation listed')
+            self.logger.print('None of the authors have an institutional affiliation listed')
             self.template_dict['none_author_affiliation'] = True
 
     def _check_spelling(self) -> None:
@@ -137,7 +132,7 @@ class Checker:
                 if has_typos:
                     typo_messages = [f'{field}: `{item}`' for item in typos]
                     for message in typo_messages:
-                        print(f'\nSpelling mistake found in the {field}: {message}')
+                        self.logger.print(f'Spelling mistake found in the {field}: {message}')
                     self.template_dict['typo']['comments'].extend(typo_messages)
 
     def _check_dv_record(self) -> None:
@@ -173,7 +168,7 @@ class Checker:
             if item.get('restricted') is True:
                 file_name = item.get('dataFile', {}).get('originalFileName') or item.get('dataFile', {}).get('filename')
                 file_path = Path(item.get('directoryLabel', ''), file_name)
-                print(f'\nRestricted file found: {file_path}')
+                print(f'Restricted file found: {file_path}')
                 self.template_dict['restricted_files']['comments'].append({'file_name': str(file_path)})
 
     def _check_terms_license(self) -> None:
@@ -187,10 +182,10 @@ class Checker:
         self.template_dict['terms_license']['licenseName'] = license_name
 
         if license_name == 'CC0 1.0':
-            print('\n The license is CC0 1.0')
+            self.logger.print('The license is CC0 1.0')
 
         if len(self.template_dict['restricted_files']['comments']) > 0 and (terms_of_use is None or terms_of_access is None):
-            print('\n The terms of use and access are missing')
+            self.logger.print('The terms of use and access are missing')
 
     def run_checks(self) -> dict:
         """Run all the checks."""

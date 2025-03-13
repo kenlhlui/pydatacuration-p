@@ -256,16 +256,16 @@ class Downloads:
             dict: Metadata of the dataset
         """
         # Initiating the downloads
-        self.logger.print('\nDownloading dataset metadata...')
+        self.logger.print('Downloading dataset metadata...')
         ds_metadata_json = self._get_ds_metadata()
         self.save_ds_metadata()
-        self.logger.print('\nDataset metadata downloaded')
+        self.logger.print('Dataset metadata downloaded')
 
         # Download the data files using async method
-        self.logger.print('\nDownloading data files...')
+        self.logger.print('Downloading data files...')
         file_list = self._get_file_list(ds_metadata_json)
         self.make_dir_structure(ds_metadata_json)
 
         await self.save_files_async(file_list)
-        self.logger.print('\nData files downloaded')
+        self.logger.print('Data files downloaded')
         return ds_metadata_json

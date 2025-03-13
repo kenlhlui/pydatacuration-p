@@ -124,7 +124,7 @@ def compare_files_and_metadata(dl_files_checksums, metadata_file_checksums, work
     """
     diff = deepdiff.DeepDiff(dl_files_checksums, metadata_file_checksums, ignore_order=True)
     if diff:
-        logger.warning('\nThe downloaded files and the file list metadata are different.')
+        logger.warning('The downloaded files and the file list metadata are different.')
         diff_log_path = Path(workddir, 'log_files', 'diff.txt').resolve()
         with diff_log_path.open('w', encoding='utf-8') as f:
             f.write(str(diff))
@@ -132,7 +132,7 @@ def compare_files_and_metadata(dl_files_checksums, metadata_file_checksums, work
         sys.exit(1)
 
     else:
-        logger.print('\nThe downloaded files and the file list metadata are the same.')
+        logger.print('The downloaded files and the file list metadata are the same.')
         return False
 
 
@@ -164,9 +164,9 @@ def gen_tree_diagram(target_dir: Path, save_dir: Path) -> None:
                 with Path(ds_tree_file_path).open('w', encoding='utf-8') as f:
                     f.write(result)
 
-                logger.print(f'\nFolder tree diagram text file saved at: {str(ds_tree_file_path)}')
+                logger.print(f'Folder tree diagram text file saved at: {str(ds_tree_file_path)}')
         else:
-            logger.print('\nThe target directory does not exist. Exiting...')
+            logger.print('The target directory does not exist. Exiting...')
             sys.exit(1)
 
     except Exception as e:
