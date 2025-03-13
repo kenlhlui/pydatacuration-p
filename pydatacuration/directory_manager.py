@@ -78,5 +78,5 @@ class DirectoryManager:
         ds_dir = self._mk_ds_dir()
         temp_data_dir = self._mk_temp_dir()
         CustomLogger.setup_logging(log_file_dir=log_files_dir)
-        self.logger.print(f'\nThe working directory is: {self.workdir}')
+        self.logger.print(f'The working directory is: {self.workdir}')
         return self.workdir, log_files_dir, ds_dir, temp_data_dir
