@@ -51,8 +51,7 @@ def main(
     # Set up the directory structure
     workdir_path, log_files_dir, ds_dir, temp_data_dir = directory_manager.DirectoryManager(ticket_number, parent_dir).make_dirs()
 
-    # Initialize the custom logger
-    CustomLogger.setup_logging(Path(log_files_dir, 'cli.log'))
+    # Initialize the custom logger in the cli
     logger = CustomLogger.get_logger('main')
 
     # print the start message
@@ -75,6 +74,7 @@ def main(
     with temp_data_dir.joinpath('template_dict.json').open('w') as f:
         f.write(orjson.dumps(template_dict, option=orjson.OPT_INDENT_2).decode())
 
+    # Generate the tree diagram of the dataset files
     utils.gen_tree_diagram(Path(workdir_path, 'dataset', 'files'), Path(log_files_dir))
 
     # Print the end message
