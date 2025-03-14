@@ -5,8 +5,8 @@ from pathlib import Path
 
 import httpx
 import jmespath
-from checksum import Checksum
 
+from .checksum import Checksum
 from .custom_logging import CustomLogger
 from .files_opener import FilesOpener
 from .log_generation import GenerateLog

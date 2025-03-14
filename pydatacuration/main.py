@@ -13,17 +13,19 @@ from . import directory_manager
 from . import downloads
 from . import log_generation
 from . import utils
+from .checker import Checker
+from .custom_logging import CustomLogger
 
 
 # Load environment variables from .env file
 load_dotenv(override=True)
 
 app = typer.Typer()
-init_tui(app)
+init_tui(app, name='tui')
 
 
 @app.command()
-def main(
+def cli(
 
     doi: str = typer.Option(None,
                             prompt=('Input the Dataset Persistent Identifier (doi or hdl)'),
