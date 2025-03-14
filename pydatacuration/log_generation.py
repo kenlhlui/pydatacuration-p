@@ -7,6 +7,7 @@ import jinja2
 import jmespath
 import orjson
 import yaml
+from custom_logging import CustomLogger
 from docxtpl import DocxTemplate
 from openpyxl import load_workbook
 
@@ -32,6 +33,7 @@ class GenerateLog:
         self.base_url = base_url
         self.dataset_info_dict = self._get_dataset_info()
         self.ticket_number = ticket_number
+        self.logger = CustomLogger.get_logger(__name__)
 
     @staticmethod
     def _get_timestamp() -> str:
@@ -106,12 +108,12 @@ class GenerateLog:
                         # Render the template with our data
                         cell.value = template.render(template_dict=template_dict)
                     except Exception as e:
-                        print(f'Error rendering template in cell {cell.coordinate}: {e}')
+                        self.logger.error(f'Error rendering template in cell {cell.coordinate}: {e}')
 
         # Save the modified workbook
         excel_path_obj = self.workdir.joinpath('log_files', 'render_log_new.xlsx')
         workbook.save(excel_path_obj)
-        print(f'\nExcel Spreadsheet curation log saved at: {str(excel_path_obj)}')
+        self.logger.print(f'Excel Spreadsheet curation log saved at: {str(excel_path_obj)}')
 
     def generate_report_doc(self, template_dict: dict) -> None:
         """Generates a report based on the provided template dictionary.
@@ -132,11 +134,11 @@ class GenerateLog:
         # Save the rendered document
         doc_path = self.workdir.joinpath('log_files', 'render_log.docx')
         doc.save(doc_path)
-        print(f'\nWord curation log saved at: {str(doc_path)}')
+        self.logger.print(f'Word curation log saved at: {str(doc_path)}')
 
     def generate_project_metadata(self) -> None:
         """Generates project metadata (project_info) to JSON file."""
         meta_path = self.workdir.joinpath('log_files', 'project_info.json')
         with meta_path.open('w', encoding='utf-8') as file:
             file.write(orjson.dumps(self._get_config_info(), option=orjson.OPT_INDENT_2).decode('utf-8'))
-            print(f'\nProject metadata saved at: {str(meta_path)}')
+            self.logger.print(f'Project metadata saved at: {str(meta_path)}')
