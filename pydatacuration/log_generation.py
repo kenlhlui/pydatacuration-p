@@ -7,9 +7,10 @@ import jinja2
 import jmespath
 import orjson
 import yaml
-from custom_logging import CustomLogger
 from docxtpl import DocxTemplate
 from openpyxl import load_workbook
+
+from .custom_logging import CustomLogger
 
 
 RES_DIR = Path('res')

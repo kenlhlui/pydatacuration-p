@@ -8,7 +8,8 @@ from pathlib import PurePosixPath
 import deepdiff
 import seedir as sd
 import typer
-from custom_logging import CustomLogger
+
+from .custom_logging import CustomLogger
 
 
 # Initialize the logger

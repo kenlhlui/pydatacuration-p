@@ -6,15 +6,16 @@ from pathlib import Path
 import httpx
 import jmespath
 from checksum import Checksum
-from custom_logging import CustomLogger
-from files_opener import FilesOpener
-from log_generation import GenerateLog
-from metadata_checker import MetadataChecker
-from spell_checker import SpellCheckerCustomized
-from utils import FileNameFormatChecker
-from utils import compare_files_and_metadata
-from utils import parse_file_list_metadata
-from utils import readme_file_checker
+
+from .custom_logging import CustomLogger
+from .files_opener import FilesOpener
+from .log_generation import GenerateLog
+from .metadata_checker import MetadataChecker
+from .spell_checker import SpellCheckerCustomized
+from .utils import FileNameFormatChecker
+from .utils import compare_files_and_metadata
+from .utils import parse_file_list_metadata
+from .utils import readme_file_checker
 
 
 class Checker:

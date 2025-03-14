@@ -1,7 +1,8 @@
 """Get the FFmpeg file formats."""
 import subprocess
 import sys
-from custom_logging import CustomLogger
+
+from .custom_logging import CustomLogger
 
 
 class FFmpegFileFormats:

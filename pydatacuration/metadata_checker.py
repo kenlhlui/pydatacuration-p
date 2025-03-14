@@ -4,7 +4,8 @@ from pathlib import Path
 
 import jmespath
 import orjson
-from custom_logging import CustomLogger
+
+from .custom_logging import CustomLogger
 
 
 class MetadataChecker:

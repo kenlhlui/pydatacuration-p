@@ -1,7 +1,9 @@
 """This module is used to manage the directories in the project."""
 
 from pathlib import Path
-from custom_logging import CustomLogger
+
+from .custom_logging import CustomLogger
+
 
 class DirectoryManager:
     """This class is used to manage the directories in the project."""
