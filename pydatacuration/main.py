@@ -2,6 +2,7 @@
 """The main module of the pydatacuration CLI application."""
 # ruff: noqa: E501, W505
 import asyncio
+import os
 from pathlib import Path
 
 import orjson
@@ -20,23 +21,23 @@ from .custom_logging import CustomLogger
 # Load environment variables from .env file
 load_dotenv(override=True)
 
-app = typer.Typer()
-init_tui(app, name='tui')
+app = typer.Typer(rich_markup_mode='rich')
+init_tui(app)
 
 
 @app.command()
 def cli(
 
-    doi: str = typer.Option(None,
+    pid: str = typer.Option(...,
                             prompt=('Input the Dataset Persistent Identifier (doi or hdl)'),
                             help='Enter the Persistent Identifier of the dataset'),
     base_url: str = typer.Option(None,
-                                 help='The base URL of the Dataverse installation',
+                                 help=f'The base URL of the Dataverse installation (current value: [bold yellow]{os.getenv("BASE_URL", "None")}[/bold yellow])',
                                  prompt=('Input the base URL of the Dataverse installation'),
                                  prompt_required=True,
                                  envvar='BASE_URL'),
     api_token: str = typer.Option(None,
-                                  help='The API token for the Dataverse installation',
+                                  help=f'The API token for the Dataverse installation (current: [bold {"green" if os.getenv("API_TOKEN") else "red"}]{"Set" if os.getenv("API_TOKEN") else "Not set"}[/bold {"green" if os.getenv("API_TOKEN") else "red"}])',
                                   prompt=('Input the API token for the Dataverse installation'),
                                   hide_input=True,
                                   prompt_required=True,
@@ -45,7 +46,7 @@ def cli(
                                 help='The working directory. If not specified, a directory "workdir" will be created in the current directory',
                                 show_default=True,
                                 ),
-    ticket_number: str = typer.Option(None,
+    ticket_number: str = typer.Option(...,
                                       help='The ticket number for the curation report; Also the directory name created under the working directory',
                                       prompt=('Input the ticket number for the curation report'),
                                       prompt_required=True,
@@ -62,7 +63,7 @@ def cli(
     logger.print('Starting the pydatacuration script...')
 
     # Download the dataset files and metadata
-    ds_metadata = asyncio.run(downloads.Downloads(base_url, api_token, doi, workdir_path).downloader())
+    ds_metadata = asyncio.run(downloads.Downloads(base_url, api_token, pid, workdir_path).downloader())
 
     # Run the checker
     checker = Checker(base_url, api_token, ds_metadata, workdir_path)

@@ -179,7 +179,7 @@ You have finished the configuration. Now is time to run the tool.
 CLI options:
 | Option          | Type  | Description                                                                                           | Default  |
 |-----------------|-------|-------------------------------------------------------------------------------------------------------|----------|
-| `--doi`         | TEXT  | Enter the Persistent Identifier of the dataset                                                      | None     |
+| `--pid`         | TEXT  | Enter the Persistent Identifier of the dataset                                                      | None     |
 | `--base-url`    | TEXT  | The base URL of the Dataverse installation [env var: BASE_URL]                                        | None     |
 | `--api-token`   | TEXT  | The API token for the Dataverse installation [env var: API_TOKEN]                                     | None     |
 | `--parent-dir`  | TEXT  | The working directory. If not specified, a directory "workdir" will be created in the current directory | workdir  |
@@ -190,7 +190,7 @@ CLI options:
 1. Open a terminal, run the script with the following command
    ```sh
    # CLI Option
-   python -m pydatacuration.main cli --doi $DOI  --ticket-number $TicketID
+   python -m pydatacuration.main cli --pid $PID  --ticket-number $TicketID
    # Or
    # TUI (GUI) Option
    python -m pydatacuration.main tui  # CLI option
@@ -202,7 +202,7 @@ CLI options:
 
    For example, if you wish to create a `download` directory inside the `pydatacuration-p` directory:
    ```sh
-   python3 pydatacuration/main.py --doi $DOI  --parent-dir 'download'
+   python -m pydatacuration.main cli --pid $PID  --parent-dir 'download'
    ```
    What you will get:
    ```sh
