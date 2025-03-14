@@ -1,23 +1,32 @@
+#!/usr/bin/env python3
 """The main module of the pydatacuration CLI application."""
 # ruff: noqa: E501, W505
 import asyncio
 from pathlib import Path
 
-import directory_manager
-import downloads
-import log_generation
+import httpx
+import jmespath
 import orjson
 import typer
-import utils
-from checker import Checker
-from custom_logging import CustomLogger
 from dotenv import load_dotenv
+from trogon.typer import init_tui
+from typing_extensions import Annotated
+
+from . import checksum
+from . import directory_manager
+from . import downloads
+from . import files_opener
+from . import log_generation
+from . import metadata_checker
+from . import spell_checker
+from . import utils
 
 
 # Load environment variables from .env file
 load_dotenv(override=True)
 
 app = typer.Typer()
+init_tui(app)
 
 
 @app.command()
