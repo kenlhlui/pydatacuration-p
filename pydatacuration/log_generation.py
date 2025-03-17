@@ -8,8 +8,8 @@ import jmespath
 import orjson
 import yaml
 from docxtpl import DocxTemplate
-from openpyxl import load_workbook
 from markitdown import MarkItDown
+from openpyxl import load_workbook
 
 from .custom_logging import CustomLogger
 
@@ -48,25 +48,14 @@ class GenerateLog:
         local_now = utc_now.astimezone()
         return local_now.strftime('%Y-%m-%d %H:%M:%S')
 
-    def _get_dataset_info(self) -> dict:
-        """Returns the dataset information as a dictionary.
-
-        Returns:
-            dict: The dataset information.
-        """
-        search_string = """{
-        DatasetTitle: join(', ', data.latestVersion.metadataBlocks.citation.fields[?typeName==`title`].value),
-        DatasetPersistentId: data.latestVersion.datasetPersistentId,
-        ID: data.latestVersion.id}"""
-        dataset_info_dict = jmespath.search(search_string, self.ds_metadata)
-        # Add 'DatasetURL' by parsing the base_url and the DatasetPersistentId
-        dataset_info_dict['DatasetURL'] = f'{self.base_url}/dataset.xhtml?persistentId={dataset_info_dict.get('DatasetPersistentId', None)}'  # noqa: E501
-
-        return dataset_info_dict
-
     @staticmethod
     def _convert_report_to_markdown(doc_path: Path) -> None:
-        """Converts the report to markdown format."""
+        """Converts the report to markdown format.
+
+        Args:
+            doc_path (Path): The path to the document to be converted.
+
+        """
         md = MarkItDown()
         result = md.convert(doc_path)
         # Save the markdown file
@@ -84,6 +73,22 @@ class GenerateLog:
         """
         with RES_DIR.joinpath('template.json').open(encoding='utf-8') as file:
             return orjson.loads(file.read())
+
+    def _get_dataset_info(self) -> dict:
+        """Returns the dataset information as a dictionary.
+
+        Returns:
+            dict: The dataset information.
+        """
+        search_string = """{
+        DatasetTitle: join(', ', data.latestVersion.metadataBlocks.citation.fields[?typeName==`title`].value),
+        DatasetPersistentId: data.latestVersion.datasetPersistentId,
+        ID: data.latestVersion.id}"""
+        dataset_info_dict = jmespath.search(search_string, self.ds_metadata)
+        # Add 'DatasetURL' by parsing the base_url and the DatasetPersistentId
+        dataset_info_dict['DatasetURL'] = f'{self.base_url}/dataset.xhtml?persistentId={dataset_info_dict.get('DatasetPersistentId', None)}'  # noqa: E501
+
+        return dataset_info_dict
 
     def _get_config_info(self) -> dict:
         """Reads the config.yaml file and returns it as a dictionary.
