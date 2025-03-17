@@ -49,7 +49,7 @@ class GenerateLog:
         return local_now.strftime('%Y-%m-%d %H:%M:%S')
 
     @staticmethod
-    def _convert_report_to_markdown(doc_path: Path) -> None:
+    def _convert_to_markdown(doc_path: Path) -> None:
         """Converts the report to markdown format.
 
         Args:
@@ -155,7 +155,7 @@ class GenerateLog:
         self.logger.print(f'Word curation log saved at: {str(doc_path)}')
 
         # Convert the report to markdown format
-        self._convert_report_to_markdown(doc_path)
+        self._convert_to_markdown(doc_path)
         self.logger.print(f'Markdown curation log of the docx file saved at: {str(doc_path.with_suffix(".md"))}')
 
     def generate_project_metadata(self) -> None:
