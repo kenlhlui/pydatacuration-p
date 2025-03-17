@@ -8,6 +8,7 @@ import jmespath
 import orjson
 import yaml
 from docxtpl import DocxTemplate
+from markitdown import MarkItDown
 from openpyxl import load_workbook
 
 from .custom_logging import CustomLogger
@@ -47,6 +48,32 @@ class GenerateLog:
         local_now = utc_now.astimezone()
         return local_now.strftime('%Y-%m-%d %H:%M:%S')
 
+    @staticmethod
+    def _convert_to_markdown(doc_path: Path) -> None:
+        """Converts the report to markdown format.
+
+        Args:
+            doc_path (Path): The path to the document to be converted.
+
+        """
+        md = MarkItDown()
+        result = md.convert(doc_path)
+        # Save the markdown file
+        md_path = doc_path.with_suffix('.md')
+        if result.text_content:
+            with md_path.open('w', encoding='utf-8') as file:
+                file.write(result.text_content)
+
+    @staticmethod
+    def read_template_json() -> dict:
+        """Reads the template.json file and returns it as a dictionary.
+
+        Returns:
+            dict: The template as a dictionary.
+        """
+        with RES_DIR.joinpath('template.json').open(encoding='utf-8') as file:
+            return orjson.loads(file.read())
+
     def _get_dataset_info(self) -> dict:
         """Returns the dataset information as a dictionary.
 
@@ -62,16 +89,6 @@ class GenerateLog:
         dataset_info_dict['DatasetURL'] = f'{self.base_url}/dataset.xhtml?persistentId={dataset_info_dict.get('DatasetPersistentId', None)}'  # noqa: E501
 
         return dataset_info_dict
-
-    @staticmethod
-    def read_template_json() -> dict:
-        """Reads the template.json file and returns it as a dictionary.
-
-        Returns:
-            dict: The template as a dictionary.
-        """
-        with RES_DIR.joinpath('template.json').open(encoding='utf-8') as file:
-            return orjson.loads(file.read())
 
     def _get_config_info(self) -> dict:
         """Reads the config.yaml file and returns it as a dictionary.
@@ -136,6 +153,10 @@ class GenerateLog:
         doc_path = self.workdir.joinpath('log_files', 'render_log.docx')
         doc.save(doc_path)
         self.logger.print(f'Word curation log saved at: {str(doc_path)}')
+
+        # Convert the report to markdown format
+        self._convert_to_markdown(doc_path)
+        self.logger.print(f'Markdown curation log of the docx file saved at: {str(doc_path.with_suffix(".md"))}')
 
     def generate_project_metadata(self) -> None:
         """Generates project metadata (project_info) to JSON file."""
