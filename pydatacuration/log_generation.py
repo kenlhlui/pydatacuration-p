@@ -9,6 +9,7 @@ import orjson
 import yaml
 from docxtpl import DocxTemplate
 from openpyxl import load_workbook
+from markitdown import MarkItDown
 
 from .custom_logging import CustomLogger
 
@@ -62,6 +63,17 @@ class GenerateLog:
         dataset_info_dict['DatasetURL'] = f'{self.base_url}/dataset.xhtml?persistentId={dataset_info_dict.get('DatasetPersistentId', None)}'  # noqa: E501
 
         return dataset_info_dict
+
+    @staticmethod
+    def _convert_report_to_markdown(doc_path: Path) -> None:
+        """Converts the report to markdown format."""
+        md = MarkItDown()
+        result = md.convert(doc_path)
+        # Save the markdown file
+        md_path = doc_path.with_suffix('.md')
+        if result.text_content:
+            with md_path.open('w', encoding='utf-8') as file:
+                file.write(result.text_content)
 
     @staticmethod
     def read_template_json() -> dict:
@@ -136,6 +148,10 @@ class GenerateLog:
         doc_path = self.workdir.joinpath('log_files', 'render_log.docx')
         doc.save(doc_path)
         self.logger.print(f'Word curation log saved at: {str(doc_path)}')
+
+        # Convert the report to markdown format
+        self._convert_report_to_markdown(doc_path)
+        self.logger.print(f'Markdown curation log of the docx file saved at: {str(doc_path.with_suffix(".md"))}')
 
     def generate_project_metadata(self) -> None:
         """Generates project metadata (project_info) to JSON file."""
