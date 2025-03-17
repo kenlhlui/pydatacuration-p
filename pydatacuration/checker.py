@@ -68,34 +68,36 @@ class Checker:
         """Check the file name format."""
         file_name_format_checker = FileNameFormatChecker()
         for file in self.file_list_metadata:
-            file_datafile_filename = file.get('dataFile', {}).get('originalFileName') or file.get('dataFile', {}).get('filename')
+            file_name = file.get('dataFile', {}).get('originalFileName') or file.get('dataFile', {}).get('filename')
+            file_rel_path = Path(file.get('directoryLabel', ''), file_name)
 
-            if file_name_format_checker.check_special_char(file_datafile_filename)[1] is True:
-                self.logger.print(f'Special characters found in the filename: {file_datafile_filename}')
-                self.template_dict['special_characters']['comments'].append({'file_name': str(file_datafile_filename)})
+            if file_name_format_checker.check_special_char(file_name)[1] is True:
+                self.logger.print(f'Special characters found in the filename: {file_rel_path}')
+                self.template_dict['special_characters']['comments'].append({'file_name': str(file_rel_path)})
 
-            if file_name_format_checker.check_file_ext(file_datafile_filename)[1] is True:
-                self.logger.print(f'File extension does not found: {file_datafile_filename}')
-                self.template_dict['file_ext']['comments'].append({'file_name': str(file_datafile_filename)})
+            if file_name_format_checker.check_file_ext(file_name)[1] is True:
+                self.logger.print(f'File extension does not found: {file_rel_path}')
+                self.template_dict['file_ext']['comments'].append({'file_name': str(file_rel_path)})
 
-            if readme_file_checker(file_datafile_filename)[1] is True:
-                self.logger.print(f'README file found: {file_datafile_filename}')
-                self.template_dict['readme_file']['comments'].append({'file_name': str(file_datafile_filename)})
+            if readme_file_checker(file_name)[1] is True:
+                self.logger.print(f'README file found: {file_rel_path}')
+                self.template_dict['readme_file']['comments'].append({'file_name': str(file_rel_path)})
 
         file_list = []
 
-        for item in self.file_list_metadata:
-            file_name = item.get('dataFile', {}).get('originalFileName') or item.get('dataFile', {}).get('filename')
-            file_path = Path(self.workdir, 'dataset', 'files', item.get('directoryLabel', ''), file_name)
-            file_list.append(file_path)
+        for file in self.file_list_metadata:
+            file_name = file.get('dataFile', {}).get('originalFileName') or file.get('dataFile', {}).get('filename')
+            file_rel_path = Path(file.get('directoryLabel', ''), file_name)
+            file_list.append(file_rel_path)
 
-        for file in file_list:
-            if self.files_opener(file).open_file()[0] is False:
-                self.logger.print(f'File cannot be opened: {file}')
-                self.template_dict['file_open']['comments'].append({'file_name': str(file)})
-            elif self.files_opener(file).open_file()[0] is None:
-                self.logger.print(f'File is not a supported file format (not checked by the script): {file}')
-                self.template_dict['file_open']['not_checked'].append({'file_name': str(file)})
+        for file_rel_path in file_list:
+            file_abs_path = Path(self.workdir, 'dataset', 'files', file_rel_path)
+            if self.files_opener(file_abs_path).open_file()[0] is False:
+                self.logger.print(f'File cannot be opened: {file_abs_path}')
+                self.template_dict['file_open']['comments'].append({'file_name': str(file_rel_path)})
+            elif self.files_opener(file_abs_path).open_file()[0] is None:
+                self.logger.print(f'File is not a supported file format (not checked by the script): {file_abs_path}')
+                self.template_dict['file_open']['not_checked'].append({'file_name': str(file_rel_path)})
 
 
     def _check_missing_metadata(self) -> None:
