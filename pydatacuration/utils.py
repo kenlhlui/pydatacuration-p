@@ -137,18 +137,6 @@ def compare_files_and_metadata(dl_files_checksums, metadata_file_checksums, work
         return False
 
 
-def combine_list_items(items: list) -> str:
-    """Combine the list items into a single string.
-
-    Args:
-        items (list): The list of items to combine.
-
-    Returns:
-        str: The combined string.
-    """
-    return ' '.join(items)
-
-
 def gen_tree_diagram(target_dir: Path, save_dir: Path) -> None:
     """Generate the tree diagram of the directory.
 
