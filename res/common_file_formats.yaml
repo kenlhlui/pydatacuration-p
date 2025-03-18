@@ -51,3 +51,6 @@ file_formats:
     - .html
     - .css
     - .xslt
+  spreadsheets:
+    - .xls
+    - .xlsx

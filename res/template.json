@@ -29,6 +29,9 @@
         "licenseName": null
         
     },
+    "common_file_format":{
+        "comments": []
+    },
     "missing_field": {
         "title": {
             "comments": []
