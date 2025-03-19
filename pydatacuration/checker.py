@@ -167,6 +167,7 @@ class Checker:
             self.template_dict['none_author_affiliation'] = True
 
     def check_spelling(self) -> None:
+        """Check for spelling mistakes in the metadata."""
         field_list = ['title', 'subtitle', 'alternativeTitle', 'dsDescription.dsDescriptionValue', 'notesText']
         for field in field_list:
             return_value, field_exists = self.metadata_checker.check_metadata_cm_field(field)
@@ -180,7 +181,8 @@ class Checker:
                     self.template_dict['typo']['comments'].extend(typo_messages)
 
     def check_dv_record(self) -> None:
-        query_string = 'data.latestVersion.metadataBlocks.citation.fields[?typeName==`author`].value[*].authorName.value[]'
+        """Check if the author has a Dataverse record."""
+        query_string = 'data.latestVersion.metadataBlocks.citation.fields[?typeName==`author`].value[*].authorName.value[]'  # noqa: E501
         author_list = jmespath.search(query_string, self.ds_metadata)
 
         if isinstance(author_list, list):
@@ -188,26 +190,28 @@ class Checker:
                 # Remove all non-alphanumeric characters from the author name
                 author = ''.join(char for char in author if char.isalpha() or char.isspace())
                 # Check if the author has record by search API
-                response = httpx.get(f'{self.base_url}/api/search?q={author}&type=dataset&per_page=100', headers={'X-Dataverse-key': self.api_token})
+                response = httpx.get(f'{self.base_url}/api/search?q={author}&type=dataset&per_page=100',
+                                      headers={'X-Dataverse-key': self.api_token})
                 if response.status_code == 200 and response.json():
-                    name_of_dataverse_result = list(set(jmespath.search('data.items[*].name_of_dataverse', response.json())))
+                    name_of_dataverse_result = list(set(jmespath.search('data.items[*].name_of_dataverse', response.json())))  # noqa: E501
                     self.template_dict['dv_record']['comments'].append({author: name_of_dataverse_result})
 
     def check_dv_collection(self) -> None:
+        """Check if the dataset is in a Dataverse collection."""
         ds_version_id = self.ds_metadata.get('data', {}).get('latestVersion', {}).get('id')
         if ds_version_id:
             # See https://github.com/IQSS/dataverse/issues/2038 for fq field;
             # Also check the source code the the available fq fields https://github.com/IQSS/dataverse/blob/develop/src/main/java/edu/harvard/iq/dataverse/search/SearchFields.java
             # Use 'datasetVersionId' here; in ds_metadata it is data.latestVersion.id
-            # Don't mess up with data.id or data.latestVersion.datasetId which are the same and is the persistent id in the dataverse system
-            response = httpx.get(f'{self.base_url}/api/search?q=*&type=dataset&per_page=1&fq=datasetVersionId:{ds_version_id}',
+            # Don't mess up with data.id or data.latestVersion.datasetId which are the same and is the persistent id in the dataverse system  # noqa: E501
+            response = httpx.get(f'{self.base_url}/api/search?q=*&type=dataset&per_page=1&fq=datasetVersionId:{ds_version_id}',  # noqa: E501
                                  headers={'X-Dataverse-key': self.api_token})
             if response.status_code == 200 and response.json():
                 name_of_dataverse = response.json().get('data', {}).get('items', [{}])[0].get('name_of_dataverse', None)
                 self.template_dict['name_of_dataverse'] = name_of_dataverse
 
     def check_restricted_files(self) -> None:
-        # Check and return file path if restricted
+        """Check for restricted files."""
         for item in self.file_list_metadata:
             if item.get('restricted') is True:
                 file_name = item.get('dataFile', {}).get('originalFileName') or item.get('dataFile', {}).get('filename')
@@ -216,7 +220,7 @@ class Checker:
                 self.template_dict['restricted_files']['comments'].append({'file_name': str(file_path)})
 
     def check_terms_license(self) -> None:
-        # Check if the terms of use and license are present
+        """Check if the terms of use and license are present."""
         terms_of_use = self.ds_metadata.get('data', {}).get('latestVersion', {}).get('termsOfUse', None)
         terms_of_access = self.ds_metadata.get('data', {}).get('latestVersion', {}).get('termsOfAccess', None)
         license_name = self.ds_metadata.get('data', {}).get('latestVersion', {}).get('license', {}).get('name', None)
@@ -228,10 +232,9 @@ class Checker:
         if license_name == 'CC0 1.0':
             self.logger.print('The license is CC0 1.0')
 
-        if len(self.template_dict['restricted_files']['comments']) > 0 and (terms_of_use is None or terms_of_access is None):
+        if len(self.template_dict['restricted_files']['comments']) > 0 and \
+            (terms_of_use is None or terms_of_access is None):
             self.logger.print('The terms of use and access are missing')
-
-
 
     def run_checks(self) -> dict:
         """Run all the checks."""
