@@ -1,5 +1,6 @@
 """HTTPX client for handing HTTP requests and responses."""
 import asyncio
+from pathlib import Path
 from types import TracebackType
 from typing import Optional
 from urllib.parse import urljoin
@@ -11,6 +12,15 @@ from .custom_logging import CustomLogger
 
 class HTTPXClient:
     """HTTPX client for handling HTTP requests and responses."""
+
+    @property
+    def async_client(self) -> httpx.AsyncClient:
+        """Return an AsyncClient instance."""
+        return httpx.AsyncClient(
+            headers=self.headers,
+            timeout=None,
+            follow_redirects=True
+        )
 
     def __init__(self, base_url: str, api_token: str) -> None:
         """Initialize the HTTPX client.
@@ -51,26 +61,38 @@ class HTTPXClient:
                 self.logger.error(f'HTTP request Error for {url}: {exc}')
                 raise
 
-    async def _async_semaphore_client(self, api_endpoint: str) -> httpx.Response | list[str]:
-        """Asynchronous HTTP client with semaphore."""
-        url = urljoin(self.base_url, api_endpoint)
-        async with self.semaphore:
-            # Create a fresh client for each request
-            async with httpx.AsyncClient(
-                headers=self.headers,
-                timeout=0,
-                follow_redirects=True
-            ) as client:
-                try:
-                    response = await client.get(url)
-                    if response.status_code != self.httpx_success_status:
-                        self.logger.error(f'HTTP request Error for {url}: {response.status_code}')
-                    return response
-                except (httpx.HTTPStatusError, httpx.RequestError) as exc:
-                    self.logger.error(f'HTTP request Error for {url}: {exc}')
-                    return [url, 'Error']
+    @staticmethod
+    async def write_stream_file(file_path: Path, content: bytes) -> None:
+        """Write content bytes to a file."""
+        # Ensure the parent directory exists
+        file_path.parent.mkdir(parents=True, exist_ok=True)
 
-    async def async_get(self, url_list: list) -> list:
-        """Asynchronous GET request."""
-        tasks = [self._async_semaphore_client(url) for url in url_list]
-        return await asyncio.gather(*tasks)
+        Path(file_path).touch(exist_ok=True)
+        with file_path.open('wb') as f:
+            f.write(content)
+
+    async def async_stream_files(self, url, *args: str, **kwargs) -> bytes | None:
+        """Asynchronous streaming GET request that returns the full content."""
+        try:
+            async with self.semaphore, httpx.AsyncClient(
+                headers=self.headers,
+                timeout=None,
+                follow_redirects=True
+            ) as client, client.stream('GET', url, *args, **kwargs) as response:
+                if response.status_code == self.httpx_success_status:
+                    # Check for empty files
+                    content_length = int(response.headers.get('content-length', '-1'))
+                    if content_length == 0:
+                        # Return empty bytes for empty files
+                        return b''
+
+                    # For non-empty files, read all content
+                    content = []
+                    async for chunk in response.aiter_bytes(chunk_size=8192):
+                        content.append(chunk)
+                    return b''.join(content)
+                return None
+        except (httpx.HTTPStatusError, httpx.RequestError) as exc:
+            self.logger.error(f'HTTP request Error for {url}: {exc}')
+            return None
+

@@ -215,7 +215,7 @@ class Checker:
             if item.get('restricted') is True:
                 file_name = item.get('dataFile', {}).get('originalFileName') or item.get('dataFile', {}).get('filename')
                 file_path = Path(item.get('directoryLabel', ''), file_name)
-                print(f'Restricted file found: {file_path}')
+                self.logger.print(f'Restricted file found: {file_path}')
                 self.template_dict['restricted_files']['comments'].append({'file_name': str(file_path)})
 
     def check_terms_license(self) -> None:
