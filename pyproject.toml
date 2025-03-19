@@ -82,7 +82,7 @@ select = [
     "PTH", # flake8-use-pathlib
     "PL",  # Pylint
 ]
-ignore = ["RET504", "T201"]  # Ignore 'unnecessary-assign (RET504) rule'; 'Print (T201)'
+ignore = ["RET504", "T201", "W505"]  # Ignore 'unnecessary-assign (RET504) rule'; 'Print (T201)'; W505 "doc-line-too-long"
 
 
 [tool.ruff.lint.pydocstyle]
@@ -111,7 +111,7 @@ max-complexity = 10  # Google suggests keeping functions simple
 # Ignore some rules in __init__.py files
 "__init__.py" = ["F401"]
 # Ignore long line warnings in main.py
-"dvmeta/main.py" = ["E501", "W505"]
+"dvmeta/main.py" = ["E501"]
 
 [tool.ruff.lint.pep8-naming]
 # Google style guide naming conventions

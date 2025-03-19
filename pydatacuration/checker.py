@@ -1,10 +1,10 @@
 """The checker module provides functions to check the validity of data files and metadata."""
 
-import sys
 from pathlib import Path
 
 import httpx
 import jmespath
+import yaml
 
 from .checksum import Checksum
 from .custom_logging import CustomLogger
@@ -16,6 +16,9 @@ from .utils import FileNameFormatChecker
 from .utils import compare_files_and_metadata
 from .utils import parse_file_list_metadata
 from .utils import readme_file_checker
+
+
+RES_DIR = Path('res')
 
 
 class Checker:
@@ -44,8 +47,32 @@ class Checker:
         self.files_opener = FilesOpener
         self.metadata_checker = MetadataChecker(self.workdir.joinpath('dataset', 'metadata', 'ds_metadata.json'))
         self.spell_checker = SpellCheckerCustomized()
-
         self.file_list_metadata = self._gen_file_list_metadata()
+        self.common_file_format_tuple = self._read_common_file_format()
+
+    def _read_common_file_format(self) -> tuple | None:
+        """Reads the common_file_format.yaml file and returns it as a dictionary.
+
+        Returns:
+            dict: The common file format as a dictionary.
+        """
+        try:
+            # Check if the file exists
+            if RES_DIR.joinpath('common_file_formats.yaml').exists():
+                # Open the file and read its content
+                with RES_DIR.joinpath('common_file_formats.yaml').open(encoding='utf-8') as file:
+                    common_file_format_dict = yaml.safe_load(file)
+
+                    file_formats = set()
+                    for _category, extensions in common_file_format_dict['file_formats'].items():
+                        file_formats.update(extensions)  # Use set to avoid duplicates
+
+                    return tuple(file_formats)  # Convert set to tuple for immutability
+
+        except FileNotFoundError:
+            # Handle the case where the file is not found
+            self.logger.error('common_file_formats.yaml file not found in the res directory.')
+            return None
 
     def _gen_file_list_metadata(self) -> list:
         """Generate the file list metadata.
@@ -64,7 +91,7 @@ class Checker:
 
         return file_list_metadata
 
-    def _check_file_name_format(self) -> None:
+    def check_file_name_format(self) -> None:
         """Check the file name format."""
         file_name_format_checker = FileNameFormatChecker()
         for file in self.file_list_metadata:
@@ -99,8 +126,22 @@ class Checker:
                 self.logger.print(f'File is not a supported file format (not checked by the script): {file_abs_path}')
                 self.template_dict['file_open']['not_checked'].append({'file_name': str(file_rel_path)})
 
+    def check_common_file_format(self) -> None:
+        """Check if the file format is in the common file format."""
+        if self.common_file_format_tuple:
+            for file in self.file_list_metadata:
+                file_name = file.get('dataFile', {}).get('originalFileName') or file.get('dataFile', {}).get('filename')
+                file_rel_path = Path(file.get('directoryLabel', ''), file_name)
+                file_abs_path = Path(self.workdir, 'dataset', 'files', file_rel_path)
+                file_ext = file_rel_path.suffix
+                if file_ext.startswith('.') and file_ext not in self.common_file_format_tuple:
+                    self.logger.print(f'File is not a common file format: {file_abs_path}')
+                    self.template_dict['common_file_format']['comments'].append({'file_name': str(file_rel_path)})
+        else:
+            self.logger.error('No common file format found in the res directory. Skipping this check.')
+            self.template_dict['common_file_format']['comments'].append('No common file format found in the res directory. Skipping this check.')  # noqa: E501
 
-    def _check_missing_metadata(self) -> None:
+    def check_missing_metadata(self) -> None:
         """Check for missing metadata."""
         field_list = ['title', 'dsDescription', 'subject']
         for field in field_list:
@@ -125,7 +166,8 @@ class Checker:
             self.logger.print('None of the authors have an institutional affiliation listed')
             self.template_dict['none_author_affiliation'] = True
 
-    def _check_spelling(self) -> None:
+    def check_spelling(self) -> None:
+        """Check for spelling mistakes in the metadata."""
         field_list = ['title', 'subtitle', 'alternativeTitle', 'dsDescription.dsDescriptionValue', 'notesText']
         for field in field_list:
             return_value, field_exists = self.metadata_checker.check_metadata_cm_field(field)
@@ -138,8 +180,9 @@ class Checker:
                         self.logger.print(f'Spelling mistake found in the {field}: {message}')
                     self.template_dict['typo']['comments'].extend(typo_messages)
 
-    def _check_dv_record(self) -> None:
-        query_string = 'data.latestVersion.metadataBlocks.citation.fields[?typeName==`author`].value[*].authorName.value[]'
+    def check_dv_record(self) -> None:
+        """Check if the author has a Dataverse record."""
+        query_string = 'data.latestVersion.metadataBlocks.citation.fields[?typeName==`author`].value[*].authorName.value[]'  # noqa: E501
         author_list = jmespath.search(query_string, self.ds_metadata)
 
         if isinstance(author_list, list):
@@ -147,26 +190,28 @@ class Checker:
                 # Remove all non-alphanumeric characters from the author name
                 author = ''.join(char for char in author if char.isalpha() or char.isspace())
                 # Check if the author has record by search API
-                response = httpx.get(f'{self.base_url}/api/search?q={author}&type=dataset&per_page=100', headers={'X-Dataverse-key': self.api_token})
+                response = httpx.get(f'{self.base_url}/api/search?q={author}&type=dataset&per_page=100',
+                                      headers={'X-Dataverse-key': self.api_token})
                 if response.status_code == 200 and response.json():
-                    name_of_dataverse_result = list(set(jmespath.search('data.items[*].name_of_dataverse', response.json())))
+                    name_of_dataverse_result = list(set(jmespath.search('data.items[*].name_of_dataverse', response.json())))  # noqa: E501
                     self.template_dict['dv_record']['comments'].append({author: name_of_dataverse_result})
 
-    def _check_dv_collection(self) -> None:
+    def check_dv_collection(self) -> None:
+        """Check if the dataset is in a Dataverse collection."""
         ds_version_id = self.ds_metadata.get('data', {}).get('latestVersion', {}).get('id')
         if ds_version_id:
             # See https://github.com/IQSS/dataverse/issues/2038 for fq field;
             # Also check the source code the the available fq fields https://github.com/IQSS/dataverse/blob/develop/src/main/java/edu/harvard/iq/dataverse/search/SearchFields.java
             # Use 'datasetVersionId' here; in ds_metadata it is data.latestVersion.id
-            # Don't mess up with data.id or data.latestVersion.datasetId which are the same and is the persistent id in the dataverse system
-            response = httpx.get(f'{self.base_url}/api/search?q=*&type=dataset&per_page=1&fq=datasetVersionId:{ds_version_id}',
+            # Don't mess up with data.id or data.latestVersion.datasetId which are the same and is the persistent id in the dataverse system  # noqa: E501
+            response = httpx.get(f'{self.base_url}/api/search?q=*&type=dataset&per_page=1&fq=datasetVersionId:{ds_version_id}',  # noqa: E501
                                  headers={'X-Dataverse-key': self.api_token})
             if response.status_code == 200 and response.json():
                 name_of_dataverse = response.json().get('data', {}).get('items', [{}])[0].get('name_of_dataverse', None)
                 self.template_dict['name_of_dataverse'] = name_of_dataverse
 
-    def _check_restricted_files(self) -> None:
-        # Check and return file path if restricted
+    def check_restricted_files(self) -> None:
+        """Check for restricted files."""
         for item in self.file_list_metadata:
             if item.get('restricted') is True:
                 file_name = item.get('dataFile', {}).get('originalFileName') or item.get('dataFile', {}).get('filename')
@@ -174,8 +219,8 @@ class Checker:
                 print(f'Restricted file found: {file_path}')
                 self.template_dict['restricted_files']['comments'].append({'file_name': str(file_path)})
 
-    def _check_terms_license(self) -> None:
-        # Check if the terms of use and license are present
+    def check_terms_license(self) -> None:
+        """Check if the terms of use and license are present."""
         terms_of_use = self.ds_metadata.get('data', {}).get('latestVersion', {}).get('termsOfUse', None)
         terms_of_access = self.ds_metadata.get('data', {}).get('latestVersion', {}).get('termsOfAccess', None)
         license_name = self.ds_metadata.get('data', {}).get('latestVersion', {}).get('license', {}).get('name', None)
@@ -187,17 +232,19 @@ class Checker:
         if license_name == 'CC0 1.0':
             self.logger.print('The license is CC0 1.0')
 
-        if len(self.template_dict['restricted_files']['comments']) > 0 and (terms_of_use is None or terms_of_access is None):
+        if len(self.template_dict['restricted_files']['comments']) > 0 and \
+            (terms_of_use is None or terms_of_access is None):
             self.logger.print('The terms of use and access are missing')
 
     def run_checks(self) -> dict:
         """Run all the checks."""
-        self._check_file_name_format()
-        self._check_missing_metadata()
-        self._check_spelling()
-        self._check_dv_record()
-        self._check_dv_collection()
-        self._check_restricted_files()
-        self._check_terms_license()
+        self.check_file_name_format()
+        self.check_common_file_format()
+        self.check_missing_metadata()
+        self.check_spelling()
+        self.check_dv_record()
+        self.check_dv_collection()
+        self.check_restricted_files()
+        self.check_terms_license()
 
         return self.template_dict
