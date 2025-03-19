@@ -2,13 +2,13 @@
 
 from pathlib import Path
 
-import httpx
 import jmespath
 import yaml
 
 from .checksum import Checksum
 from .custom_logging import CustomLogger
 from .files_opener import FilesOpener
+from .httpx_client import HTTPXClient
 from .log_generation import GenerateLog
 from .metadata_checker import MetadataChecker
 from .spell_checker import SpellCheckerCustomized
@@ -47,6 +47,7 @@ class Checker:
         self.files_opener = FilesOpener
         self.metadata_checker = MetadataChecker(self.workdir.joinpath('dataset', 'metadata', 'ds_metadata.json'))
         self.spell_checker = SpellCheckerCustomized()
+        self.httpx_client = HTTPXClient(base_url, api_token)
         self.file_list_metadata = self._gen_file_list_metadata()
         self.common_file_format_tuple = self._read_common_file_format()
 
@@ -190,9 +191,8 @@ class Checker:
                 # Remove all non-alphanumeric characters from the author name
                 author = ''.join(char for char in author if char.isalpha() or char.isspace())
                 # Check if the author has record by search API
-                response = httpx.get(f'{self.base_url}/api/search?q={author}&type=dataset&per_page=100',
-                                      headers={'X-Dataverse-key': self.api_token})
-                if response.status_code == 200 and response.json():
+                response = self.httpx_client.sync_get(f'/api/search?q={author}&type=dataset&per_page=100')  # noqa: E501
+                if response and response.json():
                     name_of_dataverse_result = list(set(jmespath.search('data.items[*].name_of_dataverse', response.json())))  # noqa: E501
                     self.template_dict['dv_record']['comments'].append({author: name_of_dataverse_result})
 
@@ -204,9 +204,8 @@ class Checker:
             # Also check the source code the the available fq fields https://github.com/IQSS/dataverse/blob/develop/src/main/java/edu/harvard/iq/dataverse/search/SearchFields.java
             # Use 'datasetVersionId' here; in ds_metadata it is data.latestVersion.id
             # Don't mess up with data.id or data.latestVersion.datasetId which are the same and is the persistent id in the dataverse system  # noqa: E501
-            response = httpx.get(f'{self.base_url}/api/search?q=*&type=dataset&per_page=1&fq=datasetVersionId:{ds_version_id}',  # noqa: E501
-                                 headers={'X-Dataverse-key': self.api_token})
-            if response.status_code == 200 and response.json():
+            response = self.httpx_client.sync_get(f'/api/search?q=*&type=dataset&per_page=1&fq=datasetVersionId:{ds_version_id}')  # noqa: E501
+            if response and response.json():
                 name_of_dataverse = response.json().get('data', {}).get('items', [{}])[0].get('name_of_dataverse', None)
                 self.template_dict['name_of_dataverse'] = name_of_dataverse
 
@@ -216,7 +215,7 @@ class Checker:
             if item.get('restricted') is True:
                 file_name = item.get('dataFile', {}).get('originalFileName') or item.get('dataFile', {}).get('filename')
                 file_path = Path(item.get('directoryLabel', ''), file_name)
-                print(f'Restricted file found: {file_path}')
+                self.logger.print(f'Restricted file found: {file_path}')
                 self.template_dict['restricted_files']['comments'].append({'file_name': str(file_path)})
 
     def check_terms_license(self) -> None:
