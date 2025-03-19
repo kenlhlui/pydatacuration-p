@@ -83,7 +83,7 @@ def cli(
     utils.gen_tree_diagram(Path(workdir_path, 'dataset', 'files'), Path(log_files_dir))
 
     # Print the end message
-    logger.print(f'✅ Curation report generated successfully. \n\nType (or copy) the following (without quotes) in the terminal to view the files: \n\n`explorer.exe {workdir_path}`')
+    logger.print(f'✅ Curation report generated successfully. \n\nType (or copy) the following (without ``quotes) in the terminal to view the files: \n\n`explorer.exe "$(wslpath -w {workdir_path})"`')
 
 
 if __name__ == '__main__':
