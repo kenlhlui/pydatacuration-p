@@ -1,8 +1,7 @@
 """HTTPX client for handing HTTP requests and responses."""
 import asyncio
 from pathlib import Path
-from types import TracebackType
-from typing import Optional
+from typing import Any
 from urllib.parse import urljoin
 
 import httpx
@@ -71,7 +70,7 @@ class HTTPXClient:
         with file_path.open('wb') as f:
             f.write(content)
 
-    async def async_stream_files(self, url, *args: str, **kwargs) -> bytes | None:
+    async def async_stream_files(self, url: str, *args: str, **kwargs: Any) -> bytes | None:
         """Asynchronous streaming GET request that returns the full content."""
         try:
             async with self.semaphore, httpx.AsyncClient(
@@ -95,4 +94,3 @@ class HTTPXClient:
         except (httpx.HTTPStatusError, httpx.RequestError) as exc:
             self.logger.error(f'HTTP request Error for {url}: {exc}')
             return None
-
