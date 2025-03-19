@@ -51,10 +51,21 @@ def cli(
                                       prompt=('Input the ticket number for the curation report'),
                                       prompt_required=True,
                                       callback=utils.check_ticket_num_input,
-                                      )) -> None:
+                                      ),
+    del_dir: bool = typer.Option(False,
+                               help='To delete an existing directory or not')) -> None:
     """This script downloads the dataset files and metadata from a Dataverse instance and checks the files and metadata for data curation, and generates a curation report in spreadsheet (.xlsx) and world (.docx) format."""  # noqa: E501, W505
-    # Set up the directory structure
-    workdir_path, log_files_dir, ds_dir, temp_data_dir = directory_manager.DirectoryManager(ticket_number, parent_dir).make_dirs()
+    # Define the working directory
+    workdir_path = directory_manager.DirectoryManager(ticket_number, parent_dir).define_workdir()
+
+    # Check if the working directory already exists and ask user for confirmation to delete it
+    utils.confirm_del_dir(workdir_path, del_dir)
+
+    # Create the working directory and its subdirectories
+    directory_manager.DirectoryManager(ticket_number, parent_dir).make_dirs()
+
+    # Define the log directory
+    log_files_dir = directory_manager.DirectoryManager(ticket_number, parent_dir).log_files_dir
 
     # Initialize the custom logger in the cli
     logger = CustomLogger.get_logger('main')
@@ -76,7 +87,7 @@ def cli(
     generate_log.generate_project_metadata()
 
     # Export the template dict to JSON for debugging purposes
-    with temp_data_dir.joinpath('template_dict.json').open('w') as f:
+    with log_files_dir.joinpath('template_dict.json').open('w') as f:
         f.write(orjson.dumps(template_dict, option=orjson.OPT_INDENT_2).decode())
 
     # Generate the tree diagram of the dataset files
