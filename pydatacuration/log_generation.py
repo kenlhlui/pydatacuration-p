@@ -1,4 +1,5 @@
 """Generates a report based on a template and data from a JSON file."""
+import sys
 from datetime import datetime
 from datetime import timezone
 from pathlib import Path
@@ -133,14 +134,22 @@ class GenerateLog:
         workbook.save(excel_path_obj)
         self.logger.print(f'Excel Spreadsheet curation log saved at: {str(excel_path_obj)}')
 
-    def generate_report_doc(self, template_dict: dict) -> None:
+    def generate_report_doc(self, template_dict: dict, level: str) -> None:
         """Generates a report based on the provided template dictionary.
 
         Args:
             template_dict (dict): The template dictionary.
+            level (str): The level of the report.
         """
         # Load the template
-        template_path = Path(RES_DIR, 'template_new.docx')
+        if level == 'medium':
+            template_path = Path(RES_DIR, 'template_medium.docx')
+        elif level == 'high':
+            template_path = Path(RES_DIR, 'template_high.docx')
+        else:
+            self.logger.error(f'Invalid level: {level}. Must be "medium" or "high".')
+            sys.exit(1)
+
         doc = DocxTemplate(template_path)
 
         # Render the document with the provided context
@@ -150,13 +159,13 @@ class GenerateLog:
                     'project_info': self._get_config_info()})
 
         # Save the rendered document
-        doc_path = self.workdir.joinpath('log_files', 'render_log.docx')
+        doc_path = self.workdir.joinpath('log_files', f'log_{level}-level.docx')
         doc.save(doc_path)
-        self.logger.print(f'Word curation log saved at: {str(doc_path)}')
+        self.logger.print(f'{level}-level Word curation log saved at: {str(doc_path)}')
 
         # Convert the report to markdown format
         self._convert_to_markdown(doc_path)
-        self.logger.print(f'Markdown curation log of the docx file saved at: {str(doc_path.with_suffix(".md"))}')
+        self.logger.print(f'Markdown curation log of the {level}-level docx file saved at: {str(doc_path.with_suffix(".md"))}')  # noqa: E501
 
     def generate_project_metadata(self) -> None:
         """Generates project metadata (project_info) to JSON file."""
