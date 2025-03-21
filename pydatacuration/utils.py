@@ -23,7 +23,13 @@ class FileNameFormatChecker:
 
     @staticmethod
     def check_special_char(file: str) -> tuple:
-        """Check if the file name contains special characters.
+        r"""Check if the file name contains special characters.
+
+        <>:"/\|?* `CR` `LF` are absolutely forbidden in file names.
+
+        , @ $ ~ are not recommended.
+
+        See https://learn.microsoft.com/en-us/windows/win32/fileio/naming-a-file for more details.
 
         Args:
             file (str): The path to the file.
@@ -31,7 +37,7 @@ class FileNameFormatChecker:
         Returns:
             tuple: The file path and a boolean value.
         """
-        if re.search(r'[^\w\s]', Path(file).stem):
+        if re.search(r'[<>:"/\\|?*,@$~\r\n]', Path(file).stem):
             return file, True
         return file, False
 
