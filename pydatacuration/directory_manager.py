@@ -21,13 +21,15 @@ class DirectoryManager:
         self.log_files_dir = Path(self.workdir, 'log_files').resolve()
         self.logger = CustomLogger.get_logger(__name__)
 
-    def _mk_log_dir(self) -> None:
+    def _mk_log_dir(self) -> Path:
         """Create the log directory.
 
         Returns:
             Path: The path to the log directory.
         """
         self.log_files_dir.mkdir(parents=True, exist_ok=True)
+
+        return self.log_files_dir
 
     def _mk_ds_dir(self) -> Path:
         """Create the dataset directory.
