@@ -29,32 +29,56 @@ init_tui(app)
 def cli(
 
     pid: str = typer.Option(...,
+                            '--pid',
+                            '-p',
                             prompt=('Input the Dataset Persistent Identifier (doi or hdl)'),
                             help='Enter the Persistent Identifier of the dataset'),
     base_url: str = typer.Option(None,
+                                 '--base-url',
+                                 '-b',
                                  help=f'The base URL of the Dataverse installation (current value: [bold yellow]{os.getenv("BASE_URL", "None")}[/bold yellow])',
                                  prompt=('Input the base URL of the Dataverse installation'),
                                  prompt_required=True,
                                  envvar='BASE_URL'),
     api_token: str = typer.Option(None,
+                                  '--api-token',
+                                  '-a',
                                   help=f'The API token for the Dataverse installation (current: [bold {"green" if os.getenv("API_TOKEN") else "red"}]{"Set" if os.getenv("API_TOKEN") else "Not set"}[/bold {"green" if os.getenv("API_TOKEN") else "red"}])',
                                   prompt=('Input the API token for the Dataverse installation'),
                                   hide_input=True,
                                   prompt_required=True,
                                   envvar='API_TOKEN'),
     parent_dir: str = typer.Option('workdir',
-                                help='The working directory. If not specified, a directory "workdir" will be created in the current directory',
-                                show_default=True,
-                                ),
+                                   '--parent-dir',
+                                   '-dir',
+                                   help='The working directory. If not specified, a directory "workdir" will be created in the current directory',
+                                   show_default=True,
+                                   ),
     ticket_number: str = typer.Option(...,
+                                      '--ticket-number',
+                                      '-t',
                                       help='The ticket number for the curation report; Also the directory name created under the working directory',
                                       prompt=('Input the ticket number for the curation report'),
                                       prompt_required=True,
                                       callback=utils.check_ticket_num_input,
-                                      )) -> None:
+                                      ),
+    force_del: bool = typer.Option(False,
+                                   '--force-del/--no-force-del',
+                                   '-f/-nf',
+                                   help='To force replace (delete) an existing working directory, if any',
+                                   show_default=True)) -> None:
     """This script downloads the dataset files and metadata from a Dataverse instance and checks the files and metadata for data curation, and generates a curation report in spreadsheet (.xlsx) and world (.docx) format."""  # noqa: E501, W505
-    # Set up the directory structure
-    workdir_path, log_files_dir, ds_dir, temp_data_dir = directory_manager.DirectoryManager(ticket_number, parent_dir).make_dirs()
+    # Define the working directory
+    workdir_path = directory_manager.DirectoryManager(ticket_number, parent_dir).define_workdir()
+
+    # Check if the working directory already exists and ask user for confirmation to delete it
+    utils.confirm_del_dir(workdir_path, force_del)
+
+    # Create the working directory and its subdirectories
+    directory_manager.DirectoryManager(ticket_number, parent_dir).make_dirs()
+
+    # Define the log directory
+    log_files_dir = directory_manager.DirectoryManager(ticket_number, parent_dir).log_files_dir
 
     # Initialize the custom logger in the cli
     logger = CustomLogger.get_logger('main')
@@ -76,7 +100,7 @@ def cli(
     generate_log.generate_project_metadata()
 
     # Export the template dict to JSON for debugging purposes
-    with temp_data_dir.joinpath('template_dict.json').open('w') as f:
+    with log_files_dir.joinpath('template_dict.json').open('w') as f:
         f.write(orjson.dumps(template_dict, option=orjson.OPT_INDENT_2).decode())
 
     # Generate the tree diagram of the dataset files
