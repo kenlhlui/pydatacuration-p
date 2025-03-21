@@ -3,6 +3,7 @@ import asyncio
 import sys
 from pathlib import Path
 from urllib.parse import urljoin
+
 import httpx
 import jmespath
 import orjson
@@ -114,8 +115,14 @@ class Downloads:
             return None
 
     async def save_files_async(self, file_list: list) -> list:
-        """Download the files of the dataset asynchronously."""
-        self.logger.debug(f'Saving files asynchronously: {file_list}')
+        """Download the files of the dataset asynchronously.
+
+        Args:
+            file_list (list): List of files to download
+
+        Returns:
+            list: List of downloaded files
+        """
         client = self.httpx_client.async_client
         async with client:
             tasks = [self._get_data_file_async(file_id, file_path)

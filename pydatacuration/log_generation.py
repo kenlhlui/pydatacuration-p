@@ -1,4 +1,5 @@
 """Generates a report based on a template and data from a JSON file."""
+import sys
 from datetime import datetime
 from datetime import timezone
 from pathlib import Path
@@ -20,7 +21,7 @@ RES_DIR = Path('res')
 class GenerateLog:
     """Generates a report based on a template and data from a JSON file."""
 
-    def __init__(self, workdir: Path, base_url: str, ds_metadata: dict, ticket_number: str) -> None:
+    def __init__(self, log_dir: Path, base_url: str, ds_metadata: dict, ticket_number: str) -> None:
         """Initializes the GenerateLog class.
 
         Args:
@@ -29,7 +30,7 @@ class GenerateLog:
             ds_metadata (dict): The dataset metadata.
             ticket_number (str): The ticket number.
         """
-        self.workdir = workdir
+        self.log_dir = log_dir
         self.timestamp = self._get_timestamp()
         self.ds_metadata = ds_metadata
         self.base_url = base_url
@@ -49,7 +50,7 @@ class GenerateLog:
         return local_now.strftime('%Y-%m-%d %H:%M:%S')
 
     @staticmethod
-    def _convert_to_markdown(doc_path: Path) -> None:
+    def _convert_to_markdown(doc_path: Path) -> Path:
         """Converts the report to markdown format.
 
         Args:
@@ -63,6 +64,8 @@ class GenerateLog:
         if result.text_content:
             with md_path.open('w', encoding='utf-8') as file:
                 file.write(result.text_content)
+
+        return md_path
 
     @staticmethod
     def read_template_json() -> dict:
@@ -129,18 +132,26 @@ class GenerateLog:
                         self.logger.error(f'Error rendering template in cell {cell.coordinate}: {e}')
 
         # Save the modified workbook
-        excel_path_obj = self.workdir.joinpath('log_files', 'render_log_new.xlsx')
+        excel_path_obj = self.log_dir.joinpath('render_log_new.xlsx')
         workbook.save(excel_path_obj)
         self.logger.print(f'Excel Spreadsheet curation log saved at: {str(excel_path_obj)}')
 
-    def generate_report_doc(self, template_dict: dict) -> None:
+    def generate_report_doc(self, template_dict: dict, level: str) -> None:
         """Generates a report based on the provided template dictionary.
 
         Args:
             template_dict (dict): The template dictionary.
+            level (str): The level of the report.
         """
         # Load the template
-        template_path = Path(RES_DIR, 'template_new.docx')
+        if level == 'medium':
+            template_path = Path(RES_DIR, 'template_medium.docx')
+        elif level == 'high':
+            template_path = Path(RES_DIR, 'template_high.docx')
+        else:
+            self.logger.error(f'Invalid level: {level}. Must be "medium" or "high".')
+            sys.exit(1)
+
         doc = DocxTemplate(template_path)
 
         # Render the document with the provided context
@@ -150,17 +161,17 @@ class GenerateLog:
                     'project_info': self._get_config_info()})
 
         # Save the rendered document
-        doc_path = self.workdir.joinpath('log_files', 'render_log.docx')
+        doc_path = self.log_dir.joinpath(f'log_{level}-level.docx')
         doc.save(doc_path)
-        self.logger.print(f'Word curation log saved at: {str(doc_path)}')
+        self.logger.print(f'{level.upper()}-level Word curation log saved at: {str(doc_path)}')
 
         # Convert the report to markdown format
-        self._convert_to_markdown(doc_path)
-        self.logger.print(f'Markdown curation log of the docx file saved at: {str(doc_path.with_suffix(".md"))}')
+        md_path = self._convert_to_markdown(doc_path)
+        self.logger.print(f'Converted {level.upper()}-level Word curation log to Markdown format at: {str(md_path)}')
 
     def generate_project_metadata(self) -> None:
         """Generates project metadata (project_info) to JSON file."""
-        meta_path = self.workdir.joinpath('log_files', 'project_info.json')
+        meta_path = self.log_dir.joinpath('project_info.json')
         with meta_path.open('w', encoding='utf-8') as file:
             file.write(orjson.dumps(self._get_config_info(), option=orjson.OPT_INDENT_2).decode('utf-8'))
             self.logger.print(f'Project metadata saved at: {str(meta_path)}')
