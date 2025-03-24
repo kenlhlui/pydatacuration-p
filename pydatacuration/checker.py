@@ -54,12 +54,10 @@ class Checker:
         self.file_list_metadata = self._gen_file_list_metadata()
         self.common_file_format_tuple = self._read_common_file_format()
 
-    @staticmethod
-    def _get_ds_tree_info(tree_json: dict, identifier_of_dataverse: str) -> dict:
+    def _get_ds_tree_info(self, identifier_of_dataverse: str) -> dict:
         """Get the dataset tree information in the Dataverse repository.
 
         Args:
-            tree_json (dict): The JSON object representing the tree structure of the Dataverse.
             identifier_of_dataverse(str): The identifier of the dataverse parent dataverse.
 
         Returns:
@@ -92,7 +90,7 @@ class Checker:
             return {}
 
         # Read the root node from the JSON once
-        root = tree_json['data']
+        root = self.dv_tree
         return _process(root, [], [], [])
 
     def _read_common_file_format(self) -> tuple | None:
@@ -267,7 +265,7 @@ class Checker:
 
                 # Get the path of the dataverse from the response
                 identifier_of_dataverse = response.json().get('data', {}).get('items', [{}])[0].get('identifier_of_dataverse', None)  # noqa: E501
-                tree_info = self._get_ds_tree_info(self.dv_tree, identifier_of_dataverse)
+                tree_info = self._get_ds_tree_info(identifier_of_dataverse)
                 path = tree_info.get('path', None)
                 if path:
                     self.template_dict['ds_tree_info']['path'] = path
