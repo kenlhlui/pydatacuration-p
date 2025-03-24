@@ -26,6 +26,9 @@ class Downloads:
         self.base_url = base_url
         self.pid = pid
         self.download_dir = download_dir
+
+        self.success_code = 200
+
         self.httpx_client = HTTPXClient(base_url, api_token)
         self.semaphore = asyncio.Semaphore(5)
         self.logger = CustomLogger.get_logger(__name__)
@@ -132,6 +135,28 @@ class Downloads:
             successful = [r for r in results if r is not None]
             return successful
 
+    def _get_dv_tree(self) -> dict:
+        """Get the tree structure of the dataverse repository.
+
+        Returns:
+            dict: Tree structure of the dataverse repository
+        """
+        url = f'{self.base_url}/api/info/metrics/tree'
+
+        try:
+            response = self.httpx_client.sync_get(url)
+            response.raise_for_status()
+            if response.status_code == self.success_code and response.json():
+                return response.json()
+            self.logger.error(f'Error: {response.status_code} - {response.text}')
+            sys.exit(1)
+        except httpx.HTTPStatusError as e:
+            self.logger.error(f'HTTP error occurred: {e}')
+            sys.exit(1)
+        except Exception as e:
+            self.logger.error(f'An error occurred: {e}')
+            sys.exit(1)
+
     def _get_ds_metadata(self) -> dict:
         """Get metadata of a dataset.
 
@@ -143,7 +168,7 @@ class Downloads:
         try:
             response = self.httpx_client.sync_get(url)
             response.raise_for_status()
-            if response.status_code == 200 and response.json():
+            if response.status_code == self.success_code and response.json():
                 return response.json()
             sys.exit(1)
             return {}
@@ -166,17 +191,22 @@ class Downloads:
             self.logger.print(f' An error occurred: {e}\n Program exiting...')
             sys.exit(1)
 
-    async def downloader(self) -> dict:
+    async def downloader(self) -> tuple:
         """Download the dataset as a zip file asynchronously.
 
         Returns:
-            dict: Metadata of the dataset
+            tuple: Tuple containing the dataset metadata and the dataverse tree structure
         """
-        # Initiating the downloads
+        # Get the dataset metadata
         self.logger.print('Downloading dataset metadata...')
         ds_metadata_json = self._get_ds_metadata()
         self.save_ds_metadata()
         self.logger.print('Dataset metadata downloaded')
+
+        # Get the tree structure of the whole dataverse repository
+        self.logger.print('Downloading dataverse tree structure...')
+        dv_tree = self._get_dv_tree()
+        self.logger.print('Dataverse tree structure downloaded')
 
         # Download the data files using async method
         self.logger.print('Downloading data files...')
@@ -185,4 +215,4 @@ class Downloads:
 
         await self.save_files_async(file_list)
         self.logger.print('Data files downloaded')
-        return ds_metadata_json
+        return ds_metadata_json, dv_tree

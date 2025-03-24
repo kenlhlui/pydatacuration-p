@@ -27,6 +27,7 @@ class Checker:
                  base_url: str,
                  api_token: str,
                  ds_metadata: dict,
+                 dv_tree: dict,
                  workdir: Path) -> None:
         """Initialize the Checker class.
 
@@ -34,11 +35,13 @@ class Checker:
             base_url (str): The base URL of the API.
             api_token (str): The API token"
             ds_metadata (dict): The dataset metadata.
+            dv_tree (dict): The Dataverse tree metadata.
             workdir (Path): The working directory.
         """
         self.base_url = base_url
         self.api_token = api_token
         self.ds_metadata = ds_metadata
+        self.dv_tree = dv_tree
         self.workdir = workdir
 
         self.logger = CustomLogger.get_logger(__name__)
@@ -50,6 +53,45 @@ class Checker:
         self.httpx_client = HTTPXClient(base_url, api_token)
         self.file_list_metadata = self._gen_file_list_metadata()
         self.common_file_format_tuple = self._read_common_file_format()
+
+    def _get_ds_tree_info(self, identifier_of_dataverse: str) -> dict:
+        """Get the dataset tree information in the Dataverse repository.
+
+        Args:
+            identifier_of_dataverse(str): The identifier of the dataverse parent dataverse.
+
+        Returns:
+            dict: A dictionary containing the path to the target node, empty if none.
+        """
+        def _process(data: dict, id_list: list, alias_list: list, name_list: list) -> dict:
+            # Append the current node's alias and name to the respective lists
+            current_id_list = id_list + [data.get('id')]
+            current_alias_list = alias_list + [data.get('alias')]
+            current_name_list = name_list + [data.get('name')]
+            # Check if the current node is the target
+            if data.get('alias') == identifier_of_dataverse:
+                return {
+                    'id': current_id_list,
+                    'alias': current_alias_list,
+                    'depth': data.get('depth'),
+                    'name': current_name_list
+                }
+            # Recursively search through any children
+            for child in data.get('children', []):
+                result = _process(child, current_id_list, current_alias_list, current_name_list)
+                if result:
+                    # Combine the paths with '/' separator
+                    result['path'] = '/'.join(result['name'])
+                    # Turn the id, alias and name from list to tuple
+                    result['id'] = tuple(result['id'])
+                    result['alias'] = tuple(result['alias'])
+                    result['name'] = tuple(result['name'])
+                    return result
+            return {}
+
+        # Read the root node from the JSON once
+        root = self.dv_tree
+        return _process(root, [], [], [])
 
     def _read_common_file_format(self) -> tuple | None:
         """Reads the common_file_format.yaml file and returns it as a dictionary.
@@ -206,8 +248,8 @@ class Checker:
 
                 # TODO: Add error handling for the case when the response is None or empty; or HTTP error
 
-    def check_dv_collection(self) -> None:
-        """Check if the dataset is in a Dataverse collection."""
+    def check_ds_tree_info(self) -> None:
+        """Check the path of the dataset in the dataverse Repository."""
         ds_version_id = self.ds_metadata.get('data', {}).get('latestVersion', {}).get('id')
         if ds_version_id:
             # See https://github.com/IQSS/dataverse/issues/2038 for fq field;
@@ -216,8 +258,17 @@ class Checker:
             # Don't mess up with data.id or data.latestVersion.datasetId which are the same and is the persistent id in the dataverse system  # noqa: E501
             response = self.httpx_client.sync_get(f'/api/search?q=*&type=dataset&per_page=1&fq=datasetVersionId:{ds_version_id}')  # noqa: E501
             if response and response.json():
-                name_of_dataverse = response.json().get('data', {}).get('items', [{}])[0].get('name_of_dataverse', None)
-                self.template_dict['name_of_dataverse'] = name_of_dataverse
+                # Get the name_of_dataverse from the response
+                name_of_dataverse = response.json().get('data', {}).get('items', [{}])[0].get('name_of_dataverse', None)  # noqa: E501
+                if name_of_dataverse:
+                    self.template_dict['ds_tree_info']['parentDataverseName'] = name_of_dataverse
+
+                # Get the path of the dataverse from the response
+                identifier_of_dataverse = response.json().get('data', {}).get('items', [{}])[0].get('identifier_of_dataverse', None)  # noqa: E501
+                tree_info = self._get_ds_tree_info(identifier_of_dataverse)
+                path = tree_info.get('path', None)
+                if path:
+                    self.template_dict['ds_tree_info']['path'] = path
 
             # TODO: Add error handling for the case when the response is None or empty; or HTTP error
 
@@ -254,7 +305,7 @@ class Checker:
         self.check_missing_metadata()
         self.check_spelling()
         self.check_dv_record('toronto')  # Change this to your dataverse's alias
-        self.check_dv_collection()
+        self.check_ds_tree_info()
         self.check_restricted_files()
         self.check_terms_license()
 
