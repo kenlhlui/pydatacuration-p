@@ -87,10 +87,10 @@ def cli(
     logger.print('Starting the pydatacuration script...')
 
     # Download the dataset files and metadata
-    ds_metadata = asyncio.run(downloads.Downloads(base_url, api_token, pid, workdir_path).downloader())
+    ds_metadata, dv_tree = asyncio.run(downloads.Downloads(base_url, api_token, pid, workdir_path).downloader())
 
     # Run the checker
-    checker = Checker(base_url, api_token, ds_metadata, workdir_path)
+    checker = Checker(base_url, api_token, ds_metadata, dv_tree, workdir_path)
     template_dict = checker.run_checks()
 
     # Generate the report
