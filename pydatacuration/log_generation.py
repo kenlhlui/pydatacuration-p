@@ -117,7 +117,7 @@ class GenerateLog:
         sheet = workbook.active
 
         # Create Jinja2 environment
-        env = jinja2.Environment()
+        env = jinja2.Environment(autoescape=True,)  # To prevent < that breaks the excel
 
         # Process each cell in the worksheet to replace Jinja2 variables
         for row in sheet.iter_rows():
@@ -158,7 +158,8 @@ class GenerateLog:
         doc.render({'template_dict': template_dict,  # TEMP fix. Need to restructure the template_dict
                     'timestamp': self.timestamp,
                     'dataset': self.dataset_info_dict,
-                    'project_info': self._get_config_info()})
+                    'project_info': self._get_config_info()},
+                    autoescape=True)  # See https://github.com/elapouya/python-docx-template/issues/38
 
         # Save the rendered document
         doc_path = self.log_dir.joinpath(f'log_{level}-level.docx')
