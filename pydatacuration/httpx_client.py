@@ -37,7 +37,12 @@ class HTTPXClient:
         self.async_sleep_time = 0  # TODO: make this configurable
 
     def sync_get(self, api_endpoint: str) -> httpx.Response:
-        """Synchronous GET request."""
+        """Synchronous GET request.
+
+        Args:
+            api_endpoint (str): API endpoint to be appended to the base URL.
+
+        """
         url = urljoin(self.base_url, api_endpoint)
 
         # Add explicit limits and timeouts
