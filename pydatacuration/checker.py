@@ -181,20 +181,30 @@ class Checker:
                         self.logger.print(f'Spelling mistake found in the {field}: {message}')
                     self.template_dict['typo']['comments'].extend(typo_messages)
 
-    def check_dv_record(self) -> None:
-        """Check if the author has a Dataverse record."""
+    def check_dv_record(self, dv_alias: str) -> None:
+        """Check if the author has deposited data in Dataverse.
+
+        Note: This check only works if the author inputs their name in a consistent way across all datasets.
+
+        Args:
+            dv_alias (str): The alias of the Dataverse.
+
+        """
         query_string = 'data.latestVersion.metadataBlocks.citation.fields[?typeName==`author`].value[*].authorName.value[]'  # noqa: E501
         author_list = jmespath.search(query_string, self.ds_metadata)
 
         if isinstance(author_list, list):
             for author in author_list:
-                # Remove all non-alphanumeric characters from the author name
-                author = ''.join(char for char in author if char.isalpha() or char.isspace())
                 # Check if the author has record by search API
-                response = self.httpx_client.sync_get(f'/api/search?q={author}&type=dataset&per_page=100')  # noqa: E501
+                # See https://github.com/IQSS/dataverse/issues/2038 for fq field;
+                # Note that fq supports searching the fields of the database schema
+                # i.e. The fields in the Native JSON export of a dataset
+                response = self.httpx_client.sync_get(f'/api/search?q=*&type=dataset&per_page=1000&subtree={dv_alias}&fq=authorName:"{author}"')  # noqa: E501
                 if response and response.json():
                     name_of_dataverse_result = list(set(jmespath.search('data.items[*].name_of_dataverse', response.json())))  # noqa: E501
                     self.template_dict['dv_record']['comments'].append({author: name_of_dataverse_result})
+
+                # TODO: Add error handling for the case when the response is None or empty; or HTTP error
 
     def check_dv_collection(self) -> None:
         """Check if the dataset is in a Dataverse collection."""
@@ -208,6 +218,8 @@ class Checker:
             if response and response.json():
                 name_of_dataverse = response.json().get('data', {}).get('items', [{}])[0].get('name_of_dataverse', None)
                 self.template_dict['name_of_dataverse'] = name_of_dataverse
+
+            # TODO: Add error handling for the case when the response is None or empty; or HTTP error
 
     def check_restricted_files(self) -> None:
         """Check for restricted files."""
@@ -241,7 +253,7 @@ class Checker:
         self.check_common_file_format()
         self.check_missing_metadata()
         self.check_spelling()
-        self.check_dv_record()
+        self.check_dv_record('toronto')  # Change this to your dataverse's alias
         self.check_dv_collection()
         self.check_restricted_files()
         self.check_terms_license()
