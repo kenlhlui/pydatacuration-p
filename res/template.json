@@ -18,18 +18,31 @@
     "dv_record": {
         "comments": []
     },
-    "name_name_of_dataverse": null,
+    "restricted_files": {
+        "comments": []
+    },
+    "ds_tree_info": {
+        "parentDataverseName": null,
+        "path": null
+    },
+    "none_author_affiliation": false,
+    "terms_license": {
+        "termsOfUse": null,
+        "termsOfAccess": null,
+        "licenseName": null
+        
+    },
+    "common_file_format":{
+        "comments": []
+    },
     "missing_field": {
         "title": {
-            "status": {},
             "comments": []
         },
         "dsDescription": {
-            "status": {},
             "comments": []
         },
         "subject": {
-            "status": {},
             "comments": []
         },        
         "author": {
@@ -37,15 +50,12 @@
             "comments": []
         },
         "authorAffiliation": {
-            "status": {},
             "comments": []
         },
         "authorIdentifierScheme": {
-            "status": {},
             "comments": []
         },
         "authorIdentifier": {
-            "status": {},
             "comments": []
         }
     }

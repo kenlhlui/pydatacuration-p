@@ -2,10 +2,14 @@
 import asyncio
 import sys
 from pathlib import Path
+from urllib.parse import urljoin
 
 import httpx
 import jmespath
 import orjson
+
+from .custom_logging import CustomLogger
+from .httpx_client import HTTPXClient
 
 
 class Downloads:
@@ -20,18 +24,14 @@ class Downloads:
             download_dir (Path): The parent directory to save the downloaded files
         """
         self.base_url = base_url
-        self.api_token = api_token
         self.pid = pid
         self.download_dir = download_dir
-        self.sync_client = httpx.Client(
-            headers={'X-Dataverse-key':
-                     self.api_token},
-            timeout=None, follow_redirects=True)
-        self.async_client = httpx.AsyncClient(
-            headers={'X-Dataverse-key': self.api_token},
-            timeout=None,
-            follow_redirects=True)
+
+        self.success_code = 200
+
+        self.httpx_client = HTTPXClient(base_url, api_token)
         self.semaphore = asyncio.Semaphore(5)
+        self.logger = CustomLogger.get_logger(__name__)
 
     def _metadata_dir(self) -> Path:
         """Create the metadata directory.
@@ -54,30 +54,6 @@ class Downloads:
         files_dir.mkdir(parents=True, exist_ok=True)
 
         return files_dir
-
-    # def _get_data_file(self, file_id: str | int, file_path: str) -> str:
-    #     """Get the data file of the dataset.
-
-    #     Args:
-    #         file_id (str): The file ID
-    #         file_path (str): The relative path of the file
-
-    #     Returns:
-    #         str: Path to the downloaded data file
-    #     """
-    #     url = f'{self.base_url}/api/access/datafile/{file_id}'
-
-    #     file_path_obj = Path(self._files_dir(), 'temp_data', file_path)
-    #     try:
-    #         with self.sync_client.stream('GET', url, params={'format': 'original'}) as response:
-    #             if response.status_code == 200:
-    #                 with file_path_obj.open('wb') as f:
-    #                     for chunk in response.iter_bytes():
-    #                         f.write(chunk)
-    #             return str(file_path_obj)
-    #     except httpx.HTTPStatusError as e:
-    #         print(f'HTTP error occurred: {e}')
-    #         sys.exit(1)
 
     @staticmethod
     def _get_file_list(metadata: dict) -> list:
@@ -121,44 +97,65 @@ class Downloads:
                 Path.mkdir(Path(self._files_dir(), directory), parents=True, exist_ok=True)
 
     async def _get_data_file_async(self, file_id: str, file_path: str) -> Path | None:
-        """Get the data file of the dataset asynchronously.
-
-        Args:
-            file_id (str): The file ID
-            file_path (str): The relative path of the file
-
-        Returns:
-            Path | None: Path to the downloaded data file or None if failed
-        """
-        url = f'{self.base_url}/api/access/datafile/{file_id}'
+        """Get the data file of the dataset asynchronously."""
+        api_endpoint = f'/api/access/datafile/{file_id}'
         file_path_obj = Path(self._files_dir(), file_path)
 
         try:
-            async with self.semaphore:
-                async with self.async_client.stream('GET', url, params={'format': 'original'}) as response:
-                    if response.status_code == 200:
-                        with file_path_obj.open('wb') as f:
-                            async for chunk in response.aiter_bytes(chunk_size=8192):
-                                f.write(chunk)
-                    return file_path_obj
-        except httpx.HTTPStatusError as e:
-            print(f'HTTP error occurred: {e}')
+            url = urljoin(self.base_url, api_endpoint)
+
+            # Get the content bytes
+            content = await self.httpx_client.async_stream_files(url, params={'format': 'original'})
+
+            if content is not None:
+                # Write the content to file
+                await self.httpx_client.write_stream_file(file_path_obj, content)
+                return file_path_obj
+
+            return None
+        except Exception as e:
+            self.logger.print(f'Error downloading {file_path}: {e}')
+            return None
 
     async def save_files_async(self, file_list: list) -> list:
         """Download the files of the dataset asynchronously.
 
         Args:
-            file_list (list): List of tuples containing the file ID and the relative path of the file
+            file_list (list): List of files to download
 
         Returns:
-            list: List of successful downloads
+            list: List of downloaded files
         """
-        async with self.async_client:
-            tasks = [self._get_data_file_async(file_id, file_path) for file_id, file_path in file_list]
+        client = self.httpx_client.async_client
+        async with client:
+            tasks = [self._get_data_file_async(file_id, file_path)
+                    for file_id, file_path in file_list]
             results = await asyncio.gather(*tasks, return_exceptions=True)
 
             successful = [r for r in results if r is not None]
             return successful
+
+    def _get_dv_tree(self) -> dict:
+        """Get the tree structure of the dataverse repository.
+
+        Returns:
+            dict: Tree structure of the dataverse repository
+        """
+        url = f'{self.base_url}/api/info/metrics/tree'
+
+        try:
+            response = self.httpx_client.sync_get(url)
+            response.raise_for_status()
+            if response.status_code == self.success_code and response.json():
+                return response.json()
+            self.logger.error(f'Error: {response.status_code} - {response.text}')
+            sys.exit(1)
+        except httpx.HTTPStatusError as e:
+            self.logger.error(f'HTTP error occurred: {e}')
+            sys.exit(1)
+        except Exception as e:
+            self.logger.error(f'An error occurred: {e}')
+            sys.exit(1)
 
     def _get_ds_metadata(self) -> dict:
         """Get metadata of a dataset.
@@ -169,18 +166,18 @@ class Downloads:
         url = f'{self.base_url}/api/datasets/:persistentId/?persistentId={self.pid}'
 
         try:
-            response = self.sync_client.get(url)
+            response = self.httpx_client.sync_get(url)
             response.raise_for_status()
-            if response.status_code == 200 and response.json():
+            if response.status_code == self.success_code and response.json():
                 return response.json()
             sys.exit(1)
             return {}
 
         except httpx.HTTPStatusError as e:
-            print(f'HTTP error occurred: {e}')
+            self.logger.print(f'HTTP error occurred: {e}')
             sys.exit(1)
         except Exception as e:
-            print(f'An error occurred: {e}')
+            self.logger.print(f'An error occurred: {e}')
             sys.exit(1)
 
     def save_ds_metadata(self) -> None:
@@ -191,79 +188,31 @@ class Downloads:
             with file_path.open('w', encoding='utf-8') as f:
                 f.write(orjson.dumps(response_json, option=orjson.OPT_INDENT_2).decode())
         except Exception as e:
-            print(f' An error occurred: {e}\n Program exiting...')
+            self.logger.print(f' An error occurred: {e}\n Program exiting...')
             sys.exit(1)
 
-    def get_ds_zip(self) -> Path:
-        """Get a dataset as a zip file.
-
-        Returns:
-            str: Path to the downloaded zip file
-        """
-        file_path = Path(self._files_dir(), 'ds.zip')
-        url = self.base_url + 'api/access/dataset/:persistentId/?persistentId=' + self.pid
-
-        try:
-            with self.sync_client.stream('GET', url) as response:
-                response.raise_for_status()
-                with file_path.open('wb') as f:
-                    for chunk in response.iter_bytes():
-                        f.write(chunk)
-            return file_path
-
-        except httpx.HTTPStatusError as e:
-            print(f'HTTP error occurred: {e}')
-            sys.exit(1)
-            return {}
-
-        except Exception as e:
-            print(f'An error occurred: {e}')
-
-            sys.exit(1)
-            return {}
-
-    async def get_ds_zip_async(self) -> Path:
-        """Get a dataset as a zip file asynchronously.
-
-        Returns:
-            str: Path to the downloaded zip file
-        """
-        file_path = Path(self._files_dir(), 'ds.zip')
-        url = self.base_url + 'api/access/dataset/:persistentId/?persistentId=' + self.pid + '&format=original'
-
-        try:
-            async with self.async_client.stream('GET', url) as response:
-                response.raise_for_status()
-                with file_path.open('wb') as f:
-                    async for chunk in response.aiter_bytes():
-                        f.write(chunk)
-            return file_path
-
-        except httpx.HTTPStatusError as e:
-            print(f'HTTP error occurred: {e}')
-            sys.exit(1)
-
-        except Exception as e:
-            print(f'An error occurred: {e}')
-            sys.exit(1)
-
-    async def downloader(self) -> dict | None:
+    async def downloader(self) -> tuple:
         """Download the dataset as a zip file asynchronously.
 
         Returns:
-            dict: Metadata of the dataset
+            tuple: Tuple containing the dataset metadata and the dataverse tree structure
         """
-        # Initiating the downloads
-        print('\nDownloading dataset metadata...')
+        # Get the dataset metadata
+        self.logger.print('Downloading dataset metadata...')
         ds_metadata_json = self._get_ds_metadata()
         self.save_ds_metadata()
-        print('\nDataset metadata downloaded')
+        self.logger.print('Dataset metadata downloaded')
+
+        # Get the tree structure of the whole dataverse repository
+        self.logger.print('Downloading dataverse tree structure...')
+        dv_tree = self._get_dv_tree()
+        self.logger.print('Dataverse tree structure downloaded')
 
         # Download the data files using async method
-        print('\nDownloading data files...')
+        self.logger.print('Downloading data files...')
         file_list = self._get_file_list(ds_metadata_json)
         self.make_dir_structure(ds_metadata_json)
 
         await self.save_files_async(file_list)
-        print('\nData files downloaded')
-        return ds_metadata_json
+        self.logger.print('Data files downloaded')
+        return ds_metadata_json, dv_tree

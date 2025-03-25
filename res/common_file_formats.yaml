@@ -1,0 +1,56 @@
+file_formats:
+  audio:
+    - .wav
+    - .aiff
+    - .flac
+    - .mp3
+  archive:
+    - .zip
+    - .tar
+    - .tar.gz
+    - .gz
+  images:
+    - .tif
+    - .tiff
+    - .png
+    - .jpg
+    - .jpeg
+    - .svg
+  pdf:
+    - .pdf
+  text_formats:
+    - .txt
+    - .md
+  tabular:
+    - .csv
+    - .tsv
+    - .tab
+  scripts:
+    - .js
+    - .es
+    - .py
+    - .R
+  video:
+    - .mp4
+  data_formats:
+    - .nc
+    - .RData
+    - .data
+    - .sps
+    - .dat
+    - .DO
+    - .mzML
+  structured_text_data:
+    - .json
+    - .yaml
+    - .yml
+    - .ini
+    - .cfg
+    - .log
+    - .xml
+    - .html
+    - .css
+    - .xslt
+  spreadsheets:
+    - .xls
+    - .xlsx
