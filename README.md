@@ -187,6 +187,7 @@ CLI options:
 
 
 
+
 1. Open a terminal, run the script with the following command
    ```sh
    # CLI Option
