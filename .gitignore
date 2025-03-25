@@ -177,10 +177,7 @@ cython_debug/
 temp_data/
 workdir/
 temp.ipynb
-<<<<<<< HEAD
 
 # res/config.yaml
 res/config.yaml
-=======
 test/ 
->>>>>>> f66c41807aab6c8a84d8d196864984ba5b16218a
