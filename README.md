@@ -153,12 +153,6 @@ When the terminal prompts to `Press Enter to open https://github.com/login/devic
    pip install -r requirements.txt
    ```
 
->[!TIP]
->If you prefer a Graphical User Interface (GUI), you can run the following command
->```sh
->explore.exe .
->```
-> A Windows File Explorer should appear, and you can edit, copy, delete, or move files using the GUI.
 
 ## ℹ️Curator info
 You can configure the curation project information by modifying the `res/config.yaml` file. 
@@ -170,7 +164,6 @@ You can modify it with Notepad (GUI) or nano editor (Terminal).
    ```
 2. Fill in the relevant information
    ```yaml
-   ticket_number:
    curator_name:
    curator_email:
    ```
@@ -179,7 +172,7 @@ You can modify it with Notepad (GUI) or nano editor (Terminal).
 You have finished the configuration. Now is time to run the tool.
 
 >[!TIP]
->See [here](docs/After_restart.md) if want to see a step-by-step guide after restart
+>See [here](docs/after_restart/after_restart.md) if want to see a step-by-step guide after restart
 
 
 1. Open a terminal, run the script with the following command
