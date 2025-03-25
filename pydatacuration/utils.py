@@ -1,14 +1,19 @@
 """This module contains utility functions for data curation tasks."""
-import os
 import re
+import shutil
 import sys
 from pathlib import Path
 from pathlib import PurePosixPath
 
 import deepdiff
-import dotenv
 import seedir as sd
+import typer
 
+from .custom_logging import CustomLogger
+
+
+# Initialize the logger
+logger = CustomLogger.get_logger(__name__)
 
 class FileNameFormatChecker:
     """This class is used to check the file name format."""
@@ -18,7 +23,13 @@ class FileNameFormatChecker:
 
     @staticmethod
     def check_special_char(file: str) -> tuple:
-        """Check if the file name contains special characters.
+        r"""Check if the file name contains special characters.
+
+        <>:"/\|?* `CR` `LF` are absolutely forbidden in file names.
+
+        , @ $ ~ are not recommended.
+
+        See https://learn.microsoft.com/en-us/windows/win32/fileio/naming-a-file for more details.
 
         Args:
             file (str): The path to the file.
@@ -26,7 +37,7 @@ class FileNameFormatChecker:
         Returns:
             tuple: The file path and a boolean value.
         """
-        if re.search(r'[^\w\s]', Path(file).stem):
+        if re.search(r'[<>:"/\\|?*,@$~\r\n]', Path(file).stem):
             return file, True
         return file, False
 
@@ -85,7 +96,7 @@ class FileNameFormatChecker:
                 with Path(preferred_file_formats_config).open(encoding='utf-8') as f:
                     return [line.strip() for line in f.readlines()]
             except FileNotFoundError as e:
-                print(f'Error: {e}')
+                logger.print(f'Error: {e}')
                 sys.exit(1)
 
         if Path(file).suffix in load_preferred_file_formats_list(preferred_file_formats_config):
@@ -120,28 +131,16 @@ def compare_files_and_metadata(dl_files_checksums, metadata_file_checksums, work
     """
     diff = deepdiff.DeepDiff(dl_files_checksums, metadata_file_checksums, ignore_order=True)
     if diff:
-        print('\nThe downloaded files and the file list metadata are different.')
+        logger.warning('The downloaded files and the file list metadata are different.')
         diff_log_path = Path(workddir, 'log_files', 'diff.txt').resolve()
         with diff_log_path.open('w', encoding='utf-8') as f:
             f.write(str(diff))
-        print(f'See the {str(diff_log_path)} file for the differences.')
+        logger.warning(f'See the {str(diff_log_path)} file for the differences.')
         sys.exit(1)
 
     else:
-        print('\nThe downloaded files and the file list metadata are the same.')
+        logger.print('The downloaded files and the file list metadata are the same.')
         return False
-
-
-def combine_list_items(items: list) -> str:
-    """Combine the list items into a single string.
-
-    Args:
-        items (list): The list of items to combine.
-
-    Returns:
-        str: The combined string.
-    """
-    return ' '.join(items)
 
 
 def gen_tree_diagram(target_dir: Path, save_dir: Path) -> None:
@@ -160,29 +159,15 @@ def gen_tree_diagram(target_dir: Path, save_dir: Path) -> None:
                 with Path(ds_tree_file_path).open('w', encoding='utf-8') as f:
                     f.write(result)
 
-                print(f'\nFolder tree diagram text file saved at: {str(ds_tree_file_path)}')
+                logger.print(f'Folder tree diagram text file saved at: {str(ds_tree_file_path)}')
         else:
-            print('\nThe target directory does not exist. Exiting...')
+            logger.print('The target directory does not exist. Exiting...')
             sys.exit(1)
 
     except Exception as e:
-        print(f'Error: {e}')
-        print('An error occurred while generating the folder tree diagram. Exiting...')
+        logger.print(f'Error: {e}')
+        logger.print('An error occurred while generating the folder tree diagram. Exiting...')
         sys.exit(1)
-
-
-def load_env(base_url: str, api_token: str) -> tuple:
-    dotenv.load_dotenv()
-    if base_url is None:
-        base_url = os.getenv('BASE_URL')
-        if base_url is None:
-            sys.exit('BASE_URL not found in the environment variables. Exiting...')
-    if api_token is None:
-        api_token = os.getenv('API_TOKEN')
-        if api_token is None:
-            sys.exit('API_TOKEN not found in the environment variables. Exiting...')
-    print('Environment variables loaded')
-    return base_url, api_token
 
 
 def parse_file_list_metadata(file_list_metadata: list) -> list:
@@ -205,3 +190,46 @@ def parse_file_list_metadata(file_list_metadata: list) -> list:
         })
 
     return file_list_metadata_nested_list
+
+
+def check_ticket_num_input(ticket_num: str) -> str:
+    """Check if the ticket number is without any special characters or spaces.
+
+    Args:
+        ticket_num (str): The ticket number to check.
+
+    Returns:
+        str: The validated ticket number.
+    """
+    # Check if the ticket number is empty
+    if not ticket_num:
+        msg = 'Ticket number cannot be empty.'
+        raise typer.BadParameter(msg)
+
+    # Check if the ticket number contains any special characters or spaces
+    if re.search(r'[^a-zA-Z0-9_\-]', ticket_num):
+        msg = '⚠️ Ticket number must only contain letters, numbers, hyphens, and underscores.'
+        raise typer.BadParameter(msg)
+
+    return ticket_num
+
+
+def confirm_del_dir(dir_path: Path, default: bool = False) -> None:
+    """Delete a directory after seeking user confirmation.
+
+    Args:
+        dir_path (Path): Path to the directory to delete
+        default (bool): If True, delete without confirmation; otherwise ask user
+    """
+    if dir_path.exists():
+        try:
+            if default or typer.confirm(
+                f'Do you want to replace {dir_path} with the new files?',
+                default=False,
+                abort=True,
+            ):
+                shutil.rmtree(dir_path)
+                typer.echo(f'Will Replace {dir_path} with the new files.')
+        except typer.Abort:
+            typer.echo('Aborted by user. Exiting...')
+            sys.exit(1)

@@ -15,7 +15,8 @@ from PIL import Image
 from pyreadstat import ReadstatError
 from pyreadstat import pyreadstat
 
-from ffmepg_file_formats import FFmpegFileFormats
+from .custom_logging import CustomLogger
+from .ffmepg_file_formats import FFmpegFileFormats
 
 
 IMAGE_FILE_EXTENSIONS = ['.jpg', '.jpeg', '.png', '.gif', '.bmp', '.tiff', '.tif']
@@ -39,7 +40,7 @@ class FilesOpener:
             file (str | Path): The file path to open.
         """
         self.file = file
-        self.pypdf_logger = logging.getLogger('pypdf').setLevel(logging.ERROR)
+        self.logger = CustomLogger.get_logger(__name__)
 
     def _get_file_encoding(self) -> dict | None:
         """Check the file encoding.

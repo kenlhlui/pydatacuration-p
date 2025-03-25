@@ -171,19 +171,38 @@ You can modify it with Notepad (GUI) or nano editor (Terminal).
 ## 🏃Run the tool
 You have finished the configuration. Now is time to run the tool.
 
+
+CLI options:
+| Option          | Type  | Description                                                                                           | Default  |
+|-----------------|-------|-------------------------------------------------------------------------------------------------------|----------|
+| `--pid`         | TEXT  | Enter the Persistent Identifier of the dataset                                                      | None     |
+| `--base-url`    | TEXT  | The base URL of the Dataverse installation [env var: BASE_URL]                                        | None     |
+| `--api-token`   | TEXT  | The API token for the Dataverse installation [env var: API_TOKEN]                                     | None     |
+| `--parent-dir`  | TEXT  | The working directory. If not specified, a directory "workdir" will be created in the current directory | workdir  |
+| `--ticket-number` | TEXT  | The ticket number for the curation report; Also the directory name created under the working directory   | None     |
+| `--help`        |       | Show this message and exit.                                                                           |          |
+
 >[!TIP]
 >See [here](docs/after_restart/after_restart.md) if want to see a step-by-step guide after restart
 
 
+
 1. Open a terminal, run the script with the following command
    ```sh
-   python3 pydatacuration/main.py --doi $DOI  # (e.g. --doi doi:10.80240/FK2/U2VZH9)
+   # CLI Option
+   python -m pydatacuration.main cli --pid $PID  --ticket-number $TicketID
+   # Or
+   # TUI (GUI) Option
+   python -m pydatacuration.main tui  # CLI option
+   
    ```
-   You may also define the working directory (the directory that stores the metadata JSON, data files, and curation log) by adding a `--workdir-input` flag following the path.
+   You may also define the working directory (the directory that stores the metadata JSON, data files, and curation log) by adding a `--parent-dir` flag following the path.
+
+   The `--ticket-number` should be the ticket number of your ticketing system, or a project name. It will also become the directory name of the downloaded dataset files, metadata JSON file and log files.
 
    For example, if you wish to create a `download` directory inside the `pydatacuration-p` directory:
    ```sh
-   python3 pydatacuration/main.py --doi $DOI  --workdir-input 'download'
+   python -m pydatacuration.main cli --pid $PID  --parent-dir 'download'
    ```
    What you will get:
    ```sh
@@ -203,7 +222,7 @@ To view the files in Windows File Explorer, run the command below in the Termina
 ```sh
 explore.exe $PATH
 ```
-For example, if you use `--workdir-input 'download'` (same as the example above), type the following command
+For example, if you used `--parent-dir 'download'` (same as the example above), type the following command
 ```sh
 explore.exe download
 ``` 
