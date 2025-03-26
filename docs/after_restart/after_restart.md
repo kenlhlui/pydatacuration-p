@@ -3,6 +3,7 @@
 
 1. Open 'Terminal' and switch to the 'Ubuntu'
 
+
 <img src="01_open-terminal.gif" width="70%" height="70%">
 
 
@@ -29,6 +30,7 @@
    
    - [TUI](/docs/tui/tui.md)
    
+
    To use run the tool with the CLI interface, replace the values starting from the $ sign, and run the following command:
    ```sh
    python -m pydatacuration.main cli --pid ${pid} --ticket-number ${ticket-number}
