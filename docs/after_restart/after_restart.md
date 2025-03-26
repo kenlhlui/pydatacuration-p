@@ -14,7 +14,7 @@
    source .venv/bin/activate || { echo "❌Failed to activate virtual environment."; return || exit; }
    git pull origin main --quiet || { echo "Failed to pull from origin main."; return || exit; }
    pip install -r requirements.txt -qq || { echo "Failed to pull from origin main."; return || exit; }
-   printf "\n✅Successfully configured the python environment \n"
+   printf "\n ✅Successfully configured the python environment \n"
    ```
 
 <img src="02_config.gif" width="70%" height="70%">
