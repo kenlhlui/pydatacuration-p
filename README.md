@@ -186,15 +186,13 @@ CLI options:
 >See [here](docs/after_restart/after_restart.md) if want to see a step-by-step guide after restart
 
 
-
-
 1. Open a terminal, run the script with the following command
    ```sh
    # CLI Option
    python -m pydatacuration.main cli --pid $PID  --ticket-number $TicketID
    # Or
    # TUI (GUI) Option
-   python -m pydatacuration.main tui  # CLI option
+   python -m pydatacuration.main tui
    
    ```
    You may also define the working directory (the directory that stores the metadata JSON, data files, and curation log) by adding a `--parent-dir` flag following the path.

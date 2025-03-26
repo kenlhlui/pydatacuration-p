@@ -25,10 +25,10 @@
 
 <img src="03_change_config.gif" width="70%" height="70%">
 
-4. To use the tool with a GUI, run the following command:
-   ```sh
-   python -m pydatacuration.main tui
-   ```
+4. See the following guide to learn how to use the tool in TUI or CLI
+   
+   - [TUI](/docs/tui/tui.md)
+   
    To use run the tool with the CLI interface, replace the values starting from the $ sign, and run the following command:
    ```sh
    python -m pydatacuration.main cli --pid ${pid} --ticket-number ${ticket-number}
