@@ -77,11 +77,13 @@ class HTTPXClient:
 
     async def async_stream_files(self, url: str, *args: str, **kwargs: Any) -> bytes | None:
         """Asynchronous streaming GET request that returns the full content."""
+        transport = httpx.AsyncHTTPTransport(local_address='0.0.0.0', retries=3)  # Force using IPV4
         try:
             async with self.semaphore, httpx.AsyncClient(
                 headers=self.headers,
                 timeout=None,
-                follow_redirects=True
+                follow_redirects=True,
+                transport=transport,
             ) as client, client.stream('GET', url, *args, **kwargs) as response:
                 if response.status_code == self.httpx_success_status:
                     # Check for empty files
