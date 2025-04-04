@@ -40,7 +40,7 @@ class HTTPXClient:
         self.semaphore = asyncio.Semaphore(10)
         self.async_sleep_time = 0  # TODO: make this configurable
 
-    @retry(stop=stop_after_attempt(3), wait=wait_fixed(0.5))
+    @retry(stop=stop_after_attempt(3), wait=wait_fixed(10))
     def sync_get(self, api_endpoint: str, raise_for_status: bool = True) -> httpx.Response:
         """Synchronous GET request.
 
