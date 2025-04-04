@@ -86,6 +86,9 @@ def cli(
     # print the start message
     logger.print('Starting the pydatacuration script...')
 
+    # Check if the dataset PID is valid and the user has access to it
+    utils.check_ds_access(pid, base_url, api_token)
+
     # Download the dataset files and metadata
     ds_metadata, dv_tree = asyncio.run(downloads.Downloads(base_url, api_token, pid, workdir_path).downloader())
 
