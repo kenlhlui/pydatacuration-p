@@ -10,6 +10,7 @@ import seedir as sd
 import typer
 
 from .custom_logging import CustomLogger
+from .httpx_client import HTTPXClient
 
 
 # Initialize the logger
@@ -233,3 +234,35 @@ def confirm_del_dir(dir_path: Path, default: bool = False) -> None:
         except typer.Abort:
             typer.echo('Aborted by user. Exiting...')
             sys.exit(1)
+
+
+def check_ds_access(pid: str, base_url: str, api_token: str) -> None:
+    """Check if the API token is valid; the PID is valid; and the user has access to the dataset.
+
+    Args:
+        pid (str): The PID of the dataset.
+        base_url (str): The base URL of the Dataverse installation.
+        api_token: The API token for the Dataverse installation.
+    """
+    httpx_client = HTTPXClient(base_url, api_token)
+
+    http_success_codes = {200, 201, 202, 204}
+    http_unauthorized_codes = {401, 403}
+    http_not_found_codes = {404}
+
+    try:
+        # Check whether the user has access to the dataset
+        response = httpx_client.sync_get(f'api/datasets/:persistentId/?persistentId={pid}', raise_for_status=False)
+
+        if response.status_code in http_unauthorized_codes:
+            httpx_client.logger.error('❌You do not have access to the dataset. \
+                                      Please check your API token or permissions.')
+            sys.exit(1)
+        elif response.status_code in http_not_found_codes:
+            httpx_client.logger.error('❌The dataset does not exist. Please check the PID input.')
+            sys.exit(1)
+        elif response.status_code in http_success_codes:
+            httpx_client.logger.print('✅ Access to the dataset checked successfully.')
+    except Exception as e:
+        logger.error(f'An error occurred while checking dataset access: {e}')
+        sys.exit(1)

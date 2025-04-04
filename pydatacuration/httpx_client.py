@@ -5,6 +5,10 @@ from typing import Any
 from urllib.parse import urljoin
 
 import httpx
+from tenacity import RetryError
+from tenacity import retry
+from tenacity import stop_after_attempt
+from tenacity import wait_fixed
 
 from .custom_logging import CustomLogger
 
@@ -36,7 +40,8 @@ class HTTPXClient:
         self.semaphore = asyncio.Semaphore(10)
         self.async_sleep_time = 0  # TODO: make this configurable
 
-    def sync_get(self, api_endpoint: str) -> httpx.Response:
+    @retry(stop=stop_after_attempt(3), wait=wait_fixed(0.5))
+    def sync_get(self, api_endpoint: str, raise_for_status: bool = True) -> httpx.Response:
         """Synchronous GET request.
 
         Args:
@@ -57,12 +62,16 @@ class HTTPXClient:
         ) as client:
             try:
                 response = client.get(url)
-                if response.status_code != self.httpx_success_status:
+                if response.status_code != self.httpx_success_status and raise_for_status:
                     self.logger.error(f'HTTP request Error for {url}: {response.status_code}')
                     response.raise_for_status()
                 return response
             except (httpx.HTTPStatusError, httpx.RequestError) as exc:
                 self.logger.error(f'HTTP request Error for {url}: {exc}')
+                self.logger.print('3 retires will be attempted with 10 seconds delay...')
+                raise
+            except RetryError as exc:
+                self.logger.error(f'The retry limit has been reached for {url}: {exc}')
                 raise
 
     @staticmethod
@@ -75,9 +84,10 @@ class HTTPXClient:
         with file_path.open('wb') as f:
             f.write(content)
 
+    @retry(stop=stop_after_attempt(3), wait=wait_fixed(10))
     async def async_stream_files(self, url: str, *args: str, **kwargs: Any) -> bytes | None:
         """Asynchronous streaming GET request that returns the full content."""
-        transport = httpx.AsyncHTTPTransport(local_address='0.0.0.0', retries=3)  # Force using IPV4
+        transport = httpx.AsyncHTTPTransport(local_address='0.0.0.0')  # Force using IPV4
         try:
             async with self.semaphore, httpx.AsyncClient(
                 headers=self.headers,
@@ -100,4 +110,7 @@ class HTTPXClient:
                 return None
         except (httpx.HTTPStatusError, httpx.RequestError) as exc:
             self.logger.error(f'HTTP request Error for {url}: {exc}')
+            return None
+        except RetryError as exc:
+            self.logger.error(f'The retry limit has been reached for {url}: {exc}')
             return None
