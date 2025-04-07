@@ -90,6 +90,7 @@ class HTTPXClient:
         with file_path.open('wb') as f:
             f.write(content)
 
+
     @retry(stop=stop_after_attempt(3), wait=wait_fixed(5))
     async def async_stream_files(self, url: str, *args: str, **kwargs: Any) -> bytes | None:
         """Asynchronous streaming GET request that returns the full content."""
@@ -124,3 +125,4 @@ class HTTPXClient:
 
         except RetryError as exc:
             self.logger.error(f'The retry limit has been reached for {url}: {exc}')
+
