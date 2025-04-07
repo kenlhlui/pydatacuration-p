@@ -40,12 +40,13 @@ class HTTPXClient:
         self.semaphore = asyncio.Semaphore(10)
         self.async_sleep_time = 0  # TODO: make this configurable
 
-    @retry(stop=stop_after_attempt(3), wait=wait_fixed(10))
+    @retry(stop=stop_after_attempt(3), wait=wait_fixed(5))
     def sync_get(self, api_endpoint: str, raise_for_status: bool = True) -> httpx.Response:
         """Synchronous GET request.
 
         Args:
             api_endpoint (str): API endpoint to be appended to the base URL.
+            raise_for_status (bool): Whether to raise an exception for non-2xx status codes.
 
         """
         url = urljoin(self.base_url, api_endpoint)
@@ -66,13 +67,18 @@ class HTTPXClient:
                     self.logger.error(f'HTTP request Error for {url}: {response.status_code}')
                     response.raise_for_status()
                 return response
-            except (httpx.HTTPStatusError, httpx.RequestError) as exc:
+            except (httpx.HTTPStatusError) as exc:
                 self.logger.error(f'HTTP request Error for {url}: {exc}')
-                self.logger.print('3 retires will be attempted with 10 seconds delay...')
-                raise
+                self.logger.error('Retrying... (max 3 attempts with 5 second delay)')
+                raise exc
+
+            except (httpx.ConnectError, httpx.ConnectTimeout) as exc:
+                self.logger.error(f'HTTP Connection error occurred {url}: {exc}')
+                self.logger.error('Retrying... (max 3 attempts with 5 second delay)')
+                raise exc
             except RetryError as exc:
                 self.logger.error(f'The retry limit has been reached for {url}: {exc}')
-                raise
+                raise exc
 
     @staticmethod
     async def write_stream_file(file_path: Path, content: bytes) -> None:
@@ -84,7 +90,7 @@ class HTTPXClient:
         with file_path.open('wb') as f:
             f.write(content)
 
-    @retry(stop=stop_after_attempt(3), wait=wait_fixed(10))
+    @retry(stop=stop_after_attempt(3), wait=wait_fixed(5))
     async def async_stream_files(self, url: str, *args: str, **kwargs: Any) -> bytes | None:
         """Asynchronous streaming GET request that returns the full content."""
         transport = httpx.AsyncHTTPTransport(local_address='0.0.0.0')  # Force using IPV4
@@ -108,9 +114,13 @@ class HTTPXClient:
                         content.append(chunk)
                     return b''.join(content)
                 return None
-        except (httpx.HTTPStatusError, httpx.RequestError) as exc:
+        except (httpx.HTTPStatusError) as exc:
             self.logger.error(f'HTTP request Error for {url}: {exc}')
-            return None
+            self.logger.error('Retrying... (max 3 attempts with 5 second delay)')
+
+        except (httpx.ConnectError, httpx.ConnectTimeout) as exc:
+            self.logger.error(f'HTTP Connection error occurred {url}: {exc}')
+            self.logger.error('Retrying... (max 3 attempts with 5 second delay)')
+
         except RetryError as exc:
             self.logger.error(f'The retry limit has been reached for {url}: {exc}')
-            return None
