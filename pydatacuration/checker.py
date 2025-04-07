@@ -153,6 +153,8 @@ class Checker:
                 self.logger.print(f'README file found: {file_rel_path}')
                 self.template_dict['readme_file']['comments'].append({'file_name': str(file_rel_path)})
 
+    def check_file_open(self) -> None:
+        """Check if the file can be opened."""
         file_list = []
 
         for file in self.file_list_metadata:
@@ -301,6 +303,7 @@ class Checker:
     def run_checks(self) -> dict:
         """Run all the checks."""
         self.check_file_name_format()
+        self.check_file_open()
         self.check_common_file_format()
         self.check_missing_metadata()
         self.check_spelling()
