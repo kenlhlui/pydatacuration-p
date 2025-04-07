@@ -29,7 +29,8 @@ class Checker:
                  api_token: str,
                  ds_metadata: dict,
                  dv_tree: dict,
-                 workdir: Path) -> None:
+                 workdir: Path,
+                 check_zip: bool) -> None:
         """Initialize the Checker class.
 
         Args:
@@ -38,12 +39,14 @@ class Checker:
             ds_metadata (dict): The dataset metadata.
             dv_tree (dict): The Dataverse tree metadata.
             workdir (Path): The working directory.
+            check_zip (bool): Whether to check zip files.
         """
         self.base_url = base_url
         self.api_token = api_token
         self.ds_metadata = ds_metadata
         self.dv_tree = dv_tree
         self.workdir = workdir
+        self.check_zip = check_zip
 
         self.logger = CustomLogger.get_logger(__name__)
         self.checksums = Checksum()
@@ -166,13 +169,17 @@ class Checker:
 
         # Unzip the files and append the unzipped files to the file_list
         zip_file_extensions = ['.zip', '.tar', '.gz', '.bz2', '.xz', '.7z']
-        for file_rel_path in file_list[:]:  # Iterate over a copy of the list
-            if file_rel_path.suffix in zip_file_extensions:
-                extracted_file_rel_paths = Unzipper(
-                    zip_file=Path(self.workdir, 'dataset', 'files', file_rel_path),
-                    output_dir=Path(self.workdir, 'dataset', 'files', file_rel_path.stem)
-                ).main()
-                file_list.extend(extracted_file_rel_paths)
+        if self.check_zip:
+            for file_rel_path in file_list[:]:  # Iterate over a copy of the list
+                if file_rel_path.suffix in zip_file_extensions:
+                    extracted_file_rel_paths = Unzipper(
+                        zip_file=Path(self.workdir, 'dataset', 'files', file_rel_path),
+                        output_dir=Path(self.workdir, 'dataset', 'files', file_rel_path.stem)
+                    ).main()
+                    file_list.extend(extracted_file_rel_paths)
+        # Only show the message if there's zip file(s) in the dataset
+        elif not self.check_zip and any(file_rel_path.suffix in zip_file_extensions for file_rel_path in file_list):
+            self.logger.print('Skipping the unzipping of zip file(s). The zip file(s) and the content inside will not be checked.')  # noqa: E501
 
         for file_rel_path in file_list:
             file_abs_path = Path(self.workdir, 'dataset', 'files', file_rel_path)
