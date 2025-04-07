@@ -17,6 +17,7 @@ from .httpx_client import HTTPXClient
 # Initialize the logger
 logger = CustomLogger.get_logger(__name__)
 
+
 class FileNameFormatChecker:
     """This class is used to check the file name format."""
 
@@ -258,7 +259,6 @@ def check_ds_access(pid: str, base_url: str, api_token: str) -> None:
 
         if response.status_code in http_unauthorized_codes:
             httpx_client.logger.error('❌You do not have access to the dataset. \nPlease check your API token or permissions.')  # noqa: E501
-
 
             sys.exit(1)
         elif response.status_code in http_not_found_codes:
