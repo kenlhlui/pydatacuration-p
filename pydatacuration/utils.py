@@ -8,6 +8,7 @@ from pathlib import PurePosixPath
 import deepdiff
 import seedir as sd
 import typer
+from tenacity import RetryError
 
 from .custom_logging import CustomLogger
 from .httpx_client import HTTPXClient
@@ -119,13 +120,13 @@ def readme_file_checker(file: str) -> tuple:
     return file, False
 
 
-def compare_files_and_metadata(dl_files_checksums, metadata_file_checksums, workddir: Path):
+def compare_files_and_metadata(dl_files_checksums: list, metadata_file_checksums: list, work_dir: Path) -> None | bool:
     """Compare the downloaded files checksums and the metadata JSON file checksums.
 
     Args:
         dl_files_checksums (list): A list of dictionaries containing the file path and the checksum.
-        metadata_files_cehcksums (list): A list of dictionaries containing the file path and the checksum.
-        workddir (Path): The working directory.
+        metadata_file_checksums (list): A list of dictionaries containing the file path and the checksum.
+        work_dir (Path): The working directory.
 
     Returns:
         bool: True if the downloaded files and the metadata JSON file checksums are the same, False otherwise.
@@ -133,7 +134,7 @@ def compare_files_and_metadata(dl_files_checksums, metadata_file_checksums, work
     diff = deepdiff.DeepDiff(dl_files_checksums, metadata_file_checksums, ignore_order=True)
     if diff:
         logger.warning('The downloaded files and the file list metadata are different.')
-        diff_log_path = Path(workddir, 'log_files', 'diff.txt').resolve()
+        diff_log_path = Path(work_dir, 'log_files', 'diff.txt').resolve()
         with diff_log_path.open('w', encoding='utf-8') as f:
             f.write(str(diff))
         logger.warning(f'See the {str(diff_log_path)} file for the differences.')
@@ -253,16 +254,19 @@ def check_ds_access(pid: str, base_url: str, api_token: str) -> None:
     try:
         # Check whether the user has access to the dataset
         response = httpx_client.sync_get(f'api/datasets/:persistentId/?persistentId={pid}', raise_for_status=False)
+        httpx_client.logger.debug(f'{response.status_code} {response.text}')
 
         if response.status_code in http_unauthorized_codes:
-            httpx_client.logger.error('❌You do not have access to the dataset. \
-                                      Please check your API token or permissions.')
+            httpx_client.logger.error('❌You do not have access to the dataset. \nPlease check your API token or permissions.')  # noqa: E501
+
+
             sys.exit(1)
         elif response.status_code in http_not_found_codes:
             httpx_client.logger.error('❌The dataset does not exist. Please check the PID input.')
             sys.exit(1)
         elif response.status_code in http_success_codes:
             httpx_client.logger.print('✅ Access to the dataset checked successfully.')
-    except Exception as e:
-        logger.error(f'An error occurred while checking dataset access: {e}')
+
+    except RetryError:
+        logger.error('The retry limit has been reached for checking dataset access. \nCheck your input of `base_url` and `pid`. Or check your internet connection.')  # noqa: E501
         sys.exit(1)
