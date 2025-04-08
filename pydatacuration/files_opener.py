@@ -1,9 +1,8 @@
+"""Open different file types."""
+
 import csv
-import logging
-import os
 from pathlib import Path
 
-import chardet
 import ffmpeg
 import netCDF4 as nc
 import pandas as pd
@@ -31,6 +30,7 @@ SHAPE_FILE_EXTENSIONS = ['.shp', '.shx', '.dbf', '.prj', '.sbn', '.sbx', '.shp.x
 SPREADSHEET_FILE_EXTENSIONS = ['.xls', '.xlsx', '.xlsm', '.xlsb', '.odf', '.ods', '.odt']
 PDF_FILE_EXTENSIONS = ['.pdf']
 
+
 class FilesOpener:
     """Open different file types."""
     def __init__(self, file: str | Path) -> None:
@@ -41,16 +41,6 @@ class FilesOpener:
         """
         self.file = file
         self.logger = CustomLogger.get_logger(__name__)
-
-    def _get_file_encoding(self) -> dict | None:
-        """Check the file encoding.
-
-        Returns:
-            dict | None: The file encoding.
-        """
-        with Path(self.file).open('rb') as f:
-
-            return chardet.detect(f.read()).get('encoding', None)
 
     def _open_image_file(self) -> tuple:
         """Open an image file.
@@ -187,8 +177,11 @@ class FilesOpener:
         except pypdf.errors.PdfReadError:
             return False, self.file
 
-    def open_file(self):
-        """Open a file.
+    def open_file(self, file_to_check: Path | str | None = None):
+        """Open a file and check whether it can be correctly opened by Python.
+
+        Args:
+            file_to_check (Path or str, optional): Specific file to check. Defaults to self.file.
 
         Returns:
             tuple: (bool, str) indicating success and the file path.
