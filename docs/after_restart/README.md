@@ -30,12 +30,4 @@
    
    - [TUI](/docs/tui/README.md)
    
-
-   To use run the tool with the CLI interface, replace the values starting from the $ sign, and run the following command:
-   ```sh
-   python -m pydatacuration.main cli --pid ${pid} --ticket-number ${ticket-number}
-   ```
-   For example if your targeted pid (doi/hdl) is 'doi:10.80240/FK2/U2VZH9' and your ticket-number is 'CUR-001', your command should look like the following:
-   ```sh
-   python -m pydatacuration.main cli --pid 'doi:10.80240/FK2/U2VZH9' --ticket-number 'CUR-001'
-   ```
+   - [CLI](/docs/cli/README.md)

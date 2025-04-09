@@ -1,5 +1,6 @@
 # To use the Text User Interface (TUI)
 
+## Step by step tutorial
 1. After activating the Python environment (you’ll see (.venv) at the start of your prompt), run:
     ```bash
     python -m pydatacuration.main tui
