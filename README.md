@@ -2,6 +2,7 @@
 
 
 ## ⚙️Prerequisite
+<details>
 1. [Linux on Windows with WSL (Ubuntu)](https://learn.microsoft.com/en-us/windows/wsl/setup/environment)
    1. Run the following command in a Windows Powershell Terminal (with administrative access). You might need to restart your computer once the execution is finished.
       ```powershell
@@ -58,8 +59,10 @@
    ```sh
    sudo apt update && sudo apt-get install ffmpeg
    ```
+</details>
 
 ## 🔐Configure Git authentication by GitHub CLI in WSL Ubuntu
+<details>
 To clone (download) a private repository, authentication is required. You must first create a GitHub account.
 The following will use the [GitHub CLI](https://cli.github.com/) for authentication. The official Linux (incl. WSL Ubuntu) installation guide is [here](https://github.com/cli/cli/blob/trunk/docs/install_linux.md).
 1. Run the following command in the WSL Ubuntu Terminal to install
@@ -108,8 +111,10 @@ When the terminal prompts to `Press Enter to open https://github.com/login/devic
    ```sh
    gh auth status
    ```
+</details>
 
 ## 🪛Install
+<details>
 1. Clone the repository
    ```sh
    git clone https://github.com/kenlhlui/pydatacuration-p
@@ -152,7 +157,7 @@ When the terminal prompts to `Press Enter to open https://github.com/login/devic
    ```sh
    pip install -r requirements.txt
    ```
-
+</details>
 
 ## ℹ️Curator info
 You can configure the curation project information by modifying the `res/config.yaml` file. 
@@ -168,60 +173,18 @@ You can modify it with Notepad (GUI) or nano editor (Terminal).
    curator_email:
    ```
 
+> [!Tip]
+> You only need to configure this once. The settings will persist even after restarting or updating the tool.
+
 ## 🏃Run the tool
 You have finished the configuration. Now is time to run the tool.
 
-
-CLI options:
-| Option          | Type  | Description                                                                                           | Default  |
-|-----------------|-------|-------------------------------------------------------------------------------------------------------|----------|
-| `--pid`         | TEXT  | Enter the Persistent Identifier of the dataset                                                      | None     |
-| `--base-url`    | TEXT  | The base URL of the Dataverse installation [env var: BASE_URL]                                        | None     |
-| `--api-token`   | TEXT  | The API token for the Dataverse installation [env var: API_TOKEN]                                     | None     |
-| `--parent-dir`  | TEXT  | The working directory. If not specified, a directory "workdir" will be created in the current directory | workdir  |
-| `--ticket-number` | TEXT  | The ticket number for the curation report; Also the directory name created under the working directory   | None     |
-| `--help`        |       | Show this message and exit.                                                                           |          |
-
 >[!TIP]
->See [here](docs/after_restart/README.md) if want to see a step-by-step guide after restart
+>See [here](docs/after_restart/README.md) if want to see a step-by-step guide after restart.
 
-
-1. Open a terminal, run the script with the following command
-   ```sh
-   # CLI Option
-   python -m pydatacuration.main cli --pid $PID  --ticket-number $TicketID
-   # Or
-   # TUI (GUI) Option
-   python -m pydatacuration.main tui
-   
-   ```
-   You may also define the working directory (the directory that stores the metadata JSON, data files, and curation log) by adding a `--parent-dir` flag following the path.
-
-   The `--ticket-number` should be the ticket number of your ticketing system, or a project name. It will also become the directory name of the downloaded dataset files, metadata JSON file and log files.
-
-   For example, if you wish to create a `download` directory inside the `pydatacuration-p` directory:
-   ```sh
-   python -m pydatacuration.main cli --pid $PID  --parent-dir 'download'
-   ```
-   What you will get:
-   ```sh
-   .
-   ├── README.md
-   ├── config.yaml
-   ├── download  # The metadata JSON file, data files, and curation log.
-   ├── poetry.lock
-   ├── pydatacuration
-   ├── pyproject.toml
-   ├── requirements.txt
-   ├── res
-   ```
-
-## 👀View the files
-To view the files in Windows File Explorer, run the command below in the Terminal. The Explorer window should be prompted.
-```sh
-explore.exe $PATH
-```
-For example, if you used `--parent-dir 'download'` (same as the example above), type the following command
-```sh
-explore.exe download
-``` 
+1. There are two ways to run the tool: via command line interface (CLI) or terminal user interface (TUI, give you a mouse clickable interface):
+   1. Run the following command to access the tool by CLI
+      ```sh
+      python -m pydatacuration.main cli --pid $PID  --ticket-number $TicketID
+      ```
+   2. See the guide [here](docs/tui/README.md) for the TUI option
