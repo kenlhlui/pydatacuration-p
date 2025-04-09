@@ -183,7 +183,7 @@ CLI options:
 | `--help`        |       | Show this message and exit.                                                                           |          |
 
 >[!TIP]
->See [here](docs/after_restart/after_restart.md) if want to see a step-by-step guide after restart
+>See [here](docs/after_restart/README.md) if want to see a step-by-step guide after restart
 
 
 1. Open a terminal, run the script with the following command

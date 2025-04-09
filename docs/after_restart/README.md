@@ -4,7 +4,7 @@
 1. Open 'Terminal' and switch to the 'Ubuntu'
 
 
-<img src="01_open-terminal.gif" width="70%" height="70%">
+   <img src="01_open-terminal.gif" width="70%" height="70%">
 
 
 2. Run the following script to initialize the python environment for running the tool, and to update the tool.
@@ -18,17 +18,17 @@
    printf "\n ✅Successfully configured the python environment \n"
    ```
 
-<img src="02_config.gif" width="70%" height="70%">
+   <img src="02_config.gif" width="70%" height="70%">
 
 
 3. Run `nano res/config.yaml` to configure the Curator Info, inside the terminal. You may skip this if you have done before and no changes needed.
 
 
-<img src="03_change_config.gif" width="70%" height="70%">
+   <img src="03_change_config.gif" width="70%" height="70%">
 
 4. See the following guide to learn how to use the tool in TUI or CLI
    
-   - [TUI](/docs/tui/tui.md)
+   - [TUI](/docs/tui/README.md)
    
 
    To use run the tool with the CLI interface, replace the values starting from the $ sign, and run the following command:
