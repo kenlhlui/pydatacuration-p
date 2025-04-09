@@ -100,7 +100,6 @@ class HTTPXClient:
     @retry(stop=stop_after_attempt(3), wait=wait_fixed(5))
     async def async_stream_files(self, url: str, client: httpx.AsyncClient, **kwargs) -> bytes | None:
         """Asynchronous streaming GET request that returns the full content."""
-        should_close_client = False
 
         try:
             async with self.semaphore:
@@ -130,7 +129,3 @@ class HTTPXClient:
         except RetryError as exc:
             self.logger.error(f'The retry limit has been reached for {url}: {exc}')
             raise
-        finally:
-            # Only close the client if we created it
-            if should_close_client and client:
-                await client.aclose()
