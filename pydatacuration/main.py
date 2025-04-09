@@ -27,7 +27,6 @@ init_tui(app)
 
 @app.command()
 def cli(
-
     pid: str = typer.Option(...,
                             '--pid',
                             '-p',
@@ -57,7 +56,7 @@ def cli(
     ticket_number: str = typer.Option(...,
                                       '--ticket-number',
                                       '-t',
-                                      help='The ticket number for the curation report; Also the directory name created under the working directory',
+                                      help='The ticket number for the curation report. It will also be the directory name created under the working directory',
                                       prompt=('Input the ticket number for the curation report'),
                                       prompt_required=True,
                                       callback=utils.check_ticket_num_input,
@@ -66,7 +65,11 @@ def cli(
                                    '--force-del/--no-force-del',
                                    '-f/-nf',
                                    help='To force replace (delete) an existing working directory, if any',
-                                   show_default=True)) -> None:
+                                   show_default=True),
+    check_zip: bool = typer.Option(True,
+                                   '--check_zip/--no-check_zip,',
+                                   '-z/-nz',
+                                   help='To unzip zip files and check the content inside or not')) -> None:
     """This script downloads the dataset files and metadata from a Dataverse instance and checks the files and metadata for data curation, and generates a curation report in spreadsheet (.xlsx) and world (.docx) format."""  # noqa: E501, W505
     # Define the working directory
     workdir_path = directory_manager.DirectoryManager(ticket_number, parent_dir).define_workdir()
@@ -86,11 +89,14 @@ def cli(
     # print the start message
     logger.print('Starting the pydatacuration script...')
 
+    # Check if the dataset PID is valid and the user has access to it
+    utils.check_ds_access(pid, base_url, api_token)
+
     # Download the dataset files and metadata
     ds_metadata, dv_tree = asyncio.run(downloads.Downloads(base_url, api_token, pid, workdir_path).downloader())
 
     # Run the checker
-    checker = Checker(base_url, api_token, ds_metadata, dv_tree, workdir_path)
+    checker = Checker(base_url, api_token, ds_metadata, dv_tree, workdir_path, check_zip)
     template_dict = checker.run_checks()
 
     # Generate the report
@@ -108,7 +114,7 @@ def cli(
     utils.gen_tree_diagram(Path(workdir_path, 'dataset', 'files'), Path(log_files_dir))
 
     # Print the end message
-    logger.print(f'✅ Curation report generated successfully. \n\nType (or copy) the following (without ``quotes) in the terminal to view the files: \n\n`explorer.exe "$(wslpath -w {workdir_path})"`')
+    logger.print(f'✅ Curation report generated successfully. \n\nType (or copy) the following in the terminal to view the files: \n\nexplorer.exe "$(wslpath -w {workdir_path})"')
 
 
 if __name__ == '__main__':

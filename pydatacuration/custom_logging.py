@@ -58,12 +58,11 @@ class CustomLogger:
             log_time_format='[%Y-%m-%d %H:%M:%S]'
         )
 
-
         root_logger.addHandler(console_handler)
 
         # Create file handler if log_file_dir is provided
         if log_file_dir:
-            log_file_path = Path(log_file_dir, 'system.log')
+            log_file_path = Path(log_file_dir, 'debug.log')
             log_file_path.parent.mkdir(parents=True, exist_ok=True)
             file_handler = logging.FileHandler(filename=str(log_file_path),
                                               mode='a', encoding='utf-8')

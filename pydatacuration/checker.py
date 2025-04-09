@@ -12,6 +12,7 @@ from .httpx_client import HTTPXClient
 from .log_generation import GenerateLog
 from .metadata_checker import MetadataChecker
 from .spell_checker import SpellCheckerCustomized
+from .unzip import Unzipper
 from .utils import FileNameFormatChecker
 from .utils import compare_files_and_metadata
 from .utils import parse_file_list_metadata
@@ -28,7 +29,8 @@ class Checker:
                  api_token: str,
                  ds_metadata: dict,
                  dv_tree: dict,
-                 workdir: Path) -> None:
+                 workdir: Path,
+                 check_zip: bool) -> None:
         """Initialize the Checker class.
 
         Args:
@@ -37,12 +39,14 @@ class Checker:
             ds_metadata (dict): The dataset metadata.
             dv_tree (dict): The Dataverse tree metadata.
             workdir (Path): The working directory.
+            check_zip (bool): Whether to check zip files.
         """
         self.base_url = base_url
         self.api_token = api_token
         self.ds_metadata = ds_metadata
         self.dv_tree = dv_tree
         self.workdir = workdir
+        self.check_zip = check_zip
 
         self.logger = CustomLogger.get_logger(__name__)
         self.checksums = Checksum()
@@ -153,21 +157,40 @@ class Checker:
                 self.logger.print(f'README file found: {file_rel_path}')
                 self.template_dict['readme_file']['comments'].append({'file_name': str(file_rel_path)})
 
+    def check_file_open(self) -> None:
+        """Check if the file can be opened."""
         file_list = []
 
+        # To generate paths for the relative files in the dataset
         for file in self.file_list_metadata:
             file_name = file.get('dataFile', {}).get('originalFileName') or file.get('dataFile', {}).get('filename')
             file_rel_path = Path(file.get('directoryLabel', ''), file_name)
             file_list.append(file_rel_path)
 
+        # Unzip the files and append the unzipped files to the file_list
+        zip_file_extensions = ['.zip', '.tar', '.gz', '.bz2', '.xz', '.7z']
+        if self.check_zip:
+            for file_rel_path in file_list[:]:  # Iterate over a copy of the list
+                if file_rel_path.suffix in zip_file_extensions:
+                    extracted_file_rel_paths = Unzipper(
+                        zip_file=Path(self.workdir, 'dataset', 'files', file_rel_path),
+                        output_dir=Path(self.workdir, 'dataset', 'files', file_rel_path.stem)
+                    ).main()
+                    file_list.extend(extracted_file_rel_paths)
+        # Only show the message if there's zip file(s) in the dataset
+        elif not self.check_zip and any(file_rel_path.suffix in zip_file_extensions for file_rel_path in file_list):
+            self.logger.print('Skipping the unzipping of zip file(s). The zip file(s) and the content inside will not be checked.')  # noqa: E501
+
         for file_rel_path in file_list:
             file_abs_path = Path(self.workdir, 'dataset', 'files', file_rel_path)
-            if self.files_opener(file_abs_path).open_file()[0] is False:
-                self.logger.print(f'File cannot be opened: {file_abs_path}')
-                self.template_dict['file_open']['comments'].append({'file_name': str(file_rel_path)})
-            elif self.files_opener(file_abs_path).open_file()[0] is None:
-                self.logger.print(f'File is not a supported file format (not checked by the script): {file_abs_path}')
-                self.template_dict['file_open']['not_checked'].append({'file_name': str(file_rel_path)})
+            # Pass if the file is a zip file
+            if file_rel_path.suffix not in zip_file_extensions:
+                if self.files_opener(file_abs_path).open_file()[0] is False:
+                    self.logger.print(f'File cannot be opened: {file_abs_path}')
+                    self.template_dict['file_open']['comments'].append({'file_name': str(file_rel_path)})
+                elif self.files_opener(file_abs_path).open_file()[0] is None:
+                    self.logger.print(f'File is not a supported file format (not checked by the script): {file_abs_path}')  # noqa: E501
+                    self.template_dict['file_open']['not_checked'].append({'file_name': str(file_rel_path)})
 
     def check_common_file_format(self) -> None:
         """Check if the file format is in the common file format."""
@@ -301,6 +324,7 @@ class Checker:
     def run_checks(self) -> dict:
         """Run all the checks."""
         self.check_file_name_format()
+        self.check_file_open()
         self.check_common_file_format()
         self.check_missing_metadata()
         self.check_spelling()

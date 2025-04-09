@@ -104,8 +104,12 @@ class Downloads:
         try:
             url = urljoin(self.base_url, api_endpoint)
 
-            # Get the content bytes
-            content = await self.httpx_client.async_stream_files(url, params={'format': 'original'})
+            # Pass the client to async_stream_files
+            content = await self.httpx_client.async_stream_files(
+                url,
+                client=self.httpx_client.async_client,
+                params={'format': 'original'}
+            )
 
             if content is not None:
                 # Write the content to file
@@ -126,14 +130,12 @@ class Downloads:
         Returns:
             list: List of downloaded files
         """
-        client = self.httpx_client.async_client
-        async with client:
-            tasks = [self._get_data_file_async(file_id, file_path)
-                    for file_id, file_path in file_list]
-            results = await asyncio.gather(*tasks, return_exceptions=True)
+        tasks = [self._get_data_file_async(file_id, file_path)
+                for file_id, file_path in file_list]
+        results = await asyncio.gather(*tasks, return_exceptions=True)
 
-            successful = [r for r in results if r is not None]
-            return successful
+        successful = [r for r in results if r is not None]
+        return successful
 
     def _get_dv_tree(self) -> dict:
         """Get the tree structure of the dataverse repository.

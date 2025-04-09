@@ -3,6 +3,7 @@
         "flac",
         "ipynb",
         "pydatacuration",
-        "pyreadstat"
+        "pyreadstat",
+        "Unzipper"
     ]
 }
