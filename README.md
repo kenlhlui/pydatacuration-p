@@ -180,9 +180,11 @@ You can modify it with Notepad (GUI) or nano editor (Terminal).
 You have finished the configuration. Now is time to run the tool.
 
 >[!TIP]
->See [here](docs/after_restart/README.md) if want to see a step-by-step guide after restart.
-
+> After a restart, refer to the [step-by-step guide](docs/after_restart/README.md) for detailed instructions.
 ### Command Line Interface (CLI)
    1. Follow the [CLI guide](docs/cli/README.md) for running the tool via the command line interface.
 ### Terminal User Interface (TUI) 
    2. Follow the [TUI guide](docs/tui/README.md) for running the tool with a terminal user interface, which provides a mouse-clickable interface.
+
+## Troubleshooting
+If the tool does not work with a specific dataset, refer to [troubleshooting guide](docs/troubleshooting/README.md). 
