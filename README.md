@@ -182,9 +182,7 @@ You have finished the configuration. Now is time to run the tool.
 >[!TIP]
 >See [here](docs/after_restart/README.md) if want to see a step-by-step guide after restart.
 
-1. There are two ways to run the tool: via command line interface (CLI) or terminal user interface (TUI, give you a mouse clickable interface):
-   1. Run the following command to access the tool by CLI
-      ```sh
-      python -m pydatacuration.main cli --pid $PID  --ticket-number $TicketID
-      ```
-   2. See the guide [here](docs/tui/README.md) for the TUI option
+### Command Line Interface (CLI)
+   1. Follow the [CLI guide](docs/cli/README.md) for running the tool via the command line interface.
+### Terminal User Interface (TUI) 
+   2. Follow the [TUI guide](docs/tui/README.md) for running the tool with a terminal user interface, which provides a mouse-clickable interface.
