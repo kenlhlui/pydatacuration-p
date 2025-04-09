@@ -23,11 +23,9 @@
 
 3. Run `nano res/config.yaml` to configure the Curator Info, inside the terminal. You may skip this if you have done before and no changes needed.
 
-
    <img src="03_change_config.gif" width="70%" height="70%">
 
 4. See the following guide to learn how to use the tool in TUI or CLI
    
-   - [TUI](/docs/tui/README.md)
-   
-   - [CLI](/docs/cli/README.md)
+   - [Command Line Interface (CLI)](/docs/cli/README.md)
+   - [Terminal User Interface (TUI)](/docs/tui/README.md)
