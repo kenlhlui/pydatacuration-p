@@ -58,7 +58,6 @@ class CustomLogger:
             log_time_format='[%Y-%m-%d %H:%M:%S]'
         )
 
-
         root_logger.addHandler(console_handler)
 
         # Create file handler if log_file_dir is provided

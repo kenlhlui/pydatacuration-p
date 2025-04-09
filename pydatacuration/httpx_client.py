@@ -97,12 +97,10 @@ class HTTPXClient:
         with file_path.open('wb') as f:
             f.write(content)
 
-
     @retry(stop=stop_after_attempt(3), wait=wait_fixed(5))
     async def async_stream_files(self, url: str, client: httpx.AsyncClient, **kwargs) -> bytes | None:
         """Asynchronous streaming GET request that returns the full content."""
         should_close_client = False
-        transport = httpx.AsyncHTTPTransport(local_address='0.0.0.0')  # Force using IPV4
 
         try:
             async with self.semaphore:
@@ -136,4 +134,3 @@ class HTTPXClient:
             # Only close the client if we created it
             if should_close_client and client:
                 await client.aclose()
-
