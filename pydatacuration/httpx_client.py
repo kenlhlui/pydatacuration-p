@@ -1,7 +1,6 @@
 """HTTPX client for handing HTTP requests and responses."""
 import asyncio
 from pathlib import Path
-from typing import Any
 from urllib.parse import urljoin
 
 import httpx
@@ -64,7 +63,7 @@ class HTTPXClient:
 
         with httpx.Client(
             headers=self.headers,
-            timeout=None,
+            timeout=httpx.Timeout(10.0, connect=5.0),
             follow_redirects=True,
             limits=limits
         ) as client:
@@ -99,24 +98,28 @@ class HTTPXClient:
 
     @retry(stop=stop_after_attempt(3), wait=wait_fixed(5))
     async def async_stream_files(self, url: str, client: httpx.AsyncClient, **kwargs) -> bytes | None:
-        """Asynchronous streaming GET request that returns the full content."""
+        """Asynchronous streaming GET request that returns the full content.
 
+        Args:
+            url (str): URL to send the GET request to.
+            client (httpx.AsyncClient): The HTTPX AsyncClient instance to use.
+            **kwargs: Additional keyword arguments for the request.
+        """
         try:
-            async with self.semaphore:
-                async with client.stream('GET', url, **kwargs) as response:
-                    if response.status_code == self.httpx_success_status:
-                        # Check for empty files
-                        content_length = int(response.headers.get('content-length', '-1'))
-                        if content_length == 0:
-                            # Return empty bytes for empty files
-                            return b''
+            async with self.semaphore, client.stream('GET', url, **kwargs) as response:
+                if response.status_code == self.httpx_success_status:
+                    # Check for empty files
+                    content_length = int(response.headers.get('content-length', '-1'))
+                    if content_length == 0:
+                        # Return empty bytes for empty files
+                        return b''
 
-                        # For non-empty files, read all content
-                        content = []
-                        async for chunk in response.aiter_bytes(chunk_size=8192):
-                            content.append(chunk)
-                        return b''.join(content)
-                    return None
+                    # For non-empty files, read all content
+                    content = []
+                    async for chunk in response.aiter_bytes(chunk_size=8192):
+                        content.append(chunk)
+                    return b''.join(content)
+                return None
 
         except (httpx.HTTPStatusError) as exc:
             self.logger.error(f'HTTP request Error for {url}: {exc}')
