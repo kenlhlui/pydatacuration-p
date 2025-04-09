@@ -15,19 +15,6 @@ from .custom_logging import CustomLogger
 
 class HTTPXClient:
     """HTTPX client for handling HTTP requests and responses."""
-
-    # @property
-    # def async_client(self) -> httpx.AsyncClient:
-    #     """Return an AsyncClient instance."""
-    #     transport = httpx.AsyncHTTPTransport(local_address='0.0.0.0')  # Force using IPv4
-    #     return httpx.AsyncClient(
-    #         headers=self.headers,
-    #         timeout=httpx.Timeout(10.0, connect=5.0),
-    #         follow_redirects=True,
-    #         transport=transport,
-    #         limits=httpx.Limits(max_keepalive_connections=5, max_connections=10)
-    #     )
-
     def __init__(self, base_url: str, api_token: str) -> None:
         """Initialize the HTTPX client.
 
