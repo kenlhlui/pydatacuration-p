@@ -3,6 +3,7 @@
 
 ## ⚙️Prerequisite
 <details>
+
 1. [Linux on Windows with WSL (Ubuntu)](https://learn.microsoft.com/en-us/windows/wsl/setup/environment)
    1. Run the following command in a Windows Powershell Terminal (with administrative access). You might need to restart your computer once the execution is finished.
       ```powershell
@@ -63,6 +64,7 @@
 
 ## 🔐Configure Git authentication by GitHub CLI in WSL Ubuntu
 <details>
+
 To clone (download) a private repository, authentication is required. You must first create a GitHub account.
 The following will use the [GitHub CLI](https://cli.github.com/) for authentication. The official Linux (incl. WSL Ubuntu) installation guide is [here](https://github.com/cli/cli/blob/trunk/docs/install_linux.md).
 1. Run the following command in the WSL Ubuntu Terminal to install
