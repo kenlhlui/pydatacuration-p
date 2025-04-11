@@ -5,7 +5,7 @@
 
    <img src="01_open-terminal.gif" width="70%" height="70%">
 
-> [!Notes]
+> [!Note]
 > Check the guide if the terminal shows `Logon failure: the user has not been granted the requested logon type at this computer.` after switching to Ubuntu.
 
 2. Run the following script to initialize the python environment for running the tool, and to update the tool.
