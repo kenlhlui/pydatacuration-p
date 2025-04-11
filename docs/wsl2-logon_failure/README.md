@@ -16,4 +16,4 @@ Follow the steps below to solve the issue:
     ```
 
    <img src="03_enter_command.gif" width="70%" height="70%">
-4. You should now be able to access the WSL2. Check the ['after restart' guide](/docs/after_restart/README.md) to see how to run the tool after restarting the computer.
+4. You should now be able to access the WSL2. Check the ['after restart' guide](/docs/after_restart/README.md) to see how to run the tool after restarting the computer or exiting the terminal.
