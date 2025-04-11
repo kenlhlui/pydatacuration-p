@@ -6,7 +6,7 @@
    <img src="01_open-terminal.gif" width="70%" height="70%">
 
 > [!Note]
-> Check the guide if the terminal shows `Logon failure: the user has not been granted the requested logon type at this computer.` after switching to Ubuntu.
+> If you encounter the error message `Logon failure: the user has not been granted the requested logon type at this computer.` after switching to Ubuntu, refer to the [guide](/docs/wsl2-logon_failure/README.md) for troubleshooting steps.
 
 2. Run the following script to initialize the python environment for running the tool, and to update the tool.
 
