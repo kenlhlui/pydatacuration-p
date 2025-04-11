@@ -2,7 +2,6 @@
 
 1. Open 'Terminal', click the little down arrow next to the first tab, and switch to 'Ubuntu'
 
-
    <img src="01_open-terminal.gif" width="70%" height="70%">
 
 > [!Note]
