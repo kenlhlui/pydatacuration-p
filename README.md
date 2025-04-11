@@ -15,15 +15,19 @@
       Online        : True
       RestartNeeded : False
       ```
-   2. Run the following command in a Windows Powershell Terminal (with administrative access). This will install the latest WSL Ubuntu version (24.04 LTS)
+   2. Run the following command Windows Powershell Terminal (with administrative access) to upgrade the WSL environment:
       ```powershell
-      wsl --install
+      wsl --update --web-download
       ```
-   3. Run the following command once the `Distribution successfully installed. It can be launched via 'wsl.exe -d Ubuntu` prompt appears
+   3. Run the following command in a Windows Powershell Terminal (with administrative access). This will install the latest WSL Ubuntu version (24.04 LTS)
+      ```powershell
+      wsl --install -d Ubuntu
+      ```
+   4. Run the following command once the `Distribution successfully installed. It can be launched via 'wsl.exe -d Ubuntu` prompt appears
       ```powershell
       wsl.exe -d Ubuntu
       ```
-   4. You should be directed to configure the default user name and password. It does not have to be the same with your windows one.
+   5. You should be directed to configure the default user name and password. It does not have to be the same with your windows one.
    
       You should see the following prompt configure the name of the default user account. Enter the user name you like.
       ```sh
@@ -44,18 +48,18 @@
       ...
       ```
 
-   5. To re-enter the WSL Ubuntu environment, simply open a Terminal and type `wsl.exe -d Ubuntu`. You may also consider installing the [Windows Terminal app](https://learn.microsoft.com/en-us/windows/terminal/) for better user experience.
+   6. To re-enter the WSL Ubuntu environment, simply open a Terminal and type `wsl.exe -d Ubuntu`. You may also consider installing the [Windows Terminal app](https://learn.microsoft.com/en-us/windows/terminal/) for better user experience.
 2. [Git](https://git-scm.com/)
 > [!NOTE]
 > WSL Ubuntu should by default comes with Git. 
 > Type `git --version` to check.
 > Or run `sudo apt update && sudo apt install git` to install.
    
-3. [Python3.10^](https://www.python.org/downloads/release/python-3100/)
+1. [Python3.10^](https://www.python.org/downloads/release/python-3100/)
 > [!NOTE]
 > WSL Ubuntu should by default comes with Python3.12.
 > Type `python3 --version` to check.
-4. [FFmpeg](https://trac.ffmpeg.org/wiki/CompilationGuide/Ubuntu)
+1. [FFmpeg](https://trac.ffmpeg.org/wiki/CompilationGuide/Ubuntu)
    1. Run the following command to install FFmpeg. You will be prompted to ask for your password and confirmation.
    ```sh
    sudo apt update && sudo apt-get install ffmpeg
