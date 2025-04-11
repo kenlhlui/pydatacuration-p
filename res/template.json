@@ -35,6 +35,7 @@
     "common_file_format":{
         "comments": []
     },
+    "keywords": [],
     "missing_field": {
         "title": {
             "comments": []

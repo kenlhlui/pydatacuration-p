@@ -328,6 +328,15 @@ class Checker:
             (terms_of_use is None or terms_of_access is None):
             self.logger.print('The terms of use and access are missing')
 
+    def check_keywords(self) -> None:
+        """Check if the keywords are present."""
+        query_string = 'data.latestVersion.metadataBlocks.citation.fields[?typeName==`keyword`].value[*].keywordValue.value[]'
+        keyword_list = jmespath.search(query_string, self.ds_metadata)
+        if isinstance(keyword_list, list):
+            self.template_dict['keywords'] = keyword_list
+        else:
+            self.logger.print('No keywords found in the metadata')
+
     def run_checks(self) -> dict:
         """Run all the checks."""
         self.check_file_name_format()
@@ -339,5 +348,6 @@ class Checker:
         self.check_ds_tree_info()
         self.check_restricted_files()
         self.check_terms_license()
+        self.check_keywords()
 
         return self.template_dict
