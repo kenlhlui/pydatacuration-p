@@ -163,24 +163,11 @@ When the terminal prompts to `Press Enter to open https://github.com/login/devic
    ```sh
    pip install -r requirements.txt
    ```
+
+7. You should set the curator info (Curator Name & Curator email) before running the email.  Follow the [configuration guide](docs/set_curator_info/README.md) to set up.
+
+   You only need to configure this once. The settings will persist after restarting or updating the tool.
 </details>
-
-## ℹ️Curator info
-You can configure the curation project information by modifying the `res/config.yaml` file. 
-
-You can modify it with Notepad (GUI) or nano editor (Terminal).
-1. Open and edit the config.yaml file.
-   ```sh
-   nano res/config.yaml
-   ```
-2. Fill in the relevant information
-   ```yaml
-   curator_name:
-   curator_email:
-   ```
-
-> [!Tip]
-> You only need to configure this once. The settings will persist even after restarting or updating the tool.
 
 ## 🏃Run the tool
 You have finished the configuration. Now is time to run the tool.
