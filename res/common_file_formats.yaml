@@ -54,3 +54,11 @@ file_formats:
   spreadsheets:
     - .xls
     - .xlsx
+  word_processing:
+    - .doc
+    - .docx
+    - .rtf
+    - .odt
+  presentations:
+    - .ppt
+    - .pptx
