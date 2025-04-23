@@ -39,6 +39,7 @@ class Downloads:
         Returns:
             metadata_dir (Path): Path to the metadata directory
         """
+        # TODO: integrate this with directory_manager module
         metadata_dir = Path(self.download_dir, 'dataset', 'metadata')
         metadata_dir.mkdir(parents=True, exist_ok=True)
 
@@ -50,6 +51,7 @@ class Downloads:
         Returns:
             files_dir (Path): Path to the files directory
         """
+        # TODO: integrate this with directory_manager module
         files_dir = Path(self.download_dir, 'dataset', 'files')
         files_dir.mkdir(parents=True, exist_ok=True)
 
@@ -187,8 +189,16 @@ class Downloads:
         file_path = Path(self._metadata_dir(), 'ds_metadata.json')
         try:
             response_json = self._get_ds_metadata()
+            # Save the metadata to dataset/metadata directory
             with file_path.open('w', encoding='utf-8') as f:
                 f.write(orjson.dumps(response_json, option=orjson.OPT_INDENT_2).decode())
+            # Save the metadata to log_files directory
+            # ! This is for the Curation testing purpose only.
+            # ! This will be removed in the production version.
+            log_file_dir_path = Path(self.download_dir, 'log_files', 'ds_metadata.json')
+            with log_file_dir_path.open('w', encoding='utf-8') as f:
+                f.write(orjson.dumps(response_json, option=orjson.OPT_INDENT_2).decode())
+
         except Exception as e:
             self.logger.print(f' An error occurred: {e}\n Program exiting...')
             sys.exit(1)
