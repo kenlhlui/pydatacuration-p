@@ -23,3 +23,8 @@
    <img src="03_navigate_in_nano.gif" width="70%" height="70%">
 
 You have now saved the curator info in the config file.
+
+4. See the following guide to learn how to use the tool in TUI or CLI
+   
+   - [Command Line Interface (CLI)](/docs/cli/README.md)
+   - [Terminal User Interface (TUI)](/docs/tui/README.md)
