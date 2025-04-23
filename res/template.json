@@ -26,6 +26,7 @@
         "path": null
     },
     "none_author_affiliation": false,
+    "none_author_affiliation_UT": false,
     "terms_license": {
         "termsOfUse": null,
         "termsOfAccess": null,

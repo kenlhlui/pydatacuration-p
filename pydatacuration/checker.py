@@ -239,6 +239,13 @@ class Checker:
             self.logger.print('None of the authors have an institutional affiliation listed')
             self.template_dict['none_author_affiliation'] = True
 
+        # Check if at least one author has affiliation with 'University of Toronto' (Non-case sensitive)
+        ut_variants = ['university of toronto', 'uoft', 'u of t']
+        author_affiliation_ut_num = len([item for item in author_info_dict if item.get('authorAffiliation') is not None and any(variant in item.get('authorAffiliation', '').lower() for variant in ut_variants)])  # noqa: E501
+        if author_affiliation_ut_num == 0:
+            self.logger.print('None of the authors have listed affiliation with University of Toronto')
+            self.template_dict['none_author_affiliation_UT'] = True
+
     def check_spelling(self) -> None:
         """Check for spelling mistakes in the metadata."""
         field_list = ['title', 'subtitle', 'alternativeTitle', 'dsDescription.dsDescriptionValue', 'notesText']
