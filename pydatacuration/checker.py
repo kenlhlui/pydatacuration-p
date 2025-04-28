@@ -231,7 +231,7 @@ class Checker:
             for field in field_list_author:
                 if item.get(field) is None:
                     self.logger.print(f'Missing metadata found in {field} field for author: {author_name}')
-                    self.template_dict['missing_field'][field]['comments'].append(f'Missing metadata in {field} field for author: {author_name}')  # noqa: E501
+                    self.template_dict['missing_field'][field]['comments'].append(f'{author_name}')  # noqa: E501
 
         # Check if at least one author has authorAffiliation
         author_affiliation_num = len([item for item in author_info_dict if item.get('authorAffiliation') is not None])
