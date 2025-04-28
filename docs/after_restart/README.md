@@ -25,7 +25,10 @@
 
    <img src="03_change_config.gif" width="70%" height="70%">
 
-4. See the following guide to learn how to use the tool in TUI or CLI
+   Press CTRL + X to leave the editor if you did not make any changes.
+
+   Press CTRL + X, CTRL + Y, and finally Enter to save the changes.
+5. See the following guide to learn how to use the tool in TUI or CLI
    
    - [Command Line Interface (CLI)](/docs/cli/README.md)
    - [Terminal User Interface (TUI)](/docs/tui/README.md)
