@@ -3,6 +3,7 @@
 # ruff: noqa: E501, W505
 import asyncio
 import os
+import subprocess
 from pathlib import Path
 
 import orjson
@@ -114,8 +115,10 @@ def cli(
     utils.gen_tree_diagram(Path(workdir_path, 'dataset', 'files'), Path(log_files_dir))
 
     # Print the end message
-    logger.print(f'✅ Curation report generated successfully. \n\nType (or copy) the following in the terminal to view the files: \n\nexplorer.exe "$(wslpath -w {workdir_path})"')
+    logger.print(f'✅ Curation report generated successfully.\n\nThe windows explorer should be popped up with the working directory opened. \n\nIf that does not work, type (or copy) the following in the terminal to view the files: \n\nexplorer.exe "$(wslpath -w {workdir_path})"')
 
+    # Run the command to open the working directory in Windows Explorer
+    subprocess.run([f'explorer.exe "$(wslpath -w {workdir_path})"'], shell=True, check=False)
 
 if __name__ == '__main__':
     app()
