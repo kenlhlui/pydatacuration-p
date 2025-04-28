@@ -8,6 +8,10 @@
     <img src="01_enter_tui.gif" width="70%" height="70%">
 
 2. Click the `cli` button on the left-hand side panel. Input the information accordingly.
+
+    Input all the required fields. 
+    
+    You may level the optional fields/checkboxes as-is. Only change them if it is applicable. 
    
    **Required fields**:
     | Field         | Input                                                                                               | Example                               | Notes                                                                        |
@@ -29,6 +33,10 @@
     <img src="02_input_info_and_dl.gif" width="70%" height="70%">
 
 3. After you see the message `✅ Curation report generated successfully.`, you can copy the command shown in the terminal to open the output folder in Windows File Explorer.
+   
+    You should copy the whole line from `explorer.exe` to the end of the double quote (")
+
+    A 
 
     <img src="03_view_files.gif" width="70%" height="70%">
    
