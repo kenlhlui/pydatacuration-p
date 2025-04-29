@@ -2,6 +2,7 @@
 import re
 import shutil
 import sys
+import os
 from pathlib import Path
 from pathlib import PurePosixPath
 
@@ -270,3 +271,10 @@ def check_ds_access(pid: str, base_url: str, api_token: str) -> None:
     except RetryError:
         logger.error('The retry limit has been reached for checking dataset access. \nCheck your input of `base_url` and `pid`. Or check your internet connection.')  # noqa: E501
         sys.exit(1)
+
+
+def validate_api_token(value: str) -> str:
+    """Validate API token to prevent empty strings from overriding environment values."""
+    if value == "" and os.getenv("API_TOKEN"):
+        return os.getenv("API_TOKEN")
+    return value
