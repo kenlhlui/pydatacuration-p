@@ -162,7 +162,7 @@ class GenerateLog:
                     autoescape=True)  # See https://github.com/elapouya/python-docx-template/issues/38
 
         # Save the rendered document
-        doc_path = self.log_dir.joinpath(f'log_{level}-level.docx')
+        doc_path = self.log_dir.joinpath(f'{self.ticket_number}_log_{level}-level.docx')
         doc.save(doc_path)
         self.logger.print(f'{level.upper()}-level Word curation log saved at: {str(doc_path)}')
 
