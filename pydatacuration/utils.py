@@ -1,8 +1,8 @@
 """This module contains utility functions for data curation tasks."""
+import os
 import re
 import shutil
 import sys
-import os
 from pathlib import Path
 from pathlib import PurePosixPath
 
