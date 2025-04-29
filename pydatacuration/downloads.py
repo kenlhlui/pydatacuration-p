@@ -14,7 +14,7 @@ from .httpx_client import HTTPXClient
 
 class Downloads:
     """Class to download a dataset from a Dataverse repository."""
-    def __init__(self, base_url: str, api_token: str, pid: str, download_dir: Path) -> None:
+    def __init__(self, base_url: str, api_token: str, pid: str, download_dir: Path, ticket_number: str) -> None:
         """Initialize the class.
 
         Args:
@@ -26,6 +26,7 @@ class Downloads:
         self.base_url = base_url
         self.pid = pid
         self.download_dir = download_dir
+        self.ticket_number = ticket_number
 
         self.success_code = 200
 
@@ -195,7 +196,7 @@ class Downloads:
             # Save the metadata to log_files directory
             # ! This is for the Curation testing purpose only.
             # ! This will be removed in the production version.
-            log_file_dir_path = Path(self.download_dir, 'log_files', 'ds_metadata.json')
+            log_file_dir_path = Path(self.download_dir, 'log_files', f'{self.ticket_number}_ds_metadata.json')
             with log_file_dir_path.open('w', encoding='utf-8') as f:
                 f.write(orjson.dumps(response_json, option=orjson.OPT_INDENT_2).decode())
 
