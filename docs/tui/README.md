@@ -32,11 +32,16 @@
    
     <img src="02_input_info_and_dl.gif" width="70%" height="70%">
 
-3. After you see the message `✅ Curation report generated successfully.`, you can copy the command shown in the terminal to open the output folder in Windows File Explorer.
-   
-    You should copy the whole line from `explorer.exe` to the end of the double quote (")
+3. After you see the message `✅ Curation report generated successfully.`, A Windows Explorer window should be popped up with the working directory opened.
 
-    A 
+    If that does not work, you can copy the command shown in the terminal to open the output folder in Windows File Explorer.
+
+    You should copy the whole line from `explorer.exe` to the end of the double quote ("), for example:
+
+    ```sh
+    explorer.exe "$(wslpath -w /home/kenlhlui/github/pydatacuration-p/workdir/WORK_999)"
+    ```
+
 
     <img src="03_view_files.gif" width="70%" height="70%">
    
