@@ -337,7 +337,7 @@ class Checker:
 
     def check_keywords(self) -> None:
         """Check if the keywords are present."""
-        query_string = 'data.latestVersion.metadataBlocks.citation.fields[?typeName==`keyword`].value[*].keywordValue.value[]'
+        query_string = 'data.latestVersion.metadataBlocks.citation.fields[?typeName==`keyword`].value[*].keywordValue.value[]'  # noqa: E501
         keyword_list = jmespath.search(query_string, self.ds_metadata)
         if isinstance(keyword_list, list):
             self.template_dict['keywords'] = keyword_list
