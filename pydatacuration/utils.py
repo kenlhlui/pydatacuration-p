@@ -273,8 +273,8 @@ def check_ds_access(pid: str, base_url: str, api_token: str) -> None:
         sys.exit(1)
 
 
-def validate_api_token(value: str) -> str:
+def validate_api_token(value: str) -> str | None:
     """Validate API token to prevent empty strings from overriding environment values."""
-    if value == "" and os.getenv("API_TOKEN"):
-        return os.getenv("API_TOKEN")
+    if value == '' and os.getenv('API_TOKEN'):
+        return os.getenv('API_TOKEN')
     return value
