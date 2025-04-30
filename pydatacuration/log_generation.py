@@ -166,9 +166,51 @@ class GenerateLog:
         doc.save(doc_path)
         self.logger.print(f'{level.upper()}-level Word curation log saved at: {str(doc_path)}')
 
+        # Save the long corrupted file list to a separate text ile
+        if len(template_dict.get('file_open', {}).get('comments')) >= 50:
+            corrupted_files_list_path = self.log_dir.joinpath(f'{self.ticket_number}_corrupted_files.txt')
+            with corrupted_files_list_path.open('w', encoding='utf-8') as file:
+                for item in template_dict.get('file_open', {}).get('comments'):
+                    file.write(f'{", ".join(str(v) for v in item.values())}\n')
+            self.logger.print(f'Long list of corrupted_files saved at: {str(corrupted_files_list_path)}')
+
+        # Save the long file list that is not checked by the script to a separate text file
+        if len(template_dict.get('file_open', {}).get('not_checked', {})) >= 50:
+            not_checked_list_path = self.log_dir.joinpath(f'{self.ticket_number}_unchecked_file_list.txt')
+            with not_checked_list_path.open('w', encoding='utf-8') as file:
+                for item in template_dict.get('file_open', {}).get('not_checked', {}):
+                    file.write(f'{", ".join(str(v) for v in item.values())}\n')
+            self.logger.print(f'Long list of not checked files saved at: {str(not_checked_list_path)}')
+
+        # Save the long file list that contains special characters to a separate text file
+        if len(template_dict.get('special_characters', {}).get('comments')) >= 50:
+            special_char_list_path = self.log_dir.joinpath(f'{self.ticket_number}_special_characters.txt')
+            with special_char_list_path.open('w', encoding='utf-8') as file:
+                for item in template_dict.get('special_characters', {}).get('comments'):
+                    file.write(f'{", ".join(str(v) for v in item.values())}\n')
+            self.logger.print(f'Long list of special characters saved at: {str(special_char_list_path)}')
+
+        # Save the long file list that do not contain file extension to a separate text file
+        if len(template_dict.get('file_ext', {}).get('comments')) >= 50:
+            no_extension_list_path = self.log_dir.joinpath(f'{self.ticket_number}_no_file_extension.txt')
+            with no_extension_list_path.open('w', encoding='utf-8') as file:
+                for item in template_dict.get('file_ext', {}).get('comments'):
+                    file.write(f'{", ".join(str(v) for v in item.values())}\n')
+            self.logger.print(f'Long list of no extension files saved at: {str(no_extension_list_path)}')
+
+        # Save the long file list that contains uncommon file extensions to a separate text file
+        if len(template_dict.get('common_file_format', {}).get('comments')) >= 50:
+            uncommon_ext_list_path = self.log_dir.joinpath(f'{self.ticket_number}_uncommon_file_extension.txt')
+            with uncommon_ext_list_path.open('w', encoding='utf-8') as file:
+                for item in template_dict.get('common_file_format', {}).get('comments'):
+                    file.write(f'{", ".join(str(v) for v in item.values())}\n')
+            self.logger.print(f'Long list of uncommon file extensions saved at: {str(uncommon_ext_list_path)}')
+
+
         # Convert the report to markdown format
-        md_path = self._convert_to_markdown(doc_path)
-        self.logger.print(f'Converted {level.upper()}-level Word curation log to Markdown format at: {str(md_path)}')
+        # ! Disable this feature for now.
+        # md_path = self._convert_to_markdown(doc_path)
+        # self.logger.print(f'Converted {level.upper()}-level Word curation log to Markdown format at: {str(md_path)}')
 
     def generate_project_metadata(self) -> None:
         """Generates project metadata (project_info) to JSON file."""
