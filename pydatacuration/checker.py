@@ -346,6 +346,7 @@ class Checker:
 
     def run_checks(self) -> dict:
         """Run all the checks."""
+        self.logger.print('Running the checks...')
         self.check_file_name_format()
         self.check_file_open()
         self.check_common_file_format()
