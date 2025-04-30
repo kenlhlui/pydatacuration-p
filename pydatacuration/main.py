@@ -103,7 +103,8 @@ def cli(
 
     # Generate the report
     generate_log = log_generation.GenerateLog(log_files_dir, base_url, ds_metadata, ticket_number)
-    generate_log.generate_report_xlsx(template_dict)
+    # ! Disable generation of xlsx report for now
+    # generate_log.generate_report_xlsx(template_dict)
     generate_log.generate_report_doc(template_dict, 'medium')  # medium-level report
     generate_log.generate_report_doc(template_dict, 'high')  # high-level report
     generate_log.generate_project_metadata()
