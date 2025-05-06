@@ -175,13 +175,14 @@ class Checker:
             file_list.append(file_rel_path)
 
         # Unzip the files and append the unzipped files to the file_list
-        zip_file_extensions = ['.zip', '.tar', '.gz', '.bz2', '.xz', '.7z']
+        zip_file_extensions = {'.tar', '.tar.gz', '.tar.bz2', '.tar.xz', '.gz', '.bz2', '.xz', '.7z', '.zip'}
         if self.check_zip:
             for file_rel_path in file_list[:]:  # Iterate over a copy of the list
                 if file_rel_path.suffix in zip_file_extensions:
+                    # Upper case the suffix and remove the leading dot
                     extracted_file_rel_paths = Unzipper(
                         zip_file=Path(self.workdir, 'dataset', 'files', file_rel_path),
-                        output_dir=Path(self.workdir, 'dataset', 'files', file_rel_path.stem)
+                        output_dir=Path(self.workdir, 'dataset', 'files', '__UNZIPED_FILES__', f'{file_rel_path.stem}_{file_rel_path.suffix[1:].upper()}')
                     ).main()
                     file_list.extend(extracted_file_rel_paths)
         # Only show the message if there's zip file(s) in the dataset
