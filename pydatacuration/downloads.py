@@ -10,6 +10,7 @@ import orjson
 
 from .custom_logging import CustomLogger
 from .httpx_client import HTTPXClient
+from .utils import orjson_export
 
 
 class Downloads:
@@ -197,11 +198,10 @@ class Downloads:
             # ! This is for the Curation testing purpose only.
             # ! This will be removed in the production version.
             log_file_dir_path = Path(self.download_dir, 'log_files', f'{self.ticket_number}_ds_metadata.json')
-            with log_file_dir_path.open('w', encoding='utf-8') as f:
-                f.write(orjson.dumps(response_json, option=orjson.OPT_INDENT_2).decode())
+            orjson_export(log_file_dir_path, response_json)
 
         except Exception as e:
-            self.logger.print(f' An error occurred: {e}\n Program exiting...')
+            self.logger.print(f'An error occurred: {e}\nProgram exiting...')
             sys.exit(1)
 
     async def downloader(self) -> tuple:

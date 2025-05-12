@@ -19,6 +19,7 @@ from . import log_generation
 from . import utils
 from .checker import Checker
 from .custom_logging import CustomLogger
+from .utils import orjson_export
 
 
 # Load environment variables from .env file
@@ -112,8 +113,7 @@ def cli(
     generate_log.generate_project_metadata()
 
     # Export the template dict to JSON for debugging purposes
-    with log_files_dir.joinpath('template_dict.json').open('w') as f:
-        f.write(orjson.dumps(template_dict, option=orjson.OPT_INDENT_2).decode())
+    orjson_export(log_files_dir.joinpath('template_dict.json'), template_dict)
 
     # Generate the tree diagram of the dataset files
     utils.gen_tree_diagram(Path(workdir_path, 'dataset', 'files'), Path(log_files_dir))
