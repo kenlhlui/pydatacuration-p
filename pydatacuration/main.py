@@ -9,6 +9,8 @@ from pathlib import Path
 import orjson
 import typer
 from dotenv import load_dotenv
+from rich.progress import Progress
+from rich.progress import SpinnerColumn
 from trogon.typer import init_tui
 
 from . import directory_manager
@@ -122,5 +124,8 @@ def cli(
     # Run the command to open the working directory in Windows Explorer
     subprocess.run([f'explorer.exe "$(wslpath -w {workdir_path})"'], shell=True, check=False)
 
+
 if __name__ == '__main__':
-    app()
+    with Progress(SpinnerColumn(), expand=True) as progress:
+        progress.add_task('', total=None, visible=True)
+        app()
