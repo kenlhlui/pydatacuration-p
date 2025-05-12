@@ -13,6 +13,7 @@ from markitdown import MarkItDown
 from openpyxl import load_workbook
 
 from .custom_logging import CustomLogger
+from .utils import orjson_export
 
 
 RES_DIR = Path('res')
@@ -215,6 +216,5 @@ class GenerateLog:
     def generate_project_metadata(self) -> None:
         """Generates project metadata (project_info) to JSON file."""
         meta_path = self.log_dir.joinpath(f'{self.ticket_number}_project_info.json')
-        with meta_path.open('w', encoding='utf-8') as file:
-            file.write(orjson.dumps(self._get_config_info(), option=orjson.OPT_INDENT_2).decode('utf-8'))
-            self.logger.print(f'Project metadata saved at: {str(meta_path)}')
+        orjson_export(meta_path, self._get_config_info())
+        self.logger.print(f'Project metadata saved at: {str(meta_path)}')

@@ -7,6 +7,7 @@ from pathlib import Path
 from pathlib import PurePosixPath
 
 import deepdiff
+import orjson
 import seedir as sd
 import typer
 from tenacity import RetryError
@@ -278,3 +279,18 @@ def validate_api_token(value: str) -> str | None:
     if value == '' and os.getenv('API_TOKEN'):
         return os.getenv('API_TOKEN')
     return value
+
+
+def orjson_export(file_path: Path | str, obj: dict) -> None:
+    """Export a dictionary to a JSON file using orjson.
+
+    Args:
+        file_path (Path | str): The path to the JSON file.
+        obj (dict): The dictionary to export.
+    """
+    try:
+        with Path(file_path).open('wb') as f:
+            f.write(orjson.dumps(obj, option=orjson.OPT_INDENT_2))
+    except Exception as e:
+        logger.error(f'Error exporting JSON: {e}')
+        raise e
