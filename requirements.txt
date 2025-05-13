@@ -109,7 +109,7 @@ ffmpeg-python==0.2.0
     # via
     #   -c (workspace)
     #   pydatacuration (pyproject.toml)
-flask==3.1.0
+flask==3.1.1
     # via
     #   -c (workspace)
     #   pydatacuration (pyproject.toml)
