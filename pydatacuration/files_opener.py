@@ -88,10 +88,11 @@ class FilesOpener:
         try:
             with Path(self.file).open('r') as f:
                 csv_reader = csv.reader(f)
-                for row in csv_reader:
+                for _row in csv_reader:
                     pass
             return True, self.file
-        except (csv.Error, UnicodeDecodeError):
+        except (csv.Error, UnicodeDecodeError) as e:
+            self.logger.error(f'Error reading CSV file: {e}')
             return False, self.file
 
     def _open_dta_file(self):
@@ -103,7 +104,8 @@ class FilesOpener:
         try:
             dta_file = pyreadstat.read_dta(self.file)
             return True, dta_file
-        except (ReadstatError, OSError):
+        except (ReadstatError, OSError) as e:
+            self.logger.error(f'Error reading DTA file: {e}')
             return False, self.file
 
     def _open_rdata_file(self) -> tuple:
@@ -115,7 +117,8 @@ class FilesOpener:
         try:
             rdata_file = pyreadr.read_r(self.file)
             return True, rdata_file
-        except (pyreadr.custom_errors.PyreadrError, pyreadr.custom_errors.LibrdataError, OSError):
+        except (pyreadr.custom_errors.PyreadrError, pyreadr.custom_errors.LibrdataError, OSError) as e:
+            self.logger.error(f'Error reading RData file: {e}')
             return False, self.file
 
     def _open_audiovisual_file(self) -> tuple:
