@@ -52,7 +52,8 @@ class FilesOpener:
             with Image.open(self.file) as _img:
                 pass
             return True, self.file
-        except (ValueError, Image.UnidentifiedImageError, OSError):
+        except (ValueError, Image.UnidentifiedImageError, OSError) as e:
+            self.logger.error(f'Error reading image file: {e}')
             return False, self.file
 
     def _open_netcdf_file(self) -> tuple:
@@ -64,7 +65,8 @@ class FilesOpener:
         try:
             nc.Dataset(self.file, 'r')
             return True, self.file
-        except (Exception, OSError):
+        except (Exception, OSError) as e:
+            self.logger.error(f'Error reading NetCDF file: {e}')
             return False, self.file
 
     def _open_sav_file(self) -> tuple:
@@ -76,7 +78,8 @@ class FilesOpener:
         try:
             sav_file = pyreadstat.read_sav(self.file)
             return True, sav_file
-        except (ReadstatError, OSError):
+        except (ReadstatError, OSError) as e:
+            self.logger.error(f'Error reading SAV file: {e}')
             return False, self.file
 
     def _open_csv_file(self) -> tuple:
@@ -88,10 +91,11 @@ class FilesOpener:
         try:
             with Path(self.file).open('r') as f:
                 csv_reader = csv.reader(f)
-                for row in csv_reader:
+                for _row in csv_reader:
                     pass
             return True, self.file
-        except (csv.Error, UnicodeDecodeError):
+        except (csv.Error, UnicodeDecodeError) as e:
+            self.logger.error(f'Error reading CSV file: {e}')
             return False, self.file
 
     def _open_dta_file(self):
@@ -103,7 +107,8 @@ class FilesOpener:
         try:
             dta_file = pyreadstat.read_dta(self.file)
             return True, dta_file
-        except (ReadstatError, OSError):
+        except (ReadstatError, OSError) as e:
+            self.logger.error(f'Error reading DTA file: {e}')
             return False, self.file
 
     def _open_rdata_file(self) -> tuple:
@@ -115,7 +120,8 @@ class FilesOpener:
         try:
             rdata_file = pyreadr.read_r(self.file)
             return True, rdata_file
-        except (pyreadr.custom_errors.PyreadrError, pyreadr.custom_errors.LibrdataError, OSError):
+        except (pyreadr.custom_errors.PyreadrError, pyreadr.custom_errors.LibrdataError, OSError) as e:
+            self.logger.error(f'Error reading RData file: {e}')
             return False, self.file
 
     def _open_audiovisual_file(self) -> tuple:
@@ -132,7 +138,8 @@ class FilesOpener:
                 return True, self.file
             return False, self.file
 
-        except ffmpeg.Error:
+        except ffmpeg.Error as e:
+            self.logger.error(f'Error reading audiovisual file: {e}')
             return False, self.file
 
     def _open_shape_file(self) -> tuple:
@@ -148,7 +155,8 @@ class FilesOpener:
 
             return False, self.file
 
-        except shapefile.ShapefileException:
+        except shapefile.ShapefileException as e:
+            self.logger.error(f'Error reading shape file: {e}')
             return False, self.file
 
     def _open_spreadsheet_file(self) -> tuple:
@@ -162,7 +170,8 @@ class FilesOpener:
             if df is not None:
                 return True, self.file
             return False, self.file
-        except (pd.errors.ParserError, OSError, ValueError):
+        except (pd.errors.ParserError, OSError, ValueError) as e:
+            self.logger.error(f'Error reading spreadsheet file: {e}')
             return False, self.file
 
     def _open_pdf_file(self) -> tuple:
@@ -174,7 +183,8 @@ class FilesOpener:
         try:
             pypdf.PdfReader(self.file, strict=True)
             return True, self.file
-        except pypdf.errors.PdfReadError:
+        except pypdf.errors.PdfReadError as e:
+            self.logger.error(f'Error reading PDF file: {e}')
             return False, self.file
 
     def open_file(self, file_to_check: Path | str | None = None):
