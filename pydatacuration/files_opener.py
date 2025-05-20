@@ -23,6 +23,7 @@ NETCDF_FILE_EXTENSIONS = ['.nc']
 # TEXT_FILE_EXTENSIONS = ['.txt', '.csv', '.tsv']  # Placeholder for text file extensions
 SAV_FILE_EXTENSIONS = ['.sav']  # Placeholder for SPSS file extensions
 CSV_FILE_EXTENSIONS = ['.csv']  # Placeholder for CSV file extensions
+TSV_FILE_EXTENSIONS = ['.tsv']  # Placeholder for TSV file extensions
 DTA_FILE_EXTENSIONS = ['.dta']  # Placeholder for Stata file extensions
 RDATA_FILE_EXTENSIONS = ['.rdata', '.rds']  # Placeholder for R file extensions
 FFMEPG_FILE_EXTENSIONS = FFmpegFileFormats().get_ffmpeg_formats()
@@ -96,6 +97,22 @@ class FilesOpener:
             return True, self.file
         except (csv.Error, UnicodeDecodeError) as e:
             self.logger.error(f'Error reading CSV file: {e}')
+            return False, self.file
+
+    def _open_tsv_file(self) -> tuple:
+        """Open a TSV file.
+
+        Returns:
+            tuple: (bool, str) indicating success and the file path.
+        """
+        try:
+            with Path(self.file).open('r') as f:
+                tsv_reader = csv.reader(f, delimiter='\t')
+                for _row in tsv_reader:
+                    pass
+            return True, self.file
+        except (csv.Error, UnicodeDecodeError) as e:
+            self.logger.error(f'Error reading TSV file: {e}')
             return False, self.file
 
     def _open_dta_file(self):
@@ -209,6 +226,9 @@ class FilesOpener:
                 return status, file_path
             if file_ext in CSV_FILE_EXTENSIONS:
                 status, file_path = self._open_csv_file()
+                return status, file_path
+            if file_ext in TSV_FILE_EXTENSIONS:
+                status, file_path = self._open_tsv_file()
                 return status, file_path
             if file_ext in DTA_FILE_EXTENSIONS:
                 status, file_path = self._open_dta_file()
