@@ -16,13 +16,15 @@ init_tui(app)
 logger = CustomLogger.get_logger(__name__)
 
 
-class ReportValidation():
+class ReportValidation:
     """Class to handle report validation tasks."""
 
     def __init__(self) -> None:
+        """Initialize the ReportValidation class."""
         self.logger = CustomLogger.get_logger(__name__)
 
-    def extract_tables_from_word(self, docx_path: Path) -> list:
+    @staticmethod
+    def extract_tables_from_word(docx_path: Path) -> list:
         """Extract tables from a Word document."""
         doc = docx.Document(str(docx_path))
         return doc.tables
@@ -161,7 +163,8 @@ class ReportValidation():
                 hours, minutes, seconds = map(int, match.groups())
                 total_seconds += hours * 3600 + minutes * 60 + seconds
             elif time_str and time_str != 'Time Spent':
-                print(f'Invalid time format in table: {time_str}')
+                msg = typer.style(f'❌Invalid time format value found in the "Time Spent" column: {time_str}. Please fix it and re-run the validation.', fg='red')
+                typer.echo(msg)
                 continue
 
         # Format the result
@@ -214,6 +217,21 @@ class ReportValidation():
                 return matches[0]
         return word_doc_path
 
+    @staticmethod
+    def check_final_results(level: str, check_num) -> None:
+        """Check final results and see whether the result is valid or not."""
+        expected_high_level_checks = 32
+        expected_medium_checks = 18
+
+        if level == 'high' and check_num != expected_high_level_checks:
+            msg = typer.style(f"❌ Invalid number of check marks ('X') for high level: {check_num}. Should be {expected_high_level_checks}.", fg='red')  # noqa: E501
+            typer.echo(msg)
+        elif level == 'medium' and check_num != expected_medium_checks:
+            msg = f"❌ Invalid number of check marks ('X') for medium level: {check_num}. Should be {expected_medium_checks}."  # noqa: E501
+            typer.echo(msg)
+        else:
+            typer.echo('✅ Total number of check marks (X) is valid.')
+
 
 class CurationLogLevels(str, Enum):
     """Enum for curation log levels."""
@@ -226,10 +244,8 @@ def report_validation(
     ticket_number: str = typer.Argument(..., help='Ticket number for the report'),
     level: CurationLogLevels = typer.Option(..., help='Level of the report'),
     parent_dir: str = typer.Argument('./workdir', help='Parent directory for the report'),
-    verbose: bool = typer.Option(False, '--verbose', '-v', help='Enable verbose output'),
     export_csv: bool = typer.Option(False, '--export-csv', help='Export results to CSV'),
-    debug: bool = typer.Option(False, '--debug', help='Enable debug mode')
-):
+) -> dict:
     """Validate curation reports by analyzing tables in Word documents.
 
     This script analyzes the tables in a curation log document and reports:
@@ -252,22 +268,23 @@ def report_validation(
 
     if not word_doc_path.exists():
         error_msg = f'Document not found: {word_doc_path}'
-        print(error_msg)
         raise typer.BadParameter(error_msg)
 
-    print(f'Analyzing document: {word_doc_path}')
+    typer.echo(f'Analyzing document: {word_doc_path}\n')
 
     # Analyze the Word document tables
     results = report_validator.analyze_word_doc_tables(word_doc_path)
 
     # Print final results
-    print('\n--- FINAL RESULTS ---')
-    print(f"Status column counts: {results['status_counts']}")
-    print(f"Total time spent: {results['total_time']}")
+    typer.echo('\n--- FINAL RESULTS ---')
+    typer.echo(f"Status column counts: {results['status_counts']}")
+    typer.echo(f"Total time spent: {results['total_time']}")
 
     # Calculate overall count
     total_x_count = sum(results['status_counts'].values())
-    print(f'Total X count: {total_x_count}')
+    typer.echo(f'Total X count: {total_x_count}')
+
+    report_validator.check_final_results(str(level.value), total_x_count)
 
     # Export results to CSV if requested
     if export_csv:
@@ -280,7 +297,7 @@ def report_validation(
 
             # Add ticket metadata
             results_df['Ticket Number'] = ticket_number
-            results_df['Level'] = level_str
+            results_df['Level'] = level
 
             # Export to CSV
             results_df.to_csv(csv_path, index=False)
