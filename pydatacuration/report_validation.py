@@ -8,222 +8,209 @@ import pandas as pd
 import typer
 from trogon.typer import init_tui
 
-# Import from the local module (commented out for standalone use)
-# from .custom_logging import CustomLogger
+from .custom_logging import CustomLogger
 
-# For standalone use, define a simple logger
-# class SimpleLogger:
-#     @staticmethod
-#     def get_logger(name):
-#         import logging
-#         logging.basicConfig(
-#             level=logging.INFO,
-#             format='%(asctime)s - %(name)s - %(levelname)s - %(message)s'
-#         )
-#         return logging.getLogger(name)
-
-# # Use the appropriate logger based on environment
-# try:
-#     from .custom_logging import CustomLogger
-# except ImportError:
-#     CustomLogger = SimpleLogger
 
 app = typer.Typer(rich_markup_mode='rich')
 init_tui(app)
+logger = CustomLogger.get_logger(__name__)
 
 
-def extract_tables_from_word(docx_path: Path) -> list:
-    """Extract tables from a Word document."""
-    doc = docx.Document(str(docx_path))
-    return doc.tables
+class ReportValidation():
+    """Class to handle report validation tasks."""
+
+    def __init__(self) -> None:
+        self.logger = CustomLogger.get_logger(__name__)
+
+    def extract_tables_from_word(self, docx_path: Path) -> list:
+        """Extract tables from a Word document."""
+        doc = docx.Document(str(docx_path))
+        return doc.tables
 
 
-def table_to_dataframe(table, logger=None):
-    """Convert a docx table to pandas DataFrame, handling merged cells and specific status columns."""
-    # Extract all rows including header
-    rows_data = []
-    for row in table.rows:
-        row_data = [cell.text.strip() for cell in row.cells]
-        rows_data.append(row_data)
+    def table_to_dataframe(self, table):
+        """Convert a docx table to pandas DataFrame, handling merged cells and specific status columns."""
+        # Extract all rows including header
+        rows_data = []
+        for row in table.rows:
+            row_data = [cell.text.strip() for cell in row.cells]
+            rows_data.append(row_data)
 
-    # Handle case where the first row might be merged and not contain all column headers
-    # If P, RQU, RCM, NS, NA columns are in a specific position (as shown in images)
-    headers = []
-    max_columns = max(len(row) for row in rows_data)
+        # Handle case where the first row might be merged and not contain all column headers
+        # If P, RQU, RCM, NS, NA columns are in a specific position (as shown in images)
+        headers = []
+        max_columns = max(len(row) for row in rows_data)
 
-    # Find the row with the most complete headers
-    header_row_index = 0
-    for i, row in enumerate(rows_data):
-        # Skip rows that are too short
-        if len(row) < 5:
-            continue
+        # Find the row with the most complete headers
+        header_row_index = 0
+        for i, row in enumerate(rows_data):
+            # Skip rows that are too short
+            if len(row) < 5:
+                continue
 
-        # Check if this row contains status column headers
-        contains_status_columns = any(col in {'P', 'RQU', 'RCM', 'NS', 'NA'} for col in row)
-        if contains_status_columns:
-            header_row_index = i
-            break
+            # Check if this row contains status column headers
+            contains_status_columns = any(col in {'P', 'RQU', 'RCM', 'NS', 'NA'} for col in row)
+            if contains_status_columns:
+                header_row_index = i
+                break
 
-    # Use the identified header row
-    if header_row_index < len(rows_data):
-        headers = rows_data[header_row_index]
-    else:
-        # Fallback: create generic headers if none found
-        headers = [f'Column_{i}' for i in range(max_columns)]
+        # Use the identified header row
+        if header_row_index < len(rows_data):
+            headers = rows_data[header_row_index]
+        else:
+            # Fallback: create generic headers if none found
+            headers = [f'Column_{i}' for i in range(max_columns)]
 
-    # Ensure the status columns are explicitly included
-    status_columns = ['P', 'RQU', 'RCM', 'NS', 'NA']
-    for status_col in status_columns:
-        if status_col not in headers:
-            # Try to find index of these columns based on position
-            # This is based on the images showing these columns are usually consecutive
-            if 'P' in headers:
-                p_index = headers.index('P')
-                for i, col in enumerate(status_columns):
-                    if p_index + i < len(headers):
-                        headers[p_index + i] = col
-                    else:
-                        # Add missing columns
-                        headers.append(col)
-            else:
-                # Just append if we can't find position
-                headers.append(status_col)
-
-    # Create data rows, skipping the header row
-    data = []
-    for i, row in enumerate(rows_data):
-        if i == header_row_index:
-            continue  # Skip the header row
-
-        # Pad row if shorter than headers
-        if len(row) < len(headers):
-            row += [''] * (len(headers) - len(row))
-
-        # Truncate row if longer than headers
-        if len(row) > len(headers):
-            row = row[:len(headers)]
-
-        # Create row dictionary
-        row_dict = dict(zip(headers, row))
-
-        # Look for 'X' markers in the right positions for status columns
-        for idx, col in enumerate(status_columns):
-            if col not in row_dict or not row_dict[col]:
-                # Try to find X in the expected position based on the header
+        # Ensure the status columns are explicitly included
+        status_columns = ['P', 'RQU', 'RCM', 'NS', 'NA']
+        for status_col in status_columns:
+            if status_col not in headers:
+                # Try to find index of these columns based on position
+                # This is based on the images showing these columns are usually consecutive
                 if 'P' in headers:
                     p_index = headers.index('P')
-                    if p_index + idx < len(row) and row[p_index + idx] == 'X':
-                        row_dict[col] = 'X'
+                    for i, col in enumerate(status_columns):
+                        if p_index + i < len(headers):
+                            headers[p_index + i] = col
+                        else:
+                            # Add missing columns
+                            headers.append(col)
+                else:
+                    # Just append if we can't find position
+                    headers.append(status_col)
 
-        data.append(row_dict)
+        # Create data rows, skipping the header row
+        data = []
+        for i, row in enumerate(rows_data):
+            if i == header_row_index:
+                continue  # Skip the header row
 
-    # Create DataFrame
-    df = pd.DataFrame(data)
-    
-    # Log the columns found for debugging
-    if logger:
-        logger.debug(f"DataFrame columns: {df.columns.tolist()}")
+            # Pad row if shorter than headers
+            if len(row) < len(headers):
+                row += [''] * (len(headers) - len(row))
 
-    return df
+            # Truncate row if longer than headers
+            if len(row) > len(headers):
+                row = row[:len(headers)]
 
+            # Create row dictionary
+            row_dict = dict(zip(headers, row))
 
-def count_status_markers(data_frame: pd.DataFrame) -> dict:
-    """Count the X markers in each status column (P, RQU, RCM, NS, NA)."""
-    status_columns = ['P', 'RQU', 'RCM', 'NS', 'NA']
-    status_counts = {col: 0 for col in status_columns}  # Use dict comprehension for initialization
+            # Look for 'X' markers in the right positions for status columns
+            for idx, col in enumerate(status_columns):
+                if col not in row_dict or not row_dict[col]:
+                    # Try to find X in the expected position based on the header
+                    if 'P' in headers:
+                        p_index = headers.index('P')
+                        if p_index + idx < len(row) and row[p_index + idx] == 'X':
+                            row_dict[col] = 'X'
 
-    # Iterate through rows to count X marks
-    for _, row in data_frame.iterrows():
-        for column in status_columns:
-            # Try different ways to access the column value
-            cell_value = None
+            data.append(row_dict)
 
-            # Try direct access
-            if column in data_frame.columns:
-                cell_value = row.get(column)
+        # Create DataFrame
+        df = pd.DataFrame(data)
 
-            # Try case-insensitive match
-            if cell_value is None:
-                for col_name in data_frame.columns:
-                    if col_name.upper() == column:
-                        cell_value = row.get(col_name)
-                        break
+        logger.debug(f'DataFrame columns: {df.columns.tolist()}')
 
-            # Check if the cell contains 'X' (case insensitive)
-            if cell_value is not None:
-                cell_str = str(cell_value).strip().upper()
-                if cell_str == 'X':
-                    status_counts[column] += 1
-
-    return status_counts
-
-
-def calculate_time_directly(tables) -> (str, int):
-    """
-    Calculate total time directly from tables.
-    Returns both formatted time string and total seconds.
-    """
-    total_seconds = 0
-    time_pattern = re.compile(r'(\d{2}):(\d{2}):(\d{2})')
-    
-    for table in tables:
-        for row in table.rows:
-            # Check all cells for time values
-            for cell in row.cells:
-                time_str = cell.text.strip()
-                match = time_pattern.match(time_str)
-                if match:
-                    hours, minutes, seconds = map(int, match.groups())
-                    total_seconds += hours * 3600 + minutes * 60 + seconds
-    
-    # Format the result
-    hours, remainder = divmod(total_seconds, 3600)
-    minutes, seconds = divmod(remainder, 60)
-    formatted_time = f'{int(hours):02d}:{int(minutes):02d}:{int(seconds):02d}'
-    
-    return formatted_time, total_seconds
+        return df
 
 
-def analyze_word_doc_tables(docx_path: Path, logger=None) -> dict:
-    """Main function to analyze tables in Word document."""
-    results = {
-        'status_counts': {'P': 0, 'RQU': 0, 'RCM': 0, 'NS': 0, 'NA': 0},
-        'total_time': '',
-        'table_data': []
-    }
+    def count_status_markers(self, data_frame: pd.DataFrame) -> dict:
+        """Count the X markers in each status column (P, RQU, RCM, NS, NA)."""
+        status_columns = ['P', 'RQU', 'RCM', 'NS', 'NA']
+        status_counts = {col: 0 for col in status_columns}  # Use dict comprehension for initialization
 
-    # Extract tables
-    tables = extract_tables_from_word(docx_path)
+        # Iterate through rows to count X marks
+        for _, row in data_frame.iterrows():
+            for column in status_columns:
+                # Try different ways to access the column value
+                cell_value = None
 
-    # Process each table for status counts
-    for i, table in enumerate(tables):
-        df = table_to_dataframe(table, logger)
-        results['table_data'].append(df)
+                # Try direct access
+                if column in data_frame.columns:
+                    cell_value = row.get(column)
 
-        # Count X markers in status columns
-        table_status_counts = count_status_markers(df)
-        if logger:
-            logger.info(f'Table {i + 1} status counts: {table_status_counts}')
-        else:
-            print(f'Table {i + 1} status counts: {table_status_counts}')
+                # Try case-insensitive match
+                if cell_value is None:
+                    for col_name in data_frame.columns:
+                        if col_name.upper() == column:
+                            cell_value = row.get(col_name)
+                            break
 
-        for key, value in table_status_counts.items():
-            results['status_counts'][key] += value
+                # Check if the cell contains 'X' (case insensitive)
+                if cell_value is not None:
+                    cell_str = str(cell_value).strip().upper()
+                    if cell_str == 'X':
+                        status_counts[column] += 1
 
-    # Calculate time directly from the tables - more reliable approach
-    formatted_time, _ = calculate_time_directly(tables)
-    results['total_time'] = formatted_time
-
-    return results
+        return status_counts
 
 
-def parse_word_path(ticket_number: str, level: str, parent_dir: str = './workdir') -> Path:
-    """Parse the Word document path based on the ticket number."""
-    # Define the base path
-    base_path = Path(parent_dir) / ticket_number / 'log_files'
-    # Construct the Word document path
-    word_doc_path = base_path / f'{ticket_number}_log_{level}-level.docx'
-    return Path(word_doc_path)
+    def calculate_time_directly(self, tables) -> (str, int):
+        """
+        Calculate total time directly from tables.
+        Returns both formatted time string and total seconds.
+        """
+        total_seconds = 0
+        time_pattern = re.compile(r'(\d{2}):(\d{2}):(\d{2})')
+
+        for table in tables:
+            for row in table.rows:
+                # Check all cells for time values
+                for cell in row.cells:
+                    time_str = cell.text.strip()
+                    match = time_pattern.match(time_str)
+                    if match:
+                        hours, minutes, seconds = map(int, match.groups())
+                        total_seconds += hours * 3600 + minutes * 60 + seconds
+
+        # Format the result
+        hours, remainder = divmod(total_seconds, 3600)
+        minutes, seconds = divmod(remainder, 60)
+        formatted_time = f'{int(hours):02d}:{int(minutes):02d}:{int(seconds):02d}'
+
+        return formatted_time, total_seconds
+
+
+    def analyze_word_doc_tables(self, docx_path: Path, logger=None) -> dict:
+        """Main function to analyze tables in Word document."""
+        results = {
+            'status_counts': {'P': 0, 'RQU': 0, 'RCM': 0, 'NS': 0, 'NA': 0},
+            'total_time': '',
+            'table_data': []
+        }
+
+        # Extract tables
+        tables = self.extract_tables_from_word(docx_path)
+
+        # Process each table for status counts
+        for i, table in enumerate(tables):
+            df = self.table_to_dataframe(table)
+            results['table_data'].append(df)
+
+            # Count X markers in status columns
+            table_status_counts = self.count_status_markers(df)
+            if self.logger:
+                self.logger.info(f'Table {i + 1} status counts: {table_status_counts}')
+            else:
+                self.logger.print(f'Table {i + 1} status counts: {table_status_counts}')
+
+            for key, value in table_status_counts.items():
+                results['status_counts'][key] += value
+
+        # Calculate time directly from the tables - more reliable approach
+        formatted_time, _ = self.calculate_time_directly(tables)
+        results['total_time'] = formatted_time
+
+        return results
+
+    def parse_word_path(self, ticket_number: str, level: str, parent_dir: str = './workdir') -> Path:
+        """Parse the Word document path based on the ticket number."""
+        # Define the base path
+        base_path = Path(parent_dir) / ticket_number / 'log_files'
+        # Construct the Word document path
+        word_doc_path = base_path / f'{ticket_number}_log_{level}-level.docx'
+        return Path(word_doc_path)
 
 
 class CurationLogLevels(str, Enum):
@@ -242,11 +229,11 @@ def report_validation(
     debug: bool = typer.Option(False, '--debug', help='Enable debug mode')
 ):
     """Validate curation reports by analyzing tables in Word documents.
-    
+
     This script analyzes the tables in a curation log document and reports:
     - Count of X markers in status columns (P, RQU, RCM, NS, NA)
     - Total time spent on curation tasks
-    
+
     Example usage:
         python -m report_validation ABC123 --level high
     """
@@ -255,47 +242,50 @@ def report_validation(
     # log_level = 'DEBUG' if debug else 'INFO'
     # logger.setLevel(log_level)
 
+    # Initialize ReportValidation class
+    report_validator = ReportValidation()
+
     # Parse the Word document path
-    word_doc_path = parse_word_path(ticket_number, str(level.value), parent_dir)
+    word_doc_path = report_validator.parse_word_path(ticket_number, str(level.value), parent_dir)
 
     if not word_doc_path.exists():
-        error_msg = f"Document not found: {word_doc_path}"
+        error_msg = f'Document not found: {word_doc_path}'
         print(error_msg)
         raise typer.BadParameter(error_msg)
 
-    print(f"Analyzing document: {word_doc_path}")
+    print(f'Analyzing document: {word_doc_path}')
 
     # Analyze the Word document tables
-    results = analyze_word_doc_tables(word_doc_path)
+    results = report_validator.analyze_word_doc_tables(word_doc_path)
 
     # Print final results
     print('\n--- FINAL RESULTS ---')
     print(f"Status column counts: {results['status_counts']}")
     print(f"Total time spent: {results['total_time']}")
-    
+
     # Calculate overall count
     total_x_count = sum(results['status_counts'].values())
-    print(f"Total X count: {total_x_count}")
-    
+    print(f'Total X count: {total_x_count}')
+
     # Export results to CSV if requested
     if export_csv:
-        csv_path = word_doc_path.parent / f"{ticket_number}_{level_str}_results.csv"
+        csv_path = word_doc_path.parent / f'{ticket_number}_{str(level.value)}_results.csv'
         try:
             # Create a DataFrame with results
             results_df = pd.DataFrame([results['status_counts']])
             results_df['Total Time'] = results['total_time']
             results_df['Total X Count'] = total_x_count
-            
+
             # Add ticket metadata
             results_df['Ticket Number'] = ticket_number
             results_df['Level'] = level_str
-            
+
             # Export to CSV
             results_df.to_csv(csv_path, index=False)
-            print(f"Results exported to: {csv_path}")
+            print(f'Results exported to: {csv_path}')
         except Exception as e:
-            logger.error(f"Error exporting results to CSV: {e}")
-    
+            logger.error(f'Error exporting results to CSV: {e}')
+
     return results
 
 
