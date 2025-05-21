@@ -1,18 +1,15 @@
 import re
-from datetime import timedelta
 from enum import Enum
 from pathlib import Path
 
 import docx
 import pandas as pd
 import typer
-from trogon.typer import init_tui
 
 from .custom_logging import CustomLogger
 
 
 app = typer.Typer(rich_markup_mode='rich')
-init_tui(app)
 logger = CustomLogger.get_logger(__name__)
 
 
@@ -227,7 +224,7 @@ class ReportValidation:
             msg = typer.style(f"❌ Invalid number of check marks ('X') for high level: {check_num}. Should be {expected_high_level_checks}.", fg='red')  # noqa: E501
             typer.echo(msg)
         elif level == 'medium' and check_num != expected_medium_checks:
-            msg = f"❌ Invalid number of check marks ('X') for medium level: {check_num}. Should be {expected_medium_checks}."  # noqa: E501
+            msg = typer.style(f"❌ Invalid number of check marks ('X') for medium level: {check_num}. Should be {expected_medium_checks}.", fg='red')  # noqa: E501
             typer.echo(msg)
         else:
             typer.echo('✅ Total number of check marks (X) is valid.')
@@ -240,7 +237,7 @@ class CurationLogLevels(str, Enum):
 
 
 @app.command()
-def report_validation(
+def validate_report(
     ticket_number: str = typer.Argument(..., help='Ticket number for the report'),
     level: CurationLogLevels = typer.Option(..., help='Level of the report'),
     parent_dir: str = typer.Argument('./workdir', help='Parent directory for the report'),

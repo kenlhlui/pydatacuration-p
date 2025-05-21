@@ -19,6 +19,7 @@ from . import log_generation
 from . import utils
 from .checker import Checker
 from .custom_logging import CustomLogger
+from .report_validation import validate_report
 from .utils import orjson_export
 
 
@@ -26,11 +27,9 @@ from .utils import orjson_export
 load_dotenv(override=True)
 
 app = typer.Typer(rich_markup_mode='rich')
-init_tui(app)
-
 
 @app.command()
-def cli(
+def gen_curation_report(
     pid: str = typer.Option(...,
                             '--pid',
                             '-p',
@@ -128,6 +127,9 @@ def cli(
         # Run the command to open the working directory in Windows Explorer
         subprocess.run([f'explorer.exe "$(wslpath -w {workdir_path})"'], shell=True, check=False)
 
+
+init_tui(app)
+app.command()(validate_report)
 
 if __name__ == '__main__':
     app()
