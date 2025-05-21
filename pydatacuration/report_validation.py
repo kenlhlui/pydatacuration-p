@@ -109,6 +109,8 @@ class ReportValidation():
 
         # Create DataFrame
         df = pd.DataFrame(data)
+        if not df.empty:
+            print(df)
 
         logger.debug(f'DataFrame columns: {df.columns.tolist()}')
 
@@ -140,11 +142,10 @@ class ReportValidation():
                 # Check if the cell contains 'X' (case insensitive)
                 if cell_value is not None:
                     cell_str = str(cell_value).strip().upper()
-                    if cell_str == 'X':
+                    if cell_str in {'X', 'x'}:
                         status_counts[column] += 1
 
         return status_counts
-
 
     def calculate_time_directly(self, tables) -> tuple:
         """Calculate total time directly from tables.
@@ -171,7 +172,6 @@ class ReportValidation():
 
         return formatted_time, total_seconds
 
-
     def analyze_word_doc_tables(self, docx_path: Path) -> dict:
         """Main function to analyze tables in Word document."""
         results = {
@@ -184,19 +184,15 @@ class ReportValidation():
         tables = self.extract_tables_from_word(docx_path)
 
         # Process each table for status counts
-        for i, table in enumerate(tables):
-            df = self.table_to_dataframe(table)
-            results['table_data'].append(df)
+        # Only process table 2 (i.e. index 1)
+        df = self.table_to_dataframe(tables[1])
+        results['table_data'].append(df)
 
-            # Count X markers in status columns
-            table_status_counts = self.count_status_markers(df)
-            if self.logger:
-                self.logger.info(f'Table {i + 1} status counts: {table_status_counts}')
-            else:
-                self.logger.print(f'Table {i + 1} status counts: {table_status_counts}')
+        # Count X markers in status columns
+        table_status_counts = self.count_status_markers(df)
 
-            for key, value in table_status_counts.items():
-                results['status_counts'][key] += value
+        for key, value in table_status_counts.items():
+            results['status_counts'][key] += value
 
         # Calculate time directly from the tables - more reliable approach
         formatted_time, _ = self.calculate_time_directly(tables)
