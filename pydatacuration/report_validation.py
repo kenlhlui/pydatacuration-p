@@ -109,8 +109,6 @@ class ReportValidation():
 
         # Create DataFrame
         df = pd.DataFrame(data)
-        for i in range(len(df)):
-            print(f'Row {i}: {df.iloc[i].values[2]}')
 
         logger.debug(f'DataFrame columns: {df.columns.tolist()}')
 
