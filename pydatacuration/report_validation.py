@@ -109,8 +109,8 @@ class ReportValidation():
 
         # Create DataFrame
         df = pd.DataFrame(data)
-        if not df.empty:
-            print(df)
+        for i in range(len(df)):
+            print(f'Row {i}: {df.iloc[i].values[2]}')
 
         logger.debug(f'DataFrame columns: {df.columns.tolist()}')
 
@@ -155,15 +155,16 @@ class ReportValidation():
         total_seconds = 0
         time_pattern = re.compile(r'(\d{2}):(\d{2}):(\d{2})')
 
-        for table in tables:
-            for row in table.rows:
-                # Check all cells for time values
-                for cell in row.cells:
-                    time_str = cell.text.strip()
-                    match = time_pattern.match(time_str)
-                    if match:
-                        hours, minutes, seconds = map(int, match.groups())
-                        total_seconds += hours * 3600 + minutes * 60 + seconds
+        # Only process value[2]:
+        for i in range(len(tables)):
+            time_str = tables.iloc[i].values[2] if not None else None
+            match = time_pattern.match(time_str)
+            if match:
+                hours, minutes, seconds = map(int, match.groups())
+                total_seconds += hours * 3600 + minutes * 60 + seconds
+            elif time_str and time_str != 'Time Spent':
+                print(f'Invalid time format in table: {time_str}')
+                continue
 
         # Format the result
         hours, remainder = divmod(total_seconds, 3600)
@@ -195,7 +196,7 @@ class ReportValidation():
             results['status_counts'][key] += value
 
         # Calculate time directly from the tables - more reliable approach
-        formatted_time, _ = self.calculate_time_directly(tables)
+        formatted_time, _ = self.calculate_time_directly(df)
         results['total_time'] = formatted_time
 
         return results
