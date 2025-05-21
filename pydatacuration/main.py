@@ -94,38 +94,40 @@ def cli(
     # print the start message
     logger.print('Starting the pydatacuration script...')
 
-    # Check if the dataset PID is valid and the user has access to it
-    utils.check_ds_access(pid, base_url, api_token)
+    # Start the progress spinner only after all user interactions are complete
+    with Progress(SpinnerColumn(), expand=True) as progress:
+        progress.add_task('Processing...', total=None, visible=True)
 
-    # Download the dataset files and metadata
-    ds_metadata, dv_tree = asyncio.run(downloads.Downloads(base_url, api_token, pid, workdir_path, ticket_number).downloader())
+        # Check if the dataset PID is valid and the user has access to it
+        utils.check_ds_access(pid, base_url, api_token)
 
-    # Run the checker
-    checker = Checker(base_url, api_token, ds_metadata, dv_tree, workdir_path, check_zip)
-    template_dict = checker.run_checks()
+        # Download the dataset files and metadata
+        ds_metadata, dv_tree = asyncio.run(downloads.Downloads(base_url, api_token, pid, workdir_path, ticket_number).downloader())
 
-    # Generate the report
-    generate_log = log_generation.GenerateLog(log_files_dir, base_url, ds_metadata, ticket_number)
-    # ! Disable generation of xlsx report for now
-    # generate_log.generate_report_xlsx(template_dict)
-    generate_log.generate_report_doc(template_dict, 'medium')  # medium-level report
-    generate_log.generate_report_doc(template_dict, 'high')  # high-level report
-    generate_log.generate_project_metadata()
+        # Run the checker
+        checker = Checker(base_url, api_token, ds_metadata, dv_tree, workdir_path, check_zip)
+        template_dict = checker.run_checks()
 
-    # Export the template dict to JSON for debugging purposes
-    orjson_export(log_files_dir.joinpath('template_dict.json'), template_dict)
+        # Generate the report
+        generate_log = log_generation.GenerateLog(log_files_dir, base_url, ds_metadata, ticket_number)
+        # ! Disable generation of xlsx report for now
+        # generate_log.generate_report_xlsx(template_dict)
+        generate_log.generate_report_doc(template_dict, 'medium')  # medium-level report
+        generate_log.generate_report_doc(template_dict, 'high')  # high-level report
+        generate_log.generate_project_metadata()
 
-    # Generate the tree diagram of the dataset files
-    utils.gen_tree_diagram(Path(workdir_path, 'dataset', 'files'), Path(log_files_dir))
+        # Export the template dict to JSON for debugging purposes
+        orjson_export(log_files_dir.joinpath('template_dict.json'), template_dict)
 
-    # Print the end message
-    logger.print(f'✅ Curation report generated successfully.\n\nThe windows explorer should be popped up with the working directory opened. \n\nIf that does not work, type (or copy) the following in the terminal to view the files: \n\nexplorer.exe "$(wslpath -w {workdir_path})"')
+        # Generate the tree diagram of the dataset files
+        utils.gen_tree_diagram(Path(workdir_path, 'dataset', 'files'), Path(log_files_dir))
 
-    # Run the command to open the working directory in Windows Explorer
-    subprocess.run([f'explorer.exe "$(wslpath -w {workdir_path})"'], shell=True, check=False)
+        # Print the end message
+        logger.print(f'✅ Curation report generated successfully.\n\nThe windows explorer should be popped up with the working directory opened. \n\nIf that does not work, type (or copy) the following in the terminal to view the files: \n\nexplorer.exe "$(wslpath -w {workdir_path})"')
+
+        # Run the command to open the working directory in Windows Explorer
+        subprocess.run([f'explorer.exe "$(wslpath -w {workdir_path})"'], shell=True, check=False)
 
 
 if __name__ == '__main__':
-    with Progress(SpinnerColumn(), expand=True) as progress:
-        progress.add_task('', total=None, visible=True)
-        app()
+    app()
