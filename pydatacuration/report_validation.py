@@ -8,8 +8,25 @@ import pandas as pd
 import typer
 from trogon.typer import init_tui
 
-from .custom_logging import CustomLogger
+# Import from the local module (commented out for standalone use)
+# from .custom_logging import CustomLogger
 
+# For standalone use, define a simple logger
+# class SimpleLogger:
+#     @staticmethod
+#     def get_logger(name):
+#         import logging
+#         logging.basicConfig(
+#             level=logging.INFO,
+#             format='%(asctime)s - %(name)s - %(levelname)s - %(message)s'
+#         )
+#         return logging.getLogger(name)
+
+# # Use the appropriate logger based on environment
+# try:
+#     from .custom_logging import CustomLogger
+# except ImportError:
+#     CustomLogger = SimpleLogger
 
 app = typer.Typer(rich_markup_mode='rich')
 init_tui(app)
@@ -21,7 +38,7 @@ def extract_tables_from_word(docx_path: Path) -> list:
     return doc.tables
 
 
-def table_to_dataframe(table):
+def table_to_dataframe(table, logger=None):
     """Convert a docx table to pandas DataFrame, handling merged cells and specific status columns."""
     # Extract all rows including header
     rows_data = []
@@ -102,6 +119,10 @@ def table_to_dataframe(table):
 
     # Create DataFrame
     df = pd.DataFrame(data)
+    
+    # Log the columns found for debugging
+    if logger:
+        logger.debug(f"DataFrame columns: {df.columns.tolist()}")
 
     return df
 
@@ -109,7 +130,7 @@ def table_to_dataframe(table):
 def count_status_markers(data_frame: pd.DataFrame) -> dict:
     """Count the X markers in each status column (P, RQU, RCM, NS, NA)."""
     status_columns = ['P', 'RQU', 'RCM', 'NS', 'NA']
-    status_counts = dict.fromkeys(status_columns, 0)
+    status_counts = {col: 0 for col in status_columns}  # Use dict comprehension for initialization
 
     # Iterate through rows to count X marks
     for _, row in data_frame.iterrows():
@@ -137,35 +158,33 @@ def count_status_markers(data_frame: pd.DataFrame) -> dict:
     return status_counts
 
 
-def calculate_total_time(data_frame: pd.DataFrame) -> str:
-    """Calculate total time from the Time Spent column.
-
-    Format expected: HH:MM:SS.
+def calculate_time_directly(tables) -> (str, int):
     """
-    total_time = timedelta()
-    time_column = 'Time Spent'
-
-    # Find the time column - it might have different naming
-    time_columns = [col for col in data_frame.columns if 'time' in col.lower()]
-    if time_columns:
-        time_column = time_columns[0]
-
-    # Regular expression to match time format HH:MM:SS
+    Calculate total time directly from tables.
+    Returns both formatted time string and total seconds.
+    """
+    total_seconds = 0
     time_pattern = re.compile(r'(\d{2}):(\d{2}):(\d{2})')
+    
+    for table in tables:
+        for row in table.rows:
+            # Check all cells for time values
+            for cell in row.cells:
+                time_str = cell.text.strip()
+                match = time_pattern.match(time_str)
+                if match:
+                    hours, minutes, seconds = map(int, match.groups())
+                    total_seconds += hours * 3600 + minutes * 60 + seconds
+    
+    # Format the result
+    hours, remainder = divmod(total_seconds, 3600)
+    minutes, seconds = divmod(remainder, 60)
+    formatted_time = f'{int(hours):02d}:{int(minutes):02d}:{int(seconds):02d}'
+    
+    return formatted_time, total_seconds
 
-    # Process each time entry
-    for _, row in data_frame.iterrows():
-        if time_column in row:
-            time_str = str(row[time_column])
-            match = time_pattern.match(time_str)
-            if match:
-                hours, minutes, seconds = map(int, match.groups())
-                total_time += timedelta(hours=hours, minutes=minutes, seconds=seconds)
 
-    return str(total_time)
-
-
-def analyze_word_doc_tables(docx_path: Path) -> dict:
+def analyze_word_doc_tables(docx_path: Path, logger=None) -> dict:
     """Main function to analyze tables in Word document."""
     results = {
         'status_counts': {'P': 0, 'RQU': 0, 'RCM': 0, 'NS': 0, 'NA': 0},
@@ -176,50 +195,32 @@ def analyze_word_doc_tables(docx_path: Path) -> dict:
     # Extract tables
     tables = extract_tables_from_word(docx_path)
 
-    total_seconds = 0
-
-    # Process each table
+    # Process each table for status counts
     for i, table in enumerate(tables):
-        df = table_to_dataframe(table)
+        df = table_to_dataframe(table, logger)
         results['table_data'].append(df)
-
-        # Print the raw DataFrame for debugging
-        # print(f'\nTable {i+1} structure:')
-        # print(df.head())
-        # print(f'Columns: {df.columns.tolist()}')
 
         # Count X markers in status columns
         table_status_counts = count_status_markers(df)
-        print(f'Table {i + 1} status counts: {table_status_counts}')
+        if logger:
+            logger.info(f'Table {i + 1} status counts: {table_status_counts}')
+        else:
+            print(f'Table {i + 1} status counts: {table_status_counts}')
 
         for key, value in table_status_counts.items():
             results['status_counts'][key] += value
 
-        # Calculate time spent
-        time_column = [col for col in df.columns if 'time' in col.lower()]
-        if time_column:
-            col_name = time_column[0]
-            for _, row in df.iterrows():
-                if col_name in row and row[col_name]:
-                    time_str = str(row[col_name])
-                    match = re.match(r'(\d{2}):(\d{2}):(\d{2})', time_str)
-                    if match:
-                        h, m, s = map(int, match.groups())
-                        total_seconds += h * 3600 + m * 60 + s
-
-
-    # Format the total time
-    hours, remainder = divmod(total_seconds, 3600)
-    minutes, seconds = divmod(remainder, 60)
-    results['total_time'] = f'{hours:02d}:{minutes:02d}:{seconds:02d}'
+    # Calculate time directly from the tables - more reliable approach
+    formatted_time, _ = calculate_time_directly(tables)
+    results['total_time'] = formatted_time
 
     return results
 
 
-def parse_word_path(ticket_number: str, level: str) -> Path:
+def parse_word_path(ticket_number: str, level: str, parent_dir: str = './workdir') -> Path:
     """Parse the Word document path based on the ticket number."""
     # Define the base path
-    base_path = Path('./workdir') / ticket_number / 'log_files'
+    base_path = Path(parent_dir) / ticket_number / 'log_files'
     # Construct the Word document path
     word_doc_path = base_path / f'{ticket_number}_log_{level}-level.docx'
     return Path(word_doc_path)
@@ -236,16 +237,33 @@ def report_validation(
     ticket_number: str = typer.Argument(..., help='Ticket number for the report'),
     level: CurationLogLevels = typer.Option(..., help='Level of the report'),
     parent_dir: str = typer.Argument('./workdir', help='Parent directory for the report'),
+    verbose: bool = typer.Option(False, '--verbose', '-v', help='Enable verbose output'),
+    export_csv: bool = typer.Option(False, '--export-csv', help='Export results to CSV'),
+    debug: bool = typer.Option(False, '--debug', help='Enable debug mode')
 ):
-    """Main entry point for the report validation."""
-    # Initialize logger
-    logger = CustomLogger.get_logger('report_validation')
-
-    # level 
-    level_str = str(level.value)
+    """Validate curation reports by analyzing tables in Word documents.
+    
+    This script analyzes the tables in a curation log document and reports:
+    - Count of X markers in status columns (P, RQU, RCM, NS, NA)
+    - Total time spent on curation tasks
+    
+    Example usage:
+        python -m report_validation ABC123 --level high
+    """
+    # # Initialize logger
+    # logger = CustomLogger.get_logger('report_validation')
+    # log_level = 'DEBUG' if debug else 'INFO'
+    # logger.setLevel(log_level)
 
     # Parse the Word document path
-    word_doc_path = parse_word_path(ticket_number, level_str)
+    word_doc_path = parse_word_path(ticket_number, str(level.value), parent_dir)
+
+    if not word_doc_path.exists():
+        error_msg = f"Document not found: {word_doc_path}"
+        print(error_msg)
+        raise typer.BadParameter(error_msg)
+
+    print(f"Analyzing document: {word_doc_path}")
 
     # Analyze the Word document tables
     results = analyze_word_doc_tables(word_doc_path)
@@ -254,25 +272,32 @@ def report_validation(
     print('\n--- FINAL RESULTS ---')
     print(f"Status column counts: {results['status_counts']}")
     print(f"Total time spent: {results['total_time']}")
+    
+    # Calculate overall count
+    total_x_count = sum(results['status_counts'].values())
+    print(f"Total X count: {total_x_count}")
+    
+    # Export results to CSV if requested
+    if export_csv:
+        csv_path = word_doc_path.parent / f"{ticket_number}_{level_str}_results.csv"
+        try:
+            # Create a DataFrame with results
+            results_df = pd.DataFrame([results['status_counts']])
+            results_df['Total Time'] = results['total_time']
+            results_df['Total X Count'] = total_x_count
+            
+            # Add ticket metadata
+            results_df['Ticket Number'] = ticket_number
+            results_df['Level'] = level_str
+            
+            # Export to CSV
+            results_df.to_csv(csv_path, index=False)
+            print(f"Results exported to: {csv_path}")
+        except Exception as e:
+            logger.error(f"Error exporting results to CSV: {e}")
+    
+    return results
 
 
 if __name__ == '__main__':
     app()
-
-    # print('\n--- FINAL RESULTS ---')
-    # print(f"Status column counts: {results['status_counts']}")
-    # print(f"Total time spent: {results['total_time']}")
-
-    # # Detailed results for each status column
-    # print('\nStatus column details:')
-    # for key, value in results['status_counts'].items():
-    #     print(f'{key}: {value} occurrences')
-
-    # # Optional: Export results to CSV
-    # try:
-    #     results_df = pd.DataFrame([results['status_counts']])
-    #     results_df['Total Time'] = results['total_time']
-    #     results_df.to_csv('table_analysis_results.csv', index=False)
-    #     print('\nResults exported to table_analysis_results.csv')
-    # except Exception as e:
-    #     print(f'Error exporting results: {e}')
