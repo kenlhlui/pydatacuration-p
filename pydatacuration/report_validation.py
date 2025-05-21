@@ -120,7 +120,7 @@ class ReportValidation():
     def count_status_markers(self, data_frame: pd.DataFrame) -> dict:
         """Count the X markers in each status column (P, RQU, RCM, NS, NA)."""
         status_columns = ['P', 'RQU', 'RCM', 'NS', 'NA']
-        status_counts = {col: 0 for col in status_columns}  # Use dict comprehension for initialization
+        status_counts = dict.fromkeys(status_columns, 0)  # Use dict comprehension for initialization
 
         # Iterate through rows to count X marks
         for _, row in data_frame.iterrows():
