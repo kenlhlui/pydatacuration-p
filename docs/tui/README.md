@@ -7,7 +7,7 @@
     ```
     <img src="01_enter_tui.gif" width="70%" height="70%">
 
-2. Click the `cli` button on the left-hand side panel. Input the information accordingly.
+2. Click the `gen-curation-report` button on the left-hand side panel. Input the information accordingly.
 
     Input all the required fields. 
     
