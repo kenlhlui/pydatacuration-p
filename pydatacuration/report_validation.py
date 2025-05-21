@@ -146,9 +146,9 @@ class ReportValidation():
         return status_counts
 
 
-    def calculate_time_directly(self, tables) -> (str, int):
-        """
-        Calculate total time directly from tables.
+    def calculate_time_directly(self, tables) -> tuple:
+        """Calculate total time directly from tables.
+
         Returns both formatted time string and total seconds.
         """
         total_seconds = 0
@@ -172,7 +172,7 @@ class ReportValidation():
         return formatted_time, total_seconds
 
 
-    def analyze_word_doc_tables(self, docx_path: Path, logger=None) -> dict:
+    def analyze_word_doc_tables(self, docx_path: Path) -> dict:
         """Main function to analyze tables in Word document."""
         results = {
             'status_counts': {'P': 0, 'RQU': 0, 'RCM': 0, 'NS': 0, 'NA': 0},
@@ -204,13 +204,20 @@ class ReportValidation():
 
         return results
 
-    def parse_word_path(self, ticket_number: str, level: str, parent_dir: str = './workdir') -> Path:
+    @staticmethod
+    def parse_word_path(ticket_number: str, level: str, parent_dir: str = './workdir') -> Path:
         """Parse the Word document path based on the ticket number."""
         # Define the base path
         base_path = Path(parent_dir) / ticket_number / 'log_files'
         # Construct the Word document path
         word_doc_path = base_path / f'{ticket_number}_log_{level}-level.docx'
-        return Path(word_doc_path)
+        # Check if the file exists
+        if not word_doc_path.exists():
+            # Try to use wildcard search for the file
+            matches = list(base_path.glob(f'{ticket_number}_log_{level}-level*.docx'))
+            if matches:
+                return matches[0]
+        return word_doc_path
 
 
 class CurationLogLevels(str, Enum):
