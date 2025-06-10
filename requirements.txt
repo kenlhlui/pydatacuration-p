@@ -410,7 +410,7 @@ pyzstd==0.16.2
     # via
     #   -c (workspace)
     #   py7zr
-requests==2.32.3
+requests==2.32.4
     # via
     #   -c (workspace)
     #   azure-core
