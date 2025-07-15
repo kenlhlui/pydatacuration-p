@@ -244,297 +244,49 @@
                     </tr>
                 </thead>
                 <tbody>
-                    <tr>
-                        <td colspan="7" class="section-header">1.0 Structure of deposit</td>
-                    </tr>
-                    <tr>
-                        <td class="item-id">1.1</td>
-                        <td class="action-item">Is the dataset deposited directly into U of T Dataverse?</td>
-                        <td class="instructions">Python scripted. If the dataset is deposited in a sub-dataverse collection, include the name of the collection.</td>
-                        <td>
-                            <div class="status-checkboxes">
-                                <div class="status-checkbox">
-                                    <input type="radio" name="status-1.1" value="P" id="status-1.1-P">
-                                    <label for="status-1.1-P">P</label>
+                    {% set current_section = '' %}
+                    {% for item in items %}
+                        {% if item.section != current_section %}
+                            {% set current_section = item.section %}
+                            <tr>
+                                <td colspan="7" class="section-header">{{ item.section }}</td>
+                            </tr>
+                        {% endif %}
+                        <tr>
+                            <td class="item-id">{{ item.id }}</td>
+                            <td class="action-item">{{ item.action }}</td>
+                            <td class="instructions">{{ item.instructions }}</td>
+                            <td>
+                                <div class="status-checkboxes">
+                                    <div class="status-checkbox">
+                                        <input type="radio" name="status-{{ item.id }}" value="P" id="status-{{ item.id }}-P">
+                                        <label for="status-{{ item.id }}-P">P</label>
+                                    </div>
+                                    <div class="status-checkbox">
+                                        <input type="radio" name="status-{{ item.id }}" value="RQU" id="status-{{ item.id }}-RQU">
+                                        <label for="status-{{ item.id }}-RQU">RQU</label>
+                                    </div>
+                                    <div class="status-checkbox">
+                                        <input type="radio" name="status-{{ item.id }}" value="RCM" id="status-{{ item.id }}-RCM">
+                                        <label for="status-{{ item.id }}-RCM">RCM</label>
+                                    </div>
+                                    <div class="status-checkbox">
+                                        <input type="radio" name="status-{{ item.id }}" value="NS" id="status-{{ item.id }}-NS">
+                                        <label for="status-{{ item.id }}-NS">NS</label>
+                                    </div>
+                                    <div class="status-checkbox">
+                                        <input type="radio" name="status-{{ item.id }}" value="NA" id="status-{{ item.id }}-NA">
+                                        <label for="status-{{ item.id }}-NA">NA</label>
+                                    </div>
                                 </div>
-                                <div class="status-checkbox">
-                                    <input type="radio" name="status-1.1" value="RQU" id="status-1.1-RQU">
-                                    <label for="status-1.1-RQU">RQU</label>
-                                </div>
-                                <div class="status-checkbox">
-                                    <input type="radio" name="status-1.1" value="RCM" id="status-1.1-RCM">
-                                    <label for="status-1.1-RCM">RCM</label>
-                                </div>
-                                <div class="status-checkbox">
-                                    <input type="radio" name="status-1.1" value="NS" id="status-1.1-NS">
-                                    <label for="status-1.1-NS">NS</label>
-                                </div>
-                                <div class="status-checkbox">
-                                    <input type="radio" name="status-1.1" value="NA" id="status-1.1-NA">
-                                    <label for="status-1.1-NA">NA</label>
-                                </div>
-                            </div>
-                        </td>
-                        <td>
-                            <textarea class="comments-input" name="comments-1.1" placeholder="List the dataset (full) path in the Dataverse repository..."></textarea>
-                        </td>
-                        <td><span class="priority-badge priority-info">Info</span></td>
-                        <td><input type="text" class="time-input" name="time-1.1" placeholder="00:00:00"></td>
-                    </tr>
-                    <tr>
-                        <td class="item-id">1.2</td>
-                        <td class="action-item">Has the depositor (or their research group) previously created or submitted to a dataverse collection?</td>
-                        <td class="instructions">Python scripted. Confirm whether the listed dataverse collection refers to the same researcher/author</td>
-                        <td>
-                            <div class="status-checkboxes">
-                                <div class="status-checkbox">
-                                    <input type="radio" name="status-1.2" value="P" id="status-1.2-P">
-                                    <label for="status-1.2-P">P</label>
-                                </div>
-                                <div class="status-checkbox">
-                                    <input type="radio" name="status-1.2" value="RQU" id="status-1.2-RQU">
-                                    <label for="status-1.2-RQU">RQU</label>
-                                </div>
-                                <div class="status-checkbox">
-                                    <input type="radio" name="status-1.2" value="RCM" id="status-1.2-RCM">
-                                    <label for="status-1.2-RCM">RCM</label>
-                                </div>
-                                <div class="status-checkbox">
-                                    <input type="radio" name="status-1.2" value="NS" id="status-1.2-NS">
-                                    <label for="status-1.2-NS">NS</label>
-                                </div>
-                                <div class="status-checkbox">
-                                    <input type="radio" name="status-1.2" value="NA" id="status-1.2-NA">
-                                    <label for="status-1.2-NA">NA</label>
-                                </div>
-                            </div>
-                        </td>
-                        <td>
-                            <textarea class="comments-input" name="comments-1.2" placeholder="List all Dataverse collections that contain the depositors' dataset..."></textarea>
-                        </td>
-                        <td><span class="priority-badge priority-info">Info</span></td>
-                        <td><input type="text" class="time-input" name="time-1.2" placeholder="00:00:00"></td>
-                    </tr>
-                    <tr>
-                        <td class="item-id">1.3</td>
-                        <td class="action-item">If the dataset was deposited in a sub-dataverse collection, does it require its own dataverse or is there an associated dataverse?</td>
-                        <td class="instructions">If the depositor created a dataverse with one dataset: Is it the only dataset in the sub-dataverse collection? Is there another sub-dataverse collection it should be in?</td>
-                        <td>
-                            <div class="status-checkboxes">
-                                <div class="status-checkbox">
-                                    <input type="radio" name="status-1.3" value="P" id="status-1.3-P">
-                                    <label for="status-1.3-P">P</label>
-                                </div>
-                                <div class="status-checkbox">
-                                    <input type="radio" name="status-1.3" value="RQU" id="status-1.3-RQU">
-                                    <label for="status-1.3-RQU">RQU</label>
-                                </div>
-                                <div class="status-checkbox">
-                                    <input type="radio" name="status-1.3" value="RCM" id="status-1.3-RCM">
-                                    <label for="status-1.3-RCM">RCM</label>
-                                </div>
-                                <div class="status-checkbox">
-                                    <input type="radio" name="status-1.3" value="NS" id="status-1.3-NS">
-                                    <label for="status-1.3-NS">NS</label>
-                                </div>
-                                <div class="status-checkbox">
-                                    <input type="radio" name="status-1.3" value="NA" id="status-1.3-NA">
-                                    <label for="status-1.3-NA">NA</label>
-                                </div>
-                            </div>
-                        </td>
-                        <td>
-                            <textarea class="comments-input" name="comments-1.3" placeholder="Curator's comments..."></textarea>
-                        </td>
-                        <td><span class="priority-badge priority-require">Require</span></td>
-                        <td><input type="text" class="time-input" name="time-1.3" placeholder="00:00:00"></td>
-                    </tr>
-                    
-                    <tr>
-                        <td colspan="7" class="section-header">2.0 Files</td>
-                    </tr>
-                    <tr>
-                        <td class="item-id">2.1b</td>
-                        <td class="action-item">Do all the files open properly?</td>
-                        <td class="instructions">Semi-automated using Python scripts. For files that cannot be opened programmatically - if we have the program, open min. 5 of each type of file.</td>
-                        <td>
-                            <div class="status-checkboxes">
-                                <div class="status-checkbox">
-                                    <input type="radio" name="status-2.1b" value="P" id="status-2.1b-P">
-                                    <label for="status-2.1b-P">P</label>
-                                </div>
-                                <div class="status-checkbox">
-                                    <input type="radio" name="status-2.1b" value="RQU" id="status-2.1b-RQU">
-                                    <label for="status-2.1b-RQU">RQU</label>
-                                </div>
-                                <div class="status-checkbox">
-                                    <input type="radio" name="status-2.1b" value="RCM" id="status-2.1b-RCM">
-                                    <label for="status-2.1b-RCM">RCM</label>
-                                </div>
-                                <div class="status-checkbox">
-                                    <input type="radio" name="status-2.1b" value="NS" id="status-2.1b-NS">
-                                    <label for="status-2.1b-NS">NS</label>
-                                </div>
-                                <div class="status-checkbox">
-                                    <input type="radio" name="status-2.1b" value="NA" id="status-2.1b-NA">
-                                    <label for="status-2.1b-NA">NA</label>
-                                </div>
-                            </div>
-                        </td>
-                        <td>
-                            <textarea class="comments-input" name="comments-2.1b" placeholder="List all files that did not open correctly..."></textarea>
-                        </td>
-                        <td><span class="priority-badge priority-require">Require</span></td>
-                        <td><input type="text" class="time-input" name="time-2.1b" placeholder="00:00:00"></td>
-                    </tr>
-                    <tr>
-                        <td class="item-id">2.2</td>
-                        <td class="action-item">Are all files free of the following special characters (<>:"/\|?*,@$~)?</td>
-                        <td class="instructions">Python scripted.</td>
-                        <td>
-                            <div class="status-checkboxes">
-                                <div class="status-checkbox">
-                                    <input type="radio" name="status-2.2" value="P" id="status-2.2-P">
-                                    <label for="status-2.2-P">P</label>
-                                </div>
-                                <div class="status-checkbox">
-                                    <input type="radio" name="status-2.2" value="RQU" id="status-2.2-RQU">
-                                    <label for="status-2.2-RQU">RQU</label>
-                                </div>
-                                <div class="status-checkbox">
-                                    <input type="radio" name="status-2.2" value="RCM" id="status-2.2-RCM">
-                                    <label for="status-2.2-RCM">RCM</label>
-                                </div>
-                                <div class="status-checkbox">
-                                    <input type="radio" name="status-2.2" value="NS" id="status-2.2-NS">
-                                    <label for="status-2.2-NS">NS</label>
-                                </div>
-                                <div class="status-checkbox">
-                                    <input type="radio" name="status-2.2" value="NA" id="status-2.2-NA">
-                                    <label for="status-2.2-NA">NA</label>
-                                </div>
-                            </div>
-                        </td>
-                        <td>
-                            <textarea class="comments-input" name="comments-2.2" placeholder="List all files that contain special characters..."></textarea>
-                        </td>
-                        <td><span class="priority-badge priority-recommend">Recommend</span></td>
-                        <td><input type="text" class="time-input" name="time-2.2" placeholder="00:00:00"></td>
-                    </tr>
-                    
-                    <tr>
-                        <td colspan="7" class="section-header">3.0 Documentation</td>
-                    </tr>
-                    <tr>
-                        <td class="item-id">3.1</td>
-                        <td class="action-item">Does the dataset include a separate README file?</td>
-                        <td class="instructions">Python scripted. Read the `ds_tree.txt` file in the log_files folder to identify whether there is a README file, but it is not named with 'README'</td>
-                        <td>
-                            <div class="status-checkboxes">
-                                <div class="status-checkbox">
-                                    <input type="radio" name="status-3.1" value="P" id="status-3.1-P">
-                                    <label for="status-3.1-P">P</label>
-                                </div>
-                                <div class="status-checkbox">
-                                    <input type="radio" name="status-3.1" value="RQU" id="status-3.1-RQU">
-                                    <label for="status-3.1-RQU">RQU</label>
-                                </div>
-                                <div class="status-checkbox">
-                                    <input type="radio" name="status-3.1" value="RCM" id="status-3.1-RCM">
-                                    <label for="status-3.1-RCM">RCM</label>
-                                </div>
-                                <div class="status-checkbox">
-                                    <input type="radio" name="status-3.1" value="NS" id="status-3.1-NS">
-                                    <label for="status-3.1-NS">NS</label>
-                                </div>
-                                <div class="status-checkbox">
-                                    <input type="radio" name="status-3.1" value="NA" id="status-3.1-NA">
-                                    <label for="status-3.1-NA">NA</label>
-                                </div>
-                            </div>
-                        </td>
-                        <td>
-                            <textarea class="comments-input" name="comments-3.1" placeholder="List the README file below..."></textarea>
-                        </td>
-                        <td><span class="priority-badge priority-require">Require</span></td>
-                        <td><input type="text" class="time-input" name="time-3.1" placeholder="00:00:00"></td>
-                    </tr>
-                    
-                    <tr>
-                        <td colspan="7" class="section-header">4.0 Metadata</td>
-                    </tr>
-                    <tr>
-                        <td class="item-id">4.1</td>
-                        <td class="action-item">Are there any typos in metadata fields?</td>
-                        <td class="instructions">Python scripted. Only checking the following fields: Title, Subtitle, Alternative Title, Description, Notes</td>
-                        <td>
-                            <div class="status-checkboxes">
-                                <div class="status-checkbox">
-                                    <input type="radio" name="status-4.1" value="P" id="status-4.1-P">
-                                    <label for="status-4.1-P">P</label>
-                                </div>
-                                <div class="status-checkbox">
-                                    <input type="radio" name="status-4.1" value="RQU" id="status-4.1-RQU">
-                                    <label for="status-4.1-RQU">RQU</label>
-                                </div>
-                                <div class="status-checkbox">
-                                    <input type="radio" name="status-4.1" value="RCM" id="status-4.1-RCM">
-                                    <label for="status-4.1-RCM">RCM</label>
-                                </div>
-                                <div class="status-checkbox">
-                                    <input type="radio" name="status-4.1" value="NS" id="status-4.1-NS">
-                                    <label for="status-4.1-NS">NS</label>
-                                </div>
-                                <div class="status-checkbox">
-                                    <input type="radio" name="status-4.1" value="NA" id="status-4.1-NA">
-                                    <label for="status-4.1-NA">NA</label>
-                                </div>
-                            </div>
-                        </td>
-                        <td>
-                            <textarea class="comments-input" name="comments-4.1" placeholder="List typos below with the format 'field: typo'..."></textarea>
-                        </td>
-                        <td><span class="priority-badge priority-require">Require</span></td>
-                        <td><input type="text" class="time-input" name="time-4.1" placeholder="00:00:00"></td>
-                    </tr>
-                    
-                    <tr>
-                        <td colspan="7" class="section-header">5.0 Sensitive data and IP</td>
-                    </tr>
-                    <tr>
-                        <td class="item-id">5.1</td>
-                        <td class="action-item">Does the dataset contain any obvious sensitivity issues, such as direct identifiers?</td>
-                        <td class="instructions">Review documentation and file names and see if there are any that should be opened and reviewed</td>
-                        <td>
-                            <div class="status-checkboxes">
-                                <div class="status-checkbox">
-                                    <input type="radio" name="status-5.1" value="P" id="status-5.1-P">
-                                    <label for="status-5.1-P">P</label>
-                                </div>
-                                <div class="status-checkbox">
-                                    <input type="radio" name="status-5.1" value="RQU" id="status-5.1-RQU">
-                                    <label for="status-5.1-RQU">RQU</label>
-                                </div>
-                                <div class="status-checkbox">
-                                    <input type="radio" name="status-5.1" value="RCM" id="status-5.1-RCM">
-                                    <label for="status-5.1-RCM">RCM</label>
-                                </div>
-                                <div class="status-checkbox">
-                                    <input type="radio" name="status-5.1" value="NS" id="status-5.1-NS">
-                                    <label for="status-5.1-NS">NS</label>
-                                </div>
-                                <div class="status-checkbox">
-                                    <input type="radio" name="status-5.1" value="NA" id="status-5.1-NA">
-                                    <label for="status-5.1-NA">NA</label>
-                                </div>
-                            </div>
-                        </td>
-                        <td>
-                            <textarea class="comments-input" name="comments-5.1" placeholder="List fields/files below with the format 'field/file: issue and comments'..."></textarea>
-                        </td>
-                        <td><span class="priority-badge priority-require">Require</span></td>
-                        <td><input type="text" class="time-input" name="time-5.1" placeholder="00:00:00"></td>
-                    </tr>
+                            </td>
+                            <td>
+                                <textarea class="comments-input" name="comments-{{ item.id }}" placeholder="Curator's comments..."></textarea>
+                            </td>
+                            <td><span class="priority-badge priority-{{ item.priority }}">{{ item.priority.title() }}</span></td>
+                            <td><input type="text" class="time-input" name="time-{{ item.id }}" placeholder="00:00:00"></td>
+                        </tr>
+                    {% endfor %}
                     
                     <tr>
                         <td colspan="7" class="section-header">Other Curator's Comment</td>
