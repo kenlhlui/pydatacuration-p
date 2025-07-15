@@ -554,19 +554,29 @@
             </table>
 
             <div class="actions">
-                <button type="submit" class="btn btn-primary">Save Curation Log</button>
-                <button type="button" class="btn btn-secondary" onclick="exportToCSV()">Export to CSV</button>
+                <button type="submit" formaction="/" class="btn btn-primary">Save Curation Log</button>
+                <button type="submit" formaction="/export-csv" formmethod="post" class="btn btn-secondary">Export to CSV</button>
                 <button type="button" class="btn btn-secondary" onclick="printLog()">Print Log</button>
+                <button type="button" class="btn btn-secondary" onclick="exitCuration()">Exit</button>
             </div>
         </form>
     </div>
-
     <script>
-        function exportToCSV() {
-            // Implementation for CSV export
-            alert('CSV export functionality would be implemented here');
+    function exitCuration() {
+        // Confirm exit
+        if (confirm('Are you sure you want to exit? Any unsaved changes will be lost.')) {
+            // Send shutdown request
+            fetch('/shutdown', { method: 'POST' })
+                .then(() => {
+                    // Close the window if possible
+                    window.close();
+                })
+                .catch(err => console.error('Shutdown failed:', err));
         }
-        
+    }
+    </script>
+    <script>
+        // Function to handle the print action
         function printLog() {
             window.print();
         }
@@ -575,8 +585,8 @@
         setInterval(function() {
             const formData = new FormData(document.querySelector('form'));
             localStorage.setItem('curationLog', JSON.stringify(Object.fromEntries(formData)));
-        }, 30000); // Save every 30 seconds
-        
+        }, 10000); // Save every 10 seconds
+
         // Load saved data on page load
         document.addEventListener('DOMContentLoaded', function() {
             const savedData = localStorage.getItem('curationLog');
