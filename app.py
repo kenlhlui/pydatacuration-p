@@ -10,6 +10,7 @@ import io
 import os
 import subprocess
 import asyncio
+from dotenv import load_dotenv
 class ChecklistItem(BaseModel):
     """Model a single checklist item.
 
@@ -57,6 +58,9 @@ class SetupRequest(BaseModel):
 app = FastAPI()
 templates = Jinja2Templates(directory='res')
 
+# Load environment variables
+load_dotenv()
+
 def get_checklist_items():
     """Get all checklist items with their details."""
     return [
@@ -97,7 +101,16 @@ def landing(request: Request) -> HTMLResponse:
     Returns:
         HTMLResponse: setup landing page
     """
-    return templates.TemplateResponse('landing.html', {'request': request})
+    # Get environment variables for prefilling form fields
+    env_data = {
+        'base_url': os.getenv('BASE_URL', ''),
+        'api_token': os.getenv('API_TOKEN', ''),
+    }
+    
+    return templates.TemplateResponse('landing.html', {
+        'request': request,
+        'env_data': env_data
+    })
 
 
 @app.get('/checklist', response_class=HTMLResponse)
