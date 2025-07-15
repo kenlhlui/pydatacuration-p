@@ -153,13 +153,15 @@
                 <div class="form-group">
                     <label for="base_url">Dataverse Base URL *</label>
                     <input type="url" id="base_url" name="base_url" required 
-                           placeholder="https://dataverse.scholarsportal.info">
+                           placeholder="https://dataverse.scholarsportal.info"
+                           value="{{ env_data.base_url }}">
                     <small>Base URL of the Dataverse installation</small>
                 </div>
                 <div class="form-group">
                     <label for="api_token">API Token *</label>
                     <input type="password" id="api_token" name="api_token" required 
-                           placeholder="Enter your Dataverse API token">
+                           placeholder="Enter your Dataverse API token"
+                           value="{{ env_data.api_token }}">
                     <small>Your Dataverse API token (will be hidden)</small>
                 </div>
                 <div class="form-group">
