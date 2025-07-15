@@ -10,6 +10,8 @@ import io
 import os
 import subprocess
 import asyncio
+import json
+from datetime import datetime
 from dotenv import load_dotenv
 class ChecklistItem(BaseModel):
     """Model a single checklist item.
@@ -125,6 +127,64 @@ def checklist(request: Request) -> HTMLResponse:
     """
     items = get_checklist_items()
     return templates.TemplateResponse('index.html', {'request': request, 'items': items})
+
+
+@app.post('/save-checklist')
+async def save_checklist(request: Request) -> JSONResponse:
+    """Save checklist data to JSON file."""
+    form = await request.form()
+    
+    # Create data structure for JSON
+    checklist_data = {
+        'metadata': {
+            'saved_at': datetime.now().isoformat(),
+            'ticket_number': form.get('ticket_number', ''),
+            'curator_name': form.get('curator_name', ''),
+            'curator_email': form.get('curator_email', ''),
+            'dataset_title': form.get('dataset_title', ''),
+            'dataset_pid': form.get('dataset_pid', ''),
+            'dataset_id': form.get('dataset_id', ''),
+            'dataset_url': form.get('dataset_url', ''),
+            'log_generated_date': form.get('log_generated_date', ''),
+            'log_updated_date': form.get('log_updated_date', ''),
+        },
+        'items': []
+    }
+    
+    # Extract checklist items
+    items = get_checklist_items()
+    for item in items:
+        item_data = {
+            'id': item.id,
+            'action': item.action,
+            'instructions': item.instructions,
+            'priority': item.priority,
+            'section': item.section,
+            'status': form.get(f'status-{item.id}', ''),
+            'comments': form.get(f'comments-{item.id}', ''),
+            'time_spent': form.get(f'time-{item.id}', ''),
+        }
+        checklist_data['items'].append(item_data)
+
+    # Add other comments
+    checklist_data['other_comments'] = form.get('comments-other', '')
+
+    # Save to JSON file
+    ticket_number = form.get('ticket_number', 'unknown')
+    filename = f'checklist.json'
+    filepath = os.path.join('output', filename)
+
+    # Create output directory if it doesn't exist
+    os.makedirs('output', exist_ok=True)
+
+    with open(filepath, 'w') as f:
+        json.dump(checklist_data, f, indent=2)
+
+    return JSONResponse(content={
+        'success': True,
+        'message': f'Checklist saved to {filename}',
+        'filepath': filepath
+    })
 
 
 @app.post('/export-csv')
