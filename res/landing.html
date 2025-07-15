@@ -1,0 +1,265 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Data Curation Setup</title>
+    <style>
+        body {
+            font-family: Arial, sans-serif;
+            margin: 20px;
+            background-color: #f5f5f5;
+        }
+        .container {
+            max-width: 800px;
+            margin: 0 auto;
+            background-color: white;
+            padding: 30px;
+            border-radius: 8px;
+            box-shadow: 0 2px 10px rgba(0,0,0,0.1);
+        }
+        h1 {
+            color: #2c3e50;
+            border-bottom: 2px solid #3498db;
+            padding-bottom: 10px;
+            margin-bottom: 30px;
+        }
+        .form-group {
+            margin-bottom: 20px;
+        }
+        label {
+            display: block;
+            font-weight: bold;
+            margin-bottom: 5px;
+            color: #34495e;
+        }
+        input[type="text"], input[type="url"], input[type="email"], input[type="password"], textarea {
+            width: 100%;
+            padding: 10px;
+            border: 1px solid #ddd;
+            border-radius: 4px;
+            font-size: 14px;
+            box-sizing: border-box;
+        }
+        small {
+            color: #666;
+            font-size: 12px;
+            margin-top: 5px;
+            display: block;
+        }
+        textarea {
+            min-height: 100px;
+            resize: vertical;
+        }
+        .checkbox-group {
+            display: flex;
+            flex-wrap: wrap;
+            gap: 15px;
+            margin-top: 10px;
+        }
+        .checkbox-item {
+            display: flex;
+            align-items: center;
+            gap: 5px;
+        }
+        .checkbox-item input[type="checkbox"] {
+            width: auto;
+        }
+        .btn {
+            padding: 12px 30px;
+            border: none;
+            border-radius: 5px;
+            cursor: pointer;
+            font-size: 16px;
+            margin-right: 10px;
+        }
+        .btn-primary {
+            background-color: #3498db;
+            color: white;
+        }
+        .btn-secondary {
+            background-color: #95a5a6;
+            color: white;
+        }
+        .btn:hover {
+            opacity: 0.8;
+        }
+        .actions {
+            margin-top: 30px;
+            text-align: center;
+        }
+        .section {
+            background-color: #ecf0f1;
+            padding: 20px;
+            border-radius: 5px;
+            margin-bottom: 20px;
+        }
+        .section h3 {
+            margin-top: 0;
+            color: #2c3e50;
+        }
+        .loading {
+            display: none;
+            text-align: center;
+            margin-top: 20px;
+        }
+        .loading-spinner {
+            display: inline-block;
+            width: 20px;
+            height: 20px;
+            border: 3px solid #f3f3f3;
+            border-top: 3px solid #3498db;
+            border-radius: 50%;
+            animation: spin 1s linear infinite;
+        }
+        @keyframes spin {
+            0% { transform: rotate(0deg); }
+            100% { transform: rotate(360deg); }
+        }
+        .error {
+            background-color: #e74c3c;
+            color: white;
+            padding: 10px;
+            border-radius: 4px;
+            margin-bottom: 20px;
+            display: none;
+        }
+        .success {
+            background-color: #27ae60;
+            color: white;
+            padding: 10px;
+            border-radius: 4px;
+            margin-bottom: 20px;
+            display: none;
+        }
+    </style>
+</head>
+<body>
+    <div class="container">
+        <h1>Data Curation Setup</h1>
+        
+        <div id="error-message" class="error"></div>
+        <div id="success-message" class="success"></div>
+
+        <form id="setup-form">
+            <div class="section">
+                <h3>Dataset Information</h3>
+                <div class="form-group">
+                    <label for="pid">Dataset Persistent Identifier (PID) *</label>
+                    <input type="text" id="pid" name="pid" required 
+                           placeholder="doi:10.5683/SP2/... or hdl:1902.1/...">
+                    <small>Enter the DOI or Handle of the dataset</small>
+                </div>
+                <div class="form-group">
+                    <label for="base_url">Dataverse Base URL *</label>
+                    <input type="url" id="base_url" name="base_url" required 
+                           placeholder="https://dataverse.scholarsportal.info">
+                    <small>Base URL of the Dataverse installation</small>
+                </div>
+                <div class="form-group">
+                    <label for="api_token">API Token *</label>
+                    <input type="password" id="api_token" name="api_token" required 
+                           placeholder="Enter your Dataverse API token">
+                    <small>Your Dataverse API token (will be hidden)</small>
+                </div>
+                <div class="form-group">
+                    <label for="ticket_number">Ticket Number *</label>
+                    <input type="text" id="ticket_number" name="ticket_number" required 
+                           placeholder="TICKET-123">
+                    <small>Ticket number for the curation report (will be used as directory name)</small>
+                </div>
+            </div>
+
+            <div class="section">
+                <h3>Working Directory Settings</h3>
+                <div class="form-group">
+                    <label for="parent_dir">Parent Directory</label>
+                    <input type="text" id="parent_dir" name="parent_dir" 
+                           placeholder="workdir" value="workdir">
+                    <small>Working directory (default: workdir)</small>
+                </div>
+                <div class="checkbox-group">
+                    <div class="checkbox-item">
+                        <input type="checkbox" id="force_del" name="force_del" value="true">
+                        <label for="force_del">Force delete existing directory</label>
+                    </div>
+                </div>
+            </div>
+
+            <div class="section">
+                <h3>Processing Options</h3>
+                <div class="checkbox-group">
+                    <div class="checkbox-item">
+                        <input type="checkbox" id="check_zip" name="check_zip" value="true" checked>
+                        <label for="check_zip">Unzip and check contents of zip files</label>
+                    </div>
+                </div>
+            </div>
+
+            <div class="actions">
+                <button type="submit" class="btn btn-primary">Start Curation Process</button>
+                <button type="button" class="btn btn-secondary" onclick="resetForm()">Reset Form</button>
+            </div>
+        </form>
+
+        <div class="loading" id="loading">
+            <div class="loading-spinner"></div>
+            <p>Running curation process...</p>
+        </div>
+    </div>
+
+    <script>
+        document.getElementById('setup-form').addEventListener('submit', async function(e) {
+            e.preventDefault();
+            
+            const formData = new FormData(this);
+            const data = Object.fromEntries(formData);
+            
+            // Handle checkbox groups
+            const checks = formData.getAll('checks');
+            data.checks = checks;
+            
+            // Show loading
+            document.getElementById('loading').style.display = 'block';
+            document.getElementById('error-message').style.display = 'none';
+            document.getElementById('success-message').style.display = 'none';
+            
+            try {
+                const response = await fetch('/setup', {
+                    method: 'POST',
+                    headers: {
+                        'Content-Type': 'application/json',
+                    },
+                    body: JSON.stringify(data)
+                });
+                
+                const result = await response.json();
+                
+                if (response.ok) {
+                    document.getElementById('success-message').textContent = 'Curation process completed successfully!';
+                    document.getElementById('success-message').style.display = 'block';
+                    
+                    // Redirect to checklist page after 2 seconds
+                    setTimeout(() => {
+                        window.location.href = '/checklist';
+                    }, 2000);
+                } else {
+                    document.getElementById('error-message').textContent = result.detail || 'An error occurred';
+                    document.getElementById('error-message').style.display = 'block';
+                }
+            } catch (error) {
+                document.getElementById('error-message').textContent = 'Network error: ' + error.message;
+                document.getElementById('error-message').style.display = 'block';
+            } finally {
+                document.getElementById('loading').style.display = 'none';
+            }
+        });
+
+        function resetForm() {
+            document.getElementById('setup-form').reset();
+            document.getElementById('error-message').style.display = 'none';
+            document.getElementById('success-message').style.display = 'none';
+        }
+    </script>
+</body>
+</html>
