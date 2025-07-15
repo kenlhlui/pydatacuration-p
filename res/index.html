@@ -243,7 +243,7 @@
                         <th>Time Spent</th>
                     </tr>
                 </thead>
-                <tbody>
+                <tbody>  <!-- Use the Jinja2 syntax here for loops with get_checklist_items() -->
                     {% set current_section = '' %}
                     {% for item in items %}
                         {% if item.section != current_section %}
