@@ -8,24 +8,57 @@ from fastapi.responses import Response
 import csv
 import io
 import os
-class ChecklistRow(BaseModel):
-    """Model a single checklist row.
+class ChecklistItem(BaseModel):
+    """Model a single checklist item.
 
     Args:
-        id (str): row identifier
+        id (str): item identifier
         action (str): description of the action
-        comments (str): free-text notes (optional)
+        instructions (str): detailed instructions
+        priority (str): priority level
+        section (str): section this item belongs to (optional)
 
     Returns:
         None: data container
     """
     id: str
     action: str
-    comments: str = ''
+    instructions: str
+    priority: str
+    section: str = ''
 
 
 app = FastAPI()
 templates = Jinja2Templates(directory='res')
+
+def get_checklist_items():
+    """Get all checklist items with their details."""
+    return [
+        ChecklistItem(id='1.1', action='Is the dataset deposited directly into U of T Dataverse?', 
+                     instructions='Python scripted. If the dataset is deposited in a sub-dataverse collection, include the name of the collection.', 
+                     priority='info', section='1.0 Structure of deposit'),
+        ChecklistItem(id='1.2', action='Has the depositor (or their research group) previously created or submitted to a dataverse collection?', 
+                     instructions='Python scripted. Confirm whether the listed dataverse collection refers to the same researcher/author', 
+                     priority='info', section='1.0 Structure of deposit'),
+        ChecklistItem(id='1.3', action='If the dataset was deposited in a sub-dataverse collection, does it require its own dataverse or is there an associated dataverse?', 
+                     instructions='If the depositor created a dataverse with one dataset: Is it the only dataset in the sub-dataverse collection? Is there another sub-dataverse collection it should be in?', 
+                     priority='require', section='1.0 Structure of deposit'),
+        ChecklistItem(id='2.1b', action='Do all the files open properly?', 
+                     instructions='Semi-automated using Python scripts. For files that cannot be opened programmatically - if we have the program, open min. 5 of each type of file.', 
+                     priority='require', section='2.0 Files'),
+        ChecklistItem(id='2.2', action='Are all files free of the following special characters (<>:"/\\|?*,@$~)?', 
+                     instructions='Python scripted.', 
+                     priority='recommend', section='2.0 Files'),
+        ChecklistItem(id='3.1', action='Does the dataset include a separate README file?', 
+                     instructions='Python scripted. Read the `ds_tree.txt` file in the log_files folder to identify whether there is a README file, but it is not named with \'README\'', 
+                     priority='require', section='3.0 Documentation'),
+        ChecklistItem(id='4.1', action='Are there any typos in metadata fields?', 
+                     instructions='Python scripted. Only checking the following fields: Title, Subtitle, Alternative Title, Description, Notes', 
+                     priority='require', section='4.0 Metadata'),
+        ChecklistItem(id='5.1', action='Does the dataset contain any obvious sensitivity issues, such as direct identifiers?', 
+                     instructions='Review documentation and file names and see if there are any that should be opened and reviewed', 
+                     priority='require', section='5.0 Sensitive data and IP'),
+    ]
 
 @app.get('/', response_class=HTMLResponse)
 def index(request: Request) -> HTMLResponse:
@@ -37,11 +70,8 @@ def index(request: Request) -> HTMLResponse:
     Returns:
         HTMLResponse: page with checklist table
     """
-    rows: List[ChecklistRow] = [
-        ChecklistRow(id='1.1', action='Verify dataset in Dataverse'),
-        ChecklistRow(id='1.2', action='Check metadata completeness', comments='Review schema.org mapping'),
-    ]
-    return templates.TemplateResponse('index.html', {'request': request, 'rows': rows})
+    items = get_checklist_items()
+    return templates.TemplateResponse('index.html', {'request': request, 'items': items})
 
 
 @app.post('/export-csv')
