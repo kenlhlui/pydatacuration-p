@@ -1,6 +1,6 @@
-from typing import List
-from fastapi import FastAPI, Request
-from fastapi.responses import HTMLResponse
+from typing import List, Optional
+from fastapi import FastAPI, Request, HTTPException
+from fastapi.responses import HTMLResponse, JSONResponse
 from fastapi.templating import Jinja2Templates
 from pydantic import BaseModel
 from fastapi import Request
@@ -8,6 +8,8 @@ from fastapi.responses import Response
 import csv
 import io
 import os
+import subprocess
+import asyncio
 class ChecklistItem(BaseModel):
     """Model a single checklist item.
 
@@ -26,6 +28,30 @@ class ChecklistItem(BaseModel):
     instructions: str
     priority: str
     section: str = ''
+
+
+class SetupRequest(BaseModel):
+    """Model for the setup form data matching CLI parameters.
+
+    Args:
+        pid (str): Persistent Identifier of the dataset
+        base_url (str): Base URL of the Dataverse installation
+        api_token (str): API token for the Dataverse installation
+        ticket_number (str): Ticket number for the curation report
+        parent_dir (str): Working directory path
+        force_del (bool): Force delete existing directory
+        check_zip (bool): Unzip and check contents of zip files
+
+    Returns:
+        None: data container
+    """
+    pid: str
+    base_url: Optional[str] = None
+    api_token: Optional[str] = None
+    ticket_number: str
+    parent_dir: str = "workdir"
+    force_del: bool = False
+    check_zip: bool = True
 
 
 app = FastAPI()
@@ -53,7 +79,8 @@ def get_checklist_items():
                      instructions='Python scripted. Read the `ds_tree.txt` file in the log_files folder to identify whether there is a README file, but it is not named with \'README\'', 
                      priority='require', section='3.0 Documentation'),
         ChecklistItem(id='4.1', action='Are there any typos in metadata fields?', 
-                     instructions='Python scripted. Only checking the following fields: Title, Subtitle, Alternative Title, Description, Notes', 
+                     instructions="""Python scripted. Only checking the following fields:\n1. Title, 2. Subtitle, 3. Alternative Title, 4. Description, 5. Notes
+                     """,
                      priority='require', section='4.0 Metadata'),
         ChecklistItem(id='5.1', action='Does the dataset contain any obvious sensitivity issues, such as direct identifiers?', 
                      instructions='Review documentation and file names and see if there are any that should be opened and reviewed', 
@@ -61,7 +88,20 @@ def get_checklist_items():
     ]
 
 @app.get('/', response_class=HTMLResponse)
-def index(request: Request) -> HTMLResponse:
+def landing(request: Request) -> HTMLResponse:
+    """Render the landing page for setup.
+
+    Args:
+        request (Request): incoming HTTP request
+
+    Returns:
+        HTMLResponse: setup landing page
+    """
+    return templates.TemplateResponse('landing.html', {'request': request})
+
+
+@app.get('/checklist', response_class=HTMLResponse)
+def checklist(request: Request) -> HTMLResponse:
     """Render the checklist UI with a table.
 
     Args:
@@ -102,6 +142,109 @@ async def export_csv(request: Request) -> Response:
         media_type='text/csv',
         headers={'Content-Disposition': 'attachment; filename="curation_log.csv"'}
     )
+
+
+async def run_command(command: str, cwd: str = None) -> dict:
+    """Run a command and return the result.
+    
+    Args:
+        command (str): Command to run
+        cwd (str): Working directory
+        
+    Returns:
+        dict: Command result with stdout, stderr, and return code
+    """
+    try:
+        process = await asyncio.create_subprocess_shell(
+            command,
+            stdout=asyncio.subprocess.PIPE,
+            stderr=asyncio.subprocess.PIPE,
+            cwd=cwd
+        )
+        stdout, stderr = await process.communicate()
+        
+        return {
+            'stdout': stdout.decode(),
+            'stderr': stderr.decode(),
+            'return_code': process.returncode,
+            'success': process.returncode == 0
+        }
+    except Exception as e:
+        return {
+            'stdout': '',
+            'stderr': str(e),
+            'return_code': -1,
+            'success': False
+        }
+
+
+@app.post('/setup')
+async def setup(request: SetupRequest) -> JSONResponse:
+    """Process the setup form and run pydatacuration CLI command.
+    
+    Args:
+        request (SetupRequest): Setup form data matching CLI parameters
+        
+    Returns:
+        JSONResponse: Result of the curation process
+    """
+    try:
+        # Build the command to run pydatacuration CLI
+        cmd_parts = [
+            'python', '-m', 'pydatacuration.main', 'gen-curation-report',
+            '--pid', f'"{request.pid}"',
+            '--ticket-number', f'"{request.ticket_number}"',
+            '--parent-dir', f'"{request.parent_dir}"'
+        ]
+        print(f'{os.getcwd()}')
+        # Add base URL if provided
+        if request.base_url:
+            cmd_parts.extend(['--base-url', f'"{request.base_url}"'])
+
+        # Add API token if provided
+        if request.api_token:
+            cmd_parts.extend(['--api-token', f'"{request.api_token}"'])
+
+        # Add optional flags
+        if request.force_del:
+            cmd_parts.append('--force-del')
+        else:
+            cmd_parts.append('--no-force-del')
+
+        # Join command parts
+        cmd = ' '.join(cmd_parts)
+
+        # Run the command
+        result = await run_command(cmd)
+
+        if result['success']:
+            return JSONResponse(content={
+                'success': True,
+                'message': 'Curation report generated successfully',
+                'output': result['stdout'],
+                'command': cmd
+            })
+        else:
+            return JSONResponse(
+                status_code=400,
+                content={
+                    'success': False,
+                    'message': 'Curation command failed',
+                    'error': result['stderr'],
+                    'output': result['stdout'],
+                    'command': cmd,
+                    'return_code': result['return_code']
+                }
+            )
+
+    except Exception as e:
+        return JSONResponse(
+            status_code=500,
+            content={
+                'success': False,
+                'message': f'Error during setup: {str(e)}'
+            }
+        )
 
 
 @app.post('/shutdown')
