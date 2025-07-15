@@ -1,0 +1,599 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>High Level Curation Log</title>
+    <style>
+        body {
+            font-family: Arial, sans-serif;
+            margin: 20px;
+            background-color: #f5f5f5;
+        }
+        .container {
+            max-width: 1200px;
+            margin: 0 auto;
+            background-color: white;
+            padding: 20px;
+            border-radius: 8px;
+            box-shadow: 0 2px 10px rgba(0,0,0,0.1);
+        }
+        h1 {
+            color: #2c3e50;
+            border-bottom: 2px solid #3498db;
+            padding-bottom: 10px;
+            margin-bottom: 20px;
+        }
+        .info-section {
+            background-color: #ecf0f1;
+            padding: 15px;
+            border-radius: 5px;
+            margin-bottom: 20px;
+        }
+        .info-grid {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(300px, 1fr));
+            gap: 10px;
+        }
+        .info-item {
+            display: flex;
+            margin-bottom: 8px;
+        }
+        .info-label {
+            font-weight: bold;
+            min-width: 150px;
+        }
+        .status-legend {
+            background-color: #fff3cd;
+            padding: 10px;
+            border-radius: 5px;
+            margin-bottom: 20px;
+            border-left: 4px solid #ffc107;
+        }
+        .status-legend h3 {
+            margin-top: 0;
+            color: #856404;
+        }
+        .status-list {
+            display: flex;
+            flex-wrap: wrap;
+            gap: 15px;
+        }
+        .status-item {
+            font-size: 14px;
+        }
+        .status-code {
+            font-weight: bold;
+            color: #495057;
+        }
+        .checklist-table {
+            width: 100%;
+            border-collapse: collapse;
+            margin-bottom: 20px;
+        }
+        .checklist-table th, .checklist-table td {
+            border: 1px solid #ddd;
+            padding: 8px;
+            text-align: left;
+            vertical-align: top;
+        }
+        .checklist-table th {
+            background-color: #f8f9fa;
+            font-weight: bold;
+            position: sticky;
+            top: 0;
+        }
+        .section-header {
+            background-color: #3498db;
+            color: white;
+            font-weight: bold;
+            text-align: center;
+        }
+        .item-id {
+            font-weight: bold;
+            width: 60px;
+        }
+        .action-item {
+            width: 40%;
+        }
+        .instructions {
+            width: 30%;
+            font-size: 12px;
+            color: #666;
+        }
+        .status-checkboxes {
+            display: flex;
+            gap: 10px;
+            flex-wrap: wrap;
+        }
+        .status-checkbox {
+            display: flex;
+            align-items: center;
+            gap: 3px;
+        }
+        .status-checkbox input[type="radio"] {
+            margin: 0;
+        }
+        .status-checkbox label {
+            font-size: 12px;
+            font-weight: bold;
+        }
+        .comments-input {
+            width: 100%;
+            min-height: 60px;
+            padding: 5px;
+            border: 1px solid #ddd;
+            border-radius: 3px;
+            font-family: Arial, sans-serif;
+            font-size: 12px;
+        }
+        .priority-badge {
+            display: inline-block;
+            padding: 2px 8px;
+            border-radius: 12px;
+            font-size: 11px;
+            font-weight: bold;
+            color: white;
+        }
+        .priority-require { background-color: #e74c3c; }
+        .priority-recommend { background-color: #f39c12; }
+        .priority-info { background-color: #3498db; }
+        .time-input {
+            width: 80px;
+            padding: 3px;
+            border: 1px solid #ddd;
+            border-radius: 3px;
+            font-family: monospace;
+        }
+        .pre-filled {
+            background-color: #e8f5e8;
+            font-style: italic;
+        }
+        .actions {
+            margin-top: 20px;
+            text-align: center;
+        }
+        .btn {
+            padding: 10px 20px;
+            margin: 0 5px;
+            border: none;
+            border-radius: 5px;
+            cursor: pointer;
+            font-size: 14px;
+        }
+        .btn-primary {
+            background-color: #3498db;
+            color: white;
+        }
+        .btn-secondary {
+            background-color: #95a5a6;
+            color: white;
+        }
+        .btn:hover {
+            opacity: 0.8;
+        }
+    </style>
+</head>
+<body>
+    <div class="container">
+        <h1>High Level Curation Log</h1>
+        
+        <div class="info-section">
+            <div class="info-grid">
+                <div class="info-item">
+                    <span class="info-label">Ticket number:</span>
+                    <input type="text" name="ticket_number" placeholder="Enter ticket number">
+                </div>
+                <div class="info-item">
+                    <span class="info-label">Curator name:</span>
+                    <input type="text" name="curator_name" placeholder="Enter curator name">
+                </div>
+                <div class="info-item">
+                    <span class="info-label">Curator email:</span>
+                    <input type="email" name="curator_email" placeholder="Enter curator email">
+                </div>
+                <div class="info-item">
+                    <span class="info-label">Dataset title:</span>
+                    <input type="text" name="dataset_title" placeholder="Enter dataset title">
+                </div>
+                <div class="info-item">
+                    <span class="info-label">Dataset persistent identifier:</span>
+                    <input type="text" name="dataset_pid" placeholder="Enter dataset PID">
+                </div>
+                <div class="info-item">
+                    <span class="info-label">Dataset ID (versioned):</span>
+                    <input type="text" name="dataset_id" placeholder="Enter dataset ID">
+                </div>
+                <div class="info-item">
+                    <span class="info-label">Dataset access URL:</span>
+                    <input type="url" name="dataset_url" placeholder="Enter dataset URL">
+                </div>
+                <div class="info-item">
+                    <span class="info-label">Log initial generated date:</span>
+                    <input type="date" name="log_generated_date">
+                </div>
+                <div class="info-item">
+                    <span class="info-label">Log last updated date:</span>
+                    <input type="date" name="log_updated_date">
+                </div>
+            </div>
+        </div>
+
+        <div class="status-legend">
+            <h3>Status Explanation</h3>
+            <div class="status-list">
+                <div class="status-item"><span class="status-code">P:</span> Passed</div>
+                <div class="status-item"><span class="status-code">RQU:</span> Required Follow-up</div>
+                <div class="status-item"><span class="status-code">RCM:</span> Recommend Follow-up</div>
+                <div class="status-item"><span class="status-code">NS:</span> Not Sure</div>
+                <div class="status-item"><span class="status-code">NA:</span> Not applicable</div>
+            </div>
+        </div>
+
+        <form action="#" method="post">
+            <table class="checklist-table">
+                <thead>
+                    <tr>
+                        <th>ID</th>
+                        <th>Action Item</th>
+                        <th>Instructions</th>
+                        <th>Status</th>
+                        <th>Curator's Comments</th>
+                        <th>Priority</th>
+                        <th>Time Spent</th>
+                    </tr>
+                </thead>
+                <tbody>
+                    <tr>
+                        <td colspan="7" class="section-header">1.0 Structure of deposit</td>
+                    </tr>
+                    <tr>
+                        <td class="item-id">1.1</td>
+                        <td class="action-item">Is the dataset deposited directly into U of T Dataverse?</td>
+                        <td class="instructions">Python scripted. If the dataset is deposited in a sub-dataverse collection, include the name of the collection.</td>
+                        <td>
+                            <div class="status-checkboxes">
+                                <div class="status-checkbox">
+                                    <input type="radio" name="status-1.1" value="P" id="status-1.1-P">
+                                    <label for="status-1.1-P">P</label>
+                                </div>
+                                <div class="status-checkbox">
+                                    <input type="radio" name="status-1.1" value="RQU" id="status-1.1-RQU">
+                                    <label for="status-1.1-RQU">RQU</label>
+                                </div>
+                                <div class="status-checkbox">
+                                    <input type="radio" name="status-1.1" value="RCM" id="status-1.1-RCM">
+                                    <label for="status-1.1-RCM">RCM</label>
+                                </div>
+                                <div class="status-checkbox">
+                                    <input type="radio" name="status-1.1" value="NS" id="status-1.1-NS">
+                                    <label for="status-1.1-NS">NS</label>
+                                </div>
+                                <div class="status-checkbox">
+                                    <input type="radio" name="status-1.1" value="NA" id="status-1.1-NA">
+                                    <label for="status-1.1-NA">NA</label>
+                                </div>
+                            </div>
+                        </td>
+                        <td>
+                            <textarea class="comments-input" name="comments-1.1" placeholder="List the dataset (full) path in the Dataverse repository..."></textarea>
+                        </td>
+                        <td><span class="priority-badge priority-info">Info</span></td>
+                        <td><input type="text" class="time-input" name="time-1.1" placeholder="00:00:00"></td>
+                    </tr>
+                    <tr>
+                        <td class="item-id">1.2</td>
+                        <td class="action-item">Has the depositor (or their research group) previously created or submitted to a dataverse collection?</td>
+                        <td class="instructions">Python scripted. Confirm whether the listed dataverse collection refers to the same researcher/author</td>
+                        <td>
+                            <div class="status-checkboxes">
+                                <div class="status-checkbox">
+                                    <input type="radio" name="status-1.2" value="P" id="status-1.2-P">
+                                    <label for="status-1.2-P">P</label>
+                                </div>
+                                <div class="status-checkbox">
+                                    <input type="radio" name="status-1.2" value="RQU" id="status-1.2-RQU">
+                                    <label for="status-1.2-RQU">RQU</label>
+                                </div>
+                                <div class="status-checkbox">
+                                    <input type="radio" name="status-1.2" value="RCM" id="status-1.2-RCM">
+                                    <label for="status-1.2-RCM">RCM</label>
+                                </div>
+                                <div class="status-checkbox">
+                                    <input type="radio" name="status-1.2" value="NS" id="status-1.2-NS">
+                                    <label for="status-1.2-NS">NS</label>
+                                </div>
+                                <div class="status-checkbox">
+                                    <input type="radio" name="status-1.2" value="NA" id="status-1.2-NA">
+                                    <label for="status-1.2-NA">NA</label>
+                                </div>
+                            </div>
+                        </td>
+                        <td>
+                            <textarea class="comments-input" name="comments-1.2" placeholder="List all Dataverse collections that contain the depositors' dataset..."></textarea>
+                        </td>
+                        <td><span class="priority-badge priority-info">Info</span></td>
+                        <td><input type="text" class="time-input" name="time-1.2" placeholder="00:00:00"></td>
+                    </tr>
+                    <tr>
+                        <td class="item-id">1.3</td>
+                        <td class="action-item">If the dataset was deposited in a sub-dataverse collection, does it require its own dataverse or is there an associated dataverse?</td>
+                        <td class="instructions">If the depositor created a dataverse with one dataset: Is it the only dataset in the sub-dataverse collection? Is there another sub-dataverse collection it should be in?</td>
+                        <td>
+                            <div class="status-checkboxes">
+                                <div class="status-checkbox">
+                                    <input type="radio" name="status-1.3" value="P" id="status-1.3-P">
+                                    <label for="status-1.3-P">P</label>
+                                </div>
+                                <div class="status-checkbox">
+                                    <input type="radio" name="status-1.3" value="RQU" id="status-1.3-RQU">
+                                    <label for="status-1.3-RQU">RQU</label>
+                                </div>
+                                <div class="status-checkbox">
+                                    <input type="radio" name="status-1.3" value="RCM" id="status-1.3-RCM">
+                                    <label for="status-1.3-RCM">RCM</label>
+                                </div>
+                                <div class="status-checkbox">
+                                    <input type="radio" name="status-1.3" value="NS" id="status-1.3-NS">
+                                    <label for="status-1.3-NS">NS</label>
+                                </div>
+                                <div class="status-checkbox">
+                                    <input type="radio" name="status-1.3" value="NA" id="status-1.3-NA">
+                                    <label for="status-1.3-NA">NA</label>
+                                </div>
+                            </div>
+                        </td>
+                        <td>
+                            <textarea class="comments-input" name="comments-1.3" placeholder="Curator's comments..."></textarea>
+                        </td>
+                        <td><span class="priority-badge priority-require">Require</span></td>
+                        <td><input type="text" class="time-input" name="time-1.3" placeholder="00:00:00"></td>
+                    </tr>
+                    
+                    <tr>
+                        <td colspan="7" class="section-header">2.0 Files</td>
+                    </tr>
+                    <tr>
+                        <td class="item-id">2.1b</td>
+                        <td class="action-item">Do all the files open properly?</td>
+                        <td class="instructions">Semi-automated using Python scripts. For files that cannot be opened programmatically - if we have the program, open min. 5 of each type of file.</td>
+                        <td>
+                            <div class="status-checkboxes">
+                                <div class="status-checkbox">
+                                    <input type="radio" name="status-2.1b" value="P" id="status-2.1b-P">
+                                    <label for="status-2.1b-P">P</label>
+                                </div>
+                                <div class="status-checkbox">
+                                    <input type="radio" name="status-2.1b" value="RQU" id="status-2.1b-RQU">
+                                    <label for="status-2.1b-RQU">RQU</label>
+                                </div>
+                                <div class="status-checkbox">
+                                    <input type="radio" name="status-2.1b" value="RCM" id="status-2.1b-RCM">
+                                    <label for="status-2.1b-RCM">RCM</label>
+                                </div>
+                                <div class="status-checkbox">
+                                    <input type="radio" name="status-2.1b" value="NS" id="status-2.1b-NS">
+                                    <label for="status-2.1b-NS">NS</label>
+                                </div>
+                                <div class="status-checkbox">
+                                    <input type="radio" name="status-2.1b" value="NA" id="status-2.1b-NA">
+                                    <label for="status-2.1b-NA">NA</label>
+                                </div>
+                            </div>
+                        </td>
+                        <td>
+                            <textarea class="comments-input" name="comments-2.1b" placeholder="List all files that did not open correctly..."></textarea>
+                        </td>
+                        <td><span class="priority-badge priority-require">Require</span></td>
+                        <td><input type="text" class="time-input" name="time-2.1b" placeholder="00:00:00"></td>
+                    </tr>
+                    <tr>
+                        <td class="item-id">2.2</td>
+                        <td class="action-item">Are all files free of the following special characters (<>:"/\|?*,@$~)?</td>
+                        <td class="instructions">Python scripted.</td>
+                        <td>
+                            <div class="status-checkboxes">
+                                <div class="status-checkbox">
+                                    <input type="radio" name="status-2.2" value="P" id="status-2.2-P">
+                                    <label for="status-2.2-P">P</label>
+                                </div>
+                                <div class="status-checkbox">
+                                    <input type="radio" name="status-2.2" value="RQU" id="status-2.2-RQU">
+                                    <label for="status-2.2-RQU">RQU</label>
+                                </div>
+                                <div class="status-checkbox">
+                                    <input type="radio" name="status-2.2" value="RCM" id="status-2.2-RCM">
+                                    <label for="status-2.2-RCM">RCM</label>
+                                </div>
+                                <div class="status-checkbox">
+                                    <input type="radio" name="status-2.2" value="NS" id="status-2.2-NS">
+                                    <label for="status-2.2-NS">NS</label>
+                                </div>
+                                <div class="status-checkbox">
+                                    <input type="radio" name="status-2.2" value="NA" id="status-2.2-NA">
+                                    <label for="status-2.2-NA">NA</label>
+                                </div>
+                            </div>
+                        </td>
+                        <td>
+                            <textarea class="comments-input" name="comments-2.2" placeholder="List all files that contain special characters..."></textarea>
+                        </td>
+                        <td><span class="priority-badge priority-recommend">Recommend</span></td>
+                        <td><input type="text" class="time-input" name="time-2.2" placeholder="00:00:00"></td>
+                    </tr>
+                    
+                    <tr>
+                        <td colspan="7" class="section-header">3.0 Documentation</td>
+                    </tr>
+                    <tr>
+                        <td class="item-id">3.1</td>
+                        <td class="action-item">Does the dataset include a separate README file?</td>
+                        <td class="instructions">Python scripted. Read the `ds_tree.txt` file in the log_files folder to identify whether there is a README file, but it is not named with 'README'</td>
+                        <td>
+                            <div class="status-checkboxes">
+                                <div class="status-checkbox">
+                                    <input type="radio" name="status-3.1" value="P" id="status-3.1-P">
+                                    <label for="status-3.1-P">P</label>
+                                </div>
+                                <div class="status-checkbox">
+                                    <input type="radio" name="status-3.1" value="RQU" id="status-3.1-RQU">
+                                    <label for="status-3.1-RQU">RQU</label>
+                                </div>
+                                <div class="status-checkbox">
+                                    <input type="radio" name="status-3.1" value="RCM" id="status-3.1-RCM">
+                                    <label for="status-3.1-RCM">RCM</label>
+                                </div>
+                                <div class="status-checkbox">
+                                    <input type="radio" name="status-3.1" value="NS" id="status-3.1-NS">
+                                    <label for="status-3.1-NS">NS</label>
+                                </div>
+                                <div class="status-checkbox">
+                                    <input type="radio" name="status-3.1" value="NA" id="status-3.1-NA">
+                                    <label for="status-3.1-NA">NA</label>
+                                </div>
+                            </div>
+                        </td>
+                        <td>
+                            <textarea class="comments-input" name="comments-3.1" placeholder="List the README file below..."></textarea>
+                        </td>
+                        <td><span class="priority-badge priority-require">Require</span></td>
+                        <td><input type="text" class="time-input" name="time-3.1" placeholder="00:00:00"></td>
+                    </tr>
+                    
+                    <tr>
+                        <td colspan="7" class="section-header">4.0 Metadata</td>
+                    </tr>
+                    <tr>
+                        <td class="item-id">4.1</td>
+                        <td class="action-item">Are there any typos in metadata fields?</td>
+                        <td class="instructions">Python scripted. Only checking the following fields: Title, Subtitle, Alternative Title, Description, Notes</td>
+                        <td>
+                            <div class="status-checkboxes">
+                                <div class="status-checkbox">
+                                    <input type="radio" name="status-4.1" value="P" id="status-4.1-P">
+                                    <label for="status-4.1-P">P</label>
+                                </div>
+                                <div class="status-checkbox">
+                                    <input type="radio" name="status-4.1" value="RQU" id="status-4.1-RQU">
+                                    <label for="status-4.1-RQU">RQU</label>
+                                </div>
+                                <div class="status-checkbox">
+                                    <input type="radio" name="status-4.1" value="RCM" id="status-4.1-RCM">
+                                    <label for="status-4.1-RCM">RCM</label>
+                                </div>
+                                <div class="status-checkbox">
+                                    <input type="radio" name="status-4.1" value="NS" id="status-4.1-NS">
+                                    <label for="status-4.1-NS">NS</label>
+                                </div>
+                                <div class="status-checkbox">
+                                    <input type="radio" name="status-4.1" value="NA" id="status-4.1-NA">
+                                    <label for="status-4.1-NA">NA</label>
+                                </div>
+                            </div>
+                        </td>
+                        <td>
+                            <textarea class="comments-input" name="comments-4.1" placeholder="List typos below with the format 'field: typo'..."></textarea>
+                        </td>
+                        <td><span class="priority-badge priority-require">Require</span></td>
+                        <td><input type="text" class="time-input" name="time-4.1" placeholder="00:00:00"></td>
+                    </tr>
+                    
+                    <tr>
+                        <td colspan="7" class="section-header">5.0 Sensitive data and IP</td>
+                    </tr>
+                    <tr>
+                        <td class="item-id">5.1</td>
+                        <td class="action-item">Does the dataset contain any obvious sensitivity issues, such as direct identifiers?</td>
+                        <td class="instructions">Review documentation and file names and see if there are any that should be opened and reviewed</td>
+                        <td>
+                            <div class="status-checkboxes">
+                                <div class="status-checkbox">
+                                    <input type="radio" name="status-5.1" value="P" id="status-5.1-P">
+                                    <label for="status-5.1-P">P</label>
+                                </div>
+                                <div class="status-checkbox">
+                                    <input type="radio" name="status-5.1" value="RQU" id="status-5.1-RQU">
+                                    <label for="status-5.1-RQU">RQU</label>
+                                </div>
+                                <div class="status-checkbox">
+                                    <input type="radio" name="status-5.1" value="RCM" id="status-5.1-RCM">
+                                    <label for="status-5.1-RCM">RCM</label>
+                                </div>
+                                <div class="status-checkbox">
+                                    <input type="radio" name="status-5.1" value="NS" id="status-5.1-NS">
+                                    <label for="status-5.1-NS">NS</label>
+                                </div>
+                                <div class="status-checkbox">
+                                    <input type="radio" name="status-5.1" value="NA" id="status-5.1-NA">
+                                    <label for="status-5.1-NA">NA</label>
+                                </div>
+                            </div>
+                        </td>
+                        <td>
+                            <textarea class="comments-input" name="comments-5.1" placeholder="List fields/files below with the format 'field/file: issue and comments'..."></textarea>
+                        </td>
+                        <td><span class="priority-badge priority-require">Require</span></td>
+                        <td><input type="text" class="time-input" name="time-5.1" placeholder="00:00:00"></td>
+                    </tr>
+                    
+                    <tr>
+                        <td colspan="7" class="section-header">Other Curator's Comment</td>
+                    </tr>
+                    <tr>
+                        <td class="item-id">-</td>
+                        <td class="action-item">Additional comments or observations</td>
+                        <td class="instructions">Any additional notes or observations not covered in the structured checklist</td>
+                        <td>-</td>
+                        <td>
+                            <textarea class="comments-input" name="comments-other" placeholder="Additional curator comments..."></textarea>
+                        </td>
+                        <td>-</td>
+                        <td>-</td>
+                    </tr>
+                </tbody>
+            </table>
+
+            <div class="actions">
+                <button type="submit" class="btn btn-primary">Save Curation Log</button>
+                <button type="button" class="btn btn-secondary" onclick="exportToCSV()">Export to CSV</button>
+                <button type="button" class="btn btn-secondary" onclick="printLog()">Print Log</button>
+            </div>
+        </form>
+    </div>
+
+    <script>
+        function exportToCSV() {
+            // Implementation for CSV export
+            alert('CSV export functionality would be implemented here');
+        }
+        
+        function printLog() {
+            window.print();
+        }
+        
+        // Auto-save functionality
+        setInterval(function() {
+            const formData = new FormData(document.querySelector('form'));
+            localStorage.setItem('curationLog', JSON.stringify(Object.fromEntries(formData)));
+        }, 30000); // Save every 30 seconds
+        
+        // Load saved data on page load
+        document.addEventListener('DOMContentLoaded', function() {
+            const savedData = localStorage.getItem('curationLog');
+            if (savedData) {
+                const data = JSON.parse(savedData);
+                Object.keys(data).forEach(key => {
+                    const element = document.querySelector(`[name="${key}"]`);
+                    if (element) {
+                        if (element.type === 'radio') {
+                            document.querySelector(`[name="${key}"][value="${data[key]}"]`).checked = true;
+                        } else {
+                            element.value = data[key];
+                        }
+                    }
+                });
+            }
+        });
+    </script>
+</body>
+</html>
