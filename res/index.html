@@ -308,6 +308,7 @@
             <div class="actions">
                 <button type="submit" formaction="/" class="btn btn-primary">Save Curation Log</button>
                 <button type="submit" formaction="/export-csv" formmethod="post" class="btn btn-secondary">Export to CSV</button>
+                <button type="button" class="btn btn-secondary" onclick="saveJSON()">Save JSON</button>
                 <button type="button" class="btn btn-secondary" onclick="printLog()">Print Log</button>
                 <button type="button" class="btn btn-secondary" onclick="window.location.href='/'">New Dataset</button>
                 <button type="button" class="btn btn-secondary" onclick="exitCuration()">Exit</button>
@@ -325,6 +326,28 @@
                     window.close();
                 })
                 .catch(err => console.error('Shutdown failed:', err));
+        }
+    }
+
+    async function saveJSON() {
+        // Get form data
+        const formData = new FormData(document.querySelector('form'));
+        
+        try {
+            const response = await fetch('/save-checklist', {
+                method: 'POST',
+                body: formData
+            });
+            
+            const result = await response.json();
+            
+            if (result.success) {
+                alert('Checklist saved successfully! File: ' + result.filepath);
+            } else {
+                alert('Error saving checklist: ' + result.message);
+            }
+        } catch (error) {
+            alert('Error saving checklist: ' + error.message);
         }
     }
     </script>
