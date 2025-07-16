@@ -65,7 +65,7 @@ class SetupRequest(BaseModel):
 
 
 app = FastAPI()
-templates = Jinja2Templates(directory='res')
+templates = Jinja2Templates(directory='pydatacuration-frontend')
 
 # Load environment variables
 load_dotenv()
