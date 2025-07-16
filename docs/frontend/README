@@ -1,0 +1,6 @@
+# To launch the new frontend (Web UI)
+Run the following to launch the Web UI to launch the app in localhost:9001
+
+```bash
+uvicorn app:app --reload --host 0.0.0.0 --port 9001
+```
