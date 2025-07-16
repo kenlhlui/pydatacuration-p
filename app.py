@@ -1,18 +1,25 @@
-from typing import List, Optional
-from fastapi import FastAPI, Request, HTTPException
-from fastapi.responses import HTMLResponse, JSONResponse
-from fastapi.templating import Jinja2Templates
-from pydantic import BaseModel
-from fastapi import Request
-from fastapi.responses import Response
+"""pydatacuration-p: FastAPI application for curation report generation."""
+import asyncio
 import csv
 import io
-import os
-import subprocess
-import asyncio
 import json
+import os
 from datetime import datetime
+from pathlib import Path
+from typing import List
+from typing import Optional
+
 from dotenv import load_dotenv
+from fastapi import FastAPI
+from fastapi import HTTPException
+from fastapi import Request
+from fastapi.responses import HTMLResponse
+from fastapi.responses import JSONResponse
+from fastapi.responses import Response
+from fastapi.templating import Jinja2Templates
+from pydantic import BaseModel
+
+
 class ChecklistItem(BaseModel):
     """Model a single checklist item.
 
@@ -49,10 +56,10 @@ class SetupRequest(BaseModel):
         None: data container
     """
     pid: str
-    base_url: Optional[str] = None
-    api_token: Optional[str] = None
+    base_url: str | None = None
+    api_token: str | None = None
     ticket_number: str
-    parent_dir: str = "workdir"
+    parent_dir: str = 'workdir'
     force_del: bool = False
     check_zip: bool = True
 
@@ -62,6 +69,7 @@ templates = Jinja2Templates(directory='res')
 
 # Load environment variables
 load_dotenv()
+
 
 def get_checklist_items():
     """Get all checklist items with their details."""
@@ -93,6 +101,7 @@ def get_checklist_items():
                      priority='require', section='5.0 Sensitive data and IP'),
     ]
 
+
 @app.get('/', response_class=HTMLResponse)
 def landing(request: Request) -> HTMLResponse:
     """Render the landing page for setup.
@@ -108,7 +117,7 @@ def landing(request: Request) -> HTMLResponse:
         'base_url': os.getenv('BASE_URL', ''),
         'api_token': os.getenv('API_TOKEN', ''),
     }
-    
+
     return templates.TemplateResponse('landing.html', {
         'request': request,
         'env_data': env_data
@@ -133,7 +142,7 @@ def checklist(request: Request) -> HTMLResponse:
 async def save_checklist(request: Request) -> JSONResponse:
     """Save checklist data to JSON file."""
     form = await request.form()
-    
+
     # Create data structure for JSON
     checklist_data = {
         'metadata': {
@@ -150,7 +159,7 @@ async def save_checklist(request: Request) -> JSONResponse:
         },
         'items': []
     }
-    
+
     # Extract checklist items
     items = get_checklist_items()
     for item in items:
@@ -171,13 +180,13 @@ async def save_checklist(request: Request) -> JSONResponse:
 
     # Save to JSON file
     ticket_number = form.get('ticket_number', 'unknown')
-    filename = f'checklist.json'
-    filepath = os.path.join('output', filename)
+    filename = 'checklist.json'
+    filepath = Path('output', filename)
 
     # Create output directory if it doesn't exist
-    os.makedirs('output', exist_ok=True)
+    Path('output').mkdir(exist_ok=True)
 
-    with open(filepath, 'w') as f:
+    with filepath.open('w', encoding='utf-8') as f:
         json.dump(checklist_data, f, indent=2)
 
     return JSONResponse(content={
@@ -219,11 +228,11 @@ async def export_csv(request: Request) -> Response:
 
 async def run_command(command: str, cwd: str = None) -> dict:
     """Run a command and return the result.
-    
+
     Args:
         command (str): Command to run
         cwd (str): Working directory
-        
+
     Returns:
         dict: Command result with stdout, stderr, and return code
     """
@@ -235,7 +244,7 @@ async def run_command(command: str, cwd: str = None) -> dict:
             cwd=cwd
         )
         stdout, stderr = await process.communicate()
-        
+
         return {
             'stdout': stdout.decode(),
             'stderr': stderr.decode(),
@@ -254,10 +263,10 @@ async def run_command(command: str, cwd: str = None) -> dict:
 @app.post('/setup')
 async def setup(request: SetupRequest) -> JSONResponse:
     """Process the setup form and run pydatacuration CLI command.
-    
+
     Args:
         request (SetupRequest): Setup form data matching CLI parameters
-        
+
     Returns:
         JSONResponse: Result of the curation process
     """
@@ -269,7 +278,7 @@ async def setup(request: SetupRequest) -> JSONResponse:
             '--ticket-number', f'"{request.ticket_number}"',
             '--parent-dir', f'"{request.parent_dir}"'
         ]
-        print(f'{os.getcwd()}')
+        print(f'{Path.cwd()}')
         # Add base URL if provided
         if request.base_url:
             cmd_parts.extend(['--base-url', f'"{request.base_url}"'])
@@ -321,6 +330,6 @@ async def setup(request: SetupRequest) -> JSONResponse:
 
 
 @app.post('/shutdown')
-async def shutdown():
+async def shutdown() -> None:
     """Shutdown the uvicorn server."""
     os._exit(0)
