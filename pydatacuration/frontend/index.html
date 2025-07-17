@@ -366,48 +366,6 @@
             JSON.stringify(Object.fromEntries(formData))
             );
         }, 10000);
-
-        // Load saved data on page load
-        document.addEventListener('DOMContentLoaded', function() {
-            // Read PID from sessionStorage
-            const savedPid = sessionStorage.getItem('pid');
-            if (savedPid) {
-                const pidInput = document.querySelector('input[name="dataset_pid"]');
-                if (pidInput) {
-                    pidInput.value = savedPid;
-                    pidInput.classList.add('pre-filled');
-                }
-            }
-            
-            // Read ticket number from sessionStorage
-            const savedTicketNumber = sessionStorage.getItem('ticket_number');
-            if (savedTicketNumber) {
-                const ticketInput = document.querySelector('input[name="ticket_number"]');
-                if (ticketInput) {
-                    ticketInput.value = savedTicketNumber;
-                    ticketInput.classList.add('pre-filled');
-                }
-            }
-            
-            // Read curator name from sessionStorage
-            const savedCuratorName = sessionStorage.getItem('curator_name');
-            if (savedCuratorName) {
-                const curatorNameInput = document.querySelector('input[name="curator_name"]');
-                if (curatorNameInput) {
-                    curatorNameInput.value = savedCuratorName;
-                    curatorNameInput.classList.add('pre-filled');
-                }
-            }
-            
-            // Read curator email from sessionStorage
-            const savedCuratorEmail = sessionStorage.getItem('curator_email');
-            if (savedCuratorEmail) {
-                const curatorEmailInput = document.querySelector('input[name="curator_email"]');
-                if (curatorEmailInput) {
-                    curatorEmailInput.value = savedCuratorEmail;
-                    curatorEmailInput.classList.add('pre-filled');
-                }
-            }
             
             // Load saved curation log data
             const savedData = sessionStorage.getItem('curationLog');
@@ -426,7 +384,7 @@
                 }
             });
             }
-        });
     </script>
+    <script defer src="/static/js/readsessionstorage.js"></script>
 </body>
 </html>

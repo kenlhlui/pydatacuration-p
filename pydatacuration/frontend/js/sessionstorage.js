@@ -41,3 +41,23 @@ document.addEventListener('DOMContentLoaded', function() {
         document.getElementById('curator_email').value = savedCuratorEmail;
     }
 });
+
+// Automatically save form fields to sessionStorage
+// document.addEventListener('DOMContentLoaded', () => {
+//   // select all form fields that have a "name"
+//   const fields = document.querySelectorAll('input[name], textarea[name], select[name]');
+
+//   fields.forEach((el) => {
+//     const key = el.name;
+//     // 1) load saved value (if any)
+//     const saved = sessionStorage.getItem(key);
+//     if (saved !== null) {
+//       el.value = saved;
+//       el.classList.add('pre-filled');
+//     }
+//     // 2) watch for changes and save
+//     el.addEventListener('input', () => {
+//       sessionStorage.setItem(key, el.value);
+//     });
+//   });
+// });
