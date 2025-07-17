@@ -1,7 +1,5 @@
 """pydatacuration-p: FastAPI application for curation report generation."""
 import asyncio
-import csv
-import io
 import json
 import os
 from datetime import datetime
@@ -16,6 +14,7 @@ from fastapi import Request
 from fastapi.responses import HTMLResponse
 from fastapi.responses import JSONResponse
 from fastapi.responses import Response
+from fastapi.staticfiles import StaticFiles
 from fastapi.templating import Jinja2Templates
 from pydantic import BaseModel
 
@@ -65,7 +64,10 @@ class SetupRequest(BaseModel):
 
 
 app = FastAPI()
-templates = Jinja2Templates(directory='pydatacuration-frontend')
+templates = Jinja2Templates(directory='pydatacuration/frontend/')
+
+# Mount static files for CSS, JS, and other assets
+app.mount("/static", StaticFiles(directory="pydatacuration/frontend"), name="static")
 
 # Load environment variables
 load_dotenv()
@@ -181,10 +183,13 @@ async def save_checklist(request: Request) -> JSONResponse:
     # Save to JSON file
     ticket_number = form.get('ticket_number', 'unknown')
     filename = 'checklist.json'
-    filepath = Path('output', filename)
+    
+    # Use configurable output directory
+    output_dir = Path(os.getenv('OUTPUT_DIR', 'output'))
+    filepath = output_dir / filename
 
     # Create output directory if it doesn't exist
-    Path('output').mkdir(exist_ok=True)
+    output_dir.mkdir(exist_ok=True)
 
     with filepath.open('w', encoding='utf-8') as f:
         json.dump(checklist_data, f, indent=2)
