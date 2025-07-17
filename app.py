@@ -196,34 +196,34 @@ async def save_checklist(request: Request) -> JSONResponse:
     })
 
 
-@app.post('/export-csv')
-async def export_csv(request: Request) -> Response:
-    """Reconstructs the table from form data and streams a CSV."""
-    form = await request.form()
-    # form is a MultiDict of keys like 'status-1.1', 'comments-1.1', 'time-1.1', etc.
-    # Extract unique row IDs:
-    row_ids = sorted({key.split('-')[1] for key in form.keys() if '-' in key})
+# @app.post('/export-csv')
+# async def export_csv(request: Request) -> Response:
+#     """Reconstructs the table from form data and streams a CSV."""
+#     form = await request.form()
+#     # form is a MultiDict of keys like 'status-1.1', 'comments-1.1', 'time-1.1', etc.
+#     # Extract unique row IDs:
+#     row_ids = sorted({key.split('-')[1] for key in form.keys() if '-' in key})
 
-    # Prepare CSV in memory
-    buf = io.StringIO()
-    writer = csv.writer(buf)
-    # header
-    writer.writerow(['ID', 'Action Item', 'Status', 'Comments', 'Priority', 'Time Spent'])
-    for rid in row_ids:
-        status = form.get(f'status-{rid}', '')
-        comments = form.get(f'comments-{rid}', '')
-        priority = form.get(f'priority-{rid}', '')
-        time_spent = form.get(f'time-{rid}', '')
-        # if you also POSTed action text, you could grab it similarly, or re-lookup your stub rows
-        action = form.get(f'action-{rid}', '')
-        writer.writerow([rid, action, status, comments, priority, time_spent])
+#     # Prepare CSV in memory
+#     buf = io.StringIO()
+#     writer = csv.writer(buf)
+#     # header
+#     writer.writerow(['ID', 'Action Item', 'Status', 'Comments', 'Priority', 'Time Spent'])
+#     for rid in row_ids:
+#         status = form.get(f'status-{rid}', '')
+#         comments = form.get(f'comments-{rid}', '')
+#         priority = form.get(f'priority-{rid}', '')
+#         time_spent = form.get(f'time-{rid}', '')
+#         # if you also POSTed action text, you could grab it similarly, or re-lookup your stub rows
+#         action = form.get(f'action-{rid}', '')
+#         writer.writerow([rid, action, status, comments, priority, time_spent])
 
-    csv_bytes = buf.getvalue().encode('utf-8')
-    return Response(
-        content=csv_bytes,
-        media_type='text/csv',
-        headers={'Content-Disposition': 'attachment; filename="curation_log.csv"'}
-    )
+#     csv_bytes = buf.getvalue().encode('utf-8')
+#     return Response(
+#         content=csv_bytes,
+#         media_type='text/csv',
+#         headers={'Content-Disposition': 'attachment; filename="curation_log.csv"'}
+#     )
 
 
 async def run_command(command: str, cwd: str = None) -> dict:
