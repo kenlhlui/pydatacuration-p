@@ -222,9 +222,8 @@
             <h3>Status Explanation</h3>
             <div class="status-list">
                 <div class="status-item"><span class="status-code">P:</span> Passed</div>
-                <div class="status-item"><span class="status-code">RQU:</span> Required Follow-up</div>
-                <div class="status-item"><span class="status-code">RCM:</span> Recommend Follow-up</div>
-                <div class="status-item"><span class="status-code">NS:</span> Not Sure</div>
+                <div class="status-item"><span class="status-code">F:</span> Follow-up</div>
+                <div class="status-item"><span class="status-code">TBD:</span> To Be Determined</div>
                 <div class="status-item"><span class="status-code">NA:</span> Not applicable</div>
             </div>
         </div>
@@ -262,16 +261,12 @@
                                         <label for="status-{{ item.id }}-P">P</label>
                                     </div>
                                     <div class="status-checkbox">
-                                        <input type="radio" name="status-{{ item.id }}" value="RQU" id="status-{{ item.id }}-RQU">
-                                        <label for="status-{{ item.id }}-RQU">RQU</label>
+                                        <input type="radio" name="status-{{ item.id }}" value="F" id="status-{{ item.id }}-F">
+                                        <label for="status-{{ item.id }}-F">F</label>
                                     </div>
                                     <div class="status-checkbox">
-                                        <input type="radio" name="status-{{ item.id }}" value="RCM" id="status-{{ item.id }}-RCM">
-                                        <label for="status-{{ item.id }}-RCM">RCM</label>
-                                    </div>
-                                    <div class="status-checkbox">
-                                        <input type="radio" name="status-{{ item.id }}" value="NS" id="status-{{ item.id }}-NS">
-                                        <label for="status-{{ item.id }}-NS">NS</label>
+                                        <input type="radio" name="status-{{ item.id }}" value="TBD" id="status-{{ item.id }}-TBD">
+                                        <label for="status-{{ item.id }}-TBD">TBD</label>
                                     </div>
                                     <div class="status-checkbox">
                                         <input type="radio" name="status-{{ item.id }}" value="NA" id="status-{{ item.id }}-NA">
