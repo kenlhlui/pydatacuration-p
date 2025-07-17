@@ -233,9 +233,9 @@
             const formData = new FormData(this);
             const data = Object.fromEntries(formData);
             
-            // Handle checkbox groups
-            const checks = formData.getAll('checks');
-            data.checks = checks;
+            // Handle checkboxes explicitly since unchecked boxes aren't in FormData
+            data.force_del = document.getElementById('force_del').checked;
+            data.check_zip = document.getElementById('check_zip').checked;
             
             // Show loading
             document.getElementById('loading').style.display = 'block';
