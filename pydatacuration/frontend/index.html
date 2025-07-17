@@ -182,23 +182,27 @@
             <div class="info-grid">
                 <div class="info-item">
                     <span class="info-label">Ticket number:</span>
-                    <input type="text" name="ticket_number" placeholder="Enter ticket number">
+                    <input type="text" name="ticket_number" placeholder="Enter ticket number"
+                    value="{{ ticket_number }}" class="pre-filled">
+                    <!-- Read the value from the Session storage-->
                 </div>
                 <div class="info-item">
                     <span class="info-label">Curator name:</span>
-                    <input type="text" name="curator_name" placeholder="Enter curator name">
+                    <input type="text" name="curator_name" placeholder="Enter curator name" value="{{ curator_name }}" class="pre-filled">
                 </div>
                 <div class="info-item">
                     <span class="info-label">Curator email:</span>
-                    <input type="email" name="curator_email" placeholder="Enter curator email">
+                    <input type="email" name="curator_email" placeholder="Enter curator email" value="{{ curator_email }}" class="pre-filled">
                 </div>
                 <div class="info-item">
                     <span class="info-label">Dataset title:</span>
-                    <input type="text" name="dataset_title" placeholder="Enter dataset title">
+                    <input type="text" name="dataset_title" placeholder="Enter dataset title" 
+                    value="{{ dataset_title }}">
                 </div>
                 <div class="info-item">
                     <span class="info-label">Dataset persistent identifier:</span>
-                    <input type="text" name="dataset_pid" placeholder="Enter dataset PID">
+                    <input type="text" name="dataset_pid" placeholder="Enter dataset PID"
+                    value="{{ dataset_pid }}" class="pre-filled">
                 </div>
                 <div class="info-item">
                     <span class="info-label">Dataset ID (versioned):</span>
@@ -309,6 +313,7 @@
             </div>
         </form>
     </div>
+    
     <script>
     function exitCuration() {
         // Confirm exit
@@ -350,28 +355,56 @@
         function printLog() {
             window.print();
         }
-        
-        // Auto-save functionality
+    </script>
+
+    <script>
+        // Auto-save every 10 s into sessionStorage instead of localStorage
         setInterval(function() {
             const formData = new FormData(document.querySelector('form'));
-            localStorage.setItem('curationLog', JSON.stringify(Object.fromEntries(formData)));
-        }, 10000); // Save every 10 seconds
+            sessionStorage.setItem(
+            'curationLog',
+            JSON.stringify(Object.fromEntries(formData))
+            );
+        }, 10000);
 
         // Load saved data on page load
         document.addEventListener('DOMContentLoaded', function() {
-            const savedData = localStorage.getItem('curationLog');
+            // Read PID from sessionStorage
+            const savedPid = sessionStorage.getItem('pid');
+            if (savedPid) {
+                const pidInput = document.querySelector('input[name="dataset_pid"]');
+                if (pidInput) {
+                    pidInput.value = savedPid;
+                    pidInput.classList.add('pre-filled');
+                }
+            }
+            
+            // Read ticket number from sessionStorage
+            const savedTicketNumber = sessionStorage.getItem('ticket_number');
+            if (savedTicketNumber) {
+                const ticketInput = document.querySelector('input[name="ticket_number"]');
+                if (ticketInput) {
+                    ticketInput.value = savedTicketNumber;
+                    ticketInput.classList.add('pre-filled');
+                }
+            }
+            
+            // Load saved curation log data
+            const savedData = sessionStorage.getItem('curationLog');
             if (savedData) {
-                const data = JSON.parse(savedData);
-                Object.keys(data).forEach(key => {
-                    const element = document.querySelector(`[name="${key}"]`);
-                    if (element) {
-                        if (element.type === 'radio') {
-                            document.querySelector(`[name="${key}"][value="${data[key]}"]`).checked = true;
-                        } else {
-                            element.value = data[key];
-                        }
-                    }
-                });
+            const data = JSON.parse(savedData);
+            Object.keys(data).forEach(key => {
+                const element = document.querySelector(`[name="${key}"]`);
+                if (element) {
+                if (element.type === 'radio') {
+                    document.querySelector(
+                    `[name="${key}"][value="${data[key]}"]`
+                    ).checked = true;
+                } else {
+                    element.value = data[key];
+                }
+                }
+            });
             }
         });
     </script>
