@@ -1,4 +1,5 @@
 """Generates a report based on a template and data from a JSON file."""
+import os
 import sys
 from datetime import datetime
 from datetime import timezone
@@ -9,6 +10,7 @@ import jmespath
 import orjson
 import yaml
 from docxtpl import DocxTemplate
+from dotenv import load_dotenv
 from markitdown import MarkItDown
 from openpyxl import load_workbook
 
@@ -17,6 +19,7 @@ from .utils import orjson_export
 
 
 RES_DIR = Path('res')
+
 
 
 class GenerateLog:
@@ -95,16 +98,21 @@ class GenerateLog:
         return dataset_info_dict
 
     def _get_config_info(self) -> dict:
-        """Reads the config.yaml file and returns it as a dictionary.
+        """Reads the .env file and returns the necessary configuration as a dictionary.
 
         Returns:
             dict: The config as a dictionary.
         """
-        with RES_DIR.joinpath('config.yaml').open(encoding='utf-8') as file:
-            config_dict = yaml.safe_load(file)
-            # Add the ticket number to the config dictionary
-            config_dict['ticket_number'] = self.ticket_number
-            return config_dict
+        # Load environment variables from .env file
+        load_dotenv()
+        # Create a dictionary with the necessary configuration
+        config_dict = {
+            'curator_name': os.getenv('CURATOR_NAME', ''),
+            'curator_email': os.getenv('CURATOR_EMAIL', ''),
+        }
+        # Add the ticket number to the config dictionary
+        config_dict['ticket_number'] = self.ticket_number
+        return config_dict
 
     def generate_report_xlsx(self, template_dict: dict) -> None:
         """Fill a formatted Excel template with data using Jinja2 for variable replacement.
