@@ -389,6 +389,26 @@
                 }
             }
             
+            // Read curator name from sessionStorage
+            const savedCuratorName = sessionStorage.getItem('curator_name');
+            if (savedCuratorName) {
+                const curatorNameInput = document.querySelector('input[name="curator_name"]');
+                if (curatorNameInput) {
+                    curatorNameInput.value = savedCuratorName;
+                    curatorNameInput.classList.add('pre-filled');
+                }
+            }
+            
+            // Read curator email from sessionStorage
+            const savedCuratorEmail = sessionStorage.getItem('curator_email');
+            if (savedCuratorEmail) {
+                const curatorEmailInput = document.querySelector('input[name="curator_email"]');
+                if (curatorEmailInput) {
+                    curatorEmailInput.value = savedCuratorEmail;
+                    curatorEmailInput.classList.add('pre-filled');
+                }
+            }
+            
             // Load saved curation log data
             const savedData = sessionStorage.getItem('curationLog');
             if (savedData) {
