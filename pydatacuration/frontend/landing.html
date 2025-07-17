@@ -136,7 +136,7 @@
 </head>
 <body>
     <div class="container">
-        <h1>Data Curation Setup</h1>
+        <h1>Data Curation Tool</h1>
         
         <div id="error-message" class="error"></div>
         <div id="success-message" class="success"></div>
@@ -169,6 +169,20 @@
                     <input type="text" id="ticket_number" name="ticket_number" required 
                            placeholder="TICKET-123">
                     <small>Ticket number for the curation report (will be used as directory name)</small>
+                </div>
+            </div>
+
+            <div class="section">
+                <h3>Curator Information</h3>
+                <div class="form-group">
+                    <label for="curator_name">Curator Name *</label>
+                    <input type="text" id="curator_name" name="curator_name" required 
+                           placeholder="Enter your name">
+                </div>
+                <div class="form-group">
+                    <label for="curator_email">Curator Email *</label>
+                    <input type="email" id="curator_email" name="curator_email" required 
+                           placeholder="Enter your email">
                 </div>
             </div>
 
@@ -263,36 +277,6 @@
             document.getElementById('success-message').style.display = 'none';
         }
     </script>
-
-    <!-- <script>
-        // Save the input of PID, ticket number and base URL to sessionStorage
-        // so that the checklist page can access them
-        document.getElementById('pid').addEventListener('input', function() {
-            sessionStorage.setItem('pid', this.value);
-        });
-        document.getElementById('ticket_number').addEventListener('input', function() {
-            sessionStorage.setItem('ticket_number', this.value);
-        });
-        document.getElementById('base_url').addEventListener('input', function() {
-            sessionStorage.setItem('base_url', this.value);
-        });
-
-        // Load saved values from sessionStorage
-        document.addEventListener('DOMContentLoaded', function() {
-            const savedPid = sessionStorage.getItem('pid');
-            const savedTicketNumber = sessionStorage.getItem('ticket_number');
-            const savedBaseUrl = sessionStorage.getItem('base_url');
-            if (savedPid) {
-                document.getElementById('pid').value = savedPid;
-            }
-            if (savedTicketNumber) {
-                document.getElementById('ticket_number').value = savedTicketNumber;
-            }
-            if (savedBaseUrl) {
-                document.getElementById('base_url').value = savedBaseUrl;
-            }
-        });
-    </script> -->
     <script defer src="/static/js/sessionstorage.js"></script>
 </body>
 </html>
