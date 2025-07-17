@@ -118,6 +118,8 @@ def landing(request: Request) -> HTMLResponse:
     env_data = {
         'base_url': os.getenv('BASE_URL', ''),
         'api_token': os.getenv('API_TOKEN', ''),
+        'curator_name': os.getenv('CURATOR_NAME', ''),
+        'curator_email': os.getenv('CURATOR_EMAIL', ''),
     }
 
     return templates.TemplateResponse('landing.html', {
