@@ -177,12 +177,14 @@
                 <div class="form-group">
                     <label for="curator_name">Curator Name *</label>
                     <input type="text" id="curator_name" name="curator_name" required 
-                           placeholder="Enter your name">
+                           placeholder="Enter your name"
+                           value ="{{ env_data.curator_name }}">
                 </div>
                 <div class="form-group">
                     <label for="curator_email">Curator Email *</label>
                     <input type="email" id="curator_email" name="curator_email" required 
-                           placeholder="Enter your email">
+                           placeholder="Enter your email"
+                           value ="{{ env_data.curator_email }}">
                 </div>
             </div>
 
@@ -196,7 +198,7 @@
                 </div>
                 <div class="checkbox-group">
                     <div class="checkbox-item">
-                        <input type="checkbox" id="force_del" name="force_del" value="true">
+                        <input type="checkbox" id="force_del" name="force_del" value="False">
                         <label for="force_del">Force delete existing directory</label>
                     </div>
                 </div>
