@@ -305,9 +305,9 @@ async def setup(request: SetupRequest) -> JSONResponse:
             cmd_parts.append('--no-force-del')
         
         if request.check_zip:
-            cmd_parts.append('--check_zip')
+            cmd_parts.append('-z')
         else:
-            cmd_parts.append('--no-check_zip')
+            cmd_parts.append('-nz')
 
         # Join command parts
         cmd = ' '.join(cmd_parts)
