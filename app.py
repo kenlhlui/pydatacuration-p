@@ -278,6 +278,10 @@ async def setup(request: SetupRequest) -> JSONResponse:
         JSONResponse: Result of the curation process
     """
     try:
+        # Debug: Print the request data
+        print(f"Request data: {request}")
+        print(f"force_del: {request.force_del}, check_zip: {request.check_zip}")
+
         # Build the command to run pydatacuration CLI
         cmd_parts = [
             'python', '-m', 'pydatacuration.main', 'gen-curation-report',
@@ -299,9 +303,15 @@ async def setup(request: SetupRequest) -> JSONResponse:
             cmd_parts.append('--force-del')
         else:
             cmd_parts.append('--no-force-del')
+        
+        if request.check_zip:
+            cmd_parts.append('--check_zip')
+        else:
+            cmd_parts.append('--no-check_zip')
 
         # Join command parts
         cmd = ' '.join(cmd_parts)
+        print(f'Running command: {cmd}')
 
         # Run the command
         result = await run_command(cmd)
