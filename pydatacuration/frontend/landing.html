@@ -257,6 +257,11 @@
                     document.getElementById('success-message').textContent = 'Curation process completed successfully!';
                     document.getElementById('success-message').style.display = 'block';
                     
+                    // Store template dict path for the checklist page
+                    if (result.template_dict_path) {
+                        sessionStorage.setItem('template_dict_path', result.template_dict_path);
+                    }
+                    
                     // Redirect to checklist page after 2 seconds
                     setTimeout(() => {
                         window.location.href = '/checklist';
