@@ -25,7 +25,11 @@ RES_DIR = Path('res')
 class GenerateLog:
     """Generates a report based on a template and data from a JSON file."""
 
-    def __init__(self, log_dir: Path, base_url: str, ds_metadata: dict, ticket_number: str) -> None:
+    def __init__(self, log_dir: Path,
+                 base_url: str,
+                 ds_metadata: dict,
+                 ticket_number: str,
+                 template_dict: dict) -> None:
         """Initializes the GenerateLog class.
 
         Args:
@@ -33,14 +37,16 @@ class GenerateLog:
             base_url (str): The base URL of the repository.
             ds_metadata (dict): The dataset metadata.
             ticket_number (str): The ticket number.
+            template_dict (dict): The template dictionary.
         """
         self.log_dir = log_dir
         self.timestamp = self._get_timestamp()
         self.ds_metadata = ds_metadata
         self.base_url = base_url
-        self.dataset_info_dict = self._get_dataset_info()
+        #self.dataset_info_dict = self._get_dataset_info()
         self.ticket_number = ticket_number
         self.logger = CustomLogger.get_logger(__name__)
+        self.template_dict = self._update_template_with_config(template_dict, ticket_number)
 
     @staticmethod
     def _get_timestamp() -> str:
@@ -93,26 +99,36 @@ class GenerateLog:
         ID: data.latestVersion.id}"""
         dataset_info_dict = jmespath.search(search_string, self.ds_metadata)
         # Add 'DatasetURL' by parsing the base_url and the DatasetPersistentId
-        dataset_info_dict['DatasetURL'] = f'{self.base_url}/dataset.xhtml?persistentId={dataset_info_dict.get('DatasetPersistentId', None)}'  # noqa: E501
+        dataset_info_dict['DatasetURL'] = f'{self.base_url}/dataset.xhtml?persistentId={dataset_info_dict.get("DatasetPersistentId", None)}'  # noqa: E501
 
         return dataset_info_dict
 
-    def _get_config_info(self) -> dict:
-        """Reads the .env file and returns the necessary configuration as a dictionary.
+    def _update_template_with_config(self,
+                                          template_dict: dict,
+                                          ticket_number: str) -> dict:
+        """Updates the template dictionary with configuration and dataset information.
+
+        Args:
+            template_dict (dict): The template dictionary.
+            ticket_number (str): The ticket number.
 
         Returns:
-            dict: The config as a dictionary.
+            dict: The updated template dictionary with configuration information.
         """
-        # Load environment variables from .env file
+        # Read the configuration information
         load_dotenv()
-        # Create a dictionary with the necessary configuration
-        config_dict = {
-            'curator_name': os.getenv('CURATOR_NAME', ''),
-            'curator_email': os.getenv('CURATOR_EMAIL', ''),
+        curator_name = os.getenv('CURATOR_NAME', '')
+        curator_email = os.getenv('CURATOR_EMAIL', '')
+
+        template_dict['project_info'] = {
+            'curator_name': curator_name,
+            'curator_email': curator_email,
+            'ticket_number': ticket_number
         }
-        # Add the ticket number to the config dictionary
-        config_dict['ticket_number'] = self.ticket_number
-        return config_dict
+        # Add the dataset information
+        template_dict['dataset_info'] = self._get_dataset_info()
+
+        return template_dict
 
     def generate_report_xlsx(self, template_dict: dict) -> None:
         """Fill a formatted Excel template with data using Jinja2 for variable replacement.
@@ -166,8 +182,7 @@ class GenerateLog:
         # Render the document with the provided context
         doc.render({'template_dict': template_dict,  # TEMP fix. Need to restructure the template_dict
                     'timestamp': self.timestamp,
-                    'dataset': self.dataset_info_dict,
-                    'project_info': self._get_config_info()},
+                    },
                     autoescape=True)  # See https://github.com/elapouya/python-docx-template/issues/38
 
         # Save the rendered document
@@ -220,9 +235,3 @@ class GenerateLog:
         # ! Disable this feature for now.
         # md_path = self._convert_to_markdown(doc_path)
         # self.logger.print(f'Converted {level.upper()}-level Word curation log to Markdown format at: {str(md_path)}')
-
-    def generate_project_metadata(self) -> None:
-        """Generates project metadata (project_info) to JSON file."""
-        meta_path = self.log_dir.joinpath(f'{self.ticket_number}_project_info.json')
-        orjson_export(meta_path, self._get_config_info())
-        self.logger.print(f'Project metadata saved at: {str(meta_path)}')
