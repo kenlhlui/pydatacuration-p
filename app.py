@@ -289,7 +289,6 @@ async def setup(request: SetupRequest) -> JSONResponse:
             '--ticket-number', f'"{request.ticket_number}"',
             '--parent-dir', f'"{request.parent_dir}"'
         ]
-        print(f'{Path.cwd()}')
         # Add base URL if provided
         if request.base_url:
             cmd_parts.extend(['--base-url', f'"{request.base_url}"'])
@@ -303,7 +302,7 @@ async def setup(request: SetupRequest) -> JSONResponse:
             cmd_parts.append('--force-del')
         else:
             cmd_parts.append('--no-force-del')
-        
+
         if request.check_zip:
             cmd_parts.append('-z')
         else:
@@ -312,6 +311,7 @@ async def setup(request: SetupRequest) -> JSONResponse:
         # Join command parts
         cmd = ' '.join(cmd_parts)
         print(f'Running command: {cmd}')
+        print(f'Working directory: {os.getcwd()}/{request.parent_dir}/{request.ticket_number}')
 
         # Run the command
         result = await run_command(cmd)
@@ -321,7 +321,8 @@ async def setup(request: SetupRequest) -> JSONResponse:
                 'success': True,
                 'message': 'Curation report generated successfully',
                 'output': result['stdout'],
-                'command': cmd
+                'command': cmd,
+                'template_dict_path': f'/template-dict/{request.parent_dir}/{request.ticket_number}',
             })
         else:
             return JSONResponse(
@@ -332,7 +333,7 @@ async def setup(request: SetupRequest) -> JSONResponse:
                     'error': result['stderr'],
                     'output': result['stdout'],
                     'command': cmd,
-                    'return_code': result['return_code']
+                    'return_code': result['return_code'],
                 }
             )
 
@@ -344,6 +345,30 @@ async def setup(request: SetupRequest) -> JSONResponse:
                 'message': f'Error during setup: {str(e)}'
             }
         )
+
+
+@app.get('/template-dict/{parent_dir}/{ticket_number}')
+async def get_template_dict(parent_dir: str, ticket_number: str) -> JSONResponse:
+    """Serve the template dictionary file for a specific ticket.
+    
+    Args:
+        parent_dir (str): Parent directory name
+        ticket_number (str): Ticket number
+        
+    Returns:
+        JSONResponse: Template dictionary data
+    """
+    try:
+        template_path = Path(parent_dir) / ticket_number / 'log_files' / 'template_dict.json'
+        if not template_path.exists():
+            raise HTTPException(status_code=404, detail="Template dictionary not found")
+            
+        with template_path.open('r', encoding='utf-8') as f:
+            template_data = json.load(f)
+            
+        return JSONResponse(content=template_data)
+    except Exception as e:
+        raise HTTPException(status_code=500, detail=f"Error reading template dictionary: {str(e)}")
 
 
 @app.post('/shutdown')
