@@ -19,31 +19,62 @@ async function readTemplateDict(templateDictPath) {
 }
 
 /**
- * Populate form fields with template dictionary data
+ * Populate form fields from nested templateDict sections.
+ *
+ * @param {Object} templateDict - The full JSON with sub-objects.
  */
 function populateFieldsFromTemplateDict(templateDict) {
-  if (!templateDict) return;
+  if (!templateDict) {
+    console.log('No templateDict provided');
+    return;
+  }
 
-  // Map template dict keys to form field names
-  const fieldMappings = {
-    'dataset_title': 'dataset_title',
-    'dataset_pid': 'dataset_pid', 
-    'dataset_id': 'dataset_id',
-    'dataset_url': 'dataset_url',
-    'log_generated_date': 'log_generated_date',
-    'log_updated_date': 'log_updated_date'
+  console.log('Starting field population with:', templateDict);
+
+  // Map template dict keys to form field names of template_dict.json
+  const sectionMappings = {
+    project_info: {
+      curator_name:  'curator_name',
+      curator_email: 'curator_email',
+      ticket_number: 'ticket_number'
+    },
+    dataset_info: {
+      DatasetTitle:        'dataset_title',
+      DatasetPersistentId: 'dataset_pid',
+      ID:                  'dataset_id',
+      DatasetURL:          'dataset_url'
+    }
+    // add more sections here if needed
   };
 
-  Object.entries(fieldMappings).forEach(([templateKey, fieldName]) => {
-    if (templateDict[templateKey]) {
-      const field = document.querySelector(`[name="${fieldName}"]`);
-      if (field && !field.value) { // Only populate if field is empty
-        field.value = templateDict[templateKey];
-        field.classList.add('pre-filled');
-        // Save to sessionStorage to maintain consistency with readsessionstorage.js
-        sessionStorage.setItem(fieldName, templateDict[templateKey]);
-      }
+  Object.entries(sectionMappings).forEach(([sectionKey, fieldMappings]) => {
+    const section = templateDict[sectionKey];
+    console.log(`Section ${sectionKey}:`, section);
+
+    if (typeof section !== 'object' || section == null) {
+      console.log(`No ${sectionKey} found, skipping`);
+      return;
     }
+
+    // For each mapping in that section
+    Object.entries(fieldMappings).forEach(([templateKey, fieldName]) => {
+      const value = section[templateKey];
+      console.log(`Checking ${sectionKey}.${templateKey} -> ${fieldName}:`, value);
+
+      if (value != null) {
+        const field = document.querySelector(`[name="${fieldName}"]`);
+        console.log(`Field [name="${fieldName}"]`, field, 'current value:', field?.value);
+
+        if (field) {
+          field.value = value;
+          field.classList.add('pre-filled');
+          sessionStorage.setItem(fieldName, value);
+          console.log(`Set ${fieldName} to:`, value);
+        } else {
+          console.log(`Field [name="${fieldName}"] not found`);
+        }
+      }
+    });
   });
 }
 
