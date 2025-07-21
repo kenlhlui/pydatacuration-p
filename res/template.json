@@ -60,5 +60,17 @@
         "authorIdentifier": {
             "comments": []
         }
+    },
+    "project_info":{
+        "ticket_number": null,
+        "curator_name": null,
+        "curator_email": null
+    },
+    "dataset_info": {
+        "DatasetTitle": null,
+        "DatasetPersistentId": null,
+        "datasetVersion": null,
+        "ID": null,
+        "DatasetURL": null
     }
 }
