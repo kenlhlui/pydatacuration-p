@@ -44,6 +44,7 @@ function populateFieldsFromTemplateDict(templateDict) {
       ID:                  'dataset_id',
       DatasetURL:          'dataset_url'
     }
+    // Note: log_generated_date and log_updated_date are handled by today.js
     // add more sections here if needed
   };
 
