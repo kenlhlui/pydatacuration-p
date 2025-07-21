@@ -199,20 +199,22 @@
                 <div class="info-item">
                     <span class="info-label">Dataset title:</span>
                     <input type="text" name="dataset_title" placeholder="Enter dataset title" 
-                    value="{{ dataset_title }}">
+                    value="{{ DatasetTitle }}" class="pre-filled">
                 </div>
                 <div class="info-item">
                     <span class="info-label">Dataset persistent identifier:</span>
                     <input type="text" name="dataset_pid" placeholder="Enter dataset PID"
-                    value="{{ dataset_pid }}" class="pre-filled">
+                    value="{{ DatasetPID }}" class="pre-filled">
                 </div>
                 <div class="info-item">
                     <span class="info-label">Dataset ID (versioned):</span>
-                    <input type="text" name="dataset_id" placeholder="Enter dataset ID">
+                    <input type="text" name="dataset_id" placeholder="Enter dataset ID"
+                    value="{{ ID }}" class="pre-filled">
                 </div>
                 <div class="info-item">
                     <span class="info-label">Dataset access URL:</span>
-                    <input type="url" name="dataset_url" placeholder="Enter dataset URL">
+                    <input type="url" name="dataset_url" placeholder="Enter dataset URL"
+                    value="{{ dataset_url }}" class="pre-filled">
                 </div>
                 <div class="info-item">
                     <span class="info-label">Log initial generated date:</span>
