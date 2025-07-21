@@ -1,6 +1,7 @@
 """pydatacuration-p: FastAPI application for curation report generation."""
 import asyncio
 import json
+import orjson
 import os
 from datetime import datetime
 from pathlib import Path
@@ -72,37 +73,23 @@ app.mount("/static", StaticFiles(directory="pydatacuration/frontend"), name="sta
 # Load environment variables
 load_dotenv()
 
-
-def get_checklist_items():
-    """Get all checklist items with their details."""
-    return [
-        ChecklistItem(id='1.1', action='Is the dataset deposited directly into U of T Dataverse?', 
-                     instructions='Python scripted. If the dataset is deposited in a sub-dataverse collection, include the name of the collection.', 
-                     priority='info', section='1.0 Structure of deposit'),
-        ChecklistItem(id='1.2', action='Has the depositor (or their research group) previously created or submitted to a dataverse collection?', 
-                     instructions='Python scripted. Confirm whether the listed dataverse collection refers to the same researcher/author', 
-                     priority='info', section='1.0 Structure of deposit'),
-        ChecklistItem(id='1.3', action='If the dataset was deposited in a sub-dataverse collection, does it require its own dataverse or is there an associated dataverse?', 
-                     instructions='If the depositor created a dataverse with one dataset: Is it the only dataset in the sub-dataverse collection? Is there another sub-dataverse collection it should be in?', 
-                     priority='require', section='1.0 Structure of deposit'),
-        ChecklistItem(id='2.1b', action='Do all the files open properly?', 
-                     instructions='Semi-automated using Python scripts. For files that cannot be opened programmatically - if we have the program, open min. 5 of each type of file.', 
-                     priority='require', section='2.0 Files'),
-        ChecklistItem(id='2.2', action='Are all files free of the following special characters (<>:"/\\|?*,@$~)?', 
-                     instructions='Python scripted.', 
-                     priority='recommend', section='2.0 Files'),
-        ChecklistItem(id='3.1', action='Does the dataset include a separate README file?', 
-                     instructions='Python scripted. Read the `ds_tree.txt` file in the log_files folder to identify whether there is a README file, but it is not named with \'README\'', 
-                     priority='require', section='3.0 Documentation'),
-        ChecklistItem(id='4.1', action='Are there any typos in metadata fields?', 
-                     instructions="""Python scripted. Only checking the following fields:\n1. Title, 2. Subtitle, 3. Alternative Title, 4. Description, 5. Notes
-                     """,
-                     priority='require', section='4.0 Metadata'),
-        ChecklistItem(id='5.1', action='Does the dataset contain any obvious sensitivity issues, such as direct identifiers?', 
-                     instructions='Review documentation and file names and see if there are any that should be opened and reviewed', 
-                     priority='require', section='5.0 Sensitive data and IP'),
-    ]
-
+def get_checklist_items() -> List[ChecklistItem]:
+    """Get all checklist items from the template_high.json file.
+    Returns:
+        List[ChecklistItem]: List of checklist items with their details.
+    """
+    with Path('res/template_high.json').open('rb') as f:
+        data = orjson.loads(f.read())
+    items = []
+    for item in data:
+        items.append(ChecklistItem(
+            id=item['id'],
+            action=item['action'],
+            instructions=item['instructions'],
+            priority=item['priority'],
+            section=item.get('section', '')
+        ))
+    return items
 
 @app.get('/', response_class=HTMLResponse)
 def landing(request: Request) -> HTMLResponse:
