@@ -81,7 +81,7 @@ cryptography==44.0.2
     #   msal
     #   pdfminer-six
     #   pyjwt
-deepdiff==8.4.2
+deepdiff==8.5.0
     # via
     #   -c (workspace)
     #   pydatacuration (pyproject.toml)
