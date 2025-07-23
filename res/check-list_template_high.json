@@ -58,7 +58,7 @@
     {
         "id": "3.2",
         "action": "Does the README contain the following information, and does it match the dataset’s metadata?",
-        "instructions": "Python scripted.",
+        "instructions": "Python scripted\n 1. Item 1 2. Item2",
         "priority": "required",
         "section": "3. Documentation"
     }
