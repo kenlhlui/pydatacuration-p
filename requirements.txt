@@ -296,7 +296,7 @@ pillow==11.1.0
     #   -c (workspace)
     #   pydatacuration (pyproject.toml)
     #   python-pptx
-platformdirs==4.3.7
+platformdirs==4.3.8
     # via
     #   -c (workspace)
     #   textual
