@@ -310,7 +310,7 @@
                         <tr>
                             <td class="item-id">{{ item.id }}</td>
                             <td class="action-item">{{ item.action }}</td>
-                            <td class="instructions">{{ item.instructions }}</td>
+                            <td class="instructions">{{ item.instructions|safe }}</td>
                             <td>
                                 <div class="status-checkboxes">
                                     <div class="status-checkbox">

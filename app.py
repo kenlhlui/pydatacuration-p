@@ -1,13 +1,14 @@
 """pydatacuration-p: FastAPI application for curation report generation."""
 import asyncio
 import json
-import orjson
 import os
 from datetime import datetime
 from pathlib import Path
 from typing import List
 from typing import Optional
 
+import markdown
+import orjson
 from dotenv import load_dotenv
 from fastapi import FastAPI
 from fastapi import HTTPException
@@ -88,7 +89,7 @@ def get_checklist_items() -> list[ChecklistItem]:
         items.append(ChecklistItem(
             id=item['id'],
             action=item['action'],
-            instructions=item['instructions'],
+            instructions=markdown.markdown(item['instructions']),  # Convert Markdown to HTML
             priority=item['priority'],
             section=item.get('section', '')
         ))
