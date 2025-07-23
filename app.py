@@ -8,7 +8,7 @@ from typing import List
 from typing import Optional
 
 import markdown
-import orjson
+import yaml
 from dotenv import load_dotenv
 from fastapi import FastAPI
 from fastapi import HTTPException
@@ -76,14 +76,14 @@ load_dotenv()
 
 
 def get_checklist_items() -> list[ChecklistItem]:
-    """Get all checklist items from the check-list_template_high.json file.
+    """Get all checklist items from the check-list_template_high.yaml file.
 
     Returns:
         List[ChecklistItem]: List of checklist items with their details.
 
     """
-    with Path('res/check-list_template_high.json').open('rb') as f:
-        data = orjson.loads(f.read())
+    with Path('res/check-list_template_high.yaml').open('r') as f:
+        data = yaml.safe_load(f)
     items = []
     for item in data:
         items.append(ChecklistItem(
