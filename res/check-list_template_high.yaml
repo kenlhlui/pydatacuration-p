@@ -39,6 +39,7 @@
   action: "Do all the files contain file extensions?"
   instructions: |
     Python scripted.
+    
     - Not all the files require a file extension (e.g. a README file can either be ‘README’ or ‘README.md’). Curator needs to check on a case-by-case basis.
   priority: "required"
   section: "2. Files"
