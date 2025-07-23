@@ -406,7 +406,7 @@ pyyaml==6.0.2
     # via
     #   -c (workspace)
     #   pydatacuration (pyproject.toml)
-pyzstd==0.16.2
+pyzstd==0.17.0
     # via
     #   -c (workspace)
     #   py7zr
