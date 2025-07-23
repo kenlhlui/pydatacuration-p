@@ -300,10 +300,8 @@
                     </tr>
                 </thead>
                 <tbody>  <!-- Use the Jinja2 syntax here for loops with get_checklist_items() -->
-                    {% set current_section = '' %}
                     {% for item in items %}
-                        {% if item.section != current_section %}
-                            {% set current_section = item.section %}
+                        {% if loop.first or item.section != loop.previtem.section %}
                             <tr>
                                 <td colspan="7" class="section-header">{{ item.section }}</td>
                             </tr>
