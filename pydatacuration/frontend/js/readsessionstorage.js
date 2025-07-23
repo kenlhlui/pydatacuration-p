@@ -9,7 +9,7 @@ document.addEventListener('DOMContentLoaded', () => {
     const saved = sessionStorage.getItem(key);
     if (saved !== null) {
       el.value = saved;
-      el.classList.add('pre-filled');
+      el.classList.add('auto-populate');
     }
     // 2) watch for changes and save
     el.addEventListener('input', () => {
