@@ -73,12 +73,15 @@ app.mount("/static", StaticFiles(directory="pydatacuration/frontend"), name="sta
 # Load environment variables
 load_dotenv()
 
-def get_checklist_items() -> List[ChecklistItem]:
-    """Get all checklist items from the template_high.json file.
+
+def get_checklist_items() -> list[ChecklistItem]:
+    """Get all checklist items from the check-list_template_high.json file.
+
     Returns:
         List[ChecklistItem]: List of checklist items with their details.
+
     """
-    with Path('res/template_high.json').open('rb') as f:
+    with Path('res/check-list_template_high.json').open('rb') as f:
         data = orjson.loads(f.read())
     items = []
     for item in data:
@@ -337,11 +340,11 @@ async def setup(request: SetupRequest) -> JSONResponse:
 @app.get('/template-dict/{parent_dir}/{ticket_number}')
 async def get_template_dict(parent_dir: str, ticket_number: str) -> JSONResponse:
     """Serve the template dictionary file for a specific ticket.
-    
+
     Args:
         parent_dir (str): Parent directory name
         ticket_number (str): Ticket number
-        
+
     Returns:
         JSONResponse: Template dictionary data
     """
@@ -349,10 +352,10 @@ async def get_template_dict(parent_dir: str, ticket_number: str) -> JSONResponse
         template_path = Path(parent_dir) / ticket_number / 'log_files' / 'template_dict.json'
         if not template_path.exists():
             raise HTTPException(status_code=404, detail="Template dictionary not found")
-            
+
         with template_path.open('r', encoding='utf-8') as f:
             template_data = json.load(f)
-            
+
         return JSONResponse(content=template_data)
     except Exception as e:
         raise HTTPException(status_code=500, detail=f"Error reading template dictionary: {str(e)}")
