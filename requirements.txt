@@ -360,7 +360,7 @@ pyreadr==0.5.3
     # via
     #   -c (workspace)
     #   pydatacuration (pyproject.toml)
-pyreadstat==1.2.8
+pyreadstat==1.3.0
     # via
     #   -c (workspace)
     #   pydatacuration (pyproject.toml)
