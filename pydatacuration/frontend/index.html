@@ -125,10 +125,10 @@
             width: 60px;
         }
         .action-item {
-            width: 40%;
+            width: 100%;
         }
         .instructions {
-            width: 30%;
+            width: 100%;
             font-size: 12px;
             color: #666;
         }
@@ -162,7 +162,7 @@
         }
         .priority-badge {
             display: inline-block;
-            padding: 4px 10px;
+            padding: 4px 8px;
             border-radius: 12px;
             font-size: 11px;
             font-weight: bold;
@@ -171,6 +171,12 @@
         .priority-required { background-color: #e74c3c; }
         .priority-recommended { background-color: #f39c12; }
         .priority-info { background-color: #3498db; }
+        .priority-badge-container {
+            width: 100px;
+            min-width: 100px;
+            max-width: 100px;
+        }
+
         .time-input {
             width: 100px;
             padding: 8px;
@@ -292,7 +298,6 @@
                     <tr>
                         <th>ID</th>
                         <th>Action Item</th>
-                        <th>Instructions</th>
                         <th>Status</th>
                         <th>Curator's Comments</th>
                         <th>Priority</th>
@@ -303,13 +308,19 @@
                     {% for item in items %}
                         {% if loop.first or item.section != loop.previtem.section %}
                             <tr>
-                                <td colspan="7" class="section-header">{{ item.section }}</td>
+                                <td colspan="6" class="section-header">{{ item.section }}</td>
                             </tr>
                         {% endif %}
                         <tr>
                             <td class="item-id">{{ item.id }}</td>
-                            <td class="action-item">{{ item.action }}</td>
-                            <td class="instructions">{{ item.instructions|safe }}</td>
+                        <td class="details-cell">
+                                    <div class="action-item">
+                                        {{ item.action }}
+                                    </div>
+                                    <div class="instructions">
+                                        {{ item.instructions|safe }}
+                                    </div>
+                                </td>
                             <td>
                                 <div class="status-checkboxes">
                                     <div class="status-checkbox">
@@ -333,18 +344,20 @@
                             <td>
                                 <textarea class="comments-input" name="comments-{{ item.id }}" placeholder="Curator's comments..."></textarea>
                             </td>
-                            <td><span class="priority-badge priority-{{ item.priority }}">{{ item.priority.title() }}</span></td>
+                            <td><div class="priority-badge-container"><span class="priority-badge priority-{{ item.priority }}">{{ item.priority.title() }}</span></div></td>
                             <td><input type="text" class="time-input" name="time-{{ item.id }}" placeholder="HH:MM:SS"></td>
                         </tr>
                     {% endfor %}
                     
                     <tr>
-                        <td colspan="7" class="section-header">Other Curator's Comment</td>
+                        <td colspan="7" class="section-header">Additional Comments</td>
                     </tr>
                     <tr>
                         <td class="item-id">-</td>
-                        <td class="action-item">Additional comments or observations</td>
-                        <td class="instructions">Any additional notes or observations not covered in the structured checklist</td>
+                        <td>
+                            <div class="action-item">Additional comments or observations</div>
+                            <div class="instructions">Any additional notes or observations not covered in the structured checklist</div>
+                        </td>
                         <td>-</td>
                         <td>
                             <textarea class="comments-input" name="comments-other" placeholder="Additional curator comments..."></textarea>
