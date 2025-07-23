@@ -66,14 +66,14 @@ function populateFieldsFromTemplateDict(templateDict) {
         const field = document.querySelector(`[name="${fieldName}"]`);
         console.log(`Field [name="${fieldName}"]`, field, 'current value:', field?.value);
 
-        if (field) {
-          field.value = value;
-          field.classList.add('pre-filled');
-          sessionStorage.setItem(fieldName, value);
-          console.log(`Set ${fieldName} to:`, value);
+      if (field.tagName === 'INPUT' || field.tagName === 'TEXTAREA' || field.tagName === 'SELECT') {
+          field.value = value;  // For form inputs
         } else {
-          console.log(`Field [name="${fieldName}"] not found`);
+          field.textContent = value;  // For display elements like <span>
         }
+        field.classList.add('auto-populate');
+        sessionStorage.setItem(fieldName, value);
+        console.log(`Set ${fieldName} to:`, value);
       }
     });
   });
