@@ -7,7 +7,7 @@ requires-python = "~=3.10.11"
 readme = "README.md"
 license = "MIT"
 dependencies = [
-    "PyYAML>=6.0.2,<7",
+    "pyyaml>=6.0.2,<7",
     "pandas[excel]>=2.2.3,<3",
     "pyjanitor>=0.29.2,<0.30",
     "orjson>=3.10.7,<4",
