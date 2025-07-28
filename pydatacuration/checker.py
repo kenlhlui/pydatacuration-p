@@ -30,7 +30,8 @@ class Checker:
                  ds_metadata: dict,
                  dv_tree: dict,
                  workdir: Path,
-                 check_zip: bool) -> None:
+                 check_zip: bool,
+                 collection_alias: str | None = None) -> None:
         """Initialize the Checker class.
 
         Args:
@@ -40,6 +41,7 @@ class Checker:
             dv_tree (dict): The Dataverse tree metadata.
             workdir (Path): The working directory.
             check_zip (bool): Whether to check zip files.
+            collection_alias (str | None): The collection alias for the author name to be searched.
         """
         self.base_url = base_url
         self.api_token = api_token
@@ -47,6 +49,7 @@ class Checker:
         self.dv_tree = dv_tree
         self.workdir = workdir
         self.check_zip = check_zip
+        self.collection_alias = collection_alias
 
         self.logger = CustomLogger.get_logger(__name__)
         self.checksums = Checksum()
@@ -261,13 +264,10 @@ class Checker:
                         self.logger.print(f'Spelling mistake found in the {field}: {message}')
                     self.template_dict['typo']['comments'].extend(typo_messages)
 
-    def check_dv_record(self, dv_alias: str) -> None:
+    def check_dv_record(self) -> None:
         """Check if the author has deposited data in Dataverse.
 
         Note: This check only works if the author inputs their name in a consistent way across all datasets.
-
-        Args:
-            dv_alias (str): The alias of the Dataverse.
 
         """
         query_string = 'data.latestVersion.metadataBlocks.citation.fields[?typeName==`author`].value[*].authorName.value[]'  # noqa: E501
@@ -279,7 +279,11 @@ class Checker:
                 # See https://github.com/IQSS/dataverse/issues/2038 for fq field;
                 # Note that fq supports searching the fields of the database schema
                 # i.e. The fields in the Native JSON export of a dataset
-                response = self.httpx_client.sync_get(f'/api/search?q=*&type=dataset&per_page=1000&subtree={dv_alias}&fq=authorName:"{author}"')  # noqa: E501
+                if self.collection_alias:
+                    response = self.httpx_client.sync_get(f'/api/search?q=*&type=dataset&per_page=1000&subtree={self.collection_alias}&fq=authorName:"{author}"')  # noqa: E501
+                else:
+                    # If no collection_alias is provided, search in all dataverses
+                    response = self.httpx_client.sync_get(f'/api/search?q=*&type=dataset&per_page=1000&fq=authorName:"{author}"')  # noqa: E501
                 if response and response.json():
                     name_of_dataverse_result = list(set(jmespath.search('data.items[*].name_of_dataverse', response.json())))  # noqa: E501
                     self.template_dict['dv_record']['comments'].append({author: name_of_dataverse_result})
@@ -353,7 +357,7 @@ class Checker:
         self.check_common_file_format()
         self.check_missing_metadata()
         self.check_spelling()
-        self.check_dv_record('toronto')  # Change this to your dataverse's alias
+        self.check_dv_record()  # Change this to your dataverse's alias
         self.check_ds_tree_info()
         self.check_restricted_files()
         self.check_terms_license()
