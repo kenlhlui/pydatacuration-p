@@ -73,7 +73,11 @@ def gen_curation_report(
     check_zip: bool = typer.Option(True,
                                    '--check_zip/--no-check_zip,',
                                    '-z/-nz',
-                                   help='To unzip zip files and check the content inside or not')) -> None:
+                                   help='To unzip zip files and check the content inside or not'),
+    collection_alias: str = typer.Option(None,
+                                    '--collection_alias',
+                                    '-c',
+                                    help='The collection alias for the author name to be searched',)) -> None:
     """This script downloads the dataset files and metadata from a Dataverse instance and checks the files and metadata for data curation, and generates a curation report in spreadsheet (.xlsx) and world (.docx) format."""  # noqa: E501, W505
     # Define the working directory
     workdir_path = directory_manager.DirectoryManager(ticket_number, parent_dir).define_workdir()
@@ -104,7 +108,13 @@ def gen_curation_report(
         ds_metadata, dv_tree = asyncio.run(downloads.Downloads(base_url, api_token, pid, workdir_path, ticket_number).downloader())
 
         # Run the checker
-        checker = Checker(base_url, api_token, ds_metadata, dv_tree, workdir_path, check_zip)
+        checker = Checker(base_url,
+                          api_token,
+                          ds_metadata,
+                          dv_tree,
+                          workdir_path,
+                          check_zip,
+                          collection_alias)
         template_dict = checker.run_checks()
 
         # Generate the report
