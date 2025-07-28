@@ -389,7 +389,6 @@
             <div class="actions">
                 <button type="submit" formaction="/" class="btn btn-primary">Export Curation Log</button>
                 <button type="button" class="btn btn-secondary" onclick="saveJSON()">Save JSON</button>
-                <button type="button" class="btn btn-secondary" onclick="printLog()">Print Log</button>
                 <button type="button" class="btn btn-secondary" onclick="window.location.href='/'">New Dataset</button>
                 <button type="button" class="btn btn-secondary" onclick="exitCuration()">Exit</button>
             </div>
@@ -432,13 +431,6 @@
         }
     }
     </script>
-    <script>
-        // Function to handle the print action
-        function printLog() {
-            window.print();
-        }
-    </script>
-
     <script>
         // Auto-save every 10 s into sessionStorage instead of localStorage
         setInterval(function() {
