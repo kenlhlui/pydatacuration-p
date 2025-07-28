@@ -56,14 +56,22 @@
             flex-wrap: wrap;
             gap: 15px;
             margin-top: 10px;
+            margin-bottom: 20px;
         }
         .checkbox-item {
             display: flex;
             align-items: center;
-            gap: 5px;
+            gap: 8px;
         }
         .checkbox-item input[type="checkbox"] {
             width: auto;
+            margin: 0;
+            vertical-align: middle;
+        }
+        .checkbox-item label {
+            margin-bottom: 0;
+            font-weight: normal;
+            cursor: pointer;
         }
         .btn {
             padding: 12px 30px;
@@ -212,6 +220,10 @@
                         <label for="check_zip">Unzip and check contents of zip files</label>
                     </div>
                 </div>
+                <div class="form-group">
+                    <label for="collection_alias">Dataverse Collection Alias</label>
+                    <input type="text" id="collection_alias" name="collection_alias" placeholder="Enter dataverse collection alias for checking the author's presence">
+                </div>
             </div>
 
             <div class="actions">
@@ -277,7 +289,6 @@
                 document.getElementById('loading').style.display = 'none';
             }
         });
-
     </script>
     <script defer src="/static/js/sessionstorage.js"></script>
     <script defer src="/static/js/restformbutton.js"></script>
