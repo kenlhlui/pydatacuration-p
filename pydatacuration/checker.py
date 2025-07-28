@@ -64,6 +64,7 @@ class Checker:
                  dv_tree: dict,
                  workdir: Path,
                  check_zip: bool,
+                 collection_alias: str | None = None,
                  collection_alias: str | None = None) -> None:
         """Initialize the Checker class.
 
@@ -74,6 +75,7 @@ class Checker:
             dv_tree (dict): The Dataverse tree metadata.
             workdir (Path): The working directory.
             check_zip (bool): Whether to check zip files.
+            collection_alias (str | None): The collection alias for the author name to be searched.
             collection_alias (str | None): The collection alias for the author name to be searched.
         """
         self.base_url = base_url
