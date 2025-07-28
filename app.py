@@ -4,6 +4,7 @@ import json
 import os
 from datetime import datetime
 from pathlib import Path
+from pprint import pprint
 from typing import List
 from typing import Optional
 
@@ -19,6 +20,7 @@ from fastapi.responses import Response
 from fastapi.staticfiles import StaticFiles
 from fastapi.templating import Jinja2Templates
 from pydantic import BaseModel
+from pydantic import ValidationError
 
 
 class ChecklistItem(BaseModel):
@@ -41,6 +43,8 @@ class ChecklistItem(BaseModel):
     section: str = ''
 
 
+from typing import Optional
+
 class SetupRequest(BaseModel):
     """Model for the setup form data matching CLI parameters.
 
@@ -49,6 +53,8 @@ class SetupRequest(BaseModel):
         base_url (str): Base URL of the Dataverse installation
         api_token (str): API token for the Dataverse installation
         ticket_number (str): Ticket number for the curation report
+        curator_name (str): Curator's name
+        curator_email (str): Curator's email
         parent_dir (str): Working directory path
         force_del (bool): Force delete existing directory
         check_zip (bool): Unzip and check contents of zip files
@@ -60,6 +66,8 @@ class SetupRequest(BaseModel):
     base_url: str | None = None
     api_token: str | None = None
     ticket_number: str
+    curator_name: str
+    curator_email: str
     parent_dir: str = 'workdir'
     force_del: bool = False
     check_zip: bool = True
@@ -133,98 +141,68 @@ def checklist(request: Request) -> HTMLResponse:
     return templates.TemplateResponse('index.html', {'request': request, 'items': items})
 
 
-@app.post('/save-checklist')
-async def save_checklist(request: Request) -> JSONResponse:
-    """Save checklist data to JSON file."""
-    form = await request.form()
-
-    # Create data structure for JSON
-    checklist_data = {
-        'metadata': {
-            'saved_at': datetime.now().isoformat(),
-            'ticket_number': form.get('ticket_number', ''),
-            'curator_name': form.get('curator_name', ''),
-            'curator_email': form.get('curator_email', ''),
-            'dataset_title': form.get('dataset_title', ''),
-            'dataset_pid': form.get('dataset_pid', ''),
-            'dataset_id': form.get('dataset_id', ''),
-            'dataset_url': form.get('dataset_url', ''),
-            'log_generated_date': form.get('log_generated_date', ''),
-            'log_updated_date': form.get('log_updated_date', ''),
-        },
-        'items': []
-    }
-
-    # Extract checklist items
-    items = get_checklist_items()
-    for item in items:
-        item_data = {
-            'id': item.id,
-            'action': item.action,
-            'instructions': item.instructions,
-            'priority': item.priority,
-            'section': item.section,
-            'status': form.get(f'status-{item.id}', ''),
-            'comments': form.get(f'comments-{item.id}', ''),
-            'time_spent': form.get(f'time-{item.id}', ''),
-        }
-        checklist_data['items'].append(item_data)
-
-    # Add other comments
-    checklist_data['other_comments'] = form.get('comments-other', '')
-
-    # Save to JSON file
-    ticket_number = form.get('ticket_number', 'unknown')
-    filename = 'checklist.json'
-    
-    # Use configurable output directory
-    output_dir = Path(os.getenv('OUTPUT_DIR', 'output'))
-    filepath = output_dir / filename
-
-    # Create output directory if it doesn't exist
-    output_dir.mkdir(exist_ok=True)
-
-    with filepath.open('w', encoding='utf-8') as f:
-        json.dump(checklist_data, f, indent=2)
-
-    return JSONResponse(content={
-        'success': True,
-        'message': f'Checklist saved to {filename}',
-        'filepath': filepath
-    })
-
-
-# @app.post('/export-csv')
-# async def export_csv(request: Request) -> Response:
-#     """Reconstructs the table from form data and streams a CSV."""
+# @app.post('/save-checklist')
+# async def save_checklist(request: Request) -> JSONResponse:
+#     """Save checklist data to JSON file."""
 #     form = await request.form()
-#     # form is a MultiDict of keys like 'status-1.1', 'comments-1.1', 'time-1.1', etc.
-#     # Extract unique row IDs:
-#     row_ids = sorted({key.split('-')[1] for key in form.keys() if '-' in key})
 
-#     # Prepare CSV in memory
-#     buf = io.StringIO()
-#     writer = csv.writer(buf)
-#     # header
-#     writer.writerow(['ID', 'Action Item', 'Status', 'Comments', 'Priority', 'Time Spent'])
-#     for rid in row_ids:
-#         status = form.get(f'status-{rid}', '')
-#         comments = form.get(f'comments-{rid}', '')
-#         priority = form.get(f'priority-{rid}', '')
-#         time_spent = form.get(f'time-{rid}', '')
-#         # if you also POSTed action text, you could grab it similarly, or re-lookup your stub rows
-#         action = form.get(f'action-{rid}', '')
-#         writer.writerow([rid, action, status, comments, priority, time_spent])
+#     # Create data structure for JSON
+#     checklist_data = {
+#         'metadata': {
+#             'saved_at': datetime.now().isoformat(),
+#             'ticket_number': form.get('ticket_number', ''),
+#             'curator_name': form.get('curator_name', ''),
+#             'curator_email': form.get('curator_email', ''),
+#             'dataset_title': form.get('dataset_title', ''),
+#             'dataset_pid': form.get('dataset_pid', ''),
+#             'dataset_id': form.get('dataset_id', ''),
+#             'dataset_url': form.get('dataset_url', ''),
+#             'log_generated_date': form.get('log_generated_date', ''),
+#             'log_updated_date': form.get('log_updated_date', ''),
+#         },
+#         'items': []
+#     }
 
-#     csv_bytes = buf.getvalue().encode('utf-8')
-#     return Response(
-#         content=csv_bytes,
-#         media_type='text/csv',
-#         headers={'Content-Disposition': 'attachment; filename="curation_log.csv"'}
-#     )
+#     # Extract checklist items
+#     items = get_checklist_items()
+#     for item in items:
+#         item_data = {
+#             'id': item.id,
+#             'action': item.action,
+#             'instructions': item.instructions,
+#             'priority': item.priority,
+#             'section': item.section,
+#             'status': form.get(f'status-{item.id}', ''),
+#             'comments': form.get(f'comments-{item.id}', ''),
+#             'time_spent': form.get(f'time-{item.id}', ''),
+#         }
+#         checklist_data['items'].append(item_data)
+
+#     # Add other comments
+#     checklist_data['other_comments'] = form.get('comments-other', '')
+
+#     # Save to JSON file
+#     ticket_number = form.get('ticket_number', 'unknown')
+#     filename = 'checklist.json'
+
+#     # Use configurable output directory
+#     output_dir = Path(os.getenv('OUTPUT_DIR', 'output'))
+#     filepath = output_dir / filename
+
+#     # Create output directory if it doesn't exist
+#     output_dir.mkdir(exist_ok=True)
+
+#     with filepath.open('w', encoding='utf-8') as f:
+#         json.dump(checklist_data, f, indent=2)
+
+#     return JSONResponse(content={
+#         'success': True,
+#         'message': f'Checklist saved to {filename}',
+#         'filepath': filepath
+#     })
 
 
-async def run_command(command: str, cwd: str = None) -> dict:
+async def run_command(command: str, cwd: str) -> dict:
     """Run a command and return the result.
 
     Args:
@@ -270,8 +248,18 @@ async def setup(request: SetupRequest) -> JSONResponse:
     """
     try:
         # Debug: Print the request data
-        print(f"Request data: {request}")
-        print(f"force_del: {request.force_del}, check_zip: {request.check_zip}")
+        print(f'Request data: {request}')
+        print(f'force_del: {request.force_del}, check_zip: {request.check_zip}')
+
+        # Validate required fields
+        if not request.pid or not request.pid.strip():
+            raise HTTPException(status_code=400, detail='PID is required')
+        if not request.ticket_number or not request.ticket_number.strip():
+            raise HTTPException(status_code=400, detail='Ticket number is required')
+        if not request.curator_name or not request.curator_name.strip():
+            raise HTTPException(status_code=400, detail='Curator name is required')
+        if not request.curator_email or not request.curator_email.strip():
+            raise HTTPException(status_code=400, detail='Curator email is required')
 
         # Build the command to run pydatacuration CLI
         cmd_parts = [
@@ -280,12 +268,13 @@ async def setup(request: SetupRequest) -> JSONResponse:
             '--ticket-number', f'"{request.ticket_number}"',
             '--parent-dir', f'"{request.parent_dir}"'
         ]
+
         # Add base URL if provided
-        if request.base_url:
+        if request.base_url and request.base_url.strip():
             cmd_parts.extend(['--base-url', f'"{request.base_url}"'])
 
         # Add API token if provided
-        if request.api_token:
+        if request.api_token and request.api_token.strip():
             cmd_parts.extend(['--api-token', f'"{request.api_token}"'])
 
         # Add optional flags
@@ -314,21 +303,37 @@ async def setup(request: SetupRequest) -> JSONResponse:
                 'output': result['stdout'],
                 'command': cmd,
                 'template_dict_path': f'/template-dict/{request.parent_dir}/{request.ticket_number}',
+                'curator_name': request.curator_name,
+                'curator_email': request.curator_email,
             })
-        else:
-            return JSONResponse(
-                status_code=400,
-                content={
-                    'success': False,
-                    'message': 'Curation command failed',
-                    'error': result['stderr'],
-                    'output': result['stdout'],
-                    'command': cmd,
-                    'return_code': result['return_code'],
-                }
-            )
+        return JSONResponse(
+            status_code=400,
+            content={
+                'success': False,
+                'message': 'Curation command failed',
+                'error': result['stderr'],
+                'output': result['stdout'],
+                'command': cmd,
+                'return_code': result['return_code'],
+            }
+        )
 
+    except ValidationError as e:
+        print(f'Validation error: {e}')
+        return JSONResponse(
+            status_code=422,
+            content={
+                'success': False,
+                'message': 'Validation error',
+                'detail': str(e),
+                'errors': e.errors()
+            }
+        )
+    except HTTPException as e:
+        pprint(f'HTTP exception: {e}')
+        raise e
     except Exception as e:
+        pprint(f'Unexpected error: {e}')
         return JSONResponse(
             status_code=500,
             content={
