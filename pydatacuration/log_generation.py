@@ -90,7 +90,7 @@ class GenerateLog:
         ID: data.latestVersion.id}"""
         dataset_info_dict = jmespath.search(search_string, self.ds_metadata)
         # Add 'DatasetURL' by parsing the base_url and the DatasetPersistentId
-        dataset_info_dict['DatasetURL'] = f'{self.base_url}/dataset.xhtml?persistentId={dataset_info_dict.get('DatasetPersistentId', None)}'  # noqa: E501
+        dataset_info_dict['DatasetURL'] = f'{self.base_url}/dataset.xhtml?persistentId={dataset_info_dict.get("DatasetPersistentId", None)}'  # noqa: E501
 
         return dataset_info_dict
 
