@@ -345,7 +345,13 @@
                                 <textarea class="comments-input" name="comments-{{ item.id }}" placeholder="Curator's comments..."></textarea>
                             </td>
                             <td><div class="priority-badge-container"><span class="priority-badge priority-{{ item.priority }}">{{ item.priority.title() }}</span></div></td>
-                            <td><input type="text" class="time-input" name="time-{{ item.id }}" placeholder="HH:MM:SS"></td>
+                            <td><input type="text" 
+                               class="time-input" 
+                               name="time-{{ item.id }}" 
+                               placeholder="MM:SS" 
+                               required
+                               title="Please enter duration in MM:SS format (e.g., 02:30, 10:45)" 
+                               maxlength="5"></td>
                         </tr>
                     {% endfor %}
                     
@@ -452,6 +458,7 @@
     <script src="/static/js/readsessionstorage.js"></script>
     <script src="/static/js/readtemplatedict.js"></script>
     <script src="/static/js/today.js"></script>
+    <script src="/static/js/timespentvalidation.js"></script>
       <script>
     window.addEventListener('DOMContentLoaded', function() {
       // Call the function from today.js
