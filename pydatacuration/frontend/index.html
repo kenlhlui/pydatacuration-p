@@ -393,7 +393,7 @@
             <div class="actions">
                 <button type="submit" formaction="/" class="btn btn-primary">Export Curation Log</button>
                 <button type="button" class="btn btn-secondary btn-calculate-time">Calculate Time Spent</button>
-                <button type="button" class="btn btn-secondary" onclick="saveJSON()">Save JSON</button>
+                <button type="button" class="btn btn-secondary" onclick="saveFormAsYaml()">Save YAML</button>
                 <button type="button" class="btn btn-secondary" onclick="window.location.href='/'">New Dataset</button>
                 <button type="button" class="btn btn-secondary" onclick="exitCuration()">Exit</button>
             </div>
@@ -414,56 +414,29 @@
         }
     }
 
-    async function saveJSON() {
-        // Get form data
-        const formData = new FormData(document.querySelector('form'));
+    // async function saveJSON() {
+    //     // Get form data
+    //     const formData = new FormData(document.querySelector('form'));
         
-        try {
-            const response = await fetch('/save-checklist', {
-                method: 'POST',
-                body: formData
-            });
+    //     try {
+    //         const response = await fetch('/save-checklist', {
+    //             method: 'POST',
+    //             body: formData
+    //         });
             
-            const result = await response.json();
+    //         const result = await response.json();
             
-            if (result.success) {
-                alert('Checklist saved successfully! File: ' + result.filepath);
-            } else {
-                alert('Error saving checklist: ' + result.message);
-            }
-        } catch (error) {
-            alert('Error saving checklist: ' + error.message);
-        }
-    }
+    //         if (result.success) {
+    //             alert('Checklist saved successfully! File: ' + result.filepath);
+    //         } else {
+    //             alert('Error saving checklist: ' + result.message);
+    //         }
+    //     } catch (error) {
+    //         alert('Error saving checklist: ' + error.message);
+    //     }
+    // }
     </script>
-    <script>
-        // Auto-save every 10 s into sessionStorage instead of localStorage
-        setInterval(function() {
-            const formData = new FormData(document.querySelector('form'));
-            sessionStorage.setItem(
-            'curationLog',
-            JSON.stringify(Object.fromEntries(formData))
-            );
-        }, 10000);
-            
-            // Load saved curation log data
-            const savedData = sessionStorage.getItem('curationLog');
-            if (savedData) {
-            const data = JSON.parse(savedData);
-            Object.keys(data).forEach(key => {
-                const element = document.querySelector(`[name="${key}"]`);
-                if (element) {
-                if (element.type === 'radio') {
-                    document.querySelector(
-                    `[name="${key}"][value="${data[key]}"]`
-                    ).checked = true;
-                } else {
-                    element.value = data[key];
-                }
-                }
-            });
-            }
-    </script>
+    <script src="/static/js/yaml-autosave.js"></script>
     <script src="/static/js/readsessionstorage.js"></script>
     <script src="/static/js/readtemplatedict.js"></script>
     <script src="/static/js/today.js"></script>
