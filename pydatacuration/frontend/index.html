@@ -97,6 +97,39 @@
             font-weight: bold;
             color: #495057;
         }
+        .status-select {
+            width: 100%;
+            padding: 5px;
+            border: 1px solid #ddd;
+            border-radius: 4px;
+            font-size: 12px;
+            transition: background-color 0.3s ease;
+        }
+        /* Status-specific colors */
+        .status-select.status-P {
+            background-color: #d4edda; /* Light green */
+            color: #155724;
+            border-color: #c3e6cb;
+        }
+
+        .status-select.status-F {
+            background-color: #f8d7da; /* Light red */
+            color: #721c24;
+            border-color: #f5c6cb;
+        }
+
+        .status-select.status-TBD {
+            background-color: #fff3cd; /* Light yellow */
+            color: #856404;
+            border-color: #ffeaa7;
+        }
+
+        .status-select.status-NA {
+            background-color: #e2e3e5; /* Light gray */
+            color: #383d41;
+            border-color: #d6d8db;
+        }
+
         .checklist-table {
             width: 100%;
             border-collapse: collapse;
@@ -131,16 +164,6 @@
             width: 100%;
             font-size: 12px;
             color: #666;
-        }
-        .status-checkboxes {
-            display: flex;
-            gap: 15px;
-            flex-wrap: wrap;
-        }
-        .status-checkbox {
-            display: flex;
-            align-items: center;
-            gap: 5px;
         }
         .status-checkbox input[type="radio"] {
             margin: 0;
@@ -321,26 +344,15 @@
                                         {{ item.instructions|safe }}
                                     </div>
                                 </td>
-                            <td>
-                                <div class="status-checkboxes">
-                                    <div class="status-checkbox">
-                                        <input type="radio" name="status-{{ item.id }}" value="P" id="status-{{ item.id }}-P">
-                                        <label for="status-{{ item.id }}-P">P</label>
-                                    </div>
-                                    <div class="status-checkbox">
-                                        <input type="radio" name="status-{{ item.id }}" value="F" id="status-{{ item.id }}-F">
-                                        <label for="status-{{ item.id }}-F">F</label>
-                                    </div>
-                                    <div class="status-checkbox">
-                                        <input type="radio" name="status-{{ item.id }}" value="TBD" id="status-{{ item.id }}-TBD">
-                                        <label for="status-{{ item.id }}-TBD">TBD</label>
-                                    </div>
-                                    <div class="status-checkbox">
-                                        <input type="radio" name="status-{{ item.id }}" value="NA" id="status-{{ item.id }}-NA">
-                                        <label for="status-{{ item.id }}-NA">NA</label>
-                                    </div>
-                                </div>
-                            </td>
+                        <td>
+                            <select name="status-{{ item.id }}" class="status-select" required>
+                                <option value="">Select status...</option>
+                                <option value="P">Passed</option>
+                                <option value="F">Follow-up</option>
+                                <option value="TBD">To Be Determined</option>
+                                <option value="NA">Not Applicable</option>
+                            </select>
+                        </td>
                             <td>
                                 <textarea class="comments-input" name="comments-{{ item.id }}" placeholder="Curator's comments..."></textarea>
                             </td>
@@ -458,7 +470,7 @@
     <script src="/static/js/readsessionstorage.js"></script>
     <script src="/static/js/readtemplatedict.js"></script>
     <script src="/static/js/today.js"></script>
-    <script src="/static/js/timespentvalidation.js"></script>
+    <script src="/static/js/validation.js"></script>
       <script>
     window.addEventListener('DOMContentLoaded', function() {
       // Call the function from today.js
