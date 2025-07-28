@@ -1,84 +1,110 @@
-// Form validation for time inputs and status selection
-document.addEventListener('DOMContentLoaded', function() {
-    const form = document.querySelector('form');
-    
-    if (form) {
-        form.addEventListener('submit', async function(e) {
-            let hasErrors = false;
-            
-            // Validate time inputs
-            const timeInputs = document.querySelectorAll('.time-input[required]');
-            timeInputs.forEach(function(input) {
-                const value = input.value.trim();
-                
-                if (!value) {
-                    alert('Time Spent field is required for item ID: ' + input.name.replace('time-', ''));
-                    input.focus();
-                    hasErrors = true;
-                    return;
-                }
-                
-                const durationRegex = /^[0-9]{1,2}:[0-5][0-9]$/;
-                if (!durationRegex.test(value)) {
-                    alert('Please enter duration in HH:MM format (e.g., 02:30, 10:45) for item ID: ' + input.name.replace('time-', ''));
-                    input.focus();
-                    input.select();
-                    hasErrors = true;
-                    return;
-                }
-            });
-            
-            // Validate status selections (FIXED FOR DROPDOWNS)
-            const statusSelects = document.querySelectorAll('.status-select[required]');
-            statusSelects.forEach(function(select) {
-                if (!select.value) {
-                    const itemId = select.name.replace('status-', '');
-                    alert('Please select a status for item ID: ' + itemId);
-                    select.focus();
-                    hasErrors = true;
-                    return;
-                }
-            });
-            
-            // If there are validation errors, prevent form export
-            if (hasErrors) {
-                e.preventDefault();
-            }
-            // If no errors, proceed with form export
-            else {
-                // Prevent immediate submission for delay
-                e.preventDefault();
-                
-                // Show success message and loading state
-                const submitButton = document.querySelector('button[type="submit"]');
-                const originalText = submitButton.textContent;
-                submitButton.textContent = 'Saving...';
-                submitButton.disabled = true;
-                
-                // Add a green bar to indicate successful validation
-                const successMessage = document.createElement('div');
-                successMessage.style.position = 'fixed';
-                successMessage.style.top = '10px';
-                successMessage.style.left = '50%';
-                successMessage.style.transform = 'translateX(-50%)';
-                successMessage.style.backgroundColor = '#d4edda';
-                successMessage.style.color = '#155724';
-                successMessage.style.padding = '15px 25px';
-                successMessage.style.border = '1px solid #c3e6cb';
-                successMessage.style.borderRadius = '5px';
-                successMessage.style.zIndex = '1000';
-                successMessage.style.boxShadow = '0 2px 10px rgba(0,0,0,0.1)';
-                successMessage.textContent = 'Checklist input validated successfully! Exporting the checklist to a docx file...';
-                document.body.appendChild(successMessage);
-                
-                // Sleep for 2 seconds
-                await new Promise(resolve => setTimeout(resolve, 2000));
-                
-                // Remove success message and submit form
-                successMessage.remove();
-                form.submit();
-            }
+document.addEventListener('DOMContentLoaded', () => {
+  const form = document.querySelector('form');
+  const calculateBtn = document.querySelector('button.btn-calculate-time');
+
+  // 1) Validation helper for form export:
+  function validateAllInputs() {
+    let hasErrors = false;
+
+    // Time inputs
+    document.querySelectorAll('.time-input[required]').forEach(input => {
+      const v = input.value.trim();
+      if (!v || !/^[0-9]{1,2}:[0-5][0-9]$/.test(v)) {
+        alert('Item ' + input.name.replace('time-', '') +
+              ': please enter time in MM:SS.');
+        input.focus();
+        hasErrors = true;
+        return;
+      }
+    });
+
+    // Status selects
+    document.querySelectorAll('.status-select[required]').forEach(select => {
+      if (!select.value) {
+        const id = select.name.replace('status-', '');
+        alert('Item ' + id + ': please select a status.');
+        select.focus();
+        hasErrors = true;
+        return;
+      }
+    });
+
+    return !hasErrors;
+  }
+
+  // 2) Form submit + export handler
+  if (form) {
+    form.addEventListener('submit', async e => {
+      if (!validateAllInputs()) {
+        e.preventDefault();
+        return;
+      }
+
+      // (If valid, show “Saving…” + green bar, delay, then submit)
+      e.preventDefault();
+      const btn = form.querySelector('button[type="submit"]');
+      btn.textContent = 'Saving...';
+      btn.disabled = true;
+
+      const msg = document.createElement('div');
+      Object.assign(msg.style, {
+        position: 'fixed',
+        top: '10px',
+        left: '50%',
+        transform: 'translateX(-50%)',
+        backgroundColor: '#d4edda',
+        color: '#155724',
+        padding: '15px 25px',
+        border: '1px solid #c3e6cb',
+        borderRadius: '5px',
+        zIndex: '1000',
+        boxShadow: '0 2px 10px rgba(0,0,0,0.1)'
+      });
+      msg.textContent = 'Checklist input validated successfully! Exporting...';
+      document.body.appendChild(msg);
+
+      await new Promise(r => setTimeout(r, 2000));
+      msg.remove();
+      form.submit();
+    });
+  }
+
+// 3) Calculate-only button: first validate time inputs, then sum
+if (calculateBtn) {
+    calculateBtn.addEventListener('click', () => {
+        const timeInputs = document.querySelectorAll('.time-input[required]');
+        const durationRegex = /^[0-9]{1,2}:[0-5][0-9]$/;
+        let totalMins = 0;
+
+        // 1) Validate each required time input
+        for (let input of timeInputs) {
+        const v = input.value.trim();
+        const id = input.name.replace('time-', '');
+
+        if (!v) {
+            alert(`Item ${id}: Time Spent input is required.`);
+            input.focus();
+            return;           // stop here if empty
+        }
+
+        if (!durationRegex.test(v)) {
+            alert(`Item ${id}: enter time in MM:SS format (e.g. 02:30).`);
+            input.focus();
+            input.select();
+            return;           // stop here if wrong format
+        }
+        }
+
+        // 2) If all valid, sum them up
+        timeInputs.forEach(input => {
+        const [h, m] = input.value.split(':').map(Number);
+        totalMins += h * 60 + m;
         });
+
+        const hours = Math.floor(totalMins / 60);
+        const mins  = (totalMins % 60).toString().padStart(2, '0');
+        alert(`Total Time Spent: ${hours}:${mins}`);
+    });
     }
 });
 
