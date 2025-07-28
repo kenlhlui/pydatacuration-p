@@ -3,7 +3,7 @@ document.addEventListener('DOMContentLoaded', function() {
     const form = document.querySelector('form');
     
     if (form) {
-        form.addEventListener('submit', function(e) {
+        form.addEventListener('submit', async function(e) {
             let hasErrors = false;
             
             // Validate time inputs
@@ -28,23 +28,55 @@ document.addEventListener('DOMContentLoaded', function() {
                 }
             });
             
-            // Validate status selections
-            const statusGroups = document.querySelectorAll('input[name^="status-"]:first-of-type');
-            statusGroups.forEach(function(firstRadio) {
-                const groupName = firstRadio.name;
-                const selectedStatus = document.querySelector(`input[name="${groupName}"]:checked`);
-                
-                if (!selectedStatus) {
-                    const itemId = groupName.replace('status-', '');
+            // Validate status selections (FIXED FOR DROPDOWNS)
+            const statusSelects = document.querySelectorAll('.status-select[required]');
+            statusSelects.forEach(function(select) {
+                if (!select.value) {
+                    const itemId = select.name.replace('status-', '');
                     alert('Please select a status for item ID: ' + itemId);
-                    firstRadio.focus();
+                    select.focus();
                     hasErrors = true;
                     return;
                 }
             });
             
+            // If there are validation errors, prevent form export
             if (hasErrors) {
                 e.preventDefault();
+            }
+            // If no errors, proceed with form export
+            else {
+                // Prevent immediate submission for delay
+                e.preventDefault();
+                
+                // Show success message and loading state
+                const submitButton = document.querySelector('button[type="submit"]');
+                const originalText = submitButton.textContent;
+                submitButton.textContent = 'Saving...';
+                submitButton.disabled = true;
+                
+                // Add a green bar to indicate successful validation
+                const successMessage = document.createElement('div');
+                successMessage.style.position = 'fixed';
+                successMessage.style.top = '10px';
+                successMessage.style.left = '50%';
+                successMessage.style.transform = 'translateX(-50%)';
+                successMessage.style.backgroundColor = '#d4edda';
+                successMessage.style.color = '#155724';
+                successMessage.style.padding = '15px 25px';
+                successMessage.style.border = '1px solid #c3e6cb';
+                successMessage.style.borderRadius = '5px';
+                successMessage.style.zIndex = '1000';
+                successMessage.style.boxShadow = '0 2px 10px rgba(0,0,0,0.1)';
+                successMessage.textContent = 'Checklist input validated successfully! Exporting the checklist to a docx file...';
+                document.body.appendChild(successMessage);
+                
+                // Sleep for 2 seconds
+                await new Promise(resolve => setTimeout(resolve, 2000));
+                
+                // Remove success message and submit form
+                successMessage.remove();
+                form.submit();
             }
         });
     }
