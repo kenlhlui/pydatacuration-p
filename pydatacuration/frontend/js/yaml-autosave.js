@@ -226,16 +226,26 @@ function autoSaveForm() {
 
 // Organize form data by checklist item IDs
 function organizeFormData(formData) {
-  // tmpMap holds per-id objects until we’ve collected them all
+  // tmpMap holds per-id objects until we've collected them all
     const tmpMap = {};
+    const otherFields = {};
+    
     for (const [key, value] of formData.entries()) {
         const rawId = extractItemId(key);
-        if (!rawId) continue;
-        const itemId = String(rawId);    // force it to a JS string
-        if (!tmpMap[itemId]) {
-        tmpMap[itemId] = { id: itemId };
+        if (rawId) {
+            // This is a checklist item field
+            const itemId = String(rawId);
+            if (!tmpMap[itemId]) {
+                tmpMap[itemId] = { id: itemId };
+            }
+            tmpMap[itemId][getFieldType(key)] = value || '';
+        } else if (isMetadataField(key)) {
+            // This is a metadata field - will be handled separately
+            continue;
+        } else {
+            // This is some other field
+            otherFields[key] = value || '';
         }
-        tmpMap[itemId][getFieldType(key)] = value || '';
     }
 
     // now turn that into a sorted array
@@ -244,20 +254,56 @@ function organizeFormData(formData) {
         .sort()
         .map((id) => tmpMap[id]);
 
+    // Collect metadata from .auto-populate fields
+    const metadata = loadMetadataFields();
+
     return {
-        metadata: {},
+        metadata: metadata,
         checklist_items: checklist,
-        other: {}
+        other: otherFields
     };
 }
 
-// Check if field is a metadata field
+// Get form field value with proper handling for different input types and display elements
+function getFormFieldValue(fieldName) {
+    const element = document.querySelector(`[name="${fieldName}"]`);
+    if (!element) return '';
+    
+    // Handle display elements (span, div, etc.) - get text content
+    if (element.tagName === 'SPAN' || element.tagName === 'DIV') {
+        return element.textContent ? element.textContent.trim() : '';
+    }
+    
+    if (element.type === 'radio') {
+        const checkedRadio = document.querySelector(`[name="${fieldName}"]:checked`);
+        return checkedRadio ? checkedRadio.value : '';
+    } else if (element.type === 'checkbox') {
+        return element.checked ? 'on' : '';
+    } else {
+        return element.value || '';
+    }
+}
+
+// Check if a field name should be considered metadata
 function isMetadataField(fieldName) {
-    const metadataFields = [
-        'ticket_number', 'curator_name', 'curator_email', 'dataset_title',
-        'dataset_pid', 'dataset_id', 'dataset_url', 'log_initial_date', 'log_updated_date'
-    ];
-    return metadataFields.includes(fieldName);
+    // Exclude form fields that are part of checklist items
+    return !fieldName.match(/^(status|comments|time)-.+$/);
+}
+
+// Collect metadata from .auto-populate fields
+function loadMetadataFields() {
+    const metadata = {};
+    const fields = document.querySelectorAll('.auto-populate');
+    fields.forEach(field => {
+        const fieldName = field.getAttribute('name');
+        if (fieldName && isMetadataField(fieldName)) {
+            const value = getFormFieldValue(fieldName);
+            if (value) {
+                metadata[fieldName] = value;
+            }
+        }
+    });
+    return metadata;
 }
 
 // Load saved data function with structured format
@@ -312,7 +358,7 @@ function populateFormFromStructuredData(data) {
             setFormFieldValue(key, value);
         });
     }
-    
+
     // Populate checklist items
     if (data.checklist_items) {
         Object.entries(data.checklist_items).forEach(([itemId, itemData]) => {
@@ -336,10 +382,17 @@ function populateFormFromStructuredData(data) {
     }
 }
 
-// Set form field value with proper handling for different input types
+// Set form field value with proper handling for different input types and display elements
 function setFormFieldValue(fieldName, value) {
     const element = document.querySelector(`[name="${fieldName}"]`);
     if (!element) return;
+    
+    // Handle display elements (span, div, etc.) - set text content
+    if (element.tagName === 'SPAN' || element.tagName === 'DIV') {
+        element.textContent = value;
+        debugLog(`Set display element ${fieldName} to ${value}`);
+        return;
+    }
     
     if (element.type === 'radio') {
         const radioElement = document.querySelector(
@@ -371,31 +424,6 @@ function updateStatusStyling(selectElement) {
         }
     }
 }
-
-// // Manual save function
-// function saveFormAsYaml() {
-//     try {
-//         autoSaveForm();
-//         alert('Form data saved successfully in structured YAML format!');
-//     } catch (error) {
-//         alert('Error saving form data: ' + error.message);
-//     }
-// }
-
-// // Get current data as YAML string for export
-// function exportAsYaml() {
-//     try {
-//         const form = document.querySelector('form');
-//         if (!form) return '';
-        
-//         const formData = new FormData(form);
-//         const organizedData = organizeFormData(formData);
-//         return simpleYamlStringify(organizedData);
-//     } catch (error) {
-//         console.error('Error exporting YAML:', error);
-//         return '';
-//     }
-// }
 
 // Initialize auto-save functionality
 function initializeYamlAutoSave() {
