@@ -375,30 +375,30 @@ function updateStatusStyling(selectElement) {
     }
 }
 
-// Manual save function
-function saveFormAsYaml() {
-    try {
-        autoSaveForm();
-        alert('Form data saved successfully in structured YAML format!');
-    } catch (error) {
-        alert('Error saving form data: ' + error.message);
-    }
-}
+// // Manual save function
+// function saveFormAsYaml() {
+//     try {
+//         autoSaveForm();
+//         alert('Form data saved successfully in structured YAML format!');
+//     } catch (error) {
+//         alert('Error saving form data: ' + error.message);
+//     }
+// }
 
-// Get current data as YAML string for export
-function exportAsYaml() {
-    try {
-        const form = document.querySelector('form');
-        if (!form) return '';
+// // Get current data as YAML string for export
+// function exportAsYaml() {
+//     try {
+//         const form = document.querySelector('form');
+//         if (!form) return '';
         
-        const formData = new FormData(form);
-        const organizedData = organizeFormData(formData);
-        return simpleYamlStringify(organizedData);
-    } catch (error) {
-        console.error('Error exporting YAML:', error);
-        return '';
-    }
-}
+//         const formData = new FormData(form);
+//         const organizedData = organizeFormData(formData);
+//         return simpleYamlStringify(organizedData);
+//     } catch (error) {
+//         console.error('Error exporting YAML:', error);
+//         return '';
+//     }
+// }
 
 // Initialize auto-save functionality
 function initializeYamlAutoSave() {
