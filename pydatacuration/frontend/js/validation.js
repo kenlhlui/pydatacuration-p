@@ -32,44 +32,7 @@ document.addEventListener('DOMContentLoaded', () => {
   const form = document.querySelector('form');
   const calculateBtn = document.querySelector('button.btn-calculate-time');
 
-  // 2) Form submit + export handler
-  if (form) {
-    form.addEventListener('submit', async e => {
-      if (!validateAllInputs()) {
-        e.preventDefault();
-        return;
-      }
-
-      // (If valid, show “Saving…” + green bar, delay, then submit)
-      e.preventDefault();
-      const btn = form.querySelector('button[type="submit"]');
-      btn.textContent = 'Saving...';
-      btn.disabled = true;
-
-      const msg = document.createElement('div');
-      Object.assign(msg.style, {
-        position: 'fixed',
-        top: '10px',
-        left: '50%',
-        transform: 'translateX(-50%)',
-        backgroundColor: '#d4edda',
-        color: '#155724',
-        padding: '15px 25px',
-        border: '1px solid #c3e6cb',
-        borderRadius: '5px',
-        zIndex: '1000',
-        boxShadow: '0 2px 10px rgba(0,0,0,0.1)'
-      });
-      msg.textContent = 'Checklist input validated successfully! Exporting...';
-      document.body.appendChild(msg);
-
-      await new Promise(r => setTimeout(r, 2000));
-      msg.remove();
-      form.submit();
-    });
-  }
-
-  // 3) Calculate-only button: first validate time inputs, then sum
+  // 2) Calculate-only button: first validate time inputs, then sum
   if (calculateBtn) {
     calculateBtn.addEventListener('click', () => {
         const timeInputs = document.querySelectorAll('.time-input[required]');
