@@ -393,7 +393,7 @@
             <div class="actions">
                 <button type="submit" formaction="/" class="btn btn-primary">Export Curation Log</button>
                 <button type="button" class="btn btn-secondary btn-calculate-time">Calculate Time Spent</button>
-                <button type="button" class="btn btn-secondary" onclick="saveFormAsYaml()">Save YAML</button>
+                <button type="button" class="btn btn-secondary" onclick="exportCurationLog()">Export YAML</button>
                 <button type="button" class="btn btn-secondary" onclick="window.location.href='/'">New Dataset</button>
                 <button type="button" class="btn btn-secondary" onclick="exitCuration()">Exit</button>
             </div>
@@ -401,6 +401,35 @@
     </div>
     
     <script>
+    async function exportCurationLog() {
+        try {
+            // Get curation log from sessionStorage
+            const yamlData = sessionStorage.getItem('curationLog');
+            if (!yamlData) {
+                alert('No curation log found. Please fill out the form and try again.');
+                return;
+            }
+            
+            const response = await fetch('/save-curation-log', {
+                method: 'POST',
+                headers: {
+                    'Content-Type': 'application/json',
+                },
+                body: JSON.stringify({ curationLog: yamlData })
+            });
+            
+            const result = await response.json();
+            
+            if (result.success) {
+                alert('Curation log exported successfully!');
+            } else {
+                alert('Error exporting curation log: ' + result.message);
+            }
+        } catch (error) {
+            alert('Error exporting curation log: ' + error.message);
+        }
+    }
+
     function exitCuration() {
         // Confirm exit
         if (confirm('Are you sure you want to exit? Any unsaved changes will be lost.')) {

@@ -371,3 +371,38 @@ async def get_template_dict(parent_dir: str, ticket_number: str) -> JSONResponse
 async def shutdown() -> None:
     """Shutdown the uvicorn server."""
     os._exit(0)
+
+
+class CurationLogRequest(BaseModel):
+    curationLog: str
+
+@app.post('/save-curation-log')
+async def save_curation_log(request: CurationLogRequest) -> JSONResponse:
+    """Process the YAML curation log from frontend."""
+    try:
+        # Parse YAML data
+        yaml_data = yaml.safe_load(request.curationLog)
+
+        # Process the structured data
+        # yaml_data['metadata'] contains ticket info
+        # yaml_data['checklist_items'] contains item statuses/comments
+        # yaml_data['other'] contains additional comments
+
+        # Save to file or database as needed
+        ticket_number = yaml_data.get('metadata', {}).get('ticket_number', 'unknown')
+        output_path = Path(f'output/curation_log_{ticket_number}.yaml')
+
+        with output_path.open('w') as f:
+            yaml.dump(yaml_data, f, default_flow_style=False)
+
+        return JSONResponse(content={
+            'success': True,
+            'message': 'Curation log saved successfully',
+            'data': yaml_data
+        })
+
+    except Exception as e:
+        return JSONResponse(
+            status_code=500,
+            content={'success': False, 'message': str(e)}
+        )
