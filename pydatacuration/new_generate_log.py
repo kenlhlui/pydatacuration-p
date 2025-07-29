@@ -18,7 +18,7 @@ def render_report_from_json(
     Returns:
         None: The filled document is written to output_path.
     """
-    with open(json_path, 'r', encoding='utf-8') as fp:
+    with open(json_path, encoding='utf-8') as fp:
         data = json.load(fp)
 
     doc = DocxTemplate(template_path)
