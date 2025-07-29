@@ -22,6 +22,7 @@ from fastapi.staticfiles import StaticFiles
 from fastapi.templating import Jinja2Templates
 from pydantic import BaseModel
 from pydantic import ValidationError
+from pydatacuration.new_generate_log import render_report_from_yaml
 
 
 class ChecklistItem(BaseModel):
@@ -140,67 +141,6 @@ def checklist(request: Request) -> HTMLResponse:
     """
     items = get_checklist_items()
     return templates.TemplateResponse('index.html', {'request': request, 'items': items})
-
-
-# @app.post('/save-checklist')
-# async def save_checklist(request: Request) -> JSONResponse:
-#     """Save checklist data to JSON file."""
-#     form = await request.form()
-
-#     # Create data structure for JSON
-#     checklist_data = {
-#         'metadata': {
-#             'saved_at': datetime.now().isoformat(),
-#             'ticket_number': form.get('ticket_number', ''),
-#             'curator_name': form.get('curator_name', ''),
-#             'curator_email': form.get('curator_email', ''),
-#             'dataset_title': form.get('dataset_title', ''),
-#             'dataset_pid': form.get('dataset_pid', ''),
-#             'dataset_id': form.get('dataset_id', ''),
-#             'dataset_url': form.get('dataset_url', ''),
-#             'log_generated_date': form.get('log_generated_date', ''),
-#             'log_updated_date': form.get('log_updated_date', ''),
-#         },
-#         'items': []
-#     }
-
-#     # Extract checklist items
-#     items = get_checklist_items()
-#     for item in items:
-#         item_data = {
-#             'id': item.id,
-#             'action': item.action,
-#             'instructions': item.instructions,
-#             'priority': item.priority,
-#             'section': item.section,
-#             'status': form.get(f'status-{item.id}', ''),
-#             'comments': form.get(f'comments-{item.id}', ''),
-#             'time_spent': form.get(f'time-{item.id}', ''),
-#         }
-#         checklist_data['items'].append(item_data)
-
-#     # Add other comments
-#     checklist_data['other_comments'] = form.get('comments-other', '')
-
-#     # Save to JSON file
-#     ticket_number = form.get('ticket_number', 'unknown')
-#     filename = 'checklist.json'
-
-#     # Use configurable output directory
-#     output_dir = Path(os.getenv('OUTPUT_DIR', 'output'))
-#     filepath = output_dir / filename
-
-#     # Create output directory if it doesn't exist
-#     output_dir.mkdir(exist_ok=True)
-
-#     with filepath.open('w', encoding='utf-8') as f:
-#         json.dump(checklist_data, f, indent=2)
-
-#     return JSONResponse(content={
-#         'success': True,
-#         'message': f'Checklist saved to {filename}',
-#         'filepath': filepath
-#     })
 
 
 async def run_command(command: str, cwd: str) -> dict:
@@ -426,4 +366,82 @@ async def save_curation_log(request: CurationLogRequest) -> JSONResponse:
         return JSONResponse(
             status_code=500,
             content={'success': False, 'message': str(e)}
+        )
+
+@app.post('/render-report')
+async def render_report(request: Request) -> JSONResponse:
+    """Render a DOCX report from the YAML curation log.
+
+    Args:
+        request (Request): HTTP request containing the curation log data
+
+    Returns:
+        JSONResponse: Result of the report generation
+    """
+    try:
+        # Handle both JSON and form data
+        if request.headers.get('content-type') == 'application/json':
+            data = await request.json()
+            curation_log_data = data.get('curationLog')
+        else:
+            # Handle form data - reconstruct the YAML from form fields
+            form_data = await request.form()
+            
+            # Get the YAML data from sessionStorage (passed via form)
+            curation_log_data = form_data.get('curationLog', '')
+            
+            if not curation_log_data:
+                # If no YAML data in form, try to reconstruct from session storage
+                # This might require getting it from the frontend differently
+                return JSONResponse(
+                    status_code=400,
+                    content={
+                        'success': False,
+                        'message': 'No curation log data found in request'
+                    }
+                )
+
+        # Create CurationLogRequest object for save_curation_log
+        curation_request = CurationLogRequest(curationLog=curation_log_data)
+        
+        # Invoke save_curation_log before rendering the report
+        save_result = await save_curation_log(curation_request)
+
+        # Check if save was successful
+        if not save_result.status_code == 200:
+            return JSONResponse(
+                status_code=500,
+                content={
+                    'success': False,
+                    'message': 'Failed to save curation log before rendering'
+                }
+            )
+
+        # Parse YAML to get ticket number for dynamic file paths
+        yaml_data = yaml.safe_load(curation_log_data)
+        ticket_number = yaml_data.get('metadata', {}).get('ticket_number', 'unknown')
+
+        # Render the report from the saved YAML file with dynamic paths
+        yaml_path = f'output/curation_log_{ticket_number}.yaml'
+        output_path = f'output/curation_log_{ticket_number}.docx'
+
+        render_report_from_yaml(
+            yaml_path=yaml_path,
+            template_path='res/new_template_high.docx',
+            output_path=output_path
+        )
+
+        return JSONResponse(content={
+            'success': True,
+            'message': f'Curation log saved to {output_path} successfully',
+            'output_file': output_path
+        })
+
+    except Exception as e:
+        return JSONResponse(
+            status_code=500,
+            content={
+                'success': False,
+                'message': f'Error rendering report: {str(e)}'
+            }
         )
