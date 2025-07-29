@@ -391,7 +391,7 @@
             </table>
 
             <div class="actions">
-                <button type="button" class="btn btn-primary" onclick="exportCurationReport()">Export Curation Log</button>
+                <button type="submit" class="btn btn-primary" onclick="exportCurationReport()">Export Curation Log</button>
                 <button type="button" class="btn btn-secondary btn-calculate-time">Calculate Time Spent</button>
                 <button type="button" class="btn btn-secondary" onclick="exportCurationLogYAML()">Export YAML</button>
                 <button type="button" class="btn btn-secondary" onclick="window.location.href='/'">New Dataset</button>
@@ -478,6 +478,11 @@ document.querySelectorAll('.auto-populate').forEach(element => {
 <script>
 async function exportCurationReport() {
     try {
+        // First validate all required inputs
+        if (!validateAllInputs()) {
+            return;
+        }
+        
         // Get curation log from sessionStorage (same as YAML export)
         const yamlData = sessionStorage.getItem('curationLog');
         if (!yamlData) {
