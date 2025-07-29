@@ -8,7 +8,8 @@ from pprint import pprint
 from typing import List
 from typing import Optional
 
-import markdown
+# import markdown
+import markdown2
 import yaml
 from dotenv import load_dotenv
 from fastapi import FastAPI
@@ -97,7 +98,7 @@ def get_checklist_items() -> list[ChecklistItem]:
         items.append(ChecklistItem(
             id=item['id'],
             action=item['action'],
-            instructions=markdown.markdown(item['instructions']),  # Convert Markdown to HTML
+            instructions=markdown2.markdown(item['instructions']),  # Convert Markdown to HTML
             priority=item['priority'],
             section=item.get('section', '')
         ))
