@@ -316,12 +316,12 @@ class CurationLogRequest(BaseModel):
 
 @app.post('/save-curation-log')
 async def save_curation_log(request: CurationLogRequest) -> JSONResponse:
-    """Process the YAML curation log from frontend."""
+    """Save the curationLog from sessionStorage to a YAML file."""
     try:
         # Parse YAML data
         yaml_data = yaml.safe_load(request.curationLog)
 
-        checklist_items = yaml_data.get('checklist_items', []) 
+        checklist_items = yaml_data.get('checklist_items', [])
         # Convert array to dictionary for easier lookup
         checklist_map = {}
         if isinstance(checklist_items, list):
@@ -336,6 +336,7 @@ async def save_curation_log(request: CurationLogRequest) -> JSONResponse:
             template_data = yaml.safe_load(f)
             check_list_template_items = template_data.get('checklist', [])
 
+        # Update checklist items with user data
         for item in check_list_template_items:
             item_id = item['id']
             # Look up our map (keys are already strings)
@@ -345,21 +346,44 @@ async def save_curation_log(request: CurationLogRequest) -> JSONResponse:
             item['comments'] = data.get('comments', '')
             item['time_spent'] = data.get('time', '')
 
-        # Save to file or database as needed
-        ticket_number = yaml_data.get('metadata', {}).get('ticket_number', 'unknown')
+        # Create the final output structure
+        output_data = {
+            'metadata': {},
+            'checklist': check_list_template_items
+        }
+
+        # Add metadata from the YAML data
+        metadata = yaml_data.get('metadata', {})
+        if metadata:
+            for key, value in metadata.items():
+                # Handle datetime objects
+                if hasattr(value, 'strftime'):  # Check if it's a date/datetime object
+                    output_data['metadata'][key] = value.strftime('%Y-%m-%d')
+                else:
+                    output_data['metadata'][key] = value
+
+        # Save to file
+        ticket_number = metadata.get('ticket_number', 'unknown')
         output_path = Path(f'output/curation_log_{ticket_number}.yaml')
+
+        # Ensure output directory exists
+        output_path.parent.mkdir(exist_ok=True)
+
         with output_path.open('w', encoding='utf-8') as f:
-            yaml.dump(check_list_template_items, f,
-                      default_flow_style=False, sort_keys=False,
-                      allow_unicode=True, encoding='utf-8')
+            yaml.dump(output_data, f,
+                      default_flow_style=False,
+                      sort_keys=False,
+                      allow_unicode=True)
 
         return JSONResponse(content={
             'success': True,
             'message': 'Curation log saved successfully',
-            'data': check_list_template_items
+            'data': output_data,
+            'file_path': str(output_path)
         })
 
     except Exception as e:
+        print(f'Error in save_curation_log: {e}')
         return JSONResponse(
             status_code=500,
             content={'success': False, 'message': str(e)}
