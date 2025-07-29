@@ -22,10 +22,16 @@ def render_report_from_yaml(
     with Path(yaml_path).open('r', encoding='utf-8') as fp:
         data = yaml.safe_load(fp)
 
+    # Get the checklist items
+    checklist_items = data.get('checklist', [])
+
+    # Get the metadata
+    metadata = data.get('metadata', {})
 
     doc = DocxTemplate(template_path)
     context = {
-        'data': data
+        'checklist': checklist_items,
+        'metadata': metadata,
     }
     # pass the list in under the name 'rows' to match the template
     doc.render(context)
