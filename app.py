@@ -22,6 +22,7 @@ from fastapi.staticfiles import StaticFiles
 from fastapi.templating import Jinja2Templates
 from pydantic import BaseModel
 from pydantic import ValidationError
+
 from pydatacuration.new_generate_log import render_report_from_yaml
 
 
@@ -44,8 +45,6 @@ class ChecklistItem(BaseModel):
     priority: str
     section: str = ''
 
-
-from typing import Optional
 
 class SetupRequest(BaseModel):
     """Model for the setup form data matching CLI parameters.
@@ -143,12 +142,11 @@ def checklist(request: Request) -> HTMLResponse:
     return templates.TemplateResponse('index.html', {'request': request, 'items': items})
 
 
-async def run_command(command: str, cwd: str) -> dict:
+async def run_command(command: str) -> dict:
     """Run a command and return the result.
 
     Args:
         command (str): Command to run
-        cwd (str): Working directory
 
     Returns:
         dict: Command result with stdout, stderr, and return code
@@ -158,7 +156,6 @@ async def run_command(command: str, cwd: str) -> dict:
             command,
             stdout=asyncio.subprocess.PIPE,
             stderr=asyncio.subprocess.PIPE,
-            cwd=cwd
         )
         stdout, stderr = await process.communicate()
 
@@ -368,6 +365,7 @@ async def save_curation_log(request: CurationLogRequest) -> JSONResponse:
             content={'success': False, 'message': str(e)}
         )
 
+
 @app.post('/render-report')
 async def render_report(request: Request) -> JSONResponse:
     """Render a DOCX report from the YAML curation log.
@@ -386,10 +384,10 @@ async def render_report(request: Request) -> JSONResponse:
         else:
             # Handle form data - reconstruct the YAML from form fields
             form_data = await request.form()
-            
+
             # Get the YAML data from sessionStorage (passed via form)
             curation_log_data = form_data.get('curationLog', '')
-            
+
             if not curation_log_data:
                 # If no YAML data in form, try to reconstruct from session storage
                 # This might require getting it from the frontend differently
