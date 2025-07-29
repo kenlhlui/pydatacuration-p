@@ -226,32 +226,29 @@ function autoSaveForm() {
 
 // Organize form data by checklist item IDs
 function organizeFormData(formData) {
-    const organized = {
+  // tmpMap holds per-id objects until we’ve collected them all
+    const tmpMap = {};
+    for (const [key, value] of formData.entries()) {
+        const rawId = extractItemId(key);
+        if (!rawId) continue;
+        const itemId = String(rawId);    // force it to a JS string
+        if (!tmpMap[itemId]) {
+        tmpMap[itemId] = { id: itemId };
+        }
+        tmpMap[itemId][getFieldType(key)] = value || '';
+    }
+
+    // now turn that into a sorted array
+    const checklist = Object
+        .keys(tmpMap)
+        .sort()
+        .map((id) => tmpMap[id]);
+
+    return {
         metadata: {},
-        checklist_items: {},
+        checklist_items: checklist,
         other: {}
     };
-    
-    for (const [key, value] of formData.entries()) {
-        const itemId = extractItemId(key);
-        const fieldType = getFieldType(key);
-        
-        if (itemId) {
-            // This is a checklist item field
-            if (!organized.checklist_items[itemId]) {
-                organized.checklist_items[itemId] = {};
-            }
-            organized.checklist_items[itemId][fieldType] = value || '';
-        } else if (isMetadataField(key)) {
-            // This is a metadata field
-            organized.metadata[key] = value || '';
-        } else {
-            // Other fields (like additional comments)
-            organized.other[key] = value || '';
-        }
-    }
-    
-    return organized;
 }
 
 // Check if field is a metadata field
