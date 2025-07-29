@@ -1,9 +1,5 @@
-document.addEventListener('DOMContentLoaded', () => {
-  const form = document.querySelector('form');
-  const calculateBtn = document.querySelector('button.btn-calculate-time');
-
-  // 1) Validation helper for form export:
-  function validateAllInputs() {
+// 1) Validation helper for form export (global scope):
+function validateAllInputs() {
     let hasErrors = false;
 
     // Time inputs
@@ -30,7 +26,11 @@ document.addEventListener('DOMContentLoaded', () => {
     });
 
     return !hasErrors;
-  }
+}
+
+document.addEventListener('DOMContentLoaded', () => {
+  const form = document.querySelector('form');
+  const calculateBtn = document.querySelector('button.btn-calculate-time');
 
   // 2) Form submit + export handler
   if (form) {
@@ -69,8 +69,8 @@ document.addEventListener('DOMContentLoaded', () => {
     });
   }
 
-// 3) Calculate-only button: first validate time inputs, then sum
-if (calculateBtn) {
+  // 3) Calculate-only button: first validate time inputs, then sum
+  if (calculateBtn) {
     calculateBtn.addEventListener('click', () => {
         const timeInputs = document.querySelectorAll('.time-input[required]');
         const durationRegex = /^[0-9]{1,2}:[0-5][0-9]$/;
@@ -105,7 +105,7 @@ if (calculateBtn) {
         const mins  = (totalMins % 60).toString().padStart(2, '0');
         alert(`Total Time Spent: ${hours}:${mins}`);
     });
-    }
+  }
 });
 
 // Color status dropdowns based on selection
