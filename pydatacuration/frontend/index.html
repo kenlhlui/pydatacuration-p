@@ -442,35 +442,13 @@
                 .catch(err => console.error('Shutdown failed:', err));
         }
     }
-
-    // async function saveJSON() {
-    //     // Get form data
-    //     const formData = new FormData(document.querySelector('form'));
-        
-    //     try {
-    //         const response = await fetch('/save-checklist', {
-    //             method: 'POST',
-    //             body: formData
-    //         });
-            
-    //         const result = await response.json();
-            
-    //         if (result.success) {
-    //             alert('Checklist saved successfully! File: ' + result.filepath);
-    //         } else {
-    //             alert('Error saving checklist: ' + result.message);
-    //         }
-    //     } catch (error) {
-    //         alert('Error saving checklist: ' + error.message);
-    //     }
-    // }
     </script>
     <script src="/static/js/yaml-autosave.js"></script>
     <script src="/static/js/readsessionstorage.js"></script>
     <script src="/static/js/readtemplatedict.js"></script>
     <script src="/static/js/today.js"></script>
     <script src="/static/js/validation.js"></script>
-      <script>
+    <script>
     window.addEventListener('DOMContentLoaded', function() {
       // Call the function from today.js
       var today = generateTodayDate();      
