@@ -411,7 +411,7 @@ async def save_curation_log(request: CurationLogRequest) -> JSONResponse:
         ticket_number = yaml_data.get('metadata', {}).get('ticket_number', 'unknown')
         output_path = Path(f'output/curation_log_{ticket_number}.yaml')
         with output_path.open('w') as f:
-            yaml.dump(check_list_template_items, f, default_flow_style=False)
+            yaml.dump(check_list_template_items, f, default_flow_style=False, sort_keys=False)
 
         return JSONResponse(content={
             'success': True,
