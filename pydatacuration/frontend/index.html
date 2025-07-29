@@ -391,9 +391,9 @@
             </table>
 
             <div class="actions">
-                <button type="submit" formaction="/" class="btn btn-primary">Export Curation Log</button>
+                <button type="button" class="btn btn-primary" onclick="exportCurationReport()">Export Curation Log</button>
                 <button type="button" class="btn btn-secondary btn-calculate-time">Calculate Time Spent</button>
-                <button type="button" class="btn btn-secondary" onclick="exportCurationLog()">Export YAML</button>
+                <button type="button" class="btn btn-secondary" onclick="exportCurationLogYAML()">Export YAML</button>
                 <button type="button" class="btn btn-secondary" onclick="window.location.href='/'">New Dataset</button>
                 <button type="button" class="btn btn-secondary" onclick="exitCuration()">Exit</button>
             </div>
@@ -401,7 +401,7 @@
     </div>
     
     <script>
-    async function exportCurationLog() {
+    async function exportCurationLogYAML() {
         try {
             // Get curation log from sessionStorage
             const yamlData = sessionStorage.getItem('curationLog');
@@ -496,6 +496,36 @@ document.querySelectorAll('.auto-populate').forEach(element => {
     const value = sessionStorage.getItem(key) || 'Not set';
     element.textContent = value;
 });
+</script>
+<script>
+async function exportCurationReport() {
+    try {
+        // Get curation log from sessionStorage (same as YAML export)
+        const yamlData = sessionStorage.getItem('curationLog');
+        if (!yamlData) {
+            alert('No curation log found. Please fill out the form and try again.');
+            return;
+        }
+        
+        const response = await fetch('/render-report', {
+            method: 'POST',
+            headers: {
+                'Content-Type': 'application/json',
+            },
+            body: JSON.stringify({ curationLog: yamlData })
+        });
+        
+        const result = await response.json();
+        
+        if (result.success) {
+            alert(`Curation report exported successfully! File: ${result.output_file}`);
+        } else {
+            alert('Error exporting curation report: ' + result.message);
+        }
+    } catch (error) {
+        alert('Error exporting curation report: ' + error.message);
+    }
+}
 </script>
 </body>
 </html>
