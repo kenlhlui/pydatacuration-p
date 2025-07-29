@@ -93,7 +93,7 @@ def get_checklist_items() -> list[ChecklistItem]:
     with Path('res/check-list_template_high.yaml').open('r') as f:
         data = yaml.safe_load(f)
     items = []
-    for item in data:
+    for item in data.get('checklist', []):
         items.append(ChecklistItem(
             id=item['id'],
             action=item['action'],
@@ -383,22 +383,40 @@ async def save_curation_log(request: CurationLogRequest) -> JSONResponse:
         # Parse YAML data
         yaml_data = yaml.safe_load(request.curationLog)
 
-        # Process the structured data
-        # yaml_data['metadata'] contains ticket info
-        # yaml_data['checklist_items'] contains item statuses/comments
-        # yaml_data['other'] contains additional comments
+        checklist_items = yaml_data.get('checklist_items', []) 
+        # Convert array to dictionary for easier lookup
+        checklist_map = {}
+        if isinstance(checklist_items, list):
+            for item in checklist_items:
+                if isinstance(item, dict) and 'id' in item:
+                    checklist_map[item['id']] = item
+        elif isinstance(checklist_items, dict):
+            checklist_map = checklist_items
+
+        # Read the check-list_template_high.yaml to get the checklist items
+        with Path('res/check-list_template_high.yaml').open('r') as f:
+            template_data = yaml.safe_load(f)
+            check_list_template_items = template_data.get('checklist', [])
+
+        for item in check_list_template_items:
+            item_id = item['id']
+            # Look up our map (keys are already strings)
+            data = checklist_map.get(item_id, {})
+            # Update the item with status, comments, and time spent
+            item['status'] = data.get('status', '')
+            item['comments'] = data.get('comments', '')
+            item['time_spent'] = data.get('time', '')
 
         # Save to file or database as needed
         ticket_number = yaml_data.get('metadata', {}).get('ticket_number', 'unknown')
         output_path = Path(f'output/curation_log_{ticket_number}.yaml')
-
         with output_path.open('w') as f:
-            yaml.dump(yaml_data, f, default_flow_style=False)
+            yaml.dump(check_list_template_items, f, default_flow_style=False)
 
         return JSONResponse(content={
             'success': True,
             'message': 'Curation log saved successfully',
-            'data': yaml_data
+            'data': check_list_template_items
         })
 
     except Exception as e:
