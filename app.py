@@ -394,7 +394,7 @@ async def save_curation_log(request: CurationLogRequest) -> JSONResponse:
             checklist_map = checklist_items
 
         # Read the check-list_template_high.yaml to get the checklist items
-        with Path('res/check-list_template_high.yaml').open('r') as f:
+        with Path('res/check-list_template_high.yaml').open('r', encoding='utf-8') as f:
             template_data = yaml.safe_load(f)
             check_list_template_items = template_data.get('checklist', [])
 
@@ -410,8 +410,10 @@ async def save_curation_log(request: CurationLogRequest) -> JSONResponse:
         # Save to file or database as needed
         ticket_number = yaml_data.get('metadata', {}).get('ticket_number', 'unknown')
         output_path = Path(f'output/curation_log_{ticket_number}.yaml')
-        with output_path.open('w') as f:
-            yaml.dump(check_list_template_items, f, default_flow_style=False, sort_keys=False)
+        with output_path.open('w', encoding='utf-8') as f:
+            yaml.dump(check_list_template_items, f,
+                      default_flow_style=False, sort_keys=False,
+                      allow_unicode=True, encoding='utf-8')
 
         return JSONResponse(content={
             'success': True,
