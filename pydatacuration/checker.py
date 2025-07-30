@@ -24,14 +24,14 @@ RES_DIR = Path('res')
 
 class CheckResultBuilder:
     """Builder class for collecting check results in a structured format."""
-    
+
     def __init__(self):
         self.results = []
-    
+
     def add_check_result(self, check_id: str, check_name: str, description: str, 
                         result_type: str, results: list):
         """Add a check result to the collection.
-        
+
         Args:
             check_id (str): Unique identifier for the check
             check_name (str): Human-readable name of the check
@@ -271,7 +271,7 @@ class Checker:
                     self.logger.print(f'File is not a supported file format (not checked by the script): {file_abs_path}')  # noqa: E501
                     self.template_dict['file_open']['not_checked'].append({'file_name': str(file_rel_path)})
                     unsupported_files.append(str(file_rel_path))
-        
+
         # Add results to the new structure
         self.result_builder.add_check_result(
             check_id='file_accessibility',
@@ -280,7 +280,7 @@ class Checker:
             result_type='file_list',
             results=inaccessible_files
         )
-        
+
         self.result_builder.add_check_result(
             check_id='unsupported_files',
             check_name='Files with Unsupported Formats',
@@ -292,7 +292,7 @@ class Checker:
     def check_common_file_format(self) -> None:
         """Check if the file format is in the common file format."""
         uncommon_format_files = []
-        
+
         if self.common_file_format_tuple:
             for file in self.file_list_metadata:
                 file_name = file.get('dataFile', {}).get('originalFileName') or file.get('dataFile', {}).get('filename')
@@ -306,7 +306,7 @@ class Checker:
         else:
             self.logger.error('No common file format found in the res directory. Skipping this check.')
             self.template_dict['common_file_format']['comments'].append('No common file format found in the res directory. Skipping this check.')  # noqa: E501
-        
+
         # Add results to the new structure
         self.result_builder.add_check_result(
             check_id='uncommon_file_formats',
@@ -322,7 +322,7 @@ class Checker:
         authors_missing_affiliation = []
         authors_missing_identifier = []
         authors_missing_scheme = []
-        
+
         field_list = ['title', 'dsDescription', 'subject']
         for field in field_list:
             return_value = self.metadata_checker.check_metadata_cm_field(field)
@@ -340,7 +340,7 @@ class Checker:
                 if item.get(field) is None:
                     self.logger.print(f'Missing metadata found in {field} field for author: {author_name}')
                     self.template_dict['missing_field'][field]['comments'].append(f'{author_name}')  # noqa: E501
-                    
+
                     # Collect authors missing specific fields
                     if field == 'authorAffiliation':
                         authors_missing_affiliation.append(author_name)
@@ -361,7 +361,7 @@ class Checker:
         if author_affiliation_ut_num == 0:
             self.logger.print('None of the authors have listed affiliation with University of Toronto')
             self.template_dict['none_author_affiliation_UT'] = True
-        
+
         # Add results to the new structure
         self.result_builder.add_check_result(
             check_id='missing_required_fields',
@@ -370,7 +370,7 @@ class Checker:
             result_type='field_list',
             results=missing_required_fields
         )
-        
+
         self.result_builder.add_check_result(
             check_id='authors_missing_affiliation',
             check_name='Authors Without Affiliation',
@@ -435,7 +435,7 @@ class Checker:
 
         """
         author_publication_history = []
-        
+
         query_string = 'data.latestVersion.metadataBlocks.citation.fields[?typeName==`author`].value[*].authorName.value[]'  # noqa: E501
         author_list = jmespath.search(query_string, self.ds_metadata)
 
@@ -547,7 +547,7 @@ class Checker:
 
     def run_checks(self) -> tuple[dict, dict]:
         """Run all the checks.
-        
+
         Returns:
             tuple: (template_dict for backward compatibility, new check_results structure)
         """
@@ -565,13 +565,6 @@ class Checker:
 
         # Build the new structure
         new_results = {
-            'session_info': {
-                'timestamp': self.template_dict.get('project_info', {}).get('timestamp', ''),
-                'ticket_number': self.template_dict.get('project_info', {}).get('ticket_number', ''),
-                'curator_name': self.template_dict.get('project_info', {}).get('curator_name', ''),
-                'curator_email': self.template_dict.get('project_info', {}).get('curator_email', '')
-            },
-            'dataset_info': self.template_dict.get('dataset_info', {}),
             'check_results': self.result_builder.get_results()
         }
 

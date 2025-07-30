@@ -111,48 +111,6 @@ def get_checklist_items() -> list[ChecklistItem]:
     return items
 
 
-def find_relevant_checks_for_item(item: ChecklistItem, check_results: list) -> list:
-    """Find automated check results relevant to a checklist item.
-    
-    Args:
-        item: ChecklistItem to match against
-        check_results: List of automated check results
-    
-    Returns:
-        List of relevant check results
-    """
-    if not check_results:
-        return []
-        
-    action_text = item.action.lower()
-    relevant_checks = []
-    
-    for check in check_results:
-        check_name = check.get('check_name', '').lower()
-        check_desc = check.get('description', '').lower()
-        
-        # Simple keyword matching - can be made more sophisticated
-        if any(keyword in action_text for keyword in ['file', 'document']) and \
-           any(keyword in check_name or keyword in check_desc for keyword in ['file', 'accessibility', 'format', 'extension']):
-            relevant_checks.append(check)
-        elif 'metadata' in action_text and \
-             any(keyword in check_name or keyword in check_desc for keyword in ['metadata', 'field', 'missing']):
-            relevant_checks.append(check)
-        elif 'author' in action_text and \
-             any(keyword in check_name or keyword in check_desc for keyword in ['author', 'affiliation']):
-            relevant_checks.append(check)
-        elif any(keyword in action_text for keyword in ['spelling', 'grammar', 'typo']) and \
-             any(keyword in check_name for keyword in ['spelling', 'typo']):
-            relevant_checks.append(check)
-        elif 'restricted' in action_text and 'restricted' in check_name:
-            relevant_checks.append(check)
-        elif any(keyword in action_text for keyword in ['format', 'extension']) and \
-             any(keyword in check_name for keyword in ['format', 'extension']):
-            relevant_checks.append(check)
-    
-    return relevant_checks
-
-
 @app.get('/', response_class=HTMLResponse)
 def landing(request: Request) -> HTMLResponse:
     """Render the landing page for setup.
