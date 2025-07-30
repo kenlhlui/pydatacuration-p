@@ -9,16 +9,24 @@ checklist:
     section: "1. Structure of deposit"
 
   - id: "1.2"
-    action: "Is the dataset deposited in a sub-collection of U of T Dataverse?"
+    action: "Has the depositor (or their research group) previously created or submitted to a dataverse collection ?"
     instructions: |
-      Python scripted. If the dataset is deposited in a sub-dataverse collection, include the name of the collection.
+      Python scripted. 
+      
+      - Confirm whether the listed dataverse collection refers to the same researcher/author
     priority: "info"
     section: "1. Structure of deposit"
 
   - id: "1.3"
-    action: "Is the dataset deposited in a sub-collection of U of T Dataverse?"
+    action: "If the dataset was deposited in a sub-dataverse collection, does it require its own dataverse collection?"
     instructions: |
-      Python scripted. If the dataset is deposited in a sub-dataverse collection, include the name of the collection.
+      If the depositor created a dataverse with one dataset:
+      
+      - Confirm whether the dataset is related to other datasets in the same sub-collection.
+      - Is there another sub-dataverse collection it should be in?
+      - Review collection name - is it the same name as the dataset? Is it a research group? 
+      - Confirm with the depositor that they actually require a dataverse (e.g., will there be future deposits?)
+      
     priority: "info"
     section: "1. Structure of deposit"
 
@@ -26,6 +34,7 @@ checklist:
     action: "Do all the files open properly?"
     instructions: |
       Semi-automated using Python scripts.
+      
       - For files that cannot be opened programmatically – if we have the program, open a minimum of 5 of each type of file.
     priority: "required"
     section: "2. Files"
@@ -65,11 +74,186 @@ checklist:
     section: "3. Documentation"
     automated_check_ids: ["readme_files"]
 
-  - id: "3.2"
-    action: "Does the README contain the following information, and does it match the dataset’s metadata?"
+  - id: "3.3"
+    action: "Does the README file contain correct and complete information about ‘Files and organization’?"
     instructions: |
       Python scripted.
-      1. Item 1
-      2. Item 2
+      
+      - Check whether the files listed in the README match the files listed in the deposit.
+      - If the files are not listed in the README, we can generate a file tree structure & pass it to the depositors to include in their README, if applicable.
     priority: "required"
     section: "3. Documentation"
+
+  - id: "3.4"
+    action: "Is there documentation for data files?"
+    instructions: |
+      Review README, documentation, and data files, to see if there is anything explaining variable headings etc.
+    priority: "required"
+    section: "3. Documentation"
+
+  - id: "4.1"
+    action: "Are there any typos in metadata fields?"
+    instructions: |
+      Python scripted.
+
+      Only checking the following fields:
+      
+      1. Title
+      2. Subtitle
+      3. Alternative Title
+      4. Description
+      5. Notes
+      
+      Note that the automated process might flag wrongly (such as acronyms/specialized terms. Delete the items from the list accordingly.
+
+    priority: "required"
+    section: "4. Metadata"
+
+  - id: "4.2"
+    action: "Do the metadata fields contain a valid entry?"
+    instructions: |
+      Review the following fields to ensure there is a valid entry and flag any issues:
+      
+      1. Title
+      2. Description
+      3. Subject
+      4. Author name & affiliation
+      
+      Note: Valid info means the information is relevant. Examples of items to flag:
+      Placeholders (Coming soon, etc.)
+      Wong filed (e.g. put author's name in the title)
+
+    priority: "required"
+    section: "4. Metadata"
+
+  - id: "4.3"
+    action: "Does at least one author affiliated with University of Toronto?"
+    instructions: |
+      Python scripted.
+      
+      - This will check either ‘uoft’, ‘u of t’ or ‘university of toronto’ is filled for the author affiliation (non-case sensitive)
+
+    priority: "required"
+    section: "4. Metadata"
+  
+  - id: "4.4"
+    action: "Does the dataset include a Researcher ID for each author?"
+    instructions: |
+      Python Scripted
+
+      If no Researcher ID (such as ORCID, or other identifier) is listed, let them know they may want to include it
+    
+    priority: "recommended"
+    section: "4. Metadata"
+  
+  - id: "4.5"
+    action: "Can any part of the deposit content be represented in a metadata field?"
+    instructions: |
+      - Read the description and README file and check them against metadata fields. For example, if a geographical location or data collection date/range is mentioned in the description, recommend filling in the relevant metadata fields
+
+      - You may reference the following documents to view the available metadata blocks:
+         - [Dataverse North Metadata Best Practices (PDF)](https://zenodo.org/records/5668945)
+         - [Borealis Metadata Fields UOFT MDL (xlsx)](https://docs.google.com/spreadsheets/d/1XA9ImwdvN-LvZJDAq_mh4jzLXWfg6fD6/edit?usp=sharing&ouid=101747471886352747956&rtpof=true&sd=true)
+
+    priority: "recommended"
+    section: "4. Metadata"
+  
+  - id: "4.6"
+    action: "Are all terms and acronyms defined?"
+    instructions: |
+      Review metadata and flag acronyms/terms that may need to be described.
+    priority: "recommended"
+    section: "4. Metadata"
+  
+  - id: "4.7"
+    action: "Does the dataset description provide sufficient information?"
+    instructions: |
+      Still need to discover/formulate the best practices for writing dataset descriptions.
+
+      Some elements to look for may include:
+      
+      - Dates of collection
+      - Geographical location
+      - Type of data
+      - Other dataset(s) used in creating the dataset
+      - Overview of the method of analysis
+      - Data processing tools used
+      - Other relevant information
+    priority: "recommended"
+    section: "4. Metadata"
+
+  - id: "4.8"
+    action: "Does the dataset include keywords?"
+    instructions: |
+      Python scripted.
+
+      - If no/few keywords are included, recommend including some.
+      - Can also provide information about controlled vocabulary (in that specific field) if none is filled out.
+    priority: "recommended"
+    section: "4. Metadata"
+  
+  - id: "4.9"
+    action: "Does the dataset serve as Replication, Background, or Supporting data for a publication?"
+    instructions: |
+      - If a suffix is used or the title suggests a publication, check the metadata for an associated publication.
+      - If metadata indicates a related publication or project:
+        - Suggest adding a corresponding suffix to the title. 
+        - Check whether a PID (such as a DOI) is included.
+    priority: "recommended"
+    section: "4. Metadata"
+  
+  - id: "4.10"
+    action: "Any related dataset?"
+    instructions: |
+      - Does the title, description or notes indicate there is a related dataset that should be included in the metadata?
+    priority: "recommended"
+    section: "4. Metadata"
+
+  - id: "5.1"
+    action: "Does the dataset contain any obvious sensitivity issues, such as direct identifiers?"
+    instructions: |
+      - Review documentation and file names and see if there are any that should be opened and reviewed (e.g. if a file is named “participant survey” - maybe open that one)
+      - Review description, notes, and terms of access metadata fields.
+        - Examples of direct identifier include:
+            - Canadian Social Insurance Number (SINs)
+            - Credit card numbers
+            - Email addresses
+            - Phone numbers
+            - vCards (Virtual Contact Files)
+            - Any other information that can be used to identify an individual.
+    priority: "required"
+    section: "5.0 Sensitive data and IP"
+  
+  - id: "5.2"
+    action: "If something is flagged in the sensitive data review, does the depositor have REB approval to share the dataset?"
+    instructions: |
+      - If something is flagged in the sensitive data review (see question above), check the intake form to confirm information about their REB status.
+    priority: "required"
+    section: "5.0 Sensitive data and IP"
+  
+  - id: "5.3"
+    action: "Has the depositor assigned an appropriate license to the dataset?"
+    instructions: |
+      Python scripted.
+
+      - If the dataset uses CC0 - confirm this is what the depositor wants
+      - Check if the deposit includes restricted files (if yes, recommend they use custom terms)
+    priority: "required"
+    section: "5.0 Sensitive data and IP"
+
+  - id: "5.4b"
+    action: "Is the Terms of Access field complete if there are restricted files in the dataset?"
+    instructions: |
+      Python scripted.
+
+      - If there are restricted files and no Terms of Access, recommend including terms of access.
+      - If there are Terms of Access, review to ensure they are clear.
+    priority: "required"
+    section: "5.0 Sensitive data and IP"
+  
+  - id: "5.5"
+    action: "Is the dataset free of any obvious licensing and IP issues?"
+    instructions: |
+      - Review the description, documentation, and names of files to see if there are any that stand out as possible third-party data sources.
+    priority: "required"
+    section: "5.0 Sensitive data and IP"
