@@ -22,6 +22,38 @@ from .utils import readme_file_checker
 RES_DIR = Path('res')
 
 
+class CheckResultBuilder:
+    """Builder class for collecting check results in a structured format."""
+    
+    def __init__(self):
+        self.results = []
+    
+    def add_check_result(self, check_id: str, check_name: str, description: str, 
+                        result_type: str, results: list):
+        """Add a check result to the collection.
+        
+        Args:
+            check_id (str): Unique identifier for the check
+            check_name (str): Human-readable name of the check
+            description (str): Description of what the check finds
+            result_type (str): Type of results (file_list, field_list, author_list, etc.)
+            results (list): List of findings from the check
+        """
+        # Only add if there are actual results
+        if results:
+            self.results.append({
+                "check_id": check_id,
+                "check_name": check_name,
+                "description": description,
+                "result_type": result_type,
+                "results": results
+            })
+    
+    def get_results(self) -> list:
+        """Get all collected check results."""
+        return self.results
+
+
 class Checker:
     """Checker class to validate the data files and metadata."""
     def __init__(self,
@@ -54,6 +86,7 @@ class Checker:
         self.logger = CustomLogger.get_logger(__name__)
         self.checksums = Checksum()
         self.template_dict = GenerateLog.read_template_json()
+        self.result_builder = CheckResultBuilder()
         self.files_opener = FilesOpener
         self.metadata_checker = MetadataChecker(self.workdir.joinpath('dataset', 'metadata', 'ds_metadata.json'))
         self.spell_checker = SpellCheckerCustomized()
@@ -151,6 +184,10 @@ class Checker:
     def check_file_name_format(self) -> None:
         """Check the file name format."""
         file_name_format_checker = FileNameFormatChecker()
+        special_char_files = []
+        missing_ext_files = []
+        readme_files = []
+        
         for file in self.file_list_metadata:
             file_name = file.get('dataFile', {}).get('originalFileName') or file.get('dataFile', {}).get('filename')
             file_rel_path = Path(file.get('directoryLabel', ''), file_name)
@@ -158,18 +195,48 @@ class Checker:
             if file_name_format_checker.check_special_char(file_name)[1] is True:
                 self.logger.print(f'Special characters found in the filename: {file_rel_path}')
                 self.template_dict['special_characters']['comments'].append({'file_name': str(file_rel_path)})
+                special_char_files.append(str(file_rel_path))
 
             if file_name_format_checker.check_file_ext(file_name)[1] is True:
                 self.logger.print(f'File extension does not found: {file_rel_path}')
                 self.template_dict['file_ext']['comments'].append({'file_name': str(file_rel_path)})
+                missing_ext_files.append(str(file_rel_path))
 
             if readme_file_checker(file_name)[1] is True:
                 self.logger.print(f'README file found: {file_rel_path}')
                 self.template_dict['readme_file']['comments'].append({'file_name': str(file_rel_path)})
+                readme_files.append(str(file_rel_path))
+        
+        # Add results to the new structure
+        self.result_builder.add_check_result(
+            check_id='filename_special_chars',
+            check_name='Files with Special Characters',
+            description='Files containing special characters in filename',
+            result_type='file_list',
+            results=special_char_files
+        )
+        
+        self.result_builder.add_check_result(
+            check_id='missing_file_extensions',
+            check_name='Files Missing Extensions',
+            description='Files without proper file extensions',
+            result_type='file_list',
+            results=missing_ext_files
+        )
+        
+        self.result_builder.add_check_result(
+            check_id='readme_files',
+            check_name='README Files Found',
+            description='README files detected in the dataset',
+            result_type='file_list',
+            results=readme_files
+        )
 
     def check_file_open(self) -> None:
         """Check if the file can be opened."""
         file_list = []
+        inaccessible_files = []
+        unsupported_files = []
 
         # To generate paths for the relative files in the dataset
         for file in self.file_list_metadata:
@@ -199,12 +266,33 @@ class Checker:
                 if self.files_opener(file_abs_path).open_file()[0] is False:
                     self.logger.print(f'File cannot be opened: {file_abs_path}')
                     self.template_dict['file_open']['comments'].append({'file_name': str(file_rel_path)})
+                    inaccessible_files.append(str(file_rel_path))
                 elif self.files_opener(file_abs_path).open_file()[0] is None:
                     self.logger.print(f'File is not a supported file format (not checked by the script): {file_abs_path}')  # noqa: E501
                     self.template_dict['file_open']['not_checked'].append({'file_name': str(file_rel_path)})
+                    unsupported_files.append(str(file_rel_path))
+        
+        # Add results to the new structure
+        self.result_builder.add_check_result(
+            check_id='file_accessibility',
+            check_name='Inaccessible Files',
+            description='Files that cannot be opened or read',
+            result_type='file_list',
+            results=inaccessible_files
+        )
+        
+        self.result_builder.add_check_result(
+            check_id='unsupported_files',
+            check_name='Files with Unsupported Formats',
+            description='Files in formats not supported by validation tools',
+            result_type='file_list',
+            results=unsupported_files
+        )
 
     def check_common_file_format(self) -> None:
         """Check if the file format is in the common file format."""
+        uncommon_format_files = []
+        
         if self.common_file_format_tuple:
             for file in self.file_list_metadata:
                 file_name = file.get('dataFile', {}).get('originalFileName') or file.get('dataFile', {}).get('filename')
@@ -214,18 +302,34 @@ class Checker:
                 if file_ext.startswith('.') and file_ext not in self.common_file_format_tuple:
                     self.logger.print(f'File is not a common file format: {file_abs_path}')
                     self.template_dict['common_file_format']['comments'].append({'file_name': str(file_rel_path)})
+                    uncommon_format_files.append(str(file_rel_path))
         else:
             self.logger.error('No common file format found in the res directory. Skipping this check.')
             self.template_dict['common_file_format']['comments'].append('No common file format found in the res directory. Skipping this check.')  # noqa: E501
+        
+        # Add results to the new structure
+        self.result_builder.add_check_result(
+            check_id='uncommon_file_formats',
+            check_name='Files with Uncommon Formats',
+            description='Files using uncommon or proprietary file formats',
+            result_type='file_list',
+            results=uncommon_format_files
+        )
 
     def check_missing_metadata(self) -> None:
         """Check for missing metadata."""
+        missing_required_fields = []
+        authors_missing_affiliation = []
+        authors_missing_identifier = []
+        authors_missing_scheme = []
+        
         field_list = ['title', 'dsDescription', 'subject']
         for field in field_list:
             return_value = self.metadata_checker.check_metadata_cm_field(field)
             if return_value[1] is False:
                 self.logger.print(f'Missing metadata found in the {field}')
                 self.template_dict['missing_field'][field]['comments'].append(f'Missing metadata in {field} field')
+                missing_required_fields.append(field)
 
         # Check any associated fields for an author (affiliation, identifier & scheme) are missing
         field_list_author = ['authorAffiliation', 'authorIdentifierScheme', 'authorIdentifier']
@@ -236,6 +340,14 @@ class Checker:
                 if item.get(field) is None:
                     self.logger.print(f'Missing metadata found in {field} field for author: {author_name}')
                     self.template_dict['missing_field'][field]['comments'].append(f'{author_name}')  # noqa: E501
+                    
+                    # Collect authors missing specific fields
+                    if field == 'authorAffiliation':
+                        authors_missing_affiliation.append(author_name)
+                    elif field == 'authorIdentifier':
+                        authors_missing_identifier.append(author_name)
+                    elif field == 'authorIdentifierScheme':
+                        authors_missing_scheme.append(author_name)
 
         # Check if at least one author has authorAffiliation
         author_affiliation_num = len([item for item in author_info_dict if item.get('authorAffiliation') is not None])
@@ -249,9 +361,44 @@ class Checker:
         if author_affiliation_ut_num == 0:
             self.logger.print('None of the authors have listed affiliation with University of Toronto')
             self.template_dict['none_author_affiliation_UT'] = True
+        
+        # Add results to the new structure
+        self.result_builder.add_check_result(
+            check_id='missing_required_fields',
+            check_name='Missing Required Metadata Fields',
+            description='Required metadata fields that are empty or missing',
+            result_type='field_list',
+            results=missing_required_fields
+        )
+        
+        self.result_builder.add_check_result(
+            check_id='authors_missing_affiliation',
+            check_name='Authors Without Affiliation',
+            description='Authors missing institutional affiliation information',
+            result_type='author_list',
+            results=authors_missing_affiliation
+        )
+        
+        self.result_builder.add_check_result(
+            check_id='authors_missing_identifier',
+            check_name='Authors Without Identifier',
+            description='Authors missing personal identifier (ORCID, etc.)',
+            result_type='author_list',
+            results=authors_missing_identifier
+        )
+        
+        self.result_builder.add_check_result(
+            check_id='authors_missing_scheme',
+            check_name='Authors Without Identifier Scheme',
+            description='Authors missing identifier scheme information',
+            result_type='author_list',
+            results=authors_missing_scheme
+        )
 
     def check_spelling(self) -> None:
         """Check for spelling mistakes in the metadata."""
+        potential_typos = []
+        
         field_list = ['title', 'subtitle', 'alternativeTitle', 'dsDescription.dsDescriptionValue', 'notesText']
         for field in field_list:
             return_value, field_exists = self.metadata_checker.check_metadata_cm_field(field)
@@ -263,6 +410,23 @@ class Checker:
                     for message in typo_messages:
                         self.logger.print(f'Spelling mistake found in the {field}: {message}')
                     self.template_dict['typo']['comments'].extend(typo_messages)
+                    
+                    # Collect typos for new structure
+                    for typo in typos:
+                        potential_typos.append({
+                            'field': field,
+                            'typo': typo,
+                            'context': return_value[0][:100] + '...' if len(return_value[0]) > 100 else return_value[0]
+                        })
+        
+        # Add results to the new structure
+        self.result_builder.add_check_result(
+            check_id='potential_typos',
+            check_name='Potential Spelling Errors',
+            description='Words that may contain spelling mistakes in metadata fields',
+            result_type='typo_list',
+            results=potential_typos
+        )
 
     def check_dv_record(self) -> None:
         """Check if the author has deposited data in Dataverse.
@@ -270,6 +434,8 @@ class Checker:
         Note: This check only works if the author inputs their name in a consistent way across all datasets.
 
         """
+        author_publication_history = []
+        
         query_string = 'data.latestVersion.metadataBlocks.citation.fields[?typeName==`author`].value[*].authorName.value[]'  # noqa: E501
         author_list = jmespath.search(query_string, self.ds_metadata)
 
@@ -286,9 +452,27 @@ class Checker:
                     response = self.httpx_client.sync_get(f'/api/search?q=*&type=dataset&per_page=1000&fq=authorName:"{author}"')  # noqa: E501
                 if response and response.json():
                     name_of_dataverse_result = list(set(jmespath.search('data.items[*].name_of_dataverse', response.json())))  # noqa: E501
+                    dataset_titles = jmespath.search('data.items[*].name', response.json()) or []
+                    
                     self.template_dict['dv_record']['comments'].append({author: name_of_dataverse_result})
+                    
+                    # Collect for new structure
+                    author_publication_history.append({
+                        'author': author,
+                        'datasets': dataset_titles,
+                        'dataverses': name_of_dataverse_result
+                    })
 
                 # TODO: Add error handling for the case when the response is None or empty; or HTTP error
+        
+        # Add results to the new structure
+        self.result_builder.add_check_result(
+            check_id='author_dataverse_history',
+            check_name='Author Publication History',
+            description='Previous datasets published by authors in this Dataverse instance',
+            result_type='author_history',
+            results=author_publication_history
+        )
 
     def check_ds_tree_info(self) -> None:
         """Check the path of the dataset in the dataverse Repository."""
@@ -316,12 +500,24 @@ class Checker:
 
     def check_restricted_files(self) -> None:
         """Check for restricted files."""
+        restricted_files = []
+        
         for item in self.file_list_metadata:
             if item.get('restricted') is True:
                 file_name = item.get('dataFile', {}).get('originalFileName') or item.get('dataFile', {}).get('filename')
                 file_path = Path(item.get('directoryLabel', ''), file_name)
                 self.logger.print(f'Restricted file found: {file_path}')
                 self.template_dict['restricted_files']['comments'].append({'file_name': str(file_path)})
+                restricted_files.append(str(file_path))
+        
+        # Add results to the new structure
+        self.result_builder.add_check_result(
+            check_id='restricted_files',
+            check_name='Restricted Access Files',
+            description='Files with access restrictions in the dataset',
+            result_type='file_list',
+            results=restricted_files
+        )
 
     def check_terms_license(self) -> None:
         """Check if the terms of use and license are present."""
@@ -349,8 +545,12 @@ class Checker:
         else:
             self.logger.print('No keywords found in the metadata')
 
-    def run_checks(self) -> dict:
-        """Run all the checks."""
+    def run_checks(self) -> tuple[dict, dict]:
+        """Run all the checks.
+        
+        Returns:
+            tuple: (template_dict for backward compatibility, new check_results structure)
+        """
         self.logger.print('Running the checks...')
         self.check_file_name_format()
         self.check_file_open()
@@ -363,4 +563,16 @@ class Checker:
         self.check_terms_license()
         self.check_keywords()
 
-        return self.template_dict
+        # Build the new structure
+        new_results = {
+            'session_info': {
+                'timestamp': self.template_dict.get('project_info', {}).get('timestamp', ''),
+                'ticket_number': self.template_dict.get('project_info', {}).get('ticket_number', ''),
+                'curator_name': self.template_dict.get('project_info', {}).get('curator_name', ''),
+                'curator_email': self.template_dict.get('project_info', {}).get('curator_email', '')
+            },
+            'dataset_info': self.template_dict.get('dataset_info', {}),
+            'check_results': self.result_builder.get_results()
+        }
+
+        return self.template_dict, new_results
