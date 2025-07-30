@@ -29,36 +29,41 @@ checklist:
       - For files that cannot be opened programmatically – if we have the program, open a minimum of 5 of each type of file.
     priority: "required"
     section: "2. Files"
+    automated_check_ids: ["file_accessibility", "unsupported_files"]
 
   - id: "2.2"
     action: "Are all files free of the following special characters (<>:\\\"/\\|?*,@$~)?"
     instructions: "Python scripted."
     priority: "recommended"
     section: "2. Files"
+    automated_check_ids: ["filename_special_chars"]
 
   - id: "2.3"
     action: "Do all the files contain file extensions?"
     instructions: |
       Python scripted.
       
-      - Not all the files require a file extension (e.g. a README file can either be ‘README’ or ‘README.md’). Curator needs to check on a case-by-case basis.
+      - Not all the files require a file extension (e.g. a README file can either be 'README' or 'README.md'). Curator needs to check on a case-by-case basis.
     priority: "required"
     section: "2. Files"
+    automated_check_ids: ["missing_file_extensions"]
 
   - id: "2.4"
     action: "Do all files appear on the common file format list?"
     instructions: "Python scripted."
     priority: "info"
     section: "2. Files"
+    automated_check_ids: ["uncommon_file_formats"]
 
   - id: "3.1"
     action: "Does the dataset include a separate README file?"
     instructions: |
       Python scripted.
       
-      - Read the `ds_tree.txt` file in the log_files folder to identify whether there is a README file, even if it is not named with ‘README’.
+      - Read the `ds_tree.txt` file in the log_files folder to identify whether there is a README file, even if it is not named with 'README'.
     priority: "required"
     section: "3. Documentation"
+    automated_check_ids: ["readme_files"]
 
   - id: "3.2"
     action: "Does the README contain the following information, and does it match the dataset’s metadata?"
