@@ -104,6 +104,7 @@ def get_checklist_items() -> list[ChecklistItem]:
         ))
     return items
 
+
 @app.get('/', response_class=HTMLResponse)
 def landing(request: Request) -> HTMLResponse:
     """Render the landing page for setup.
@@ -185,9 +186,6 @@ async def setup(request: SetupRequest) -> JSONResponse:
         JSONResponse: Result of the curation process
     """
     try:
-        # Debug: Print the request data
-        print(f'Request data: {request}')
-        print(f'force_del: {request.force_del}, check_zip: {request.check_zip}')
 
         # Validate required fields
         if not request.pid or not request.pid.strip():
@@ -228,8 +226,10 @@ async def setup(request: SetupRequest) -> JSONResponse:
 
         # Join command parts
         cmd = ' '.join(cmd_parts)
-        print(f'Running command: {cmd}')
-        print(f'Working directory: {os.getcwd()}/{request.parent_dir}/{request.ticket_number}')
+
+        # Define the working directory
+        app.state.work_dir = Path(Path.cwd()) / request.parent_dir / request.ticket_number
+        print(f'Working directory: {app.state.work_dir}')
 
         # Run the command
         result = await run_command(cmd)
@@ -240,7 +240,6 @@ async def setup(request: SetupRequest) -> JSONResponse:
                 'message': 'Curation report generated successfully',
                 'output': result['stdout'],
                 'command': cmd,
-                'template_dict_path': f'/template-dict/{request.parent_dir}/{request.ticket_number}',
                 'curator_name': request.curator_name,
                 'curator_email': request.curator_email,
             })
@@ -268,10 +267,10 @@ async def setup(request: SetupRequest) -> JSONResponse:
             }
         )
     except HTTPException as e:
-        pprint(f'HTTP exception: {e}')
+        print(f'HTTP exception: {e}')
         raise e
     except Exception as e:
-        pprint(f'Unexpected error: {e}')
+        print(f'Unexpected error: {e}')
         return JSONResponse(
             status_code=500,
             content={
@@ -314,9 +313,9 @@ async def shutdown() -> None:
 class CurationLogRequest(BaseModel):
     curationLog: str
 
-@app.post('/save-curation-log')
-async def save_curation_log(request: CurationLogRequest) -> JSONResponse:
-    """Save the curationLog from sessionStorage to a YAML file."""
+@app.post('/export-curation-log')
+async def export_log_yaml(request: CurationLogRequest) -> JSONResponse:
+    """Export the curationLog from sessionStorage to a YAML file."""
     try:
         # Parse YAML data
         yaml_data = yaml.safe_load(request.curationLog)
@@ -364,10 +363,7 @@ async def save_curation_log(request: CurationLogRequest) -> JSONResponse:
 
         # Save to file
         ticket_number = metadata.get('ticket_number', 'unknown')
-        output_path = Path(f'output/curation_log_{ticket_number}.yaml')
-
-        # Ensure output directory exists
-        output_path.parent.mkdir(exist_ok=True)
+        output_path = Path(f'{app.state.work_dir}', 'log_files', f'{ticket_number}_new.yaml')
 
         with output_path.open('w', encoding='utf-8') as f:
             yaml.dump(output_data, f,
@@ -377,13 +373,13 @@ async def save_curation_log(request: CurationLogRequest) -> JSONResponse:
 
         return JSONResponse(content={
             'success': True,
-            'message': 'Curation log saved successfully',
+            'message': f'Curation log in YAML format exported successfully to {output_path}',
             'data': output_data,
             'file_path': str(output_path)
         })
 
     except Exception as e:
-        print(f'Error in save_curation_log: {e}')
+        print(f'Error in export_log_yaml: {e}')
         return JSONResponse(
             status_code=500,
             content={'success': False, 'message': str(e)}
@@ -423,11 +419,11 @@ async def render_report(request: Request) -> JSONResponse:
                     }
                 )
 
-        # Create CurationLogRequest object for save_curation_log
+        # Create CurationLogRequest object for save_log_yaml
         curation_request = CurationLogRequest(curationLog=curation_log_data)
-        
-        # Invoke save_curation_log before rendering the report
-        save_result = await save_curation_log(curation_request)
+
+        # Invoke save_log_yaml before rendering the report
+        save_result = await export_log_yaml(curation_request)
 
         # Check if save was successful
         if not save_result.status_code == 200:
@@ -444,19 +440,19 @@ async def render_report(request: Request) -> JSONResponse:
         ticket_number = yaml_data.get('metadata', {}).get('ticket_number', 'unknown')
 
         # Render the report from the saved YAML file with dynamic paths
-        yaml_path = f'output/curation_log_{ticket_number}.yaml'
-        output_path = f'output/curation_log_{ticket_number}.docx'
+        yaml_path = Path(f'{app.state.work_dir}', 'log_files', f'{ticket_number}_new.yaml')
+        output_path = Path(f'{app.state.work_dir}', 'log_files', f'{ticket_number}_new.docx')
 
         render_report_from_yaml(
             yaml_path=yaml_path,
-            template_path='res/new_template_high.docx',
+            template_path=Path('res/new_template_high.docx'),
             output_path=output_path
         )
 
         return JSONResponse(content={
             'success': True,
             'message': f'Curation log saved to {output_path} successfully',
-            'output_file': output_path
+            'output_file': str(output_path)
         })
 
     except Exception as e:
@@ -464,6 +460,6 @@ async def render_report(request: Request) -> JSONResponse:
             status_code=500,
             content={
                 'success': False,
-                'message': f'Error rendering report: {str(e)}'
+                'message': f'Error when rendering report: {str(e)}'
             }
         )
