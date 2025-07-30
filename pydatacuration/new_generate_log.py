@@ -5,9 +5,9 @@ from docxtpl import DocxTemplate
 
 
 def render_report_from_yaml(
-    yaml_path: str,
-    template_path: str,
-    output_path: str
+    yaml_path: Path,
+    template_path: Path,
+    output_path: Path
 ) -> None:
     """Render a DOCX report by repeating a table row for each YAML record.
 

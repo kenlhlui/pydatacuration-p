@@ -410,7 +410,7 @@
                 return;
             }
             
-            const response = await fetch('/save-curation-log', {
+            const response = await fetch('/export-curation-log', {
                 method: 'POST',
                 headers: {
                     'Content-Type': 'application/json',
@@ -421,7 +421,7 @@
             const result = await response.json();
             
             if (result.success) {
-                alert('Curation log exported successfully!');
+                alert('' + result.message);
             } else {
                 alert('Error exporting curation log: ' + result.message);
             }
