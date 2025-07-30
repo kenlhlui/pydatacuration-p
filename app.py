@@ -2,11 +2,7 @@
 import asyncio
 import json
 import os
-from datetime import datetime
 from pathlib import Path
-from pprint import pprint
-from typing import List
-from typing import Optional
 
 # import markdown
 import markdown2
@@ -17,7 +13,6 @@ from fastapi import HTTPException
 from fastapi import Request
 from fastapi.responses import HTMLResponse
 from fastapi.responses import JSONResponse
-from fastapi.responses import Response
 from fastapi.staticfiles import StaticFiles
 from fastapi.templating import Jinja2Templates
 from pydantic import BaseModel
@@ -35,7 +30,7 @@ class ChecklistItem(BaseModel):
         instructions (str): detailed instructions
         priority (str): priority level
         section (str): section this item belongs to (optional)
-        automated_check_ids (List[str]): list of automated check IDs that map to this item
+        automated_check_ids (list[str]): list of automated check IDs that map to this item
 
     Returns:
         None: data container
@@ -45,7 +40,7 @@ class ChecklistItem(BaseModel):
     instructions: str
     priority: str
     section: str = ''
-    automated_check_ids: List[str] = []
+    automated_check_ids: list[str] = []
 
 
 class SetupRequest(BaseModel):
@@ -90,7 +85,7 @@ def get_checklist_items() -> list[ChecklistItem]:
     """Get all checklist items from the check-list_template_high.yaml file.
 
     Returns:
-        List[ChecklistItem]: List of checklist items with their details.
+        list[ChecklistItem]: List of checklist items with their details.
 
     """
     with Path('res/check-list_template_high.yaml').open('r') as f:
