@@ -126,6 +126,9 @@ def gen_curation_report(
 
         # Export the template dict to JSON for debugging purposes
         orjson_export(log_files_dir.joinpath('template_dict.json'), template_dict)
+        
+        # Export the new check results structure
+        orjson_export(log_files_dir.joinpath('check_results.json'), new_check_results)
 
         # Generate the tree diagram of the dataset files
         utils.gen_tree_diagram(Path(workdir_path, 'dataset', 'files'), Path(log_files_dir))

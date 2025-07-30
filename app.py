@@ -35,6 +35,7 @@ class ChecklistItem(BaseModel):
         instructions (str): detailed instructions
         priority (str): priority level
         section (str): section this item belongs to (optional)
+        automated_check_ids (List[str]): list of automated check IDs that map to this item
 
     Returns:
         None: data container
@@ -44,6 +45,7 @@ class ChecklistItem(BaseModel):
     instructions: str
     priority: str
     section: str = ''
+    automated_check_ids: List[str] = []
 
 
 class SetupRequest(BaseModel):
@@ -95,14 +97,60 @@ def get_checklist_items() -> list[ChecklistItem]:
         data = yaml.safe_load(f)
     items = []
     for item in data.get('checklist', []):
-        items.append(ChecklistItem(
+        checklist_item = ChecklistItem(
             id=item['id'],
             action=item['action'],
             instructions=markdown2.markdown(item['instructions']),  # Convert Markdown to HTML
             priority=item['priority'],
-            section=item.get('section', '')
-        ))
+            section=item.get('section', ''),
+            automated_check_ids=item.get('automated_check_ids', [])
+        )
+        if checklist_item.automated_check_ids:
+            print(f"Item {checklist_item.id} has automated_check_ids: {checklist_item.automated_check_ids}")
+        items.append(checklist_item)
     return items
+
+
+def find_relevant_checks_for_item(item: ChecklistItem, check_results: list) -> list:
+    """Find automated check results relevant to a checklist item.
+    
+    Args:
+        item: ChecklistItem to match against
+        check_results: List of automated check results
+    
+    Returns:
+        List of relevant check results
+    """
+    if not check_results:
+        return []
+        
+    action_text = item.action.lower()
+    relevant_checks = []
+    
+    for check in check_results:
+        check_name = check.get('check_name', '').lower()
+        check_desc = check.get('description', '').lower()
+        
+        # Simple keyword matching - can be made more sophisticated
+        if any(keyword in action_text for keyword in ['file', 'document']) and \
+           any(keyword in check_name or keyword in check_desc for keyword in ['file', 'accessibility', 'format', 'extension']):
+            relevant_checks.append(check)
+        elif 'metadata' in action_text and \
+             any(keyword in check_name or keyword in check_desc for keyword in ['metadata', 'field', 'missing']):
+            relevant_checks.append(check)
+        elif 'author' in action_text and \
+             any(keyword in check_name or keyword in check_desc for keyword in ['author', 'affiliation']):
+            relevant_checks.append(check)
+        elif any(keyword in action_text for keyword in ['spelling', 'grammar', 'typo']) and \
+             any(keyword in check_name for keyword in ['spelling', 'typo']):
+            relevant_checks.append(check)
+        elif 'restricted' in action_text and 'restricted' in check_name:
+            relevant_checks.append(check)
+        elif any(keyword in action_text for keyword in ['format', 'extension']) and \
+             any(keyword in check_name for keyword in ['format', 'extension']):
+            relevant_checks.append(check)
+    
+    return relevant_checks
 
 
 @app.get('/', response_class=HTMLResponse)
@@ -140,7 +188,39 @@ def checklist(request: Request) -> HTMLResponse:
         HTMLResponse: page with checklist table
     """
     items = get_checklist_items()
-    return templates.TemplateResponse('index.html', {'request': request, 'items': items})
+    
+    # Try to load check results if available
+    check_results = []
+    try:
+        # Get working directory info from query parameters or default
+        parent_dir = request.query_params.get('parent_dir', 'workdir')
+        ticket_number = request.query_params.get('ticket_number')
+        
+        print(f"DEBUG: Query parameters - parent_dir: {parent_dir}, ticket_number: {ticket_number}")
+        print(f"DEBUG: All query params: {dict(request.query_params)}")
+        
+        if ticket_number:
+            check_results_path = Path(parent_dir) / ticket_number / 'log_files' / 'check_results.json'
+            print(f"Looking for check results at: {check_results_path}")
+            if check_results_path.exists():
+                with check_results_path.open('r', encoding='utf-8') as f:
+                    check_results_data = json.load(f)
+                    check_results = check_results_data.get('check_results', [])
+                    print(f"Loaded {len(check_results)} check results")
+                    if check_results:
+                        print(f"First check result: {check_results[0]}")
+            else:
+                print("Check results file does not exist")
+        else:
+            print("DEBUG: No ticket_number provided in query parameters")
+    except Exception as e:
+        print(f"Could not load check results: {e}")
+    
+    return templates.TemplateResponse('index.html', {
+        'request': request, 
+        'items': items, 
+        'check_results': check_results
+    })
 
 
 async def run_command(command: str) -> dict:
@@ -242,6 +322,7 @@ async def setup(request: SetupRequest) -> JSONResponse:
                 'command': cmd,
                 'curator_name': request.curator_name,
                 'curator_email': request.curator_email,
+                'redirect_url': f'/checklist?parent_dir={request.parent_dir}&ticket_number={request.ticket_number}',
             })
         return JSONResponse(
             status_code=400,

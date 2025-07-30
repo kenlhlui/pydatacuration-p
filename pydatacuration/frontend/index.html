@@ -325,6 +325,7 @@
                     <tr>
                         <th>ID</th>
                         <th>Action Item</th>
+                        <th>Automated Check</th>
                         <th>Status</th>
                         <th>Curator's Comments</th>
                         <th>Priority</th>
@@ -335,28 +336,98 @@
                     {% for item in items %}
                         {% if loop.first or item.section != loop.previtem.section %}
                             <tr>
-                                <td colspan="6" class="section-header">{{ item.section }}</td>
+                                <td colspan="7" class="section-header">{{ item.section }}</td>
                             </tr>
                         {% endif %}
                         <tr>
                             <td class="item-id">{{ item.id }}</td>
-                        <td class="details-cell">
-                                    <div class="action-item">
-                                        {{ item.action }}
+                            <td class="details-cell">
+                                <div class="action-item">
+                                    {{ item.action }}
+                                </div>
+                                <div class="instructions">
+                                    {{ item.instructions|safe }}
+                                </div>
+                            </td>
+                            <td class="automated-check-cell">
+                                <!-- Debug info -->
+                                {% if loop.first %}
+                                    <div style="font-size: 10px; color: red;">
+                                        DEBUG: {{ check_results|length }} check results loaded
+                                        {% if check_results %}
+                                            <br>First check ID: {{ check_results[0].check_id }}
+                                        {% endif %}
                                     </div>
-                                    <div class="instructions">
-                                        {{ item.instructions|safe }}
-                                    </div>
-                                </td>
-                        <td>
-                            <select name="status-{{ item.id }}" class="status-select" required>
-                                <option value="">Select status...</option>
-                                <option value="P">Passed</option>
-                                <option value="F">Follow-up</option>
-                                <option value="TBD">To Be Determined</option>
-                                <option value="NA">Not Applicable</option>
-                            </select>
-                        </td>
+                                {% endif %}
+                                <div style="font-size: 10px; color: blue;">
+                                    Item {{ item.id }} automated_check_ids: {{ item.automated_check_ids }}
+                                </div>
+                                
+                                {% set relevant_checks = [] %}
+                                {% for check in check_results %}
+                                    {% if check.check_id in item.automated_check_ids %}
+                                        {% set _ = relevant_checks.append(check) %}
+                                    {% endif %}
+                                {% endfor %}
+                                
+                                {% if relevant_checks %}
+                                    {% for check in relevant_checks %}
+                                        {% set has_issues = check.results and check.results|length > 0 %}
+                                        <div class="check-result {% if has_issues %}check-warning{% else %}check-pass{% endif %}">
+                                            <div class="check-header">
+                                                <strong>{{ check.check_name }}</strong>
+                                            </div>
+                                            <div class="check-description">{{ check.description }}</div>
+                                            {% if has_issues %}
+                                                <div class="check-summary">{{ check.results|length }} issue{% if check.results|length > 1 %}s{% endif %} found</div>
+                                                {% if check.results|length <= 3 %}
+                                                    <div class="check-details">
+                                                        {% for result in check.results %}
+                                                            <div class="result-item">
+                                                                {% if result is string %}
+                                                                    <code>{{ result }}</code>
+                                                                {% elif result.field and result.typo %}
+                                                                    {{ result.field }}: <code>{{ result.typo }}</code>
+                                                                {% elif result.author %}
+                                                                    {{ result.author }}
+                                                                {% else %}
+                                                                    {{ result }}
+                                                                {% endif %}
+                                                            </div>
+                                                        {% endfor %}
+                                                    </div>
+                                                {% else %}
+                                                    <div class="check-details">
+                                                        {% for result in check.results[:3] %}
+                                                            <div class="result-item">
+                                                                {% if result is string %}
+                                                                    <code>{{ result }}</code>
+                                                                {% else %}
+                                                                    {{ result }}
+                                                                {% endif %}
+                                                            </div>
+                                                        {% endfor %}
+                                                        <div class="more-items">... and {{ check.results|length - 3 }} more</div>
+                                                    </div>
+                                                {% endif %}
+                                            {% else %}
+                                                <div class="check-summary">No issues found</div>
+                                            {% endif %}
+                                        </div>
+                                    {% endfor %}
+                                {% else %}
+                                    <span class="no-automation">Manual check only</span>
+                                {% endif %}
+                            </td>
+                            <td>
+                                <select name="status-{{ item.id }}" class="status-select" required>
+                                    <option value="">Select status...</option>
+                                    <option value="P">Passed</option>
+                                    <option value="F">Follow-up</option>
+                                    <option value="TBD">To Be Determined</option>
+                                    <option value="NA">Not Applicable</option>
+                                </select>
+                            </td>
                             <td>
                                 <textarea class="comments-input" name="comments-{{ item.id }}" placeholder="Curator's comments..."></textarea>
                             </td>
@@ -380,6 +451,7 @@
                             <div class="action-item">Additional comments or observations</div>
                             <div class="instructions">Any additional notes or observations not covered in the structured checklist</div>
                         </td>
+                        <td>-</td>
                         <td>-</td>
                         <td>
                             <textarea class="comments-input" name="comments-other" placeholder="Additional curator comments..."></textarea>
