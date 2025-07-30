@@ -115,7 +115,7 @@ def gen_curation_report(
                           workdir_path,
                           check_zip,
                           collection_alias)
-        template_dict = checker.run_checks()
+        template_dict, new_check_results = checker.run_checks()
 
         # Generate the report
         generate_log = log_generation.GenerateLog(log_files_dir, base_url, ds_metadata, ticket_number, template_dict)
