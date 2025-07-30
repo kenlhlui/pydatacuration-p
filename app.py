@@ -189,37 +189,11 @@ def checklist(request: Request) -> HTMLResponse:
     """
     items = get_checklist_items()
     
-    # Try to load check results if available
-    check_results = []
-    try:
-        # Get working directory info from query parameters or default
-        parent_dir = request.query_params.get('parent_dir', 'workdir')
-        ticket_number = request.query_params.get('ticket_number')
-        
-        print(f"DEBUG: Query parameters - parent_dir: {parent_dir}, ticket_number: {ticket_number}")
-        print(f"DEBUG: All query params: {dict(request.query_params)}")
-        
-        if ticket_number:
-            check_results_path = Path(parent_dir) / ticket_number / 'log_files' / 'check_results.json'
-            print(f"Looking for check results at: {check_results_path}")
-            if check_results_path.exists():
-                with check_results_path.open('r', encoding='utf-8') as f:
-                    check_results_data = json.load(f)
-                    check_results = check_results_data.get('check_results', [])
-                    print(f"Loaded {len(check_results)} check results")
-                    if check_results:
-                        print(f"First check result: {check_results[0]}")
-            else:
-                print("Check results file does not exist")
-        else:
-            print("DEBUG: No ticket_number provided in query parameters")
-    except Exception as e:
-        print(f"Could not load check results: {e}")
-    
+    # Check results will be loaded via JavaScript from session storage
     return templates.TemplateResponse('index.html', {
         'request': request, 
         'items': items, 
-        'check_results': check_results
+        'check_results': []  # Empty, will be populated by frontend JavaScript
     })
 
 
@@ -407,6 +381,37 @@ async def get_check_results(parent_dir: str, ticket_number: str) -> JSONResponse
         return JSONResponse(content=check_results_data)
     except Exception as e:
         raise HTTPException(status_code=500, detail=f"Error reading check results: {str(e)}")
+
+
+@app.get('/api/check-results')
+async def get_check_results_from_session(request: Request) -> JSONResponse:
+    """Serve check results based on session storage data (via query params).
+    
+    Expected query parameters:
+    - ticket_number: from sessionStorage
+    - parent_dir: optional, defaults to 'workdir'
+    
+    Returns:
+        JSONResponse: Check results data or empty results if not found
+    """
+    try:
+        parent_dir = request.query_params.get('parent_dir', 'workdir')
+        ticket_number = request.query_params.get('ticket_number')
+        
+        if not ticket_number:
+            return JSONResponse(content={'check_results': []})
+        
+        check_results_path = Path(parent_dir) / ticket_number / 'log_files' / 'check_results.json'
+        if not check_results_path.exists():
+            return JSONResponse(content={'check_results': []})
+
+        with check_results_path.open('r', encoding='utf-8') as f:
+            check_results_data = json.load(f)
+
+        return JSONResponse(content=check_results_data)
+    except Exception as e:
+        print(f"Error loading check results: {e}")
+        return JSONResponse(content={'check_results': []})
 
 
 @app.post('/shutdown')
