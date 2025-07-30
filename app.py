@@ -304,6 +304,30 @@ async def get_template_dict(parent_dir: str, ticket_number: str) -> JSONResponse
         raise HTTPException(status_code=500, detail=f"Error reading template dictionary: {str(e)}")
 
 
+@app.get('/check-results/{parent_dir}/{ticket_number}')
+async def get_check_results(parent_dir: str, ticket_number: str) -> JSONResponse:
+    """Serve the check results file for a specific ticket.
+
+    Args:
+        parent_dir (str): Parent directory name
+        ticket_number (str): Ticket number
+
+    Returns:
+        JSONResponse: Check results data
+    """
+    try:
+        check_results_path = Path(parent_dir) / ticket_number / 'log_files' / 'check_results.json'
+        if not check_results_path.exists():
+            raise HTTPException(status_code=404, detail="Check results not found")
+
+        with check_results_path.open('r', encoding='utf-8') as f:
+            check_results_data = json.load(f)
+
+        return JSONResponse(content=check_results_data)
+    except Exception as e:
+        raise HTTPException(status_code=500, detail=f"Error reading check results: {str(e)}")
+
+
 @app.post('/shutdown')
 async def shutdown() -> None:
     """Shutdown the uvicorn server."""
