@@ -4,6 +4,8 @@ import json
 import os
 from pathlib import Path
 
+import jmespath
+
 # import markdown
 import markdown2
 import yaml
@@ -234,14 +236,25 @@ async def setup(request: SetupRequest) -> JSONResponse:
         # Join command parts
         cmd = ' '.join(cmd_parts)
 
-        # Define the working directory
+        # Store state variables 
         app.state.work_dir = Path(Path.cwd()) / request.parent_dir / request.ticket_number
+        app.state.base_url = request.base_url
         print(f'Working directory: {app.state.work_dir}')
+        print(f'Base URL: {app.state.base_url}')
 
         # Run the command
         result = await run_command(cmd)
 
         if result['success']:
+            # Use get_ds_metadata function to get processed metadata
+            ds_metadata = None
+            try:
+                ds_metadata_response = await get_ds_metadata(request.parent_dir, request.ticket_number)
+                # Extract the content from the JSONResponse
+                ds_metadata = json.loads(ds_metadata_response.body.decode('utf-8'))
+            except Exception as e:
+                print(f'Could not load ds_metadata using get_ds_metadata: {e}')
+
             return JSONResponse(content={
                 'success': True,
                 'message': 'Curation report generated successfully',
@@ -249,6 +262,7 @@ async def setup(request: SetupRequest) -> JSONResponse:
                 'command': cmd,
                 'curator_name': request.curator_name,
                 'curator_email': request.curator_email,
+                'ds_metadata': ds_metadata,
                 'redirect_url': f'/checklist?parent_dir={request.parent_dir}&ticket_number={request.ticket_number}',
             })
         return JSONResponse(
@@ -336,24 +350,64 @@ async def get_check_results(parent_dir: str, ticket_number: str) -> JSONResponse
         raise HTTPException(status_code=500, detail=f"Error reading check results: {str(e)}")
 
 
+@app.get('/ds-metadata/{parent_dir}/{ticket_number}')
+async def get_ds_metadata(parent_dir: str, ticket_number: str) -> JSONResponse:
+    """Serve the dataset metadata file for a specific ticket.
+
+    Args:
+        parent_dir (str): Parent directory name
+        ticket_number (str): Ticket number
+
+    Returns:
+        JSONResponse: Dataset metadata data
+    """
+    try:
+        # Try the main location first
+        ds_metadata_path = Path(parent_dir) / ticket_number / 'dataset' / 'metadata' / 'ds_metadata.json'
+
+        # If not found, try the log_files location
+        if not ds_metadata_path.exists():
+            ds_metadata_path = Path(parent_dir) / ticket_number / 'log_files' / f'{ticket_number}_ds_metadata.json'
+
+        if not ds_metadata_path.exists():
+            raise HTTPException(status_code=404, detail='Dataset metadata not found')
+
+        with ds_metadata_path.open('r', encoding='utf-8') as f:
+            ds_metadata = json.load(f)
+
+        # Get the relevant fields
+        processed_metadata = {
+            'dataset_pid': ds_metadata.get('data', {}).get('latestVersion', {}).get('datasetPersistentId', ''),
+            'dataset_title': jmespath.search('data.latestVersion.metadataBlocks.citation.fields[?typeName == `title`].value | [0]', ds_metadata),
+            'dataset_id': ds_metadata.get('data', {}).get('latestVersion', {}).get('id', ''),
+            'dataset_url': app.state.base_url + '/dataset.xhtml?persistentId=' + ds_metadata.get('data', {}).get('latestVersion', {}).get('datasetPersistentId', '')
+        }
+
+        print(f"Dataset metadata for {ticket_number}: {processed_metadata}")
+
+        return JSONResponse(content=processed_metadata)
+    except Exception as e:
+        raise HTTPException(status_code=500, detail=f'Error reading dataset metadata: {str(e)}')
+
+
 @app.get('/api/check-results')
 async def get_check_results_from_session(request: Request) -> JSONResponse:
     """Serve check results based on session storage data (via query params).
-    
+
     Expected query parameters:
     - ticket_number: from sessionStorage
     - parent_dir: optional, defaults to 'workdir'
-    
+
     Returns:
         JSONResponse: Check results data or empty results if not found
     """
     try:
         parent_dir = request.query_params.get('parent_dir', 'workdir')
         ticket_number = request.query_params.get('ticket_number')
-        
+
         if not ticket_number:
             return JSONResponse(content={'check_results': []})
-        
+
         check_results_path = Path(parent_dir) / ticket_number / 'log_files' / 'check_results.json'
         if not check_results_path.exists():
             return JSONResponse(content={'check_results': []})
