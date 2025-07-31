@@ -400,7 +400,7 @@
                 <button type="button" class="btn btn-secondary btn-calculate-time">Calculate Time Spent</button>
                 <button type="button" class="btn btn-secondary" onclick="exportCurationLogYAML()">Export YAML</button>
                 <button type="button" class="btn btn-secondary" onclick="window.location.href='/'">New Dataset</button>
-                <button type="button" class="btn btn-secondary" onclick="exitCuration()">Exit</button>
+
             </div>
         </form>
     </div>
@@ -432,19 +432,6 @@
             }
         } catch (error) {
             alert('Error exporting curation log: ' + error.message);
-        }
-    }
-
-    function exitCuration() {
-        // Confirm exit
-        if (confirm('Are you sure you want to exit? Any unsaved changes will be lost.')) {
-            // Send shutdown request
-            fetch('/shutdown', { method: 'POST' })
-                .then(() => {
-                    // Close the window if possible
-                    window.close();
-                })
-                .catch(err => console.error('Shutdown failed:', err));
         }
     }
     </script>
