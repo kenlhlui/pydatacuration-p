@@ -25,11 +25,12 @@ RES_DIR = Path('res')
 class CheckResultBuilder:
     """Builder class for collecting check results in a structured format."""
 
-    def __init__(self):
+    def __init__(self) -> None:
+        """Initialize the CheckResultBuilder."""
         self.results = []
 
-    def add_check_result(self, check_id: str, check_name: str, description: str, 
-                        result_type: str, results: list):
+    def add_check_result(self, check_id: str, check_name: str,
+                         description: str, result_type: str, results: list) -> None:
         """Add a check result to the collection.
 
         Args:
@@ -42,13 +43,13 @@ class CheckResultBuilder:
         # Only add if there are actual results
         if results:
             self.results.append({
-                "check_id": check_id,
-                "check_name": check_name,
-                "description": description,
-                "result_type": result_type,
-                "results": results
+                'check_id': check_id,
+                'check_name': check_name,
+                'description': description,
+                'result_type': result_type,
+                'results': results
             })
-    
+
     def get_results(self) -> list:
         """Get all collected check results."""
         return self.results
@@ -453,9 +454,9 @@ class Checker:
                 if response and response.json():
                     name_of_dataverse_result = list(set(jmespath.search('data.items[*].name_of_dataverse', response.json())))  # noqa: E501
                     dataset_titles = jmespath.search('data.items[*].name', response.json()) or []
-                    
+
                     self.template_dict['dv_record']['comments'].append({author: name_of_dataverse_result})
-                    
+
                     # Collect for new structure
                     author_publication_history.append({
                         'author': author,
@@ -464,7 +465,7 @@ class Checker:
                     })
 
                 # TODO: Add error handling for the case when the response is None or empty; or HTTP error
-        
+
         # Add results to the new structure
         self.result_builder.add_check_result(
             check_id='author_dataverse_history',
@@ -501,7 +502,7 @@ class Checker:
     def check_restricted_files(self) -> None:
         """Check for restricted files."""
         restricted_files = []
-        
+
         for item in self.file_list_metadata:
             if item.get('restricted') is True:
                 file_name = item.get('dataFile', {}).get('originalFileName') or item.get('dataFile', {}).get('filename')
@@ -509,7 +510,7 @@ class Checker:
                 self.logger.print(f'Restricted file found: {file_path}')
                 self.template_dict['restricted_files']['comments'].append({'file_name': str(file_path)})
                 restricted_files.append(str(file_path))
-        
+
         # Add results to the new structure
         self.result_builder.add_check_result(
             check_id='restricted_files',
