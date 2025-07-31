@@ -192,13 +192,7 @@ class Downloads:
         try:
             response_json = self._get_ds_metadata()
             # Save the metadata to dataset/metadata directory
-            with file_path.open('w', encoding='utf-8') as f:
-                f.write(orjson.dumps(response_json, option=orjson.OPT_INDENT_2).decode())
-            # Save the metadata to log_files directory
-            # ! This is for the Curation testing purpose only.
-            # ! This will be removed in the production version.
-            log_file_dir_path = Path(self.download_dir, 'log_files', f'{self.ticket_number}_ds_metadata.json')
-            orjson_export(log_file_dir_path, response_json)
+            orjson_export(file_path, response_json)
 
         except Exception as e:
             self.logger.print(f'An error occurred: {e}\nProgram exiting...')

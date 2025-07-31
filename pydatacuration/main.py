@@ -6,7 +6,6 @@ import os
 import subprocess
 from pathlib import Path
 
-import orjson
 import typer
 from dotenv import load_dotenv
 from rich.progress import Progress
@@ -15,7 +14,6 @@ from trogon.typer import init_tui
 
 from . import directory_manager
 from . import downloads
-from . import log_generation
 from . import utils
 from .checker import Checker
 from .custom_logging import CustomLogger
@@ -117,16 +115,6 @@ def gen_curation_report(
                           collection_alias)
         template_dict, new_check_results = checker.run_checks()
 
-        # Generate the report
-        generate_log = log_generation.GenerateLog(log_files_dir, base_url, ds_metadata, ticket_number, template_dict)
-        # ! Disable generation of xlsx report for now
-        # generate_log.generate_report_xlsx(template_dict)
-        generate_log.generate_report_doc(template_dict, 'medium')  # medium-level report
-        generate_log.generate_report_doc(template_dict, 'high')  # high-level report
-
-        # Export the template dict to JSON for debugging purposes
-        orjson_export(log_files_dir.joinpath('template_dict.json'), template_dict)
-        
         # Export the new check results structure
         orjson_export(log_files_dir.joinpath('check_results.json'), new_check_results)
 
