@@ -24,6 +24,7 @@ async function loadCheckResults() {
         const checkResults = data.check_results || [];
         
         console.log(`Loaded ${checkResults.length} check results for ticket ${ticketNumber}`);
+        console.log('Check results data:', checkResults); // Debug: see the actual data structure
         
         // Update the automated check column for each checklist item
         updateAutomatedCheckColumn(checkResults);
@@ -34,6 +35,8 @@ async function loadCheckResults() {
 }
 
 function updateAutomatedCheckColumn(checkResults) {
+    console.log('updateAutomatedCheckColumn called with:', checkResults);
+    
     // Get all checklist rows
     const checklistRows = document.querySelectorAll('.checklist-table tbody tr');
     
@@ -50,11 +53,11 @@ function updateAutomatedCheckColumn(checkResults) {
             return;
         }
         
-        const itemId = itemIdCell.textContent.trim();
-        
         // Get automated_check_ids for this item from the data attribute
         const automatedCheckIdsStr = row.dataset.automatedCheckIds;
         const automatedCheckIds = automatedCheckIdsStr ? automatedCheckIdsStr.split(',').filter(id => id.trim()) : [];
+        
+        console.log(`Row ${itemIdCell.textContent}: automated check IDs = ${automatedCheckIds}`);
         
         if (!automatedCheckIds || automatedCheckIds.length === 0) {
             automatedCheckCell.innerHTML = '<span class="no-automation">Manual check only</span>';
@@ -65,6 +68,8 @@ function updateAutomatedCheckColumn(checkResults) {
         const relevantChecks = checkResults.filter(check => 
             automatedCheckIds.includes(check.check_id)
         );
+        
+        console.log(`Found ${relevantChecks.length} relevant checks for item ${itemIdCell.textContent}`);
         
         if (relevantChecks.length === 0) {
             automatedCheckCell.innerHTML = '<span class="no-automation">Manual check only</span>';
@@ -80,6 +85,8 @@ function updateAutomatedCheckColumn(checkResults) {
         
         // Add check results
         relevantChecks.forEach(check => {
+            console.log('Processing check:', check);
+            
             const hasIssues = check.results && check.results.length > 0;
             
             const checkDiv = document.createElement('div');
@@ -90,10 +97,12 @@ function updateAutomatedCheckColumn(checkResults) {
             headerDiv.innerHTML = `<strong>${check.check_name}</strong>`;
             checkDiv.appendChild(headerDiv);
             
-            const descDiv = document.createElement('div');
-            descDiv.className = 'check-description';
-            descDiv.textContent = check.description;
-            checkDiv.appendChild(descDiv);
+            if (check.description) {
+                const descDiv = document.createElement('div');
+                descDiv.className = 'check-description';
+                descDiv.textContent = check.description;
+                checkDiv.appendChild(descDiv);
+            }
             
             if (hasIssues) {
                 const summaryDiv = document.createElement('div');
@@ -101,35 +110,30 @@ function updateAutomatedCheckColumn(checkResults) {
                 summaryDiv.textContent = `${check.results.length} issue${check.results.length > 1 ? 's' : ''} found`;
                 checkDiv.appendChild(summaryDiv);
                 
-                // Show first few results
-                const detailsDiv = document.createElement('div');
-                detailsDiv.className = 'check-details';
+                // Show all results as numbered list
+                const detailsDiv = document.createElement('ol');
+                detailsDiv.className = 'check-details-list';
                 
-                const resultsToShow = check.results.slice(0, 3);
-                resultsToShow.forEach(result => {
-                    const resultDiv = document.createElement('div');
-                    resultDiv.className = 'result-item';
+                check.results.forEach(result => {
+                    const resultItem = document.createElement('li');
+                    resultItem.className = 'result-item';
                     
                     if (typeof result === 'string') {
-                        resultDiv.innerHTML = `<code>${result}</code>`;
-                    } else if (result.field && result.typo) {
-                        resultDiv.innerHTML = `${result.field}: <code>${result.typo}</code>`;
-                    } else if (result.author) {
-                        resultDiv.textContent = result.author;
+                        resultItem.innerHTML = `<code>${result}</code>`;
+                    } else if (result && result.field && result.typo) {
+                        resultItem.innerHTML = `${result.field}: <code>${result.typo}</code>`;
+                    } else if (result && result.author) {
+                        resultItem.textContent = result.author;
+                    } else if (result && typeof result === 'object') {
+                        // Handle other object types - convert to string representation
+                        resultItem.textContent = JSON.stringify(result);
                     } else {
-                        resultDiv.textContent = result;
+                        resultItem.textContent = String(result || '');
                     }
-                    detailsDiv.appendChild(resultDiv);
+                    detailsDiv.appendChild(resultItem);
                 });
                 
-                if (check.results.length > 3) {
-                    const moreDiv = document.createElement('div');
-                    moreDiv.className = 'more-items';
-                    moreDiv.textContent = `... and ${check.results.length - 3} more`;
-                    detailsDiv.appendChild(moreDiv);
-                }
-                
-                checkDiv.appendChild(detailsDiv);
+                checkDiv.appendChild(detailsDiv); // ← This should work now
             } else {
                 const summaryDiv = document.createElement('div');
                 summaryDiv.className = 'check-summary';
@@ -137,13 +141,15 @@ function updateAutomatedCheckColumn(checkResults) {
                 checkDiv.appendChild(summaryDiv);
             }
             
+            // Add the complete checkDiv to the cell
             automatedCheckCell.appendChild(checkDiv);
+            console.log('Added check div to cell for:', check.check_name);
         });
     });
 }
 
-
 // Load check results when the DOM is ready
 document.addEventListener('DOMContentLoaded', function() {
+    console.log('DOM loaded, loading check results...');
     loadCheckResults();
 });
