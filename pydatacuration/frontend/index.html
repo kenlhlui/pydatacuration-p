@@ -282,18 +282,18 @@
                 <div class="info-item">
                     <span class="info-label">Ticket number:</span>
                     <input type="text" name="ticket_number" placeholder="Enter ticket number"
-                    value="{{ ticket_number }}" class="auto-populate pre-filled" data-key="ticket_number">
+                    value="{{ ticket_number }}" class="auto-populate pre-filled">
                     <!-- Read the value from the Session storage-->
                 </div>
                 <div class="info-item">
                     <span class="info-label">Curator name:</span>
                     <input type="text" name="curator_name" placeholder="Enter curator name" 
-                    value="{{ curator_name }}" class="auto-populate pre-filled" data-key="curator_name">
+                    value="{{ curator_name }}" class="auto-populate pre-filled">
                 </div>
                 <div class="info-item">
                     <span class="info-label">Curator email:</span>
                     <input type="email" name="curator_email" placeholder="Enter curator email" 
-                    value="{{ curator_email }}" class="auto-populate pre-filled" data-key="curator_email">
+                    value="{{ curator_email }}" class="auto-populate pre-filled">
                 </div>
                 <div class="info-item">
                     <span class="info-label">Dataset title:</span>
@@ -473,14 +473,6 @@
       }
     });
   </script>
-<script>
-// Works for any element with class 'auto-populate'
-document.querySelectorAll('.auto-populate').forEach(element => {
-    const key = element.dataset.key;
-    const value = sessionStorage.getItem(key) || 'Not set';
-    element.textContent = value;
-});
-</script>
 <script>
 async function exportCurationReport() {
     try {
