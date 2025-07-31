@@ -274,6 +274,11 @@
                         sessionStorage.setItem('ds_metadata', JSON.stringify(result.ds_metadata));
                     }
                     
+                    // Store curator and ticket information for the checklist page
+                    sessionStorage.setItem('curator_name', data.curator_name || '');
+                    sessionStorage.setItem('curator_email', data.curator_email || '');
+                    sessionStorage.setItem('ticket_number', data.ticket_number || '');
+                    
                     // Redirect to checklist page after 2 seconds
                     setTimeout(() => {
                         window.location.href = '/checklist';
