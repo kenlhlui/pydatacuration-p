@@ -303,6 +303,16 @@ function loadMetadataFields() {
             }
         }
     });
+    
+    // Also load curator and ticket information from sessionStorage
+    const curatorName = sessionStorage.getItem('curator_name');
+    const curatorEmail = sessionStorage.getItem('curator_email');
+    const ticketNumber = sessionStorage.getItem('ticket_number');
+    
+    if (curatorName) metadata['curator_name'] = curatorName;
+    if (curatorEmail) metadata['curator_email'] = curatorEmail;
+    if (ticketNumber) metadata['ticket_number'] = ticketNumber;
+    
     return metadata;
 }
 
