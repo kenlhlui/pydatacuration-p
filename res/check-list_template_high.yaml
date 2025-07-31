@@ -39,6 +39,9 @@ checklist:
     priority: "required"
     section: "2. Files"
     automated_check_ids: ["file_accessibility", "unsupported_files"]
+    information: |
+      - If the file cannot be opened, flag it for the depositor to check.
+      - If the file is not supported, flag it for the depositor to check.
 
   - id: "2.2"
     action: "Are all files free of the following special characters (<>:\\\"/\\|?*,@$~)?"
@@ -108,6 +111,7 @@ checklist:
 
     priority: "required"
     section: "4. Metadata"
+    automated_check_ids: ["potential_typos"]
 
   - id: "4.2"
     action: "Do the metadata fields contain a valid entry?"
@@ -135,6 +139,7 @@ checklist:
 
     priority: "required"
     section: "4. Metadata"
+    automated_check_ids: ["authors_missing_affiliation"]
   
   - id: "4.4"
     action: "Does the dataset include a Researcher ID for each author?"
@@ -257,3 +262,17 @@ checklist:
       - Review the description, documentation, and names of files to see if there are any that stand out as possible third-party data sources.
     priority: "required"
     section: "5.0 Sensitive data and IP"
+
+  - id: "6.1"
+    action: "Additional comments or observations (required)"
+    instructions: |
+      - Review the description, documentation, and names of files to see if there are any that stand out as possible third-party data sources.
+    priority: "required"
+    section: "6.0 Additional comments"
+
+  - id: "6.2"
+    action: "Additional comments or observations  (recommended)"
+    instructions: |
+      - Review the description, documentation, and names of files to see if there are any that stand out as possible third-party data sources.
+    priority: "recommended"
+    section: "6.0 Additional comments"
