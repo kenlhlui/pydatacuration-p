@@ -186,16 +186,29 @@ function getFieldType(fieldName) {
 
 // Configuration
 const AUTOSAVE_CONFIG = {
-    interval: 10000, // 10 seconds
+    interval: 30000, // 30 seconds (backup only)
+    debounceDelay: 500, // 0.5 seconds for immediate saves
     storageKey: 'curationLog',
     debugMode: false
 };
+
+// Debounce timer
+let debounceTimer = null;
 
 // Debug logging function
 function debugLog(message, data = null) {
     if (AUTOSAVE_CONFIG.debugMode) {
         console.log(`[YAML AutoSave] ${message}`, data || '');
     }
+}
+
+// Debounced auto-save function
+function debouncedAutoSave() {
+    clearTimeout(debounceTimer);
+    debounceTimer = setTimeout(() => {
+        autoSaveForm();
+        debugLog('Debounced save triggered');
+    }, AUTOSAVE_CONFIG.debounceDelay);
 }
 
 // Auto-save function with structured organization
@@ -443,10 +456,24 @@ function initializeYamlAutoSave() {
     setInterval(autoSaveForm, AUTOSAVE_CONFIG.interval);
     debugLog(`Auto-save interval set to ${AUTOSAVE_CONFIG.interval}ms`);
     
-    // Add event listeners for status select changes
+    // Add event listeners for immediate saving on form changes
+    const form = document.querySelector('form');
+    if (form) {
+        // Listen for input changes on all form inputs
+        form.addEventListener('input', debouncedAutoSave);
+        form.addEventListener('change', debouncedAutoSave);
+        
+        // Also listen for blur events to catch any missed changes
+        form.addEventListener('blur', debouncedAutoSave, true);
+        
+        debugLog('Added event listeners for immediate saving');
+    }
+    
+    // Add event listeners for status select changes (styling + save)
     document.querySelectorAll('select[name^="status-"]').forEach(select => {
         select.addEventListener('change', function() {
             updateStatusStyling(this);
+            debouncedAutoSave(); // Immediate save on status changes
         });
     });
     
