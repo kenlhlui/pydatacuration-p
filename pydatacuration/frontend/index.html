@@ -394,7 +394,7 @@
                 <button type="button" class="btn btn-primary" onclick="exportCurationReport()">Export Curation Log</button>
                 <button type="button" class="btn btn-secondary btn-calculate-time">Calculate Time Spent</button>
                 <button type="button" class="btn btn-secondary" onclick="exportCurationLogYAML()">Export YAML</button>
-                <button type="button" class="btn btn-secondary" onclick="window.location.href='/'">New Dataset</button>
+                <button type="button" class="btn btn-secondary" onclick="confirmNewDataset()">New Dataset</button>
 
             </div>
         </form>
@@ -487,6 +487,13 @@ async function exportCurationReport() {
         }
     } catch (error) {
         alert('Error exporting curation report: ' + error.message);
+    }
+}
+
+function confirmNewDataset() {
+    if (confirm('This erases all current input and can’t be undone. Are you sure you want to start a new dataset?')) {
+        sessionStorage.clear();
+        window.location.href = '/';
     }
 }
 </script>
