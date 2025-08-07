@@ -131,6 +131,20 @@
             border-color: #d6d8db;
         }
 
+        /* Row status background colors */
+        tr.row-status-P {
+            background-color: rgba(212, 237, 218, 0.3) !important; /* Very light green */
+        }
+        tr.row-status-F {
+            background-color: rgba(248, 215, 218, 0.3) !important; /* Very light red */
+        }
+        tr.row-status-TBD {
+            background-color: rgba(255, 243, 205, 0.3) !important; /* Very light yellow */
+        }
+        tr.row-status-NA {
+            background-color: rgba(226, 227, 229, 0.3) !important; /* Very light gray */
+        }
+
         .checklist-table {
             width: 100%;
             border-collapse: collapse;
@@ -546,6 +560,35 @@ function confirmNewDataset() {
         window.location.href = '/';
     }
 }
+</script>
+
+<script>
+// Handle status changes and update row colors
+document.addEventListener('DOMContentLoaded', function() {
+    const statusSelects = document.querySelectorAll('.status-select');
+    
+    statusSelects.forEach(select => {
+        // Function to update row color based on status
+        function updateRowColor() {
+            const row = select.closest('tr');
+            const statusValue = select.value;
+            
+            // Remove all existing status classes
+            row.classList.remove('row-status-P', 'row-status-F', 'row-status-TBD', 'row-status-NA');
+            
+            // Add new status class if a status is selected
+            if (statusValue) {
+                row.classList.add(`row-status-${statusValue}`);
+            }
+        }
+        
+        // Update color on change
+        select.addEventListener('change', updateRowColor);
+        
+        // Update color on initial load if status is already selected
+        updateRowColor();
+    });
+});
 </script>
 </body>
 </html>
