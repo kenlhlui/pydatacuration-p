@@ -108,28 +108,25 @@ checklist:
     action: "Are there any typos in metadata fields?"
     instructions: |
       Python scripted.      
+      
       Note that the automated process might flag wrongly (such as acronyms/specialized terms. Delete the items from the list accordingly.
 
     priority: "required"
     section: "4. Metadata"
     automated_check_ids: ["potential_typos"]
-    information_location: "Only checking the following fields:
-      
+    information_location: |   
+      Only checking the following fields:
+
       1. Title
       2. Subtitle
       3. Alternative Title
       4. Description
-      5. Notes"
+      5. Notes
 
   - id: "4.2"
     action: "Do the metadata fields contain a valid entry?"
     instructions: |
-      Review the following fields to ensure there is a valid entry and flag any issues:
-      
-      1. Title
-      2. Description
-      3. Subject
-      4. Author name & affiliation
+
       
       Note: Valid info means the information is relevant. Examples of items to flag:
       Placeholders (Coming soon, etc.)
@@ -137,7 +134,13 @@ checklist:
 
     priority: "required"
     section: "4. Metadata"
-    information_location: "Dataset metadata: title, description, subject, author fields"
+    information_location: |
+      Review the following fields to ensure there is a valid entry and flag any issues:
+      
+      1. Title
+      2. Description
+      3. Subject
+      4. Author name & affiliation
 
   - id: "4.3"
     action: "Does at least one author affiliated with University of Toronto?"

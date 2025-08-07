@@ -79,7 +79,7 @@ app = FastAPI()
 templates = Jinja2Templates(directory='pydatacuration/frontend/')
 
 # Mount static files for CSS, JS, and other assets
-app.mount("/static", StaticFiles(directory="pydatacuration/frontend"), name="static")
+app.mount("/static", StaticFiles(directory='pydatacuration/frontend'), name='static')
 
 # Load environment variables
 load_dotenv()
@@ -92,7 +92,7 @@ def get_checklist_items() -> list[ChecklistItem]:
         list[ChecklistItem]: List of checklist items with their details.
 
     """
-    with Path('res/check-list_template_high.yaml').open('r') as f:
+    with Path('res/check-list_template_high.yaml').open('r', encoding='utf-8') as f:
         data = yaml.safe_load(f)
     items = []
     for item in data.get('checklist', []):
@@ -103,7 +103,9 @@ def get_checklist_items() -> list[ChecklistItem]:
             priority=item['priority'],
             section=item.get('section', ''),
             automated_check_ids=item.get('automated_check_ids', []),
-            information_location=item.get('information_location', '')
+            information_location=markdown2.markdown(  # Convert Markdown to HTML
+                item.get('information_location', '')
+            ) if item.get('information_location') else '',  # Handle missing information_location
         )
         if checklist_item.automated_check_ids:
             print(f"Item {checklist_item.id} has automated_check_ids: {checklist_item.automated_check_ids}")
@@ -432,6 +434,7 @@ async def shutdown() -> None:
 
 class CurationLogRequest(BaseModel):
     curationLog: str
+
 
 @app.post('/export-curation-log')
 async def export_log_yaml(request: CurationLogRequest) -> JSONResponse:
