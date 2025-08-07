@@ -70,7 +70,10 @@ function updateAutomatedCheckColumn(checkResults) {
         
         if (!automatedCheckIds || automatedCheckIds.length === 0) {
             cellContent += '<span class="no-automation">Manual check only</span>';
-            automatedCheckCell.innerHTML = cellContent;
+            const scrollContainer = document.createElement('div');
+            scrollContainer.innerHTML = cellContent;
+            automatedCheckCell.innerHTML = '';
+            automatedCheckCell.appendChild(scrollContainer);
             return;
         }
         
@@ -83,15 +86,25 @@ function updateAutomatedCheckColumn(checkResults) {
         
         if (relevantChecks.length === 0) {
             cellContent += '<span class="no-automation">Manual check only</span>';
-            automatedCheckCell.innerHTML = cellContent;
+            const scrollContainer = document.createElement('div');
+            scrollContainer.innerHTML = cellContent;
+            automatedCheckCell.innerHTML = '';
+            automatedCheckCell.appendChild(scrollContainer);
             return;
         }
         
         // Clear existing content except debug info, but preserve information location
         const debugInfo = automatedCheckCell.querySelector('[style*="color: blue"]');
-        automatedCheckCell.innerHTML = cellContent;
+        
+        // Create a scrollable container for the content
+        const scrollContainer = document.createElement('div');
+        scrollContainer.innerHTML = cellContent;
+        
+        automatedCheckCell.innerHTML = '';
+        automatedCheckCell.appendChild(scrollContainer);
+        
         if (debugInfo) {
-            automatedCheckCell.appendChild(debugInfo);
+            scrollContainer.appendChild(debugInfo);
         }
         
         // Add check results
@@ -152,8 +165,8 @@ function updateAutomatedCheckColumn(checkResults) {
                 checkDiv.appendChild(summaryDiv);
             }
             
-            // Add the complete checkDiv to the cell
-            automatedCheckCell.appendChild(checkDiv);
+            // Add the complete checkDiv to the scrollable container
+            scrollContainer.appendChild(checkDiv);
             console.log('Added check div to cell for:', check.check_name);
         });
     });
