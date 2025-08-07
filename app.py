@@ -33,6 +33,7 @@ class ChecklistItem(BaseModel):
         priority (str): priority level
         section (str): section this item belongs to (optional)
         automated_check_ids (list[str]): list of automated check IDs that map to this item
+        information_location (str): location where information can be found
 
     Returns:
         None: data container
@@ -43,6 +44,7 @@ class ChecklistItem(BaseModel):
     priority: str
     section: str = ''
     automated_check_ids: list[str] = []
+    information_location: str = ''
 
 
 class SetupRequest(BaseModel):
@@ -100,7 +102,8 @@ def get_checklist_items() -> list[ChecklistItem]:
             instructions=markdown2.markdown(item['instructions']),  # Convert Markdown to HTML
             priority=item['priority'],
             section=item.get('section', ''),
-            automated_check_ids=item.get('automated_check_ids', [])
+            automated_check_ids=item.get('automated_check_ids', []),
+            information_location=item.get('information_location', '')
         )
         if checklist_item.automated_check_ids:
             print(f"Item {checklist_item.id} has automated_check_ids: {checklist_item.automated_check_ids}")
