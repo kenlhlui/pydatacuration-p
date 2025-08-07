@@ -154,6 +154,15 @@
             margin-bottom: 4px;
             display: list-item;
         }
+        .check-details-list .result-item code {
+            color: #0D534D;
+        }
+        .check-description {
+            color: #6C757D;
+            font-style: italic;
+            margin-top: 5px;
+            font-size: 11px;
+        }
         .checklist-table th {
             background-color: #f8f9fa;
             font-weight: bold;
@@ -255,6 +264,10 @@
             background-color: #6D247A;
             color: white;
         }
+        .btn-new-dataset {
+            background-color: #DC4633;
+            color: white;
+        }
         .btn:hover {
             opacity: 0.8;
             transform: translateY(-1px);
@@ -338,7 +351,7 @@
                     <tr>
                         <th>ID</th>
                         <th>Action Item</th>
-                        <th>Automated Check</th>
+                        <th>Information Location</th>
                         <th>Status</th>
                         <th>Curator's Comments</th>
                         <th>Priority</th>
@@ -391,10 +404,10 @@
             </table>
 
             <div class="actions">
-                <button type="button" class="btn btn-primary" onclick="exportCurationReport()">Export Curation Log</button>
+                <button type="button" class="btn btn-primary" onclick="exportCurationReport()">Export Curation Log (Word)</button>
                 <button type="button" class="btn btn-secondary btn-calculate-time">Calculate Time Spent</button>
                 <button type="button" class="btn btn-secondary" onclick="exportCurationLogYAML()">Export YAML</button>
-                <button type="button" class="btn btn-secondary" onclick="confirmNewDataset()">New Dataset</button>
+                <button type="button" class="btn btn-secondary btn-new-dataset" onclick="confirmNewDataset()">New Dataset</button>
 
             </div>
         </form>
