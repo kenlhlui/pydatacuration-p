@@ -163,6 +163,16 @@
             margin-top: 5px;
             font-size: 11px;
         }
+        .information-location {
+            background-color: #f8f9fa;
+            border: 1px solid #e9ecef;
+            border-radius: 4px;
+            padding: 8px;
+            margin-bottom: 10px;
+            font-size: 12px;
+            color: #495057;
+            font-weight: 500;
+        }
         .checklist-table th {
             background-color: #f8f9fa;
             font-weight: bold;
@@ -365,7 +375,7 @@
                                 <td colspan="7" class="section-header">{{ item.section }}</td>
                             </tr>
                         {% endif %}
-                        <tr data-item-id="{{ item.id }}" data-automated-check-ids="{{ item.automated_check_ids|join(',') }}">
+                        <tr data-item-id="{{ item.id }}" data-automated-check-ids="{{ item.automated_check_ids|join(',') }}" data-information-location="{{ item.information_location|default('') }}">
                             <td class="item-id">{{ item.id }}</td>
                             <td class="details-cell">
                                 <div class="action-item">
@@ -376,7 +386,9 @@
                                 </div>
                             </td>
                             <td class="automated-check-cell">
-                                <span class="no-automation">Loading...</span>
+                                <div class="information-location">
+                                    {{ item.information_location }}
+                                </div>
                             </td>
                             <td>
                                 <select name="status-{{ item.id }}" class="status-select" required>
