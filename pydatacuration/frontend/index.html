@@ -416,7 +416,7 @@
                                 </div>
                             </td>
                             <td>
-                                <select name="status-{{ item.id }}" class="status-select" required>
+                                <select name="status-{{ item.id }}" class="status-select auto-populate" required>
                                     <option value="">Select status...</option>
                                     <option value="P">Passed</option>
                                     <option value="F">Follow-up</option>
@@ -425,11 +425,11 @@
                                 </select>
                             </td>
                             <td>
-                                <textarea class="comments-input" name="comments-{{ item.id }}" placeholder="Curator's comments..."></textarea>
+                                <textarea class="comments-input auto-populate" name="comments-{{ item.id }}" placeholder="Curator's comments..."></textarea>
                             </td>
                             <td><div class="priority-badge-container"><span class="priority-badge priority-{{ item.priority }}">{{ item.priority.title() }}</span></div></td>
                             <td><input type="text" 
-                               class="time-input" 
+                               class="time-input auto-populate" 
                                name="time-{{ item.id }}" 
                                placeholder="MM:SS" 
                                required
