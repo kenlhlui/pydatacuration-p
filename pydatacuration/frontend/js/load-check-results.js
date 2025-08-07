@@ -53,14 +53,24 @@ function updateAutomatedCheckColumn(checkResults) {
             return;
         }
         
+        // Get information location from the data attribute
+        const informationLocation = row.dataset.informationLocation || '';
+        
         // Get automated_check_ids for this item from the data attribute
         const automatedCheckIdsStr = row.dataset.automatedCheckIds;
         const automatedCheckIds = automatedCheckIdsStr ? automatedCheckIdsStr.split(',').filter(id => id.trim()) : [];
         
-        console.log(`Row ${itemIdCell.textContent}: automated check IDs = ${automatedCheckIds}`);
+        console.log(`Row ${itemIdCell.textContent}: automated check IDs = ${automatedCheckIds}, information location = '${informationLocation}'`);
+        
+        // Start with the information location content
+        let cellContent = '';
+        if (informationLocation) {
+            cellContent += `<div class="information-location">${informationLocation}</div>`;
+        }
         
         if (!automatedCheckIds || automatedCheckIds.length === 0) {
-            automatedCheckCell.innerHTML = '<span class="no-automation">Manual check only</span>';
+            cellContent += '<span class="no-automation">Manual check only</span>';
+            automatedCheckCell.innerHTML = cellContent;
             return;
         }
         
@@ -72,13 +82,14 @@ function updateAutomatedCheckColumn(checkResults) {
         console.log(`Found ${relevantChecks.length} relevant checks for item ${itemIdCell.textContent}`);
         
         if (relevantChecks.length === 0) {
-            automatedCheckCell.innerHTML = '<span class="no-automation">Manual check only</span>';
+            cellContent += '<span class="no-automation">Manual check only</span>';
+            automatedCheckCell.innerHTML = cellContent;
             return;
         }
         
-        // Clear existing content except debug info
+        // Clear existing content except debug info, but preserve information location
         const debugInfo = automatedCheckCell.querySelector('[style*="color: blue"]');
-        automatedCheckCell.innerHTML = '';
+        automatedCheckCell.innerHTML = cellContent;
         if (debugInfo) {
             automatedCheckCell.appendChild(debugInfo);
         }
