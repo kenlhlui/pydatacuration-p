@@ -277,7 +277,7 @@ class Checker:
         self.result_builder.add_check_result(
             check_id='file_accessibility',
             check_name='Inaccessible Files',
-            description='Files that cannot be opened or read',
+            description='Files that cannot be opened or read by the validation tool',
             result_type='file_list',
             results=inaccessible_files
         )
@@ -285,7 +285,7 @@ class Checker:
         self.result_builder.add_check_result(
             check_id='unsupported_files',
             check_name='Files with Unsupported Formats',
-            description='Files in formats not supported by validation tools',
+            description='Files in formats not supported by the validation tool',
             result_type='file_list',
             results=unsupported_files
         )
