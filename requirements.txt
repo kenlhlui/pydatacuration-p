@@ -265,7 +265,7 @@ orjson==3.10.16
     # via
     #   -c (workspace)
     #   pydatacuration (pyproject.toml)
-packaging==24.2
+packaging==25.0
     # via
     #   -c (workspace)
     #   python-calamine
