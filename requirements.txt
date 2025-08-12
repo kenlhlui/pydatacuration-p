@@ -518,7 +518,7 @@ xarray==2025.3.0
     # via
     #   -c (workspace)
     #   pandas-flavor
-xlrd==2.0.1
+xlrd==2.0.2
     # via
     #   -c (workspace)
     #   markitdown
