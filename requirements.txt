@@ -58,7 +58,7 @@ chardet==5.2.0
     # via
     #   -c (workspace)
     #   pydatacuration (pyproject.toml)
-charset-normalizer==3.4.3
+charset-normalizer==3.4.1
     # via
     #   -c (workspace)
     #   markitdown
@@ -117,7 +117,7 @@ future==1.0.0
     # via
     #   -c (workspace)
     #   ffmpeg-python
-h11==0.16.0
+h11==0.14.0
     # via
     #   -c (workspace)
     #   httpcore
@@ -265,7 +265,7 @@ orjson==3.10.16
     # via
     #   -c (workspace)
     #   pydatacuration (pyproject.toml)
-packaging==25.0
+packaging==24.2
     # via
     #   -c (workspace)
     #   python-calamine
@@ -296,7 +296,7 @@ pillow==11.1.0
     #   -c (workspace)
     #   pydatacuration (pyproject.toml)
     #   python-pptx
-platformdirs==4.3.8
+platformdirs==4.3.7
     # via
     #   -c (workspace)
     #   textual
@@ -348,7 +348,7 @@ pyjwt==2.10.1
     # via
     #   -c (workspace)
     #   msal
-pypdf==6.0.0
+pypdf==5.4.0
     # via
     #   -c (workspace)
     #   pydatacuration (pyproject.toml)
@@ -360,7 +360,7 @@ pyreadr==0.5.3
     # via
     #   -c (workspace)
     #   pydatacuration (pyproject.toml)
-pyreadstat==1.3.0
+pyreadstat==1.2.8
     # via
     #   -c (workspace)
     #   pydatacuration (pyproject.toml)
@@ -406,11 +406,11 @@ pyyaml==6.0.2
     # via
     #   -c (workspace)
     #   pydatacuration (pyproject.toml)
-pyzstd==0.17.0
+pyzstd==0.16.2
     # via
     #   -c (workspace)
     #   py7zr
-requests==2.32.4
+requests==2.32.3
     # via
     #   -c (workspace)
     #   azure-core
@@ -430,7 +430,7 @@ seedir==0.5.0
     # via
     #   -c (workspace)
     #   pydatacuration (pyproject.toml)
-setuptools==80.9.0
+setuptools==78.1.0
     # via
     #   -c (workspace)
     #   docxcompose
@@ -506,7 +506,7 @@ uc-micro-py==1.0.3
     # via
     #   -c (workspace)
     #   linkify-it-py
-urllib3==2.5.0
+urllib3==2.3.0
     # via
     #   -c (workspace)
     #   requests
@@ -518,12 +518,12 @@ xarray==2025.3.0
     # via
     #   -c (workspace)
     #   pandas-flavor
-xlrd==2.0.2
+xlrd==2.0.1
     # via
     #   -c (workspace)
     #   markitdown
     #   pandas
-xlsxwriter==3.2.5
+xlsxwriter==3.2.2
     # via
     #   -c (workspace)
     #   pandas
