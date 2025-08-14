@@ -1,15 +1,5 @@
 checklist:
   - id: "1.1"
-    action: "Is the dataset deposited directly into U of T Dataverse?"
-    instructions: |
-      Python scripted.
-
-      If the dataset is deposited in a sub-dataverse collection, include the name of the collection.
-    priority: "info"
-    section: "1. Structure of deposit"
-    information_location: ""
-
-  - id: "1.2"
     action: "Has the depositor (or their research group) previously created or submitted to a dataverse collection ?"
     instructions: |
       Python scripted. 
@@ -19,7 +9,7 @@ checklist:
     section: "1. Structure of deposit"
     information_location: "Author metadata, dataverse collection history"
 
-  - id: "1.3"
+  - id: "1.2"
     action: "If the dataset was deposited in a sub-dataverse collection, does it require its own dataverse collection?"
     instructions: |
       If the depositor created a dataverse with one dataset:
