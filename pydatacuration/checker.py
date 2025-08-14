@@ -95,6 +95,8 @@ class Checker:
         self.file_list_metadata = self._gen_file_list_metadata()
         self.common_file_format_tuple = self._read_common_file_format()
 
+        self.ds_title = jmespath.search('data.latestVersion.metadataBlocks.citation.fields[?typeName == `title`].value | [0]', self.ds_metadata)  # ! Temp fix; should use log_generation.py _get_dataset_info to get the title.  # noqa
+
     def _get_ds_tree_info(self, identifier_of_dataverse: str) -> dict:
         """Get the dataset tree information in the Dataverse repository.
 
@@ -224,7 +226,7 @@ class Checker:
             result_type='file_list',
             results=missing_ext_files
         )
-        
+
         self.result_builder.add_check_result(
             check_id='readme_files',
             check_name='README Files Found',
@@ -493,9 +495,22 @@ class Checker:
                 # Get the path of the dataverse from the response
                 identifier_of_dataverse = response.json().get('data', {}).get('items', [{}])[0].get('identifier_of_dataverse', None)  # noqa: E501
                 tree_info = self._get_ds_tree_info(identifier_of_dataverse)
-                path = tree_info.get('path', None)
+                path: str | None = tree_info.get('path', None)
                 if path:
-                    self.template_dict['ds_tree_info']['path'] = path
+                    # Add the dataset title to the end of the path
+                    ds_title = self.ds_title if self.ds_title else 'Unknown Dataset Title'
+                    # Join the Path
+                    self.template_dict['ds_tree_info']['path'] = f'{path}/{ds_title}'
+                    self.logger.debug(f'Dataset path in the dataverse repository: {self.template_dict["ds_tree_info"]["path"]}')  # noqa: E501
+
+                # Add the result to self.result_builder
+                self.result_builder.add_check_result(
+                    check_id='dataset_path',
+                    check_name='Dataset Path Information',
+                    description="Information about the dataset's location in the Dataverse repository",
+                    result_type='dataset_path',
+                    results=[self.template_dict['ds_tree_info']['path']]
+                )
 
             # TODO: Add error handling for the case when the response is None or empty; or HTTP error
 
@@ -558,7 +573,7 @@ class Checker:
         self.check_common_file_format()
         self.check_missing_metadata()
         self.check_spelling()
-        self.check_dv_record()  # Change this to your dataverse's alias
+        self.check_dv_record()
         self.check_ds_tree_info()
         self.check_restricted_files()
         self.check_terms_license()
