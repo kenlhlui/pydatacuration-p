@@ -26,11 +26,42 @@ async function loadCheckResults() {
         console.log(`Loaded ${checkResults.length} check results for ticket ${ticketNumber}`);
         console.log('Check results data:', checkResults); // Debug: see the actual data structure
         
+        // Populate dataset_path specifically from check results
+        populateDatasetPath(data);
+        
         // Update the automated check column for each checklist item
         updateAutomatedCheckColumn(checkResults);
         
     } catch (error) {
         console.error('Error loading check results:', error);
+    }
+}
+
+/**
+ * Populate dataset_path from check results data
+ */
+function populateDatasetPath(checkResultsData) {
+    console.log('Checking for dataset_path in check results:', checkResultsData);
+    
+    // Look for dataset_path in the check_results array
+    const checkResults = checkResultsData.check_results || [];
+    const datasetPathCheck = checkResults.find(check => check.check_id === 'dataset_path');
+    
+    if (datasetPathCheck && datasetPathCheck.results && datasetPathCheck.results.length > 0) {
+        const datasetPath = datasetPathCheck.results[0]; // Get the first result
+        console.log('Found dataset_path:', datasetPath);
+        
+        // Find the dataset path element
+        const datasetPathElement = document.getElementById('dataset_path');
+        
+        if (datasetPathElement) {
+            datasetPathElement.textContent = datasetPath;
+            console.log('Set dataset_path element to:', datasetPath);
+        } else {
+            console.log('dataset_path element not found');
+        }
+    } else {
+        console.log('No dataset_path check found in check results data');
     }
 }
 
