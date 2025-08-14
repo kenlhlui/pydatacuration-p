@@ -513,7 +513,7 @@
       const updatedDateField = document.getElementById('log_updated_date');
       
       if (initialDateField && !initialDateField.value) {
-        initialDateField.value = today;
+        initialDateField.textContent = today;
         console.log('Set log_initial_date to:', today);
       }
       
