@@ -95,9 +95,14 @@
                                 <div class="action-item">
                                     {{ item.action }}
                                 </div>
+                                {% if item.instructions %}
+                                <div class="instructions-header">
+                                    Guidance:
+                                </div>
                                 <div class="instructions">
                                     {{ item.instructions|safe }}
                                 </div>
+                                {% endif %}
                             </td>
                             <td class="information-location-column">
                                 <div class="automated-check-cell">
