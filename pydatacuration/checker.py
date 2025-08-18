@@ -30,7 +30,7 @@ class CheckResultBuilder:
         self.results = []
 
     def add_check_result(self, check_id: str, check_name: str,
-                         description: str, result_type: str, results: list) -> None:
+                         description: str, result_type: str, results: list, allow_empty: bool = False) -> None:
         """Add a check result to the collection.
 
         Args:
@@ -39,9 +39,10 @@ class CheckResultBuilder:
             description (str): Description of what the check finds
             result_type (str): Type of results (file_list, field_list, author_list, etc.)
             results (list): List of findings from the check
+            allow_empty (bool): Whether to allow empty results
         """
         # Only add if there are actual results
-        if results:
+        if results or allow_empty:
             self.results.append({
                 'check_id': check_id,
                 'check_name': check_name,
@@ -381,7 +382,7 @@ class Checker:
             result_type='author_list',
             results=authors_missing_affiliation
         )
-        
+
         self.result_builder.add_check_result(
             check_id='authors_missing_identifier',
             check_name='Authors Without Identifier',
@@ -389,7 +390,7 @@ class Checker:
             result_type='author_list',
             results=authors_missing_identifier
         )
-        
+
         self.result_builder.add_check_result(
             check_id='authors_missing_scheme',
             check_name='Authors Without Identifier Scheme',
@@ -558,8 +559,17 @@ class Checker:
         keyword_list = jmespath.search(query_string, self.ds_metadata)
         if isinstance(keyword_list, list):
             self.template_dict['keywords'] = keyword_list
-        else:
-            self.logger.print('No keywords found in the metadata')
+            self.logger.print(f'Keywords found in the metadata: {keyword_list}')
+
+        # Add the result to self.result_builder
+        self.result_builder.add_check_result(
+            check_id='keywords_existence',
+            check_name='Keywords Existence',
+            description='Check if keywords are present in the dataset',
+            result_type='keyword_list',
+            results=keyword_list,
+            allow_empty=True
+        )
 
     def run_checks(self) -> tuple[dict, dict]:
         """Run all the checks.
