@@ -99,7 +99,7 @@ def get_checklist_items() -> list[ChecklistItem]:
         checklist_item = ChecklistItem(
             id=item['id'],
             action=item['action'],
-            instructions=markdown2.markdown(item['instructions']),  # Convert Markdown to HTML
+            instructions=markdown2.markdown(item['instructions']) if item['instructions'] else '',
             priority=item['priority'],
             section=item.get('section', ''),
             automated_check_ids=item.get('automated_check_ids', []),
