@@ -86,12 +86,16 @@ function updateAutomatedCheckColumn(checkResults) {
         
         // Get information location from the data attribute
         const informationLocation = row.dataset.informationLocation || '';
-        
+
+        // Get the check_type
+        const checkType = row.dataset.checkType || '';
+        console.log(`Check type for row ${itemIdCell.textContent}: '${checkType}'`);
+
         // Get automated_check_ids for this item from the data attribute
         const automatedCheckIdsStr = row.dataset.automatedCheckIds;
         const automatedCheckIds = automatedCheckIdsStr ? automatedCheckIdsStr.split(',').filter(id => id.trim()) : [];
-        
-        console.log(`Row ${itemIdCell.textContent}: automated check IDs = ${automatedCheckIds}, information location = '${informationLocation}'`);
+
+        console.log(`Row ${itemIdCell.textContent}: automated check IDs = ${automatedCheckIds}, information location = '${informationLocation}', check type = '${checkType}'`);
         
         // Clear existing content except debug info
         const debugInfo = automatedCheckCell.querySelector('[style*="color: blue"]');
@@ -121,6 +125,20 @@ function updateAutomatedCheckColumn(checkResults) {
             staticContainer.innerHTML = informationLocation;
         }
         
+        // Add check type information if available
+        if (checkType) {
+            const checkTypeDiv = document.createElement('div');
+            checkTypeDiv.className = 'check-type-info';
+            checkTypeDiv.innerHTML = `<strong>Check Type:</strong> ${checkType}`;
+            checkTypeDiv.style.marginTop = '5px';
+            checkTypeDiv.style.padding = '3px 5px';
+            checkTypeDiv.style.backgroundColor = '#e7f3ff';
+            checkTypeDiv.style.border = '1px solid #b3d9ff';
+            checkTypeDiv.style.borderRadius = '3px';
+            checkTypeDiv.style.fontSize = '0.9em';
+            staticContainer.appendChild(checkTypeDiv);
+        }
+
         if (!automatedCheckIds || automatedCheckIds.length === 0) {
             const noAutoDiv = document.createElement('div');
             noAutoDiv.className = 'no-automation';
