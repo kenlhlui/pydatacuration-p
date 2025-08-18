@@ -192,27 +192,12 @@ function updateAutomatedCheckColumn(checkResults) {
                 checkDiv.appendChild(descDiv);
             }
             
+            // Get the item type from result_type, defaulting to 'item'
+            const itemType = check.result_type || 'item';
+            
             if (hasValidResults) {
                 const summaryDiv = document.createElement('div');
                 summaryDiv.className = 'check-summary';
-                
-                // Get the item type from result_type, defaulting to 'issue'
-                let itemType = 'issue';
-                if (check.result_type) {
-                    // Convert result_type to a more user-friendly term
-                    const typeMap = {
-                        'file_list': 'file',
-                        'field_list': 'field',
-                        'author_list': 'author',
-                        'typo_list': 'typo',
-                        'keyword_list': 'keyword',
-                        'terms_license': 'license term',
-                        'author_history': 'author entry',
-                        'dataset_path': 'path'
-                    };
-                    itemType = typeMap[check.result_type] || 'issue';
-                }
-                
                 summaryDiv.textContent = `${validResults.length} ${itemType}${validResults.length > 1 ? 's' : ''} found`;
                 checkDiv.appendChild(summaryDiv);
                 
@@ -243,12 +228,12 @@ function updateAutomatedCheckColumn(checkResults) {
             } else if (hasNullResults) {
                 const summaryDiv = document.createElement('div');
                 summaryDiv.className = 'check-summary';
-                summaryDiv.textContent = 'No information found';
+                summaryDiv.textContent = `No ${itemType} information found`;
                 checkDiv.appendChild(summaryDiv);
             } else {
                 const summaryDiv = document.createElement('div');
                 summaryDiv.className = 'check-summary';
-                summaryDiv.textContent = 'No issue found';
+                summaryDiv.textContent = `No ${itemType} found`;
                 checkDiv.appendChild(summaryDiv);
             }
             
