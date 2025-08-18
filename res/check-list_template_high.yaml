@@ -257,7 +257,7 @@ checklist:
       - Check if the deposit includes restricted files (if yes, recommend they use custom terms)
     priority: "required"
     section: "5.0 Sensitive data and IP"
-    automated_check_ids: ["termsOfUse", "termsOfAccess", "license"]
+    automated_check_ids: ["termsOfUse", "license"]
     information_location: "License field, CC0 confirmation, restricted files list"
     check_type: "Semi-automated"
 
@@ -268,6 +268,7 @@ checklist:
       - If there are Terms of Access, review to ensure they are clear.
     priority: "required"
     section: "5.0 Sensitive data and IP"
+    automated_check_ids: ["restricted_files", "termsOfAccess"]
     information_location: "Terms of Access field, restricted files status"
     check_type: "Semi-automated"
   

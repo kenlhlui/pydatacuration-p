@@ -195,7 +195,25 @@ function updateAutomatedCheckColumn(checkResults) {
             if (hasValidResults) {
                 const summaryDiv = document.createElement('div');
                 summaryDiv.className = 'check-summary';
-                summaryDiv.textContent = `${validResults.length} issue${validResults.length > 1 ? 's' : ''} found`;
+                
+                // Get the item type from result_type, defaulting to 'issue'
+                let itemType = 'issue';
+                if (check.result_type) {
+                    // Convert result_type to a more user-friendly term
+                    const typeMap = {
+                        'file_list': 'file',
+                        'field_list': 'field',
+                        'author_list': 'author',
+                        'typo_list': 'typo',
+                        'keyword_list': 'keyword',
+                        'terms_license': 'license term',
+                        'author_history': 'author entry',
+                        'dataset_path': 'path'
+                    };
+                    itemType = typeMap[check.result_type] || 'issue';
+                }
+                
+                summaryDiv.textContent = `${validResults.length} ${itemType}${validResults.length > 1 ? 's' : ''} found`;
                 checkDiv.appendChild(summaryDiv);
                 
                 // Show all valid results as numbered list
