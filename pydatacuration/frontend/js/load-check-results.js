@@ -142,7 +142,7 @@ function updateAutomatedCheckColumn(checkResults) {
         if (!automatedCheckIds || automatedCheckIds.length === 0) {
             const noAutoDiv = document.createElement('div');
             noAutoDiv.className = 'no-automation';
-            noAutoDiv.textContent = 'Manual check only';
+            noAutoDiv.textContent = 'No automated information available';
             noAutoDiv.style.padding = '5px';
             noAutoDiv.style.textAlign = 'center';
             noAutoDiv.style.color = '#6c757d';
