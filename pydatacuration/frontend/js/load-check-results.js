@@ -156,11 +156,11 @@ function updateAutomatedCheckColumn(checkResults) {
         );
         
         console.log(`Found ${relevantChecks.length} relevant checks for item ${itemIdCell.textContent}`);
-        
+
         if (relevantChecks.length === 0) {
             const noAutoDiv = document.createElement('div');
             noAutoDiv.className = 'no-automation';
-            noAutoDiv.textContent = 'Manual check only';
+            noAutoDiv.textContent = `${automatedCheckIds.join(', ')} check not found`; // TODO: Fix this statement for debug purpose/correct reflect what the length means
             noAutoDiv.style.padding = '20px';
             noAutoDiv.style.textAlign = 'center';
             noAutoDiv.style.color = '#6c757d';
@@ -222,7 +222,7 @@ function updateAutomatedCheckColumn(checkResults) {
             } else {
                 const summaryDiv = document.createElement('div');
                 summaryDiv.className = 'check-summary';
-                summaryDiv.textContent = 'No issues found';
+                summaryDiv.textContent = 'No item found';
                 checkDiv.appendChild(summaryDiv);
             }
             

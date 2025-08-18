@@ -146,6 +146,7 @@ checklist:
     
     priority: "recommended"
     section: "4. Metadata"
+    automated_check_ids: ['authors_missing_identifier', 'authors_missing_scheme']
     information_location: "Author metadata, researcher ID fields"
     check_type: "Fully-automated"
 
@@ -198,6 +199,7 @@ checklist:
       - Can also provide information about controlled vocabulary (in that specific field) if none is filled out.
     priority: "recommended"
     section: "4. Metadata"
+    automated_check_ids: ['keywords_existence']
     information_location: "Keywords field, controlled vocabulary references"
     check_type: "Fully-automated"
 
