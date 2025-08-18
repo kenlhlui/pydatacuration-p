@@ -45,6 +45,7 @@ class ChecklistItem(BaseModel):
     section: str = ''
     automated_check_ids: list[str] = []
     information_location: str = ''
+    check_type: str = ''
 
 
 class SetupRequest(BaseModel):
@@ -106,6 +107,7 @@ def get_checklist_items() -> list[ChecklistItem]:
             information_location=markdown2.markdown(  # Convert Markdown to HTML
                 item.get('information_location', '')
             ) if item.get('information_location') else '',  # Handle missing information_location
+            check_type=item.get('check_type', 'Manual')  # Optional field for check type
         )
         if checklist_item.automated_check_ids:
             print(f"Item {checklist_item.id} has automated_check_ids: {checklist_item.automated_check_ids}")
@@ -148,7 +150,7 @@ def checklist(request: Request) -> HTMLResponse:
         HTMLResponse: page with checklist table
     """
     items = get_checklist_items()
-    
+
     # Check results will be loaded via JavaScript from session storage
     return templates.TemplateResponse('index.html', {
         'request': request, 
