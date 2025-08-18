@@ -120,23 +120,23 @@ function updateAutomatedCheckColumn(checkResults) {
             dynamicContainer.appendChild(debugInfo);
         }
         
-        // Add information location to static container first (always visible)
-        if (informationLocation) {
-            staticContainer.innerHTML = informationLocation;
-        }
-        
-        // Add check type information if available
+        // Add check type information first (at the top)
         if (checkType) {
             const checkTypeDiv = document.createElement('div');
             checkTypeDiv.className = 'check-type-info';
             checkTypeDiv.innerHTML = `<strong>Check Type:</strong> ${checkType}`;
-            checkTypeDiv.style.marginTop = '5px';
+            checkTypeDiv.style.marginBottom = '5px';
             checkTypeDiv.style.padding = '3px 5px';
             checkTypeDiv.style.backgroundColor = '#e7f3ff';
             checkTypeDiv.style.border = '1px solid #b3d9ff';
             checkTypeDiv.style.borderRadius = '3px';
             checkTypeDiv.style.fontSize = '0.9em';
             staticContainer.appendChild(checkTypeDiv);
+        }
+        
+        // Add information location after check type
+        if (informationLocation) {
+            staticContainer.innerHTML += informationLocation;
         }
 
         if (!automatedCheckIds || automatedCheckIds.length === 0) {
