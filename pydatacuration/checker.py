@@ -536,22 +536,56 @@ class Checker:
             results=restricted_files
         )
 
-    def check_terms_license(self) -> None:
-        """Check if the terms of use and license are present."""
+    def check_terms_of_use(self) -> None:
+        """Check if the terms of use are present."""
         terms_of_use = self.ds_metadata.get('data', {}).get('latestVersion', {}).get('termsOfUse', None)
+        self.template_dict['terms_license']['termsOfUse'] = terms_of_use
+
+        # Add results to the new structure
+        self.result_builder.add_check_result(
+            check_id='termsOfUse',
+            check_name='Terms of Use of the Dataset',
+            description='Terms of Use information in the dataset',
+            result_type='terms_license',
+            results=[
+                terms_of_use,
+            ]
+        )
+
+    def check_terms_of_access(self) -> None:
+        """Check if the terms of access are present."""
         terms_of_access = self.ds_metadata.get('data', {}).get('latestVersion', {}).get('termsOfAccess', None)
+        self.template_dict['terms_license']['termsOfAccess'] = terms_of_access
+
+        # Add results to the new structure
+        self.result_builder.add_check_result(
+            check_id='termsOfAccess',
+            check_name='Terms of Access of the Dataset',
+            description='Terms of Access information in the dataset',
+            result_type='terms_license',
+            results=[
+                terms_of_access,
+            ]
+        )
+
+    def check_license(self) -> None:
+        """Check if the terms of use and license are present."""
         license_name = self.ds_metadata.get('data', {}).get('latestVersion', {}).get('license', {}).get('name', None)
 
-        self.template_dict['terms_license']['termsOfUse'] = terms_of_use
-        self.template_dict['terms_license']['termsOfAccess'] = terms_of_access
         self.template_dict['terms_license']['licenseName'] = license_name
+
+        self.result_builder.add_check_result(
+            check_id='license',
+            check_name='License of the Dataset',
+            description='License information in the dataset',
+            result_type='terms_license',
+            results=[
+                license_name,
+            ]
+        )
 
         if license_name == 'CC0 1.0':
             self.logger.print('The license is CC0 1.0')
-
-        if len(self.template_dict['restricted_files']['comments']) > 0 and \
-            (terms_of_use is None or terms_of_access is None):
-            self.logger.print('The terms of use and access are missing')
 
     def check_keywords(self) -> None:
         """Check if the keywords are present."""
@@ -586,8 +620,10 @@ class Checker:
         self.check_dv_record()
         self.check_ds_tree_info()
         self.check_restricted_files()
-        self.check_terms_license()
+        self.check_terms_of_use()
+        self.check_terms_of_access()
         self.check_keywords()
+        self.check_license()
 
         # Build the new structure
         new_results = {

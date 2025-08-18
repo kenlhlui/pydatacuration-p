@@ -172,10 +172,13 @@ function updateAutomatedCheckColumn(checkResults) {
         relevantChecks.forEach(check => {
             console.log('Processing check:', check);
             
-            const hasIssues = check.results && check.results.length > 0;
+            // Filter out null values to get actual issues
+            const validResults = check.results ? check.results.filter(result => result != null) : [];
+            const hasNullResults = check.results && check.results.some(result => result === null);
+            const hasValidResults = validResults.length > 0;
             
             const checkDiv = document.createElement('div');
-            checkDiv.className = `check-result ${hasIssues ? 'check-warning' : 'check-pass'}`;
+            checkDiv.className = `check-result ${hasValidResults ? 'check-warning' : 'check-pass'}`;
             
             const headerDiv = document.createElement('div');
             headerDiv.className = 'check-header';
@@ -189,17 +192,17 @@ function updateAutomatedCheckColumn(checkResults) {
                 checkDiv.appendChild(descDiv);
             }
             
-            if (hasIssues) {
+            if (hasValidResults) {
                 const summaryDiv = document.createElement('div');
                 summaryDiv.className = 'check-summary';
-                summaryDiv.textContent = `${check.results.length} issue${check.results.length > 1 ? 's' : ''} found`;
+                summaryDiv.textContent = `${validResults.length} issue${validResults.length > 1 ? 's' : ''} found`;
                 checkDiv.appendChild(summaryDiv);
                 
-                // Show all results as numbered list
+                // Show all valid results as numbered list
                 const detailsDiv = document.createElement('ol');
                 detailsDiv.className = 'check-details-list';
                 
-                check.results.forEach(result => {
+                validResults.forEach(result => {
                     const resultItem = document.createElement('li');
                     resultItem.className = 'result-item';
                     
@@ -218,11 +221,16 @@ function updateAutomatedCheckColumn(checkResults) {
                     detailsDiv.appendChild(resultItem);
                 });
                 
-                checkDiv.appendChild(detailsDiv); // ← This should work now
+                checkDiv.appendChild(detailsDiv);
+            } else if (hasNullResults) {
+                const summaryDiv = document.createElement('div');
+                summaryDiv.className = 'check-summary';
+                summaryDiv.textContent = 'No information found';
+                checkDiv.appendChild(summaryDiv);
             } else {
                 const summaryDiv = document.createElement('div');
                 summaryDiv.className = 'check-summary';
-                summaryDiv.textContent = 'No item found';
+                summaryDiv.textContent = 'No issue found';
                 checkDiv.appendChild(summaryDiv);
             }
             
