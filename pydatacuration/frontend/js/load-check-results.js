@@ -96,29 +96,39 @@ function updateAutomatedCheckColumn(checkResults) {
         // Clear existing content except debug info
         const debugInfo = automatedCheckCell.querySelector('[style*="color: blue"]');
         
-        // Create a scrollable container for the content
-        const scrollContainer = document.createElement('div');
-        
+        // Clear the cell completely
         automatedCheckCell.innerHTML = '';
-        automatedCheckCell.appendChild(scrollContainer);
+        
+        // Create static container for information location (non-scrollable)
+        const staticContainer = document.createElement('div');
+        staticContainer.className = 'static-information-location';
+        
+        // Create dynamic container for check results (scrollable)
+        const dynamicContainer = document.createElement('div');
+        dynamicContainer.className = 'dynamic-check-results';
+        
+        // Add dynamic container first, then static
+        automatedCheckCell.appendChild(staticContainer);
+        automatedCheckCell.appendChild(dynamicContainer);
+        
         
         if (debugInfo) {
-            scrollContainer.appendChild(debugInfo);
+            dynamicContainer.appendChild(debugInfo);
+        }
+        
+        // Add information location to static container first (always visible)
+        if (informationLocation) {
+            staticContainer.innerHTML = informationLocation;
         }
         
         if (!automatedCheckIds || automatedCheckIds.length === 0) {
-            const noAutoDiv = document.createElement('span');
+            const noAutoDiv = document.createElement('div');
             noAutoDiv.className = 'no-automation';
             noAutoDiv.textContent = 'Manual check only';
-            scrollContainer.appendChild(noAutoDiv);
-            
-            // Add information location after the no automation message
-            if (informationLocation) {
-                const infoLocationDiv = document.createElement('div');
-                infoLocationDiv.className = 'information-location';
-                infoLocationDiv.innerHTML = informationLocation;
-                scrollContainer.appendChild(infoLocationDiv);
-            }
+            noAutoDiv.style.padding = '5px';
+            noAutoDiv.style.textAlign = 'center';
+            noAutoDiv.style.color = '#6c757d';
+            dynamicContainer.appendChild(noAutoDiv);
             return;
         }
         
@@ -130,22 +140,17 @@ function updateAutomatedCheckColumn(checkResults) {
         console.log(`Found ${relevantChecks.length} relevant checks for item ${itemIdCell.textContent}`);
         
         if (relevantChecks.length === 0) {
-            const noAutoDiv = document.createElement('span');
+            const noAutoDiv = document.createElement('div');
             noAutoDiv.className = 'no-automation';
             noAutoDiv.textContent = 'Manual check only';
-            scrollContainer.appendChild(noAutoDiv);
-            
-            // Add information location after the no automation message
-            if (informationLocation) {
-                const infoLocationDiv = document.createElement('div');
-                infoLocationDiv.className = 'information-location';
-                infoLocationDiv.innerHTML = informationLocation;
-                scrollContainer.appendChild(infoLocationDiv);
-            }
+            noAutoDiv.style.padding = '20px';
+            noAutoDiv.style.textAlign = 'center';
+            noAutoDiv.style.color = '#6c757d';
+            dynamicContainer.appendChild(noAutoDiv);
             return;
         }
         
-        // Add check results first
+        // Add check results
         relevantChecks.forEach(check => {
             console.log('Processing check:', check);
             
@@ -203,18 +208,10 @@ function updateAutomatedCheckColumn(checkResults) {
                 checkDiv.appendChild(summaryDiv);
             }
             
-            // Add the complete checkDiv to the scrollable container
-            scrollContainer.appendChild(checkDiv);
+            // Add the complete checkDiv to the dynamic (scrollable) container
+            dynamicContainer.appendChild(checkDiv);
             console.log('Added check div to cell for:', check.check_name);
         });
-        
-        // Add information location after all check results
-        if (informationLocation) {
-            const infoLocationDiv = document.createElement('div');
-            infoLocationDiv.className = 'information-location';
-            infoLocationDiv.innerHTML = informationLocation;
-            scrollContainer.appendChild(infoLocationDiv);
-        }
     });
 }
 
