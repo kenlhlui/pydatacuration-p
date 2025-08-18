@@ -30,14 +30,14 @@ class CheckResultBuilder:
         self.results = []
 
     def add_check_result(self, check_id: str, check_name: str,
-                         description: str, result_type: str, results: list, allow_empty: bool = False) -> None:
+                         description: str, result_name: str, results: list, allow_empty: bool = False) -> None:
         """Add a check result to the collection.
 
         Args:
             check_id (str): Unique identifier for the check
             check_name (str): Human-readable name of the check
             description (str): Description of what the check finds
-            result_type (str): Type of results (file_list, field_list, author_list, etc.)
+            result_name (str): Name of the result (value, file, keyword, etc)
             results (list): List of findings from the check
             allow_empty (bool): Whether to allow empty results
         """
@@ -47,7 +47,7 @@ class CheckResultBuilder:
                 'check_id': check_id,
                 'check_name': check_name,
                 'description': description,
-                'result_type': result_type,
+                'result_type': result_name,
                 'results': results
             })
 
@@ -210,21 +210,21 @@ class Checker:
                 self.logger.print(f'README file found: {file_rel_path}')
                 self.template_dict['readme_file']['comments'].append({'file_name': str(file_rel_path)})
                 readme_files.append(str(file_rel_path))
-        
+
         # Add results to the new structure
         self.result_builder.add_check_result(
             check_id='filename_special_chars',
             check_name='Files with Special Characters',
             description='Files containing special characters in filename',
-            result_type='file_list',
+            result_name='file',
             results=special_char_files
         )
-        
+
         self.result_builder.add_check_result(
             check_id='missing_file_extensions',
             check_name='Files Missing Extensions',
             description='Files without proper file extensions',
-            result_type='file_list',
+            result_name='file',
             results=missing_ext_files
         )
 
@@ -232,7 +232,7 @@ class Checker:
             check_id='readme_files',
             check_name='README Files Found',
             description='README files detected in the dataset',
-            result_type='file_list',
+            result_name='file',
             results=readme_files
         )
 
@@ -281,7 +281,7 @@ class Checker:
             check_id='file_accessibility',
             check_name='Inaccessible Files',
             description='Files that cannot be opened or read by the validation tool',
-            result_type='file_list',
+            result_name='file',
             results=inaccessible_files
         )
 
@@ -289,7 +289,7 @@ class Checker:
             check_id='unsupported_files',
             check_name='Files with Unsupported Formats',
             description='Files in formats not supported by the validation tool',
-            result_type='file_list',
+            result_name='file',
             results=unsupported_files
         )
 
@@ -316,7 +316,7 @@ class Checker:
             check_id='uncommon_file_formats',
             check_name='Files with Uncommon Formats',
             description='Files using uncommon or proprietary file formats',
-            result_type='file_list',
+            result_name='file',
             results=uncommon_format_files
         )
 
@@ -371,7 +371,7 @@ class Checker:
             check_id='missing_required_fields',
             check_name='Missing Required Metadata Fields',
             description='Required metadata fields that are empty or missing',
-            result_type='field_list',
+            result_name='file',
             results=missing_required_fields
         )
 
@@ -379,7 +379,7 @@ class Checker:
             check_id='authors_missing_affiliation',
             check_name='Authors Without Affiliation',
             description='Authors missing institutional affiliation information',
-            result_type='author_list',
+            result_name='author',
             results=authors_missing_affiliation
         )
 
@@ -387,7 +387,7 @@ class Checker:
             check_id='authors_missing_identifier',
             check_name='Authors Without Identifier',
             description='Authors missing personal identifier (ORCID, etc.)',
-            result_type='author_list',
+            result_name='author',
             results=authors_missing_identifier
         )
 
@@ -395,7 +395,7 @@ class Checker:
             check_id='authors_missing_scheme',
             check_name='Authors Without Identifier Scheme',
             description='Authors missing identifier scheme information',
-            result_type='author_list',
+            result_name='author',
             results=authors_missing_scheme
         )
 
@@ -414,7 +414,7 @@ class Checker:
                     for message in typo_messages:
                         self.logger.print(f'Spelling mistake found in the {field}: {message}')
                     self.template_dict['typo']['comments'].extend(typo_messages)
-                    
+
                     # Collect typos for new structure
                     for typo in typos:
                         potential_typos.append({
@@ -422,13 +422,13 @@ class Checker:
                             'typo': typo,
                             'context': return_value[0][:100] + '...' if len(return_value[0]) > 100 else return_value[0]
                         })
-        
+
         # Add results to the new structure
         self.result_builder.add_check_result(
             check_id='potential_typos',
             check_name='Potential Spelling Errors',
             description='Words that may contain spelling mistakes in metadata fields',
-            result_type='typo_list',
+            result_name='typo',
             results=potential_typos
         )
 
@@ -474,7 +474,7 @@ class Checker:
             check_id='author_dataverse_history',
             check_name='Author Publication History',
             description='Previous datasets published by authors in this Dataverse instance',
-            result_type='author_history',
+            result_name='author history',
             results=author_publication_history
         )
 
@@ -509,7 +509,7 @@ class Checker:
                     check_id='dataset_path',
                     check_name='Dataset Path Information',
                     description="Information about the dataset's location in the Dataverse repository",
-                    result_type='dataset_path',
+                    result_name='dataset_path',
                     results=[self.template_dict['ds_tree_info']['path']]
                 )
 
@@ -532,7 +532,7 @@ class Checker:
             check_id='restricted_files',
             check_name='Restricted Access Files',
             description='Files with access restrictions in the dataset',
-            result_type='file_list',
+            result_name='file',
             results=restricted_files
         )
 
@@ -546,7 +546,7 @@ class Checker:
             check_id='termsOfUse',
             check_name='Terms of Use of the Dataset',
             description='Terms of Use information in the dataset',
-            result_type='terms_license',
+            result_name='terms of use',
             results=[
                 terms_of_use,
             ]
@@ -562,7 +562,7 @@ class Checker:
             check_id='termsOfAccess',
             check_name='Terms of Access of the Dataset',
             description='Terms of Access information in the dataset',
-            result_type='terms_license',
+            result_name='term of access',
             results=[
                 terms_of_access,
             ]
@@ -578,7 +578,7 @@ class Checker:
             check_id='license',
             check_name='License of the Dataset',
             description='License information in the dataset',
-            result_type='terms_license',
+            result_name='license',
             results=[
                 license_name,
             ]
@@ -600,7 +600,7 @@ class Checker:
             check_id='keywords_existence',
             check_name='Keywords Existence',
             description='Check if keywords are present in the dataset',
-            result_type='keyword_list',
+            result_name='keyword',
             results=keyword_list,
             allow_empty=True
         )
