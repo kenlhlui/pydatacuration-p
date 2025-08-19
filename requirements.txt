@@ -320,7 +320,7 @@ pycparser==2.22
     # via
     #   -c (workspace)
     #   cffi
-pycryptodomex==3.22.0
+pycryptodomex==3.23.0
     # via
     #   -c (workspace)
     #   py7zr
