@@ -196,7 +196,7 @@ markupsafe==3.0.2
     #   -c (workspace)
     #   jinja2
     #   werkzeug
-mdit-py-plugins==0.4.2
+mdit-py-plugins==0.5.0
     # via
     #   -c (workspace)
     #   markdown-it-py
