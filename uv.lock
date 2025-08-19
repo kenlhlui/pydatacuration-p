@@ -1,5 +1,5 @@
 version = 1
-revision = 2
+revision = 3
 requires-python = ">=3.10, <4"
 resolution-markers = [
     "python_full_version >= '3.13'",
@@ -2125,7 +2125,7 @@ requires-dist = [
     { name = "pillow", specifier = ">=11.0.0,<12" },
     { name = "py7zr", specifier = ">=0.22.0,<0.23" },
     { name = "pyjanitor", specifier = ">=0.29.2,<0.30" },
-    { name = "pypdf", specifier = ">=5.1.0,<6" },
+    { name = "pypdf", specifier = ">=5.1.0,<7" },
     { name = "pyreadr", specifier = ">=0.5.2,<0.6" },
     { name = "pyreadstat", specifier = ">=1.2.8,<2" },
     { name = "pyshp", specifier = ">=2.3.1,<3" },
