@@ -196,7 +196,7 @@ markupsafe==3.0.2
     #   -c (workspace)
     #   jinja2
     #   werkzeug
-mdit-py-plugins==0.5.0
+mdit-py-plugins==0.4.2
     # via
     #   -c (workspace)
     #   markdown-it-py
@@ -287,7 +287,7 @@ pathvalidate==3.2.3
     # via
     #   -c (workspace)
     #   markitdown
-pdfminer-six==20250506
+pdfminer-six==20250327
     # via
     #   -c (workspace)
     #   markitdown
@@ -426,7 +426,7 @@ scipy==1.15.2
     # via
     #   -c (workspace)
     #   pyjanitor
-seedir==0.5.1
+seedir==0.5.0
     # via
     #   -c (workspace)
     #   pydatacuration (pyproject.toml)
@@ -466,7 +466,7 @@ texttable==1.7.0
     # via
     #   -c (workspace)
     #   py7zr
-textual==5.3.0
+textual==2.1.2
     # via
     #   -c (workspace)
     #   trogon
