@@ -256,7 +256,8 @@ async def setup(request: SetupRequest) -> JSONResponse:
             # Use get_ds_metadata function to get processed metadata
             ds_metadata = None
             try:
-                ds_metadata_response = await get_ds_metadata(request.parent_dir, request.ticket_number)
+                base_url = request.base_url or ''
+                ds_metadata_response = await get_ds_metadata(request.parent_dir, request.ticket_number, base_url)
                 # Extract the content from the JSONResponse
                 ds_metadata = json.loads(ds_metadata_response.body.decode('utf-8'))
             except Exception as e:
@@ -358,12 +359,13 @@ async def get_check_results(parent_dir: str, ticket_number: str) -> JSONResponse
 
 
 @app.get('/ds-metadata/{parent_dir}/{ticket_number}')
-async def get_ds_metadata(parent_dir: str, ticket_number: str) -> JSONResponse:
+async def get_ds_metadata(parent_dir: str, ticket_number: str, base_url: str = '') -> JSONResponse:
     """Serve the dataset metadata file for a specific ticket.
 
     Args:
         parent_dir (str): Parent directory name
         ticket_number (str): Ticket number
+        base_url (str): Base URL for dataset links (optional)
 
     Returns:
         JSONResponse: Dataset metadata data
@@ -383,14 +385,15 @@ async def get_ds_metadata(parent_dir: str, ticket_number: str) -> JSONResponse:
             ds_metadata = json.load(f)
 
         # Get the relevant fields
+        dataset_pid = ds_metadata.get('data', {}).get('latestVersion', {}).get('datasetPersistentId', '')
         processed_metadata = {
-            'dataset_pid': ds_metadata.get('data', {}).get('latestVersion', {}).get('datasetPersistentId', ''),
+            'dataset_pid': dataset_pid,
             'dataset_title': jmespath.search('data.latestVersion.metadataBlocks.citation.fields[?typeName == `title`].value | [0]', ds_metadata),
             'dataset_id': ds_metadata.get('data', {}).get('latestVersion', {}).get('id', ''),
-            'dataset_url': app.state.base_url + '/dataset.xhtml?persistentId=' + ds_metadata.get('data', {}).get('latestVersion', {}).get('datasetPersistentId', '')
+            'dataset_url': f'{base_url}/dataset.xhtml?persistentId={dataset_pid}' if base_url and dataset_pid else ''
         }
 
-        print(f"Dataset metadata for {ticket_number}: {processed_metadata}")
+        print(f'Dataset metadata for {ticket_number}: {processed_metadata}')
 
         return JSONResponse(content=processed_metadata)
     except Exception as e:
@@ -488,7 +491,9 @@ async def export_log_yaml(request: CurationLogRequest) -> JSONResponse:
 
         # Save to file
         ticket_number = metadata.get('ticket_number', 'unknown')
-        output_path = Path(f'{app.state.work_dir}', 'log_files', f'{ticket_number}_new.yaml')
+        parent_dir = metadata.get('parent_dir', 'workdir')
+        work_dir = Path(Path.cwd()) / parent_dir / ticket_number
+        output_path = Path(work_dir, 'log_files', f'{ticket_number}_new.yaml')
 
         with output_path.open('w', encoding='utf-8') as f:
             yaml.dump(output_data, f,
@@ -563,10 +568,12 @@ async def render_report(request: Request) -> JSONResponse:
         # Parse YAML to get ticket number for dynamic file paths
         yaml_data = yaml.safe_load(curation_log_data)
         ticket_number = yaml_data.get('metadata', {}).get('ticket_number', 'unknown')
+        parent_dir = yaml_data.get('metadata', {}).get('parent_dir', 'workdir')
+        work_dir = Path(Path.cwd()) / parent_dir / ticket_number
 
         # Render the report from the saved YAML file with dynamic paths
-        yaml_path = Path(f'{app.state.work_dir}', 'log_files', f'{ticket_number}_new.yaml')
-        output_path = Path(f'{app.state.work_dir}', 'log_files', f'{ticket_number}_new.docx')
+        yaml_path = Path(work_dir, 'log_files', f'{ticket_number}_new.yaml')
+        output_path = Path(work_dir, 'log_files', f'{ticket_number}_new.docx')
 
         render_report_from_yaml(
             yaml_path=yaml_path,
