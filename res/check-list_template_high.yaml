@@ -5,6 +5,7 @@ checklist:
       - Confirm whether the listed dataverse collection refers to the same researcher/author
     priority: "info"
     section: "1. Structure of deposit"
+    automated_check_ids: ["author_dataverse_history"]
     information_location: "Author metadata, dataverse collection history"
     check_type: "Fully-automated"
 
