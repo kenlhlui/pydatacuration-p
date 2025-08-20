@@ -26,6 +26,7 @@ load_dotenv(override=True)
 
 app = typer.Typer(rich_markup_mode='rich')
 
+
 @app.command()
 def gen_curation_report(
     pid: str = typer.Option(...,
@@ -113,7 +114,7 @@ def gen_curation_report(
                           workdir_path,
                           check_zip,
                           collection_alias)
-        template_dict, new_check_results = checker.run_checks()
+        new_check_results = checker.run_checks()
 
         # Export the new check results structure
         orjson_export(log_files_dir.joinpath('check_results.json'), new_check_results)

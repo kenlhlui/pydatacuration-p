@@ -309,28 +309,28 @@ async def setup(request: SetupRequest) -> JSONResponse:
         )
 
 
-@app.get('/template-dict/{parent_dir}/{ticket_number}')
-async def get_template_dict(parent_dir: str, ticket_number: str) -> JSONResponse:
-    """Serve the template dictionary file for a specific ticket.
+# @app.get('/template-dict/{parent_dir}/{ticket_number}')
+# async def get_template_dict(parent_dir: str, ticket_number: str) -> JSONResponse:
+#     """Serve the template dictionary file for a specific ticket.
 
-    Args:
-        parent_dir (str): Parent directory name
-        ticket_number (str): Ticket number
+#     Args:
+#         parent_dir (str): Parent directory name
+#         ticket_number (str): Ticket number
 
-    Returns:
-        JSONResponse: Template dictionary data
-    """
-    try:
-        template_path = Path(parent_dir) / ticket_number / 'log_files' / 'template_dict.json'
-        if not template_path.exists():
-            raise HTTPException(status_code=404, detail="Template dictionary not found")
+#     Returns:
+#         JSONResponse: Template dictionary data
+#     """
+#     try:
+#         template_path = Path(parent_dir) / ticket_number / 'log_files' / 'template_dict.json'
+#         if not template_path.exists():
+#             raise HTTPException(status_code=404, detail="Template dictionary not found")
 
-        with template_path.open('r', encoding='utf-8') as f:
-            template_data = json.load(f)
+#         with template_path.open('r', encoding='utf-8') as f:
+#             template_data = json.load(f)
 
-        return JSONResponse(content=template_data)
-    except Exception as e:
-        raise HTTPException(status_code=500, detail=f"Error reading template dictionary: {str(e)}")
+#         return JSONResponse(content=template_data)
+#     except Exception as e:
+#         raise HTTPException(status_code=500, detail=f"Error reading template dictionary: {str(e)}")
 
 
 @app.get('/check-results/{parent_dir}/{ticket_number}')
