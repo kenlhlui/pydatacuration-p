@@ -402,7 +402,7 @@ class Checker:
     def check_spelling(self) -> None:
         """Check for spelling mistakes in the metadata."""
         potential_typos = []
-        
+
         field_list = ['title', 'subtitle', 'alternativeTitle', 'dsDescription.dsDescriptionValue', 'notesText']
         for field in field_list:
             return_value, field_exists = self.metadata_checker.check_metadata_cm_field(field)
@@ -449,23 +449,19 @@ class Checker:
                 # See https://github.com/IQSS/dataverse/issues/2038 for fq field;
                 # Note that fq supports searching the fields of the database schema
                 # i.e. The fields in the Native JSON export of a dataset
-                if self.collection_alias:
+                if self.collection_alias:  # Only check the specified collection
                     response = self.httpx_client.sync_get(f'/api/search?q=*&type=dataset&per_page=1000&subtree={self.collection_alias}&fq=authorName:"{author}"')  # noqa: E501
                 else:
                     # If no collection_alias is provided, search in all dataverses
                     response = self.httpx_client.sync_get(f'/api/search?q=*&type=dataset&per_page=1000&fq=authorName:"{author}"')  # noqa: E501
                 if response and response.json():
-                    name_of_dataverse_result = list(set(jmespath.search('data.items[*].name_of_dataverse', response.json())))  # noqa: E501
-                    dataset_titles = jmespath.search('data.items[*].name', response.json()) or []
+                    dataset_publish_history = jmespath.search('data.items[*].{name: name, url: url, name_of_dataverse: name_of_dataverse}', response.json()) or []
 
-                    self.template_dict['dv_record']['comments'].append({author: name_of_dataverse_result})
-
-                    # Collect for new structure
-                    author_publication_history.append({
-                        'author': author,
-                        'datasets': dataset_titles,
-                        'dataverses': name_of_dataverse_result
-                    })
+                    # Extend the string to the author_publication_history list
+                    author_publication_history.extend(
+                        f'{author}: {dataset.get("name")} ({dataset.get("url")}) - Dataverse Name: {dataset.get("name_of_dataverse")}'
+                        for dataset in dataset_publish_history
+                    )
 
                 # TODO: Add error handling for the case when the response is None or empty; or HTTP error
 
