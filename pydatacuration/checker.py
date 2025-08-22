@@ -65,7 +65,7 @@ class Checker:
                  workdir: Path,
                  check_zip: bool,
                  collection_alias: str | None = None,
-                 collection_alias: str | None = None) -> None:
+                 ) -> None:
         """Initialize the Checker class.
 
         Args:

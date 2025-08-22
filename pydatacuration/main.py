@@ -78,17 +78,20 @@ def gen_curation_report(
                                     '-c',
                                     help='The collection alias for the author name to be searched',)) -> None:
     """This script downloads the dataset files and metadata from a Dataverse instance and checks the files and metadata for data curation, and generates a curation report in spreadsheet (.xlsx) and world (.docx) format."""  # noqa: E501, W505
+    # Initialize the directory manager class
+    dir_manager = directory_manager.DirectoryManager(ticket_number, parent_dir)
+
     # Define the working directory
-    workdir_path = directory_manager.DirectoryManager(ticket_number, parent_dir).define_workdir()
+    workdir_path = dir_manager.workdir
 
     # Check if the working directory already exists and ask user for confirmation to delete it
     utils.confirm_del_dir(workdir_path, force_del)
 
-    # Create the working directory and its subdirectories
-    directory_manager.DirectoryManager(ticket_number, parent_dir).make_dirs()
+    # Create the working directory and its subdirectories plus the db directory
+    dir_manager.make_dirs()
 
-    # Define the log directory
-    log_files_dir = directory_manager.DirectoryManager(ticket_number, parent_dir).log_files_dir
+    # Define the database directory
+    db_dir = dir_manager.db_dir
 
     # Initialize the custom logger in the cli
     logger = CustomLogger.get_logger('main')
@@ -104,23 +107,23 @@ def gen_curation_report(
         utils.check_ds_access(pid, base_url, api_token)
 
         # Download the dataset files and metadata
-        ds_metadata, dv_tree = asyncio.run(downloads.Downloads(base_url, api_token, pid, workdir_path, ticket_number).downloader())
+        ds_metadata, dv_tree = asyncio.run(downloads.Downloads(base_url, api_token, pid, dir_manager.workdir, ticket_number).downloader())
 
         # Run the checker
         checker = Checker(base_url,
                           api_token,
                           ds_metadata,
                           dv_tree,
-                          workdir_path,
+                          dir_manager.workdir,
                           check_zip,
                           collection_alias)
         new_check_results = checker.run_checks()
 
         # Export the new check results structure
-        orjson_export(log_files_dir.joinpath('check_results.json'), new_check_results)
+        orjson_export(dir_manager.log_files_dir.joinpath('check_results.json'), new_check_results)
 
         # Generate the tree diagram of the dataset files
-        utils.gen_tree_diagram(Path(workdir_path, 'dataset', 'files'), Path(log_files_dir))
+        utils.gen_tree_diagram(Path(workdir_path, 'dataset', 'files'), Path(dir_manager.log_files_dir))
 
         # Print the end message
         logger.print(f'✅ Curation report generated successfully.\n\nThe windows explorer should be popped up with the working directory opened. \n\nIf that does not work, type (or copy) the following in the terminal to view the files: \n\nexplorer.exe "$(wslpath -w {workdir_path})"')
