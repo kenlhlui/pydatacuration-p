@@ -1,13 +1,9 @@
 """MetadataChecker class for checking metadata fields in a JSON file."""
 
-import sys
-from pathlib import Path
 
 import jmespath
-import orjson
 
 from .custom_logging import CustomLogger
-from .directory_manager import DirectoryManager
 
 
 class MetadataChecker:
@@ -63,7 +59,7 @@ class MetadataChecker:
         Returns:
             result (list[dict]): List of dictionaries containing author metadata fields
         """
-        query_string = 'data.latestVersion.metadataBlocks.citation.fields[?typeName==`author`].value[].{authorName:authorName.value, authorAffiliation: authorAffiliation.value, authorIdentifierScheme: authorIdentifierScheme.value, authorIdentifier:authorIdentifier.value}'
+        query_string = 'data.latestVersion.metadataBlocks.citation.fields[?typeName==`author`].value[].{authorName:authorName.value, authorAffiliation: authorAffiliation.value, authorIdentifierScheme: authorIdentifierScheme.value, authorIdentifier:authorIdentifier.value}'  # noqa: E501
         result = jmespath.search(query_string, self.metadata)
 
         return result
