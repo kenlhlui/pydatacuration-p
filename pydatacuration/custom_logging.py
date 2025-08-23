@@ -1,13 +1,51 @@
-"""This module provides a simple logging setup using loguru."""
+"""This module provides a simple logging setup using loguru with Rich console support."""
 
-import sys
+
 from pathlib import Path
 
 from loguru import logger
+from rich.console import Console
+from rich.highlighter import ReprHighlighter
+from rich.text import Text
+
+
+# Create a global Rich console instance
+console = Console()
+highlighter = ReprHighlighter()
+
+
+def rich_sink(message) -> None:
+    """Custom sink function that uses Rich console for enhanced output."""
+    # Extract the message record
+    record = message.record
+
+    # Format timestamp
+    timestamp = Text(record['time'].strftime('%Y-%m-%d %H:%M:%S'), style='green')
+
+    # Format level with color
+    level = record['level']
+    level_styles = {
+        'DEBUG': 'dim cyan',
+        'INFO': 'blue',
+        'WARNING': 'yellow',
+        'ERROR': 'red',
+        'CRITICAL': 'bold red',
+    }
+    level_text = Text(f'{level.name:<8}', style=level_styles.get(level.name, 'white'))
+
+    # Format location info
+    location = Text(f'{record["name"]}:{record["function"]}:{record["line"]}', style='dim cyan')
+
+    # Format the actual message with syntax highlighting
+    msg_text = Text(str(record['message']))
+    msg_text = highlighter(msg_text)
+
+    # Combine all parts
+    console.print(timestamp, '│', level_text, '│', location, '│', msg_text)
 
 
 def setup_logging(log_file_dir: Path | None = None, log_level: str = 'INFO') -> None:
-    """Setup loguru configuration for the entire application.
+    """Setup loguru configuration for the entire application with Rich console support.
 
     Args:
         log_file_dir: Optional directory path for log files. If provided, creates debug.log
@@ -16,9 +54,11 @@ def setup_logging(log_file_dir: Path | None = None, log_level: str = 'INFO') -> 
     # Remove default handler
     logger.remove()
 
-    # Add console handler with custom format
+    # Add Rich console handler for colorful, syntax-highlighted output
     logger.add(
-        sys.stdout, format='<green>{time:YYYY-MM-DD HH:mm:ss}</green> - {message}', level=log_level, colorize=True
+        rich_sink,
+        level=log_level,
+        format='{message}',  # Message formatting is handled by rich_sink
     )
 
     # Add file handler if log directory is provided
