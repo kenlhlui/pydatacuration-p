@@ -1,19 +1,20 @@
 """HTTPX client for handing HTTP requests and responses."""
+
 import asyncio
 from pathlib import Path
 from urllib.parse import urljoin
 
 import httpx
+from loguru import logger
 from tenacity import RetryError
 from tenacity import retry
 from tenacity import stop_after_attempt
 from tenacity import wait_fixed
 
-from .custom_logging import CustomLogger
-
 
 class HTTPXClient:
     """HTTPX client for handling HTTP requests and responses."""
+
     def __init__(self, base_url: str, api_token: str) -> None:
         """Initialize the HTTPX client.
 
@@ -25,7 +26,7 @@ class HTTPXClient:
         self.api_token = api_token
         self.headers = {'X-Dataverse-key': api_token}
         self.httpx_success_status = 200
-        self.logger = CustomLogger.get_logger(__name__)
+        self.logger = logger
         self.semaphore = asyncio.Semaphore(10)
         self.async_sleep_time = 0  # TODO: make this configurable
 
@@ -36,7 +37,7 @@ class HTTPXClient:
             timeout=httpx.Timeout(10.0, connect=5.0),
             follow_redirects=True,
             transport=transport,
-            limits=httpx.Limits(max_keepalive_connections=5, max_connections=10)
+            limits=httpx.Limits(max_keepalive_connections=5, max_connections=10),
         )
 
     @property
@@ -62,10 +63,7 @@ class HTTPXClient:
         limits = httpx.Limits(max_keepalive_connections=5, max_connections=10)
 
         with httpx.Client(
-            headers=self.headers,
-            timeout=httpx.Timeout(10.0, connect=5.0),
-            follow_redirects=True,
-            limits=limits
+            headers=self.headers, timeout=httpx.Timeout(10.0, connect=5.0), follow_redirects=True, limits=limits
         ) as client:
             try:
                 response = client.get(url)
@@ -73,7 +71,7 @@ class HTTPXClient:
                     self.logger.error(f'HTTP request Error for {url}: {response.status_code}')
                     response.raise_for_status()
                 return response
-            except (httpx.HTTPStatusError) as exc:
+            except httpx.HTTPStatusError as exc:
                 self.logger.error(f'HTTP request Error for {url}: {exc}')
                 self.logger.error('Retrying... (max 3 attempts with 5 second delay)')
                 raise exc
@@ -121,7 +119,7 @@ class HTTPXClient:
                     return b''.join(content)
                 return None
 
-        except (httpx.HTTPStatusError) as exc:
+        except httpx.HTTPStatusError as exc:
             self.logger.error(f'HTTP request Error for {url}: {exc}')
             self.logger.error('Retrying... (max 3 attempts with 5 second delay)')
             raise

@@ -8,8 +8,7 @@ import zipfile
 from pathlib import Path
 
 import py7zr
-
-from .custom_logging import CustomLogger
+from loguru import logger
 
 
 class Unzipper:
@@ -24,7 +23,7 @@ class Unzipper:
         """
         self.zip_file = Path(zip_file)
         self.output_dir = Path(output_dir)
-        self.logger = CustomLogger.get_logger(__name__)
+        self.logger = logger
 
     def _unzip(self) -> None:
         """Unzip the file."""
@@ -93,8 +92,10 @@ class Unzipper:
             self._unzip()
         elif name.endswith('.7z'):
             self._extract_7z()
-        elif any(name.endswith(ext) for ext in ['.tar', '.tar.gz', '.tgz', '.tar.bz2', '.tbz2', 
-                                            '.tar.xz', '.txz', '.gz', '.bz2', '.xz']):
+        elif any(
+            name.endswith(ext)
+            for ext in ['.tar', '.tar.gz', '.tgz', '.tar.bz2', '.tbz2', '.tar.xz', '.txz', '.gz', '.bz2', '.xz']
+        ):
             self._extract_tar()
         else:
             self.logger.warning(f'Unsupported archive format: {self.zip_file}')

@@ -5,12 +5,10 @@ from pathlib import Path
 import docx
 import pandas as pd
 import typer
-
-from .custom_logging import CustomLogger
+from loguru import logger
 
 
 app = typer.Typer(rich_markup_mode='rich')
-logger = CustomLogger.get_logger(__name__)
 
 
 class ReportValidation:
@@ -18,14 +16,13 @@ class ReportValidation:
 
     def __init__(self) -> None:
         """Initialize the ReportValidation class."""
-        self.logger = CustomLogger.get_logger(__name__)
+        self.logger = logger
 
     @staticmethod
     def extract_tables_from_word(docx_path: Path) -> list:
         """Extract tables from a Word document."""
         doc = docx.Document(str(docx_path))
         return doc.tables
-
 
     def table_to_dataframe(self, table):
         """Convert a docx table to pandas DataFrame, handling merged cells and specific status columns."""
@@ -90,7 +87,7 @@ class ReportValidation:
 
             # Truncate row if longer than headers
             if len(row) > len(headers):
-                row = row[:len(headers)]
+                row = row[: len(headers)]
 
             # Create row dictionary
             row_dict = dict(zip(headers, row))
@@ -112,7 +109,6 @@ class ReportValidation:
         logger.debug(f'DataFrame columns: {df.columns.tolist()}')
 
         return df
-
 
     def count_status_markers(self, data_frame: pd.DataFrame) -> dict:
         """Count the X markers in each status column (P, RQU, RCM, NS, NA)."""
@@ -160,7 +156,10 @@ class ReportValidation:
                 hours, minutes, seconds = map(int, match.groups())
                 total_seconds += hours * 3600 + minutes * 60 + seconds
             elif time_str and time_str != 'Time Spent':
-                msg = typer.style(f'❌Invalid time format value found in the "Time Spent" column: {time_str}. Please fix it and re-run the validation.', fg='red')
+                msg = typer.style(
+                    f'❌Invalid time format value found in the "Time Spent" column: {time_str}. Please fix it and re-run the validation.',
+                    fg='red',
+                )
                 typer.echo(msg)
                 continue
 
@@ -173,11 +172,7 @@ class ReportValidation:
 
     def analyze_word_doc_tables(self, docx_path: Path) -> dict:
         """Main function to analyze tables in Word document."""
-        results = {
-            'status_counts': {'P': 0, 'RQU': 0, 'RCM': 0, 'NS': 0, 'NA': 0},
-            'total_time': '',
-            'table_data': []
-        }
+        results = {'status_counts': {'P': 0, 'RQU': 0, 'RCM': 0, 'NS': 0, 'NA': 0}, 'total_time': '', 'table_data': []}
 
         # Extract tables
         tables = self.extract_tables_from_word(docx_path)
@@ -221,10 +216,16 @@ class ReportValidation:
         expected_medium_checks = 18
 
         if level == 'high' and check_num != expected_high_level_checks:
-            msg = typer.style(f"❌ Invalid number of check marks ('X') for high level: {check_num}. Should be {expected_high_level_checks}.", fg='red')  # noqa: E501
+            msg = typer.style(
+                f"❌ Invalid number of check marks ('X') for high level: {check_num}. Should be {expected_high_level_checks}.",
+                fg='red',
+            )  # noqa: E501
             typer.echo(msg)
         elif level == 'medium' and check_num != expected_medium_checks:
-            msg = typer.style(f"❌ Invalid number of check marks ('X') for medium level: {check_num}. Should be {expected_medium_checks}.", fg='red')  # noqa: E501
+            msg = typer.style(
+                f"❌ Invalid number of check marks ('X') for medium level: {check_num}. Should be {expected_medium_checks}.",
+                fg='red',
+            )  # noqa: E501
             typer.echo(msg)
         else:
             typer.echo('✅ Total number of check marks (X) is valid.')
@@ -232,6 +233,7 @@ class ReportValidation:
 
 class CurationLogLevels(str, Enum):
     """Enum for curation log levels."""
+
     high = 'high'
     medium = 'medium'
 
@@ -252,10 +254,7 @@ def validate_report(
     Example usage:
         python -m report_validation ABC123 --level high
     """
-    # # Initialize logger
-    # logger = CustomLogger.get_logger('report_validation')
-    # log_level = 'DEBUG' if debug else 'INFO'
-    # logger.setLevel(log_level)
+    # # Initialize logger - now using loguru globally
 
     # Initialize ReportValidation class
     report_validator = ReportValidation()
@@ -274,8 +273,8 @@ def validate_report(
 
     # Print final results
     typer.echo('\n--- FINAL RESULTS ---')
-    typer.echo(f"Status column counts: {results['status_counts']}")
-    typer.echo(f"Total time spent: {results['total_time']}")
+    typer.echo(f'Status column counts: {results["status_counts"]}')
+    typer.echo(f'Total time spent: {results["total_time"]}')
 
     # Calculate overall count
     total_x_count = sum(results['status_counts'].values())
