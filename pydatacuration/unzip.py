@@ -93,8 +93,10 @@ class Unzipper:
             self._unzip()
         elif name.endswith('.7z'):
             self._extract_7z()
-        elif any(name.endswith(ext) for ext in ['.tar', '.tar.gz', '.tgz', '.tar.bz2', '.tbz2', 
-                                            '.tar.xz', '.txz', '.gz', '.bz2', '.xz']):
+        elif any(
+            name.endswith(ext)
+            for ext in ['.tar', '.tar.gz', '.tgz', '.tar.bz2', '.tbz2', '.tar.xz', '.txz', '.gz', '.bz2', '.xz']
+        ):
             self._extract_tar()
         else:
             self.logger.warning(f'Unsupported archive format: {self.zip_file}')

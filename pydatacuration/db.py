@@ -7,6 +7,7 @@ import duckdb
 
 class DuckDBConnection:
     """DuckDB database connection class."""
+
     _instance = None
 
     def __new__(cls, db_path: Path):

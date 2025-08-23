@@ -1,4 +1,5 @@
 """This module defines a custom logger for the package."""
+
 # ruff: noqa: ANN401
 import logging
 from pathlib import Path
@@ -9,6 +10,7 @@ from rich.logging import RichHandler
 
 class CustomLogger:
     """Custom logger class that extends the standard logging module."""
+
     # Custom log level between INFO (20) and WARNING (30)
     PRINT_LEVEL = 25
 
@@ -43,8 +45,9 @@ class CustomLogger:
 
         # Create formatter
         console_formatter = logging.Formatter(fmt='%(asctime)s - %(message)s', datefmt='%Y-%m-%d %H:%M:%S')
-        file_formatter = logging.Formatter(fmt='%(asctime)s - %(name)s - %(levelname)s - %(message)s',
-                                      datefmt='%Y-%m-%d %H:%M:%S')
+        file_formatter = logging.Formatter(
+            fmt='%(asctime)s - %(name)s - %(levelname)s - %(message)s', datefmt='%Y-%m-%d %H:%M:%S'
+        )
 
         # Create console handler using the RichHandler
         console_handler = RichHandler(
@@ -55,7 +58,7 @@ class CustomLogger:
             show_level=False,
             omit_repeated_times=False,
             markup=True,
-            log_time_format='[%Y-%m-%d %H:%M:%S]'
+            log_time_format='[%Y-%m-%d %H:%M:%S]',
         )
 
         root_logger.addHandler(console_handler)
@@ -64,8 +67,7 @@ class CustomLogger:
         if log_file_dir:
             log_file_path = Path(log_file_dir, 'debug.log')
             log_file_path.parent.mkdir(parents=True, exist_ok=True)
-            file_handler = logging.FileHandler(filename=str(log_file_path),
-                                              mode='a', encoding='utf-8')
+            file_handler = logging.FileHandler(filename=str(log_file_path), mode='a', encoding='utf-8')
             file_handler.setFormatter(file_formatter)
             file_handler.setLevel(logging.NOTSET)
             root_logger.addHandler(file_handler)

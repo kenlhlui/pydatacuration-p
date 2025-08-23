@@ -28,8 +28,15 @@ class CheckResultBuilder:
         """Initialize the CheckResultBuilder."""
         self.results = []
 
-    def add_check_result(self, check_id: str, check_name: str,
-                         description: str, result_name: str, results: list, allow_empty: bool = False) -> None:
+    def add_check_result(
+        self,
+        check_id: str,
+        check_name: str,
+        description: str,
+        result_name: str,
+        results: list,
+        allow_empty: bool = False,
+    ) -> None:
         """Add a check result to the collection.
 
         Args:
@@ -42,13 +49,15 @@ class CheckResultBuilder:
         """
         # Only add if there are actual results
         if results or allow_empty:
-            self.results.append({
-                'check_id': check_id,
-                'check_name': check_name,
-                'description': description,
-                'result_type': result_name,
-                'results': results
-            })
+            self.results.append(
+                {
+                    'check_id': check_id,
+                    'check_name': check_name,
+                    'description': description,
+                    'result_type': result_name,
+                    'results': results,
+                }
+            )
 
     def get_results(self) -> list:
         """Get all collected check results."""
@@ -57,15 +66,17 @@ class CheckResultBuilder:
 
 class Checker:
     """Checker class to validate the data files and metadata."""
-    def __init__(self,
-                 base_url: str,
-                 api_token: str,
-                 ds_metadata: dict,
-                 dv_tree: dict,
-                 workdir: Path,
-                 check_zip: bool,
-                 collection_alias: str | None = None,
-                 ) -> None:
+
+    def __init__(
+        self,
+        base_url: str,
+        api_token: str,
+        ds_metadata: dict,
+        dv_tree: dict,
+        workdir: Path,
+        check_zip: bool,
+        collection_alias: str | None = None,
+    ) -> None:
         """Initialize the Checker class.
 
         Args:
@@ -90,13 +101,15 @@ class Checker:
         self.checksums = Checksum()
         self.result_builder = CheckResultBuilder()
         self.files_opener = FilesOpener
-        self.metadata_checker = MetadataChecker(self.workdir.joinpath('dataset', 'metadata', 'ds_metadata.json'))
+        self.metadata_checker = MetadataChecker(self.ds_metadata)
         self.spell_checker = SpellCheckerCustomized()
         self.httpx_client = HTTPXClient(base_url, api_token)
         self.file_list_metadata = self._gen_file_list_metadata()
         self.common_file_format_tuple = self._read_common_file_format()
 
-        self.ds_title = jmespath.search('data.latestVersion.metadataBlocks.citation.fields[?typeName == `title`].value | [0]', self.ds_metadata)  # noqa
+        self.ds_title = jmespath.search(
+            'data.latestVersion.metadataBlocks.citation.fields[?typeName == `title`].value | [0]', self.ds_metadata
+        )  # noqa
 
     def _get_ds_tree_info(self, identifier_of_dataverse: str) -> dict:
         """Get the dataset tree information in the Dataverse repository.
@@ -107,6 +120,7 @@ class Checker:
         Returns:
             dict: A dictionary containing the path to the target node, empty if none.
         """
+
         def _process(data: dict, id_list: list, alias_list: list, name_list: list) -> dict:
             # Append the current node's alias and name to the respective lists
             # Create new lists with current node's information
@@ -120,7 +134,7 @@ class Checker:
                     'id': current_id_list,
                     'alias': current_alias_list,
                     'depth': data.get('depth'),
-                    'name': current_name_list
+                    'name': current_name_list,
                 }
                 # Combine the paths with '/' separator
                 result['path'] = '/'.join(current_name_list)
@@ -214,7 +228,7 @@ class Checker:
             check_name='Files with Special Characters',
             description='Files containing special characters in filename',
             result_name='file',
-            results=special_char_files
+            results=special_char_files,
         )
 
         self.result_builder.add_check_result(
@@ -222,7 +236,7 @@ class Checker:
             check_name='Files Missing Extensions',
             description='Files without proper file extensions',
             result_name='file',
-            results=missing_ext_files
+            results=missing_ext_files,
         )
 
         self.result_builder.add_check_result(
@@ -230,7 +244,7 @@ class Checker:
             check_name='README Files Found',
             description='README files detected in the dataset',
             result_name='file',
-            results=readme_files
+            results=readme_files,
         )
 
     def check_file_open(self) -> None:
@@ -253,12 +267,20 @@ class Checker:
                     # Upper case the suffix and remove the leading dot
                     extracted_file_rel_paths = Unzipper(
                         zip_file=Path(self.workdir, 'dataset', 'files', file_rel_path),
-                        output_dir=Path(self.workdir, 'dataset', 'files', '__UNZIPED_FILES__', f'{file_rel_path.stem}_{file_rel_path.suffix[1:].upper()}')
+                        output_dir=Path(
+                            self.workdir,
+                            'dataset',
+                            'files',
+                            '__UNZIPED_FILES__',
+                            f'{file_rel_path.stem}_{file_rel_path.suffix[1:].upper()}',
+                        ),
                     ).main()
                     file_list.extend(extracted_file_rel_paths)
         # Only show the message if there's zip file(s) in the dataset
         elif not self.check_zip and any(file_rel_path.suffix in zip_file_extensions for file_rel_path in file_list):
-            self.logger.print('Skipping the unzipping of zip file(s). The zip file(s) and the content inside will not be checked.')  # noqa: E501
+            self.logger.print(
+                'Skipping the unzipping of zip file(s). The zip file(s) and the content inside will not be checked.'
+            )  # noqa: E501
 
         for file_rel_path in file_list:
             file_abs_path = Path(self.workdir, 'dataset', 'files', file_rel_path)
@@ -268,7 +290,9 @@ class Checker:
                     self.logger.print(f'File cannot be opened: {file_abs_path}')
                     inaccessible_files.append(str(file_rel_path))
                 elif self.files_opener(file_abs_path).open_file()[0] is None:
-                    self.logger.print(f'File is not a supported file format (not checked by the script): {file_abs_path}')  # noqa: E501
+                    self.logger.print(
+                        f'File is not a supported file format (not checked by the script): {file_abs_path}'
+                    )  # noqa: E501
                     unsupported_files.append(str(file_rel_path))
 
         # Add results to the new structure
@@ -277,7 +301,7 @@ class Checker:
             check_name='Inaccessible Files',
             description='Files that cannot be opened or read by the validation tool',
             result_name='file',
-            results=inaccessible_files
+            results=inaccessible_files,
         )
 
         self.result_builder.add_check_result(
@@ -285,7 +309,7 @@ class Checker:
             check_name='Files with Unsupported Formats',
             description='Files in formats not supported by the validation tool',
             result_name='file',
-            results=unsupported_files
+            results=unsupported_files,
         )
 
     def check_common_file_format(self) -> None:
@@ -310,7 +334,7 @@ class Checker:
             check_name='Files with Uncommon Formats',
             description='Files using uncommon or proprietary file formats',
             result_name='file',
-            results=uncommon_format_files
+            results=uncommon_format_files,
         )
 
     def check_missing_metadata(self) -> None:
@@ -351,7 +375,14 @@ class Checker:
 
         # Check if at least one author has affiliation with 'University of Toronto' (Non-case sensitive)
         ut_variants = ['university of toronto', 'uoft', 'u of t']
-        author_affiliation_ut_num = len([item for item in author_info_dict if item.get('authorAffiliation') is not None and any(variant in item.get('authorAffiliation', '').lower() for variant in ut_variants)])  # noqa: E501
+        author_affiliation_ut_num = len(
+            [
+                item
+                for item in author_info_dict
+                if item.get('authorAffiliation') is not None
+                and any(variant in item.get('authorAffiliation', '').lower() for variant in ut_variants)
+            ]
+        )  # noqa: E501
         if author_affiliation_ut_num == 0:
             self.logger.print('None of the authors have listed affiliation with University of Toronto')
 
@@ -361,7 +392,7 @@ class Checker:
             check_name='Missing Required Metadata Fields',
             description='Required metadata fields that are empty or missing',
             result_name='file',
-            results=missing_required_fields
+            results=missing_required_fields,
         )
 
         self.result_builder.add_check_result(
@@ -369,7 +400,7 @@ class Checker:
             check_name='Authors Without Affiliation',
             description='Authors missing institutional affiliation information',
             result_name='author',
-            results=authors_missing_affiliation
+            results=authors_missing_affiliation,
         )
 
         self.result_builder.add_check_result(
@@ -377,7 +408,7 @@ class Checker:
             check_name='Authors Without Identifier',
             description='Authors missing personal identifier (ORCID, etc.)',
             result_name='author',
-            results=authors_missing_identifier
+            results=authors_missing_identifier,
         )
 
         self.result_builder.add_check_result(
@@ -385,7 +416,7 @@ class Checker:
             check_name='Authors Without Identifier Scheme',
             description='Authors missing identifier scheme information',
             result_name='author',
-            results=authors_missing_scheme
+            results=authors_missing_scheme,
         )
 
     def check_spelling(self) -> None:
@@ -405,11 +436,15 @@ class Checker:
 
                     # Collect typos for new structure
                     for typo in typos:
-                        potential_typos.append({
-                            'field': field,
-                            'typo': typo,
-                            'context': return_value[0][:100] + '...' if len(return_value[0]) > 100 else return_value[0]
-                        })
+                        potential_typos.append(
+                            {
+                                'field': field,
+                                'typo': typo,
+                                'context': return_value[0][:100] + '...'
+                                if len(return_value[0]) > 100
+                                else return_value[0],
+                            }
+                        )
 
         # Add results to the new structure
         self.result_builder.add_check_result(
@@ -417,7 +452,7 @@ class Checker:
             check_name='Potential Spelling Errors',
             description='Words that may contain spelling mistakes in metadata fields',
             result_name='typo',
-            results=potential_typos
+            results=potential_typos,
         )
 
     def check_dv_record(self) -> None:
@@ -428,7 +463,9 @@ class Checker:
         """
         author_publication_history = []
 
-        query_string = 'data.latestVersion.metadataBlocks.citation.fields[?typeName==`author`].value[*].authorName.value[]'  # noqa: E501
+        query_string = (
+            'data.latestVersion.metadataBlocks.citation.fields[?typeName==`author`].value[*].authorName.value[]'  # noqa: E501
+        )
         author_list = jmespath.search(query_string, self.ds_metadata)
 
         if isinstance(author_list, list):
@@ -438,12 +475,22 @@ class Checker:
                 # Note that fq supports searching the fields of the database schema
                 # i.e. The fields in the Native JSON export of a dataset
                 if self.collection_alias:  # Only check the specified collection
-                    response = self.httpx_client.sync_get(f'/api/search?q=*&type=dataset&per_page=1000&subtree={self.collection_alias}&fq=authorName:"{author}"')  # noqa: E501
+                    response = self.httpx_client.sync_get(
+                        f'/api/search?q=*&type=dataset&per_page=1000&subtree={self.collection_alias}&fq=authorName:"{author}"'
+                    )  # noqa: E501
                 else:
                     # If no collection_alias is provided, search in all dataverses
-                    response = self.httpx_client.sync_get(f'/api/search?q=*&type=dataset&per_page=1000&fq=authorName:"{author}"')  # noqa: E501
+                    response = self.httpx_client.sync_get(
+                        f'/api/search?q=*&type=dataset&per_page=1000&fq=authorName:"{author}"'
+                    )  # noqa: E501
                 if response and response.json():
-                    dataset_publish_history = jmespath.search('data.items[*].{name: name, url: url, name_of_dataverse: name_of_dataverse}', response.json()) or []
+                    dataset_publish_history = (
+                        jmespath.search(
+                            'data.items[*].{name: name, url: url, name_of_dataverse: name_of_dataverse}',
+                            response.json(),
+                        )
+                        or []
+                    )
 
                     # Extend the string to the author_publication_history list
                     author_publication_history.extend(
@@ -459,7 +506,7 @@ class Checker:
             check_name='Author Publication History',
             description='Previous datasets published by authors in this Dataverse instance',
             result_name='author record',
-            results=author_publication_history
+            results=author_publication_history,
         )
 
     def check_ds_tree_info(self) -> None:
@@ -470,13 +517,17 @@ class Checker:
             # Also check the source code the the available fq fields https://github.com/IQSS/dataverse/blob/develop/src/main/java/edu/harvard/iq/dataverse/search/SearchFields.java
             # Use 'datasetVersionId' here; in ds_metadata it is data.latestVersion.id
             # Don't mess up with data.id or data.latestVersion.datasetId which are the same and is the persistent id in the dataverse system  # noqa: E501
-            response = self.httpx_client.sync_get(f'/api/search?q=*&type=dataset&per_page=1&fq=datasetVersionId:{ds_version_id}')  # noqa: E501
+            response = self.httpx_client.sync_get(
+                f'/api/search?q=*&type=dataset&per_page=1&fq=datasetVersionId:{ds_version_id}'
+            )  # noqa: E501
             if response and response.json():
                 # Get the name_of_dataverse from the response
                 name_of_dataverse = response.json().get('data', {}).get('items', [{}])[0].get('name_of_dataverse', None)  # noqa: E501
 
                 # Get the path of the dataverse from the response
-                identifier_of_dataverse = response.json().get('data', {}).get('items', [{}])[0].get('identifier_of_dataverse', None)  # noqa: E501
+                identifier_of_dataverse = (
+                    response.json().get('data', {}).get('items', [{}])[0].get('identifier_of_dataverse', None)
+                )  # noqa: E501
                 tree_info = self._get_ds_tree_info(identifier_of_dataverse)
                 path: str | None = tree_info.get('path', '')
                 dataset_path = ''  # Placeholder to prevent error
@@ -493,7 +544,7 @@ class Checker:
                     check_name='Dataset Path Information',
                     description="Information about the dataset's location in the Dataverse repository",
                     result_name='dataset_path',
-                    results=[dataset_path]
+                    results=[dataset_path],
                 )
 
             # TODO: Add error handling for the case when the response is None or empty; or HTTP error
@@ -515,7 +566,7 @@ class Checker:
             check_name='Restricted Access Files',
             description='Files with access restrictions in the dataset',
             result_name='file',
-            results=restricted_files
+            results=restricted_files,
         )
 
     def check_terms_of_use(self) -> None:
@@ -530,7 +581,7 @@ class Checker:
             result_name='terms of use',
             results=[
                 terms_of_use,
-            ]
+            ],
         )
 
     def check_terms_of_access(self) -> None:
@@ -545,7 +596,7 @@ class Checker:
             result_name='term of access',
             results=[
                 terms_of_access,
-            ]
+            ],
         )
 
     def check_license(self) -> None:
@@ -559,7 +610,7 @@ class Checker:
             result_name='license',
             results=[
                 license_name,
-            ]
+            ],
         )
 
         if license_name == 'CC0 1.0':
@@ -567,7 +618,9 @@ class Checker:
 
     def check_keywords(self) -> None:
         """Check if the keywords are present."""
-        query_string = 'data.latestVersion.metadataBlocks.citation.fields[?typeName==`keyword`].value[*].keywordValue.value[]'  # noqa: E501
+        query_string = (
+            'data.latestVersion.metadataBlocks.citation.fields[?typeName==`keyword`].value[*].keywordValue.value[]'  # noqa: E501
+        )
         keyword_list = jmespath.search(query_string, self.ds_metadata)
         if isinstance(keyword_list, list):
             self.logger.print(f'Keywords found in the metadata: {keyword_list}')
@@ -579,7 +632,7 @@ class Checker:
             description='Check if keywords are present in the dataset',
             result_name='keyword',
             results=keyword_list,
-            allow_empty=True
+            allow_empty=True,
         )
 
     def run_checks(self) -> dict:
@@ -603,8 +656,6 @@ class Checker:
         self.check_license()
 
         # Build the new structure
-        new_results = {
-            'check_results': self.result_builder.get_results()
-        }
+        new_results = {'check_results': self.result_builder.get_results()}
 
         return new_results

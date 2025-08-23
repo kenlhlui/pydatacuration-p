@@ -34,6 +34,7 @@ PDF_FILE_EXTENSIONS = ['.pdf']
 
 class FilesOpener:
     """Open different file types."""
+
     def __init__(self, file: str | Path) -> None:
         """Initialize the FilesOpener class.
 
@@ -144,8 +145,7 @@ class FilesOpener:
     def _open_audiovisual_file(self) -> tuple:
         try:
             stderr = (
-                ffmpeg
-                .input(self.file)
+                ffmpeg.input(self.file)
                 .output('null', f='null')
                 .global_args('-v', 'error')
                 .run(capture_stdout=False, capture_stderr=True)

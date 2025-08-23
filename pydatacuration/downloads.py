@@ -1,4 +1,5 @@
 """Downloads class to download a dataset from a Dataverse repository."""
+
 import asyncio
 import sys
 from pathlib import Path
@@ -6,16 +7,17 @@ from urllib.parse import urljoin
 
 import httpx
 import jmespath
-import orjson
 
 from .custom_logging import CustomLogger
 from .httpx_client import HTTPXClient
 from .utils import orjson_export
+from .directory_manager import DirectoryManager
 
 
 class Downloads:
     """Class to download a dataset from a Dataverse repository."""
-    def __init__(self, base_url: str, api_token: str, pid: str, download_dir: Path, ticket_number: str) -> None:
+
+    def __init__(self, base_url: str, api_token: str, pid: str, download_dir: Path | str, ticket_number: str) -> None:
         """Initialize the class.
 
         Args:
@@ -34,18 +36,19 @@ class Downloads:
         self.httpx_client = HTTPXClient(base_url, api_token)
         self.semaphore = asyncio.Semaphore(5)
         self.logger = CustomLogger.get_logger(__name__)
+        self.dir_manager = DirectoryManager(ticket_number, str(download_dir))
 
-    def _metadata_dir(self) -> Path:
-        """Create the metadata directory.
+    # def _metadata_dir(self) -> Path:
+    #     """Create the metadata directory.
 
-        Returns:
-            metadata_dir (Path): Path to the metadata directory
-        """
-        # TODO: integrate this with directory_manager module
-        metadata_dir = Path(self.download_dir, 'dataset', 'metadata')
-        metadata_dir.mkdir(parents=True, exist_ok=True)
+    #     Returns:
+    #         metadata_dir (Path): Path to the metadata directory
+    #     """
+    #     # TODO: integrate this with directory_manager module
+    #     metadata_dir = Path(self.download_dir, 'dataset', 'metadata')
+    #     metadata_dir.mkdir(parents=True, exist_ok=True)
 
-        return metadata_dir
+    #     return metadata_dir
 
     def _files_dir(self) -> Path:
         """Create the files directory.
@@ -110,9 +113,7 @@ class Downloads:
 
             # Pass the client to async_stream_files
             content = await self.httpx_client.async_stream_files(
-                url,
-                client=self.httpx_client.async_client,
-                params={'format': 'original'}
+                url, client=self.httpx_client.async_client, params={'format': 'original'}
             )
 
             if content is not None:
@@ -134,8 +135,7 @@ class Downloads:
         Returns:
             list: List of downloaded files
         """
-        tasks = [self._get_data_file_async(file_id, file_path)
-                for file_id, file_path in file_list]
+        tasks = [self._get_data_file_async(file_id, file_path) for file_id, file_path in file_list]
         results = await asyncio.gather(*tasks, return_exceptions=True)
 
         successful = [r for r in results if r is not None]
@@ -188,7 +188,8 @@ class Downloads:
 
     def save_ds_metadata(self) -> None:
         """Save the dataset metadata to a JSON file."""
-        file_path = Path(self._metadata_dir(), 'ds_metadata.json')
+
+        file_path = self.dir_manager.metadata_dir.joinpath('dataset_metadata.json')
         try:
             response_json = self._get_ds_metadata()
             # Save the metadata to dataset/metadata directory

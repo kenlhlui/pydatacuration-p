@@ -1,17 +1,22 @@
 """Spell checker module for text data curation."""
+
 import re
 from pathlib import Path
 from typing import Union
 
 from spellchecker import SpellChecker
 
+
 class SpellCheckerCustomized:
     """A class for spell checking and cleaning text."""
+
     def __init__(self) -> None:
         """Initialize the SpellCheckerCustomized class."""
         self.spell = SpellChecker()
-        self.spell.word_frequency.load_text_file(str(
-            Path('res', 'spellcheck_exclusions.txt')))  # Load the list of words to exclude from the spell check.
+        self.spell.word_frequency.load_text_file(
+            str(Path('res', 'spellcheck_exclusions.txt'))
+        )  # Load the list of words to exclude from the spell check.
+
     # TODO: Add a function/amend clean_text function to remove the html tags, if appeared.
     # TODO: Error handling if the input is not a string/list.
 

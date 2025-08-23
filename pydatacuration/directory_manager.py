@@ -8,12 +8,12 @@ from .custom_logging import CustomLogger
 class DirectoryManager:
     """Generic directory manager for creating and managing project directories."""
 
-    def __init__(self, ticket_number: str, parent_dir: str) -> None:
+    def __init__(self, ticket_number: str, parent_dir: str | Path) -> None:
         """Initialize the class.
 
         Args:
             ticket_number (str): The ticket number, also the name of the working directory.
-            parent_dir (str): The parent directory where the working directory will be created.
+            parent_dir (str | Path): The parent directory where the working directory will be created.
         """
         self.ticket_number = ticket_number
         self.parent_dir = parent_dir
@@ -37,7 +37,12 @@ class DirectoryManager:
             Path: The path object of the working directory.
         """
         if self.parent_dir:
-            return Path(self.parent_dir, 'projects', self.ticket_number).resolve()
+            parent_path = Path(self.parent_dir)
+            # If parent_dir already ends with the ticket number, use it directly
+            if parent_path.name == self.ticket_number:
+                return parent_path.resolve()
+            # Otherwise, create the project structure
+            return Path(parent_path, 'projects', self.ticket_number).resolve()
         return Path(Path.cwd(), 'workdir', self.ticket_number).resolve()
 
     def _define_dbdir(self) -> Path:
@@ -178,3 +183,8 @@ class DirectoryManager:
     def outputs_dir(self) -> Path:
         """Get outputs directory path."""
         return self.get_dir('outputs')
+
+    @property
+    def metadata_dir(self) -> Path:
+        """Get metadata directory path."""
+        return self.get_dir('dataset/metadata')

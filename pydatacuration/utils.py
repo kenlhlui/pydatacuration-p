@@ -1,4 +1,5 @@
 """This module contains utility functions for data curation tasks."""
+
 import os
 import re
 import shutil
@@ -186,13 +187,14 @@ def parse_file_list_metadata(file_list_metadata: list) -> list:
     """
     file_list_metadata_nested_list = []
     for file_meta in file_list_metadata:
-        filename = file_meta.get('dataFile', {}).get('originalFileName') or file_meta.get('dataFile', {}).get('filename')  # noqa: E501
+        filename = file_meta.get('dataFile', {}).get('originalFileName') or file_meta.get('dataFile', {}).get(
+            'filename'
+        )  # noqa: E501
         directory_label = file_meta.get('directoryLabel', '')
         file_full_path_obj = Path(directory_label, filename)
-        file_list_metadata_nested_list.append({
-            'file': str(PurePosixPath(file_full_path_obj)),
-            'md5_checksum': file_meta['dataFile']['md5']
-        })
+        file_list_metadata_nested_list.append(
+            {'file': str(PurePosixPath(file_full_path_obj)), 'md5_checksum': file_meta['dataFile']['md5']}
+        )
 
     return file_list_metadata_nested_list
 
@@ -260,7 +262,9 @@ def check_ds_access(pid: str, base_url: str, api_token: str) -> None:
         httpx_client.logger.debug(f'{response.status_code} {response.text}')
 
         if response.status_code in http_unauthorized_codes:
-            httpx_client.logger.error('❌You do not have access to the dataset. \nPlease check your API token or permissions.')  # noqa: E501
+            httpx_client.logger.error(
+                '❌You do not have access to the dataset. \nPlease check your API token or permissions.'
+            )  # noqa: E501
 
             sys.exit(1)
         elif response.status_code in http_not_found_codes:
@@ -270,7 +274,9 @@ def check_ds_access(pid: str, base_url: str, api_token: str) -> None:
             httpx_client.logger.print('✅ Access to the dataset checked successfully.')
 
     except RetryError:
-        logger.error('The retry limit has been reached for checking dataset access. \nCheck your input of `base_url` and `pid`. Or check your internet connection.')  # noqa: E501
+        logger.error(
+            'The retry limit has been reached for checking dataset access. \nCheck your input of `base_url` and `pid`. Or check your internet connection.'
+        )  # noqa: E501
         sys.exit(1)
 
 

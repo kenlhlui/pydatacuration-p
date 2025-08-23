@@ -1,4 +1,5 @@
 """MetadataChecker class for checking metadata fields in a JSON file."""
+
 import sys
 from pathlib import Path
 
@@ -6,40 +7,27 @@ import jmespath
 import orjson
 
 from .custom_logging import CustomLogger
+from .directory_manager import DirectoryManager
 
 
 class MetadataChecker:
-    def __init__(self, metadata_json_path: Path | str) -> None:
+    def __init__(self, metadata: dict) -> None:
         """Initialize the MetadataChecker class.
 
         Args:
             metadata_json_path (Path | str): Path to the metadata JSON file.
-            metadata (dict): Metadata from the JSON file.
+                metadata (dict): Metadata from the JSON file.
         """
-        self.metadata_json_path = metadata_json_path
-        self.metadata = self._read_json()
         self.logger = CustomLogger.get_logger(__name__)
-
-    def _read_json(self) -> dict:
-        """Read the JSON file and return the data.
-
-        Returns:
-            data (dict): Data from the JSON file.
-        """
-        try:
-            with Path(self.metadata_json_path).open('r', encoding='utf-8') as f:
-                data = orjson.loads(f.read())
-            return data
-        except Exception as e:
-            self.logger.error(f'Error reading JSON file: {e}')
-            self.logger.print('Exiting...')
-            sys.exit(1)
+        self.metadata = metadata
 
     def _read_metadata_cm_field(self, field: str, subfield=None):
         # TODO: fix the logic of subfield
 
         if subfield:
-            query_string = f'data.latestVersion.metadataBlocks.citation.fields[?typeName==`{field}`].value[].[{subfield}][].value'  # noqa: E501
+            query_string = (
+                f'data.latestVersion.metadataBlocks.citation.fields[?typeName==`{field}`].value[].[{subfield}][].value'  # noqa: E501
+            )
             result = jmespath.search(query_string, self.metadata)
         else:
             query_string = f'data.latestVersion.metadataBlocks.citation.fields[?typeName==`{field}`].value[]'

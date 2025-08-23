@@ -1,4 +1,5 @@
 """Get the FFmpeg file formats."""
+
 import subprocess
 import sys
 
@@ -7,6 +8,7 @@ from .custom_logging import CustomLogger
 
 class FFmpegFileFormats:
     """Get the FFmpeg file formats."""
+
     def __init__(self) -> None:
         """Initialize the FFmpegFileFormats class."""
         self.logger = CustomLogger.get_logger(__name__)
@@ -17,6 +19,7 @@ class FFmpegFileFormats:
         Returns:
             list: The FFmpeg file formats.
         """
+
         def parse_ffmpeg_formats(output) -> list:
             """Parse the FFmpeg formats output.
 
@@ -41,15 +44,13 @@ class FFmpegFileFormats:
                 if parsing_formats:
                     if line.strip().startswith(('D', 'E', 'DE')):
                         parts = line.strip().split(None, 2)
-                        if len(parts) >= 2: # noqa
+                        if len(parts) >= 2:  # noqa
                             direction = parts[0]
                             format_name = parts[1]
-                            description = parts[2] if len(parts) > 2 else '' # noqa
-                            formats.append({
-                                'direction': direction,
-                                'format_name': format_name,
-                                'description': description
-                            })
+                            description = parts[2] if len(parts) > 2 else ''  # noqa
+                            formats.append(
+                                {'direction': direction, 'format_name': format_name, 'description': description}
+                            )
             return formats
 
         try:
@@ -58,7 +59,7 @@ class FFmpegFileFormats:
                 stdout=subprocess.PIPE,
                 stderr=subprocess.STDOUT,
                 universal_newlines=True,
-                check=False
+                check=False,
             )
             output = result.stdout
             formats = parse_ffmpeg_formats(output)
