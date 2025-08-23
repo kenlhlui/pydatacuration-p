@@ -2,79 +2,188 @@
 
 from pathlib import Path
 
-from loguru import logger
-
-from .custom_logging import setup_logging
+from .custom_logging import logger
 
 
 class DirectoryManager:
-    """This class is used to manage the directories in the project."""
+    """Generic directory manager for creating and managing project directories."""
 
-    def __init__(self, ticket_number: str, parent_dir: str | None = None) -> None:
+    def __init__(self, ticket_number: str, parent_dir: str | Path) -> None:
         """Initialize the class.
 
         Args:
-            ticket_number (str): The name ticket number, also the name of the working directory.
-            parent_dir (str | None): The parent directory where the working directory will be created.
+            ticket_number (str): The ticket number, also the name of the working directory.
+            parent_dir (str | Path): The parent directory where the working directory will be created.
         """
         self.ticket_number = ticket_number
         self.parent_dir = parent_dir
-        self.workdir = self.define_workdir()
-        self.log_files_dir = Path(self.workdir, 'log_files').resolve()
+        self.workdir = self._define_workdir()
         self.logger = logger
 
-    def _mk_log_dir(self) -> Path:
-        """Create the log directory.
+        # Pre-defined directory structure
+        self._directory_structure = {
+            'logs': 'logs',
+            'dataset/files': 'dataset/files',
+            'dataset/metadata': 'dataset/metadata',
+            'dataset/temp': 'dataset/temp',
+            'outputs': 'outputs',
+            'outputs/reports': 'outputs/reports',
+        }
 
-        Returns:
-            Path: The path to the log directory.
-        """
-        self.log_files_dir.mkdir(parents=True, exist_ok=True)
-
-        return self.log_files_dir
-
-    def _mk_ds_dir(self) -> Path:
-        """Create the dataset directory.
-
-        Returns:
-            Path: The path to the dataset directory.
-        """
-        dir_path_list = [
-            Path(self.workdir, 'dataset').resolve(),
-            Path(self.workdir, 'dataset', 'files').resolve(),
-            Path(self.workdir, 'dataset', 'metadata').resolve(),
-        ]
-
-        for dir_path in dir_path_list:
-            Path.mkdir(dir_path, parents=True, exist_ok=True)
-
-        return dir_path_list[0]  # The path object of the root directory of dataset.
-
-    def _mk_temp_dir(self) -> Path:
-        """Create the temp directory.
-
-        Returns:
-            Path: The path to the temp directory.
-        """
-        temp_data_dir = Path(self.workdir, 'temp_data')
-        Path.mkdir(temp_data_dir, parents=True, exist_ok=True)
-
-        return temp_data_dir.resolve()
-
-    def define_workdir(self) -> Path:
-        """Define the working directory. Combine the ticket number with the path.
+    def _define_workdir(self) -> Path:
+        """Define the working directory.
 
         Returns:
             Path: The path object of the working directory.
         """
         if self.parent_dir:
-            return Path(self.parent_dir, self.ticket_number).resolve()
-        return Path(Path.cwd(), 'workdir', self.ticket_number)
+            parent_path = Path(self.parent_dir)
+            # If parent_dir already ends with the ticket number, use it directly
+            if parent_path.name == self.ticket_number:
+                return parent_path.resolve()
+            # Otherwise, create the project structure
+            return Path(parent_path, 'projects', self.ticket_number).resolve()
+        return Path(Path.cwd(), 'workdir', self.ticket_number).resolve()
 
-    def make_dirs(self) -> None:
-        """Create the directories."""
-        log_files_dir = self._mk_log_dir()
-        self._mk_ds_dir()  # The dataset directory.
-        self._mk_temp_dir()  # The temp directory.
-        setup_logging(log_files_dir)
+    def _define_dbdir(self) -> Path:
+        """Define the database directory.
+
+        Returns:
+            Path: The path object of the database directory.
+        """
+        if self.parent_dir:
+            return Path(self.parent_dir, 'db').resolve()
+        return Path(self.workdir, 'data', 'db').resolve()
+
+    def get_dir(self, dir_name: str) -> Path:
+        """Get a directory path by name.
+
+        Args:
+            dir_name (str): The directory name key.
+
+        Returns:
+            Path: The resolved path to the directory.
+
+        Raises:
+            KeyError: If the directory name is not found.
+        """
+        if dir_name == 'db':
+            return self._define_dbdir()
+        if dir_name not in self._directory_structure:
+            msg = f"Directory '{dir_name}' not found in structure"
+            raise KeyError(msg)
+
+        dir_path = self._directory_structure[dir_name]
+        return (self.workdir / dir_path).resolve()
+
+    def create_dir(self, dir_name: str, custom_path: str | None = None) -> Path:
+        """Create a single directory.
+
+        Args:
+            dir_name (str): The directory name key or custom name.
+            custom_path (str, optional): Custom path relative to workdir.
+
+        Returns:
+            Path: The created directory path.
+        """
+        dir_path = (self.workdir / custom_path).resolve() if custom_path else self.get_dir(dir_name)
+
+        dir_path.mkdir(parents=True, exist_ok=True)
+        return dir_path
+
+    def create_dirs(
+        self, dir_names: list[str] | None = None, custom_dirs: dict[str, str] | None = None
+    ) -> dict[str, Path]:
+        """Create multiple directories.
+
+        Args:
+            dir_names (List[str], optional): List of directory names to create.
+            custom_dirs (Dict[str, str], optional): Custom directories {name: path}.
+
+        Returns:
+            Dict[str, Path]: Dictionary of created directory paths.
+        """
+        created_dirs = {}
+
+        # Create predefined directories
+        if dir_names:
+            for name in dir_names:
+                created_dirs[name] = self.create_dir(name)
+
+        # Create custom directories
+        if custom_dirs:
+            for name, path in custom_dirs.items():
+                created_dirs[name] = self.create_dir(name, path)
+
+        return created_dirs
+
+    def make_dirs(self) -> dict[str, Path]:
+        """Create the default project directory structure.
+
+        Returns:
+            Dict[str, Path]: Dictionary of created directory paths.
+        """
+        default_dirs = [
+            'logs',
+            'dataset/files',
+            'dataset/metadata',
+            'dataset/temp',
+            'outputs',
+        ]
+        created_dirs = self.create_dirs(default_dirs)
+
+        # Also create database directory
+        created_dirs['db'] = self.create_dir('db')
+
+        # Setup logging after log directory is created
         self.logger.info(f'The working directory is: {self.workdir}')
+
+        return created_dirs
+
+    def add_directory(self, name: str, path: str) -> None:
+        """Add a new directory to the structure.
+
+        Args:
+            name (str): The directory name key.
+            path (str): The directory path relative to workdir.
+        """
+        self._directory_structure[name] = path
+
+    def list_directories(self) -> dict[str, str]:
+        """List all defined directories.
+
+        Returns:
+            dict[str, str]: Dictionary of directory names and their paths.
+        """
+        return self._directory_structure.copy()
+
+    # Backward compatibility properties
+    @property
+    def log_files_dir(self) -> Path:
+        """Get log files directory path."""
+        return self.get_dir('logs')
+
+    @property
+    def logs_dir(self) -> Path:
+        """Get logs directory path."""
+        return self.get_dir('logs')
+
+    @property
+    def db_dir(self) -> Path:
+        """Get database directory path."""
+        return self.get_dir('db')
+
+    @property
+    def data_dir(self) -> Path:
+        """Get data directory path."""
+        return self.get_dir('data')
+
+    @property
+    def outputs_dir(self) -> Path:
+        """Get outputs directory path."""
+        return self.get_dir('outputs')
+
+    @property
+    def metadata_dir(self) -> Path:
+        """Get metadata directory path."""
+        return self.get_dir('dataset/metadata')
