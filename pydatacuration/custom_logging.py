@@ -54,25 +54,22 @@ def setup_logging(log_file_dir: Path | None = None, log_level: str = 'INFO') -> 
     # Remove default handler
     logger.remove()
 
-    # Add Rich console handler for colorful, syntax-highlighted output
+    # Add Rich console handler for colorful, syntax-highlighted output with location info
     logger.add(
         rich_sink,
         level=log_level,
         format='{message}',  # Message formatting is handled by rich_sink
     )
 
-    # Add file handler if log directory is provided
+    # Add file handler with simple format (no location info)
     if log_file_dir:
         log_file_path = Path(log_file_dir) / 'debug.log'
         log_file_path.parent.mkdir(parents=True, exist_ok=True)
 
         logger.add(
             str(log_file_path),
-            format='{time:YYYY-MM-DD HH:mm:SS} - {name} - {level} - {message}',
+            format='{time:YYYY-MM-DD HH:mm:SS} | {name}:{function}:{line} | {level} | {message}',
             level='DEBUG',
-            rotation='10 MB',
-            retention='7 days',
-            compression='zip',
         )
 
 
