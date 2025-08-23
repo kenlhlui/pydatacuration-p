@@ -30,7 +30,7 @@ class MetadataChecker:
             result = jmespath.search(query_string, self.metadata)
         return result
 
-    def check_metadata_cm_field(self, field: str) -> tuple[str, bool]:
+    def check_metadata_cm_field(self, field: str) -> tuple[str | None, bool]:
         r"""Check if a metadata field exists in the metadata JSON file.
 
         Args:
