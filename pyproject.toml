@@ -206,7 +206,6 @@ build-backend = "hatchling.build"
 # General settings
 line-length = 120
 indent-width = 4
-ignore = ["T201"]  # Ignore print statements globally
 
 [tool.ruff.format]
 quote-style = "single"

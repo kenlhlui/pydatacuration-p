@@ -22,12 +22,12 @@ class DirectoryManager:
 
         # Pre-defined directory structure
         self._directory_structure = {
-            'log_files': 'log_files',
-            'db': '../db',  # Relative to parent_dir
-            'dataset': 'dataset',
-            'dataset_files': 'dataset/files',
-            'dataset_metadata': 'dataset/metadata',
-            'temp_data': 'temp_data',
+            'logs': 'logs',
+            'dataset/files': 'dataset/files',
+            'dataset/metadata': 'dataset/metadata',
+            'dataset/temp': 'dataset/temp',
+            'outputs': 'outputs',
+            'outputs/reports': 'outputs/reports',
         }
 
     def _define_workdir(self) -> Path:
@@ -37,8 +37,18 @@ class DirectoryManager:
             Path: The path object of the working directory.
         """
         if self.parent_dir:
-            return Path(self.parent_dir, self.ticket_number).resolve()
+            return Path(self.parent_dir, 'projects', self.ticket_number).resolve()
         return Path(Path.cwd(), 'workdir', self.ticket_number).resolve()
+
+    def _define_dbdir(self) -> Path:
+        """Define the database directory.
+
+        Returns:
+            Path: The path object of the database directory.
+        """
+        if self.parent_dir:
+            return Path(self.parent_dir, 'db').resolve()
+        return Path(self.workdir, 'data', 'db').resolve()
 
     def get_dir(self, dir_name: str) -> Path:
         """Get a directory path by name.
@@ -52,20 +62,16 @@ class DirectoryManager:
         Raises:
             KeyError: If the directory name is not found.
         """
+        if dir_name == 'db':
+            return self._define_dbdir()
         if dir_name not in self._directory_structure:
-            raise KeyError(f"Directory '{dir_name}' not found in structure")
+            msg = f"Directory '{dir_name}' not found in structure"
+            raise KeyError(msg)
 
         dir_path = self._directory_structure[dir_name]
-
-        # Handle relative paths that start with ../
-        if dir_path.startswith('../'):
-            base_path = Path(self.parent_dir).resolve()
-            relative_path = dir_path[3:]  # Remove '../'
-            return (base_path / relative_path).resolve()
-
         return (self.workdir / dir_path).resolve()
 
-    def create_dir(self, dir_name: str, custom_path: str = None) -> Path:
+    def create_dir(self, dir_name: str, custom_path: str | None = None) -> Path:
         """Create a single directory.
 
         Args:
@@ -80,7 +86,9 @@ class DirectoryManager:
         dir_path.mkdir(parents=True, exist_ok=True)
         return dir_path
 
-    def create_dirs(self, dir_names: list[str] = None, custom_dirs: list[str, str] = None) -> list[str, Path]:
+    def create_dirs(
+        self, dir_names: list[str] | None = None, custom_dirs: dict[str, str] | None = None
+    ) -> dict[str, Path]:
         """Create multiple directories.
 
         Args:
@@ -110,11 +118,20 @@ class DirectoryManager:
         Returns:
             Dict[str, Path]: Dictionary of created directory paths.
         """
-        default_dirs = ['log_files', 'dataset', 'dataset_files', 'dataset_metadata', 'temp_data', 'db']
+        default_dirs = [
+            'logs',
+            'dataset/files',
+            'dataset/metadata',
+            'dataset/temp',
+            'outputs',
+        ]
         created_dirs = self.create_dirs(default_dirs)
 
+        # Also create database directory
+        created_dirs['db'] = self.create_dir('db')
+
         # Setup logging after log directory is created
-        CustomLogger.setup_logging(log_file_dir=created_dirs['log_files'])
+        CustomLogger.setup_logging(log_file_dir=created_dirs['logs'])
         self.logger.print(f'The working directory is: {self.workdir}')
 
         return created_dirs
@@ -140,9 +157,24 @@ class DirectoryManager:
     @property
     def log_files_dir(self) -> Path:
         """Get log files directory path."""
-        return self.get_dir('log_files')
+        return self.get_dir('logs')
+
+    @property
+    def logs_dir(self) -> Path:
+        """Get logs directory path."""
+        return self.get_dir('logs')
 
     @property
     def db_dir(self) -> Path:
         """Get database directory path."""
         return self.get_dir('db')
+
+    @property
+    def data_dir(self) -> Path:
+        """Get data directory path."""
+        return self.get_dir('data')
+
+    @property
+    def outputs_dir(self) -> Path:
+        """Get outputs directory path."""
+        return self.get_dir('outputs')
