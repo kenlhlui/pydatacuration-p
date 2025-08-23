@@ -1,4 +1,5 @@
 """Downloads class to download a dataset from a Dataverse repository."""
+
 import asyncio
 import sys
 from pathlib import Path
@@ -7,14 +8,15 @@ from urllib.parse import urljoin
 import httpx
 import jmespath
 import orjson
+from loguru import logger
 
-from .custom_logging import CustomLogger
 from .httpx_client import HTTPXClient
 from .utils import orjson_export
 
 
 class Downloads:
     """Class to download a dataset from a Dataverse repository."""
+
     def __init__(self, base_url: str, api_token: str, pid: str, download_dir: Path, ticket_number: str) -> None:
         """Initialize the class.
 
@@ -33,7 +35,7 @@ class Downloads:
 
         self.httpx_client = HTTPXClient(base_url, api_token)
         self.semaphore = asyncio.Semaphore(5)
-        self.logger = CustomLogger.get_logger(__name__)
+        self.logger = logger
 
     def _metadata_dir(self) -> Path:
         """Create the metadata directory.
@@ -110,9 +112,7 @@ class Downloads:
 
             # Pass the client to async_stream_files
             content = await self.httpx_client.async_stream_files(
-                url,
-                client=self.httpx_client.async_client,
-                params={'format': 'original'}
+                url, client=self.httpx_client.async_client, params={'format': 'original'}
             )
 
             if content is not None:
@@ -122,7 +122,7 @@ class Downloads:
 
             return None
         except Exception as e:
-            self.logger.print(f'Error downloading {file_path}: {e}')
+            self.logger.info(f'Error downloading {file_path}: {e}')
             return None
 
     async def save_files_async(self, file_list: list) -> list:
@@ -134,8 +134,7 @@ class Downloads:
         Returns:
             list: List of downloaded files
         """
-        tasks = [self._get_data_file_async(file_id, file_path)
-                for file_id, file_path in file_list]
+        tasks = [self._get_data_file_async(file_id, file_path) for file_id, file_path in file_list]
         results = await asyncio.gather(*tasks, return_exceptions=True)
 
         successful = [r for r in results if r is not None]
@@ -180,10 +179,10 @@ class Downloads:
             return {}
 
         except httpx.HTTPStatusError as e:
-            self.logger.print(f'HTTP error occurred: {e}')
+            self.logger.info(f'HTTP error occurred: {e}')
             sys.exit(1)
         except Exception as e:
-            self.logger.print(f'An error occurred: {e}')
+            self.logger.info(f'An error occurred: {e}')
             sys.exit(1)
 
     def save_ds_metadata(self) -> None:
@@ -195,7 +194,7 @@ class Downloads:
             orjson_export(file_path, response_json)
 
         except Exception as e:
-            self.logger.print(f'An error occurred: {e}\nProgram exiting...')
+            self.logger.info(f'An error occurred: {e}\nProgram exiting...')
             sys.exit(1)
 
     async def downloader(self) -> tuple:
@@ -205,21 +204,21 @@ class Downloads:
             tuple: Tuple containing the dataset metadata and the dataverse tree structure
         """
         # Get the dataset metadata
-        self.logger.print('Downloading dataset metadata...')
+        self.logger.info('Downloading dataset metadata...')
         ds_metadata_json = self._get_ds_metadata()
         self.save_ds_metadata()
-        self.logger.print('Dataset metadata downloaded')
+        self.logger.info('Dataset metadata downloaded')
 
         # Get the tree structure of the whole dataverse repository
-        self.logger.print('Downloading dataverse tree structure...')
+        self.logger.info('Downloading dataverse tree structure...')
         dv_tree = self._get_dv_tree()
-        self.logger.print('Dataverse tree structure downloaded')
+        self.logger.info('Dataverse tree structure downloaded')
 
         # Download the data files using async method
-        self.logger.print('Downloading data files...')
+        self.logger.info('Downloading data files...')
         file_list = self._get_file_list(ds_metadata_json)
         self.make_dir_structure(ds_metadata_json)
 
         await self.save_files_async(file_list)
-        self.logger.print('Data files downloaded')
+        self.logger.info('Data files downloaded')
         return ds_metadata_json, dv_tree

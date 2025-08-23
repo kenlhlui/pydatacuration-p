@@ -1,11 +1,11 @@
 """MetadataChecker class for checking metadata fields in a JSON file."""
+
 import sys
 from pathlib import Path
 
 import jmespath
 import orjson
-
-from .custom_logging import CustomLogger
+from loguru import logger
 
 
 class MetadataChecker:
@@ -18,7 +18,7 @@ class MetadataChecker:
         """
         self.metadata_json_path = metadata_json_path
         self.metadata = self._read_json()
-        self.logger = CustomLogger.get_logger(__name__)
+        self.logger = logger
 
     def _read_json(self) -> dict:
         """Read the JSON file and return the data.
@@ -32,14 +32,16 @@ class MetadataChecker:
             return data
         except Exception as e:
             self.logger.error(f'Error reading JSON file: {e}')
-            self.logger.print('Exiting...')
+            self.logger.info('Exiting...')
             sys.exit(1)
 
     def _read_metadata_cm_field(self, field: str, subfield=None):
         # TODO: fix the logic of subfield
 
         if subfield:
-            query_string = f'data.latestVersion.metadataBlocks.citation.fields[?typeName==`{field}`].value[].[{subfield}][].value'  # noqa: E501
+            query_string = (
+                f'data.latestVersion.metadataBlocks.citation.fields[?typeName==`{field}`].value[].[{subfield}][].value'  # noqa: E501
+            )
             result = jmespath.search(query_string, self.metadata)
         else:
             query_string = f'data.latestVersion.metadataBlocks.citation.fields[?typeName==`{field}`].value[]'

@@ -1,4 +1,5 @@
 """This module contains utility functions for data curation tasks."""
+
 import os
 import re
 import shutil
@@ -10,14 +11,13 @@ import deepdiff
 import orjson
 import seedir as sd
 import typer
+from loguru import logger
 from tenacity import RetryError
 
-from .custom_logging import CustomLogger
 from .httpx_client import HTTPXClient
 
 
-# Initialize the logger
-logger = CustomLogger.get_logger(__name__)
+# Logger is imported directly from loguru
 
 
 class FileNameFormatChecker:
@@ -101,7 +101,7 @@ class FileNameFormatChecker:
                 with Path(preferred_file_formats_config).open(encoding='utf-8') as f:
                     return [line.strip() for line in f.readlines()]
             except FileNotFoundError as e:
-                logger.print(f'Error: {e}')
+                logger.info(f'Error: {e}')
                 sys.exit(1)
 
         if Path(file).suffix in load_preferred_file_formats_list(preferred_file_formats_config):
@@ -144,7 +144,7 @@ def compare_files_and_metadata(dl_files_checksums: list, metadata_file_checksums
         sys.exit(1)
 
     else:
-        logger.print('The downloaded files and the file list metadata are the same.')
+        logger.info('The downloaded files and the file list metadata are the same.')
         return False
 
 
@@ -164,14 +164,14 @@ def gen_tree_diagram(target_dir: Path, save_dir: Path) -> None:
                 with Path(ds_tree_file_path).open('w', encoding='utf-8') as f:
                     f.write(result)
 
-                logger.print(f'Folder tree diagram text file saved at: {str(ds_tree_file_path)}')
+                logger.info(f'Folder tree diagram text file saved at: {str(ds_tree_file_path)}')
         else:
-            logger.print('The target directory does not exist. Exiting...')
+            logger.info('The target directory does not exist. Exiting...')
             sys.exit(1)
 
     except Exception as e:
-        logger.print(f'Error: {e}')
-        logger.print('An error occurred while generating the folder tree diagram. Exiting...')
+        logger.info(f'Error: {e}')
+        logger.info('An error occurred while generating the folder tree diagram. Exiting...')
         sys.exit(1)
 
 
@@ -186,13 +186,14 @@ def parse_file_list_metadata(file_list_metadata: list) -> list:
     """
     file_list_metadata_nested_list = []
     for file_meta in file_list_metadata:
-        filename = file_meta.get('dataFile', {}).get('originalFileName') or file_meta.get('dataFile', {}).get('filename')  # noqa: E501
+        filename = file_meta.get('dataFile', {}).get('originalFileName') or file_meta.get('dataFile', {}).get(
+            'filename'
+        )  # noqa: E501
         directory_label = file_meta.get('directoryLabel', '')
         file_full_path_obj = Path(directory_label, filename)
-        file_list_metadata_nested_list.append({
-            'file': str(PurePosixPath(file_full_path_obj)),
-            'md5_checksum': file_meta['dataFile']['md5']
-        })
+        file_list_metadata_nested_list.append(
+            {'file': str(PurePosixPath(file_full_path_obj)), 'md5_checksum': file_meta['dataFile']['md5']}
+        )
 
     return file_list_metadata_nested_list
 
@@ -260,17 +261,21 @@ def check_ds_access(pid: str, base_url: str, api_token: str) -> None:
         httpx_client.logger.debug(f'{response.status_code} {response.text}')
 
         if response.status_code in http_unauthorized_codes:
-            httpx_client.logger.error('❌You do not have access to the dataset. \nPlease check your API token or permissions.')  # noqa: E501
+            httpx_client.logger.error(
+                '❌You do not have access to the dataset. \nPlease check your API token or permissions.'
+            )  # noqa: E501
 
             sys.exit(1)
         elif response.status_code in http_not_found_codes:
             httpx_client.logger.error('❌The dataset does not exist. Please check the PID input.')
             sys.exit(1)
         elif response.status_code in http_success_codes:
-            httpx_client.logger.print('✅ Access to the dataset checked successfully.')
+            httpx_client.logger.info('✅ Access to the dataset checked successfully.')
 
     except RetryError:
-        logger.error('The retry limit has been reached for checking dataset access. \nCheck your input of `base_url` and `pid`. Or check your internet connection.')  # noqa: E501
+        logger.error(
+            'The retry limit has been reached for checking dataset access. \nCheck your input of `base_url` and `pid`. Or check your internet connection.'
+        )  # noqa: E501
         sys.exit(1)
 
 

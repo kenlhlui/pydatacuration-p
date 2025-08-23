@@ -2,7 +2,9 @@
 
 from pathlib import Path
 
-from .custom_logging import CustomLogger
+from loguru import logger
+
+from .custom_logging import setup_logging
 
 
 class DirectoryManager:
@@ -19,7 +21,7 @@ class DirectoryManager:
         self.parent_dir = parent_dir
         self.workdir = self.define_workdir()
         self.log_files_dir = Path(self.workdir, 'log_files').resolve()
-        self.logger = CustomLogger.get_logger(__name__)
+        self.logger = logger
 
     def _mk_log_dir(self) -> Path:
         """Create the log directory.
@@ -74,5 +76,5 @@ class DirectoryManager:
         log_files_dir = self._mk_log_dir()
         self._mk_ds_dir()  # The dataset directory.
         self._mk_temp_dir()  # The temp directory.
-        CustomLogger.setup_logging(log_file_dir=log_files_dir)
-        self.logger.print(f'The working directory is: {self.workdir}')
+        setup_logging(log_files_dir)
+        self.logger.info(f'The working directory is: {self.workdir}')

@@ -10,11 +10,11 @@ import pypdf
 import pypdf.errors
 import pyreadr
 import shapefile
+from loguru import logger
 from PIL import Image
 from pyreadstat import ReadstatError
 from pyreadstat import pyreadstat
 
-from .custom_logging import CustomLogger
 from .ffmepg_file_formats import FFmpegFileFormats
 
 
@@ -34,6 +34,7 @@ PDF_FILE_EXTENSIONS = ['.pdf']
 
 class FilesOpener:
     """Open different file types."""
+
     def __init__(self, file: str | Path) -> None:
         """Initialize the FilesOpener class.
 
@@ -41,7 +42,7 @@ class FilesOpener:
             file (str | Path): The file path to open.
         """
         self.file = file
-        self.logger = CustomLogger.get_logger(__name__)
+        self.logger = logger
 
     def _open_image_file(self) -> tuple:
         """Open an image file.
@@ -144,8 +145,7 @@ class FilesOpener:
     def _open_audiovisual_file(self) -> tuple:
         try:
             stderr = (
-                ffmpeg
-                .input(self.file)
+                ffmpeg.input(self.file)
                 .output('null', f='null')
                 .global_args('-v', 'error')
                 .run(capture_stdout=False, capture_stderr=True)
