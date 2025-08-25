@@ -514,7 +514,7 @@ class Checker:
             results=author_publication_history,
         )
 
-    def check_ds_tree_info(self) -> None:
+    def check_ds_tree_info(self) -> str | None:
         """Check the path of the dataset in the dataverse Repository."""
         ds_version_id = self.ds_metadata.get('data', {}).get('latestVersion', {}).get('id')
         if ds_version_id:
@@ -551,7 +551,9 @@ class Checker:
                     result_name='dataset_path',
                     results=[dataset_path],
                 )
-
+                # DEBUG: Add the returned path
+                return dataset_path
+        return None
             # TODO: Add error handling for the case when the response is None or empty; or HTTP error
 
     def check_restricted_files(self) -> None:
@@ -645,11 +647,19 @@ class Checker:
         duckdb_models = DuckDBmodels(schema_name=self.duckdb_instance.schema_name)
         project_metadata_schema = duckdb_models.project_metadata_record()
 
-        self.duckdb_instance.sql_write_records_to_table(project_metadata_schema(
-            name="test-dataset",
-            description="stored in myschema",
-            created_at="2023-01-01"
-        ))
+        self.duckdb_instance.sql_write_records_to_table(
+            project_metadata_schema(
+                ticket_number=self.duckdb_instance.schema_name,
+                dataset_title=self.ds_title if self.ds_title else 'No Title',
+                dataset_pid=self.ds_metadata.get('data', {}).get('latestVersion', {}).get('datasetPersistentId', 'No ID'),
+                dataset_id=self.ds_metadata.get('data', {}).get('latestVersion', {}).get('id', 'No ID'),
+                dataset_url=self.ds_metadata.get('data', {}).get('latestVersion', {}).get('url', 'No URL'),
+                dataset_path=self.check_ds_tree_info(),
+                log_init_date="2023-01-01",  # ! Placeholder to fix later
+                log_lastupdate_date="2023-01-02"  # ! Placeholder to fix later
+            )
+        )
+
     def run_checks(self) -> dict:
         """Run all the checks.
 
