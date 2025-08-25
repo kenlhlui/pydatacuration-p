@@ -12,7 +12,6 @@ from sqlmodel import create_engine
 from sqlmodel import text
 
 from .custom_logging import logger
-from .sqlmodels import project_metadata_table
 
 
 class DuckDB:
@@ -116,26 +115,6 @@ class DuckDB:
                 logger.info('Enabled WAL mode for better concurrency')
         except Exception as e:
             logger.warning(f'Could not enable WAL mode: {e}')
-
-    def create_metadata_table(self) -> None:
-        """Create the metadata table in the DuckDB database."""
-        if not self.connection:
-            self.connect()
-        #! placeholder
-        # self.connection.sql(f"""
-        #     CREATE TABLE IF NOT EXISTS "{self.schema_name}"."metadata" (
-        #         id INTEGER PRIMARY KEY,
-        #         key TEXT NOT NULL,
-        #         value TEXT NOT NULL
-        #     );
-        # """)
-        logger.info(f'Created metadata table in schema: {self.schema_name}')
-
-    def main(self) -> None:
-        if self.check_schema_exists(self.schema_name):
-            self.delete_schema(self.schema_name)
-        self.create_schema(self.schema_name)
-        self.create_metadata_table()
 
     # Create the database
     def create_database(self) -> None:
