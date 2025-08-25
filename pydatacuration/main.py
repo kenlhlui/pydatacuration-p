@@ -15,11 +15,12 @@ from trogon.typer import init_tui
 
 from . import directory_manager
 from . import downloads
+from . import duck_db
 from . import utils
 from .checker import Checker
-from .custom_logging import logger, setup_logging
+from .custom_logging import logger
+from .custom_logging import setup_logging
 from .report_validation import validate_report
-from .utils import orjson_export
 
 
 # Load environment variables from .env file
@@ -112,6 +113,10 @@ def gen_curation_report(
     # print the start message
     logger.info('Starting the pydatacuration script...')
 
+    # Create the db
+    duckdb = duck_db.DuckDB(schema_name=dir_manager.ticket_number, database=db_dir)
+    duckdb.main()
+
     # Start the progress spinner only after all user interactions are complete
     with Progress(SpinnerColumn(), expand=True) as progress:
         progress.add_task('Processing...', total=None, visible=True)
@@ -129,7 +134,7 @@ def gen_curation_report(
         new_check_results = checker.run_checks()
 
         # Export the new check results structure
-        orjson_export(dir_manager.log_files_dir.joinpath('check_results.json'), new_check_results)
+        utils.orjson_export(dir_manager.log_files_dir.joinpath('check_results.json'), new_check_results)
 
         # Generate the tree diagram of the dataset files
         utils.gen_tree_diagram(Path(workdir_path, 'dataset', 'files'), Path(dir_manager.log_files_dir))
