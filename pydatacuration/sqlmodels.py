@@ -34,8 +34,14 @@ class DuckDBmodels:
                     primary_key=True
                 )
             )
-            name: str = Field(sa_column=Column(String, nullable=False))
-            description: str = Field(sa_column=Column(String, nullable=False))
-            created_at: str = Field(sa_column=Column(String, nullable=False))
+            ticket_number: str = Field(sa_column=Column(String, nullable=False, unique=True))
+            dataset_title: str = Field(sa_column=Column(String, nullable=False))
+            dataset_pid: str = Field(sa_column=Column(String, nullable=False))
+            dataset_id: str = Field(sa_column=Column(String, nullable=False))
+            dataset_url: str = Field(sa_column=Column(String, nullable=False))
+            dataset_path: str = Field(sa_column=Column(String, nullable=False))
+            log_init_date: str = Field(sa_column=Column(String, nullable=False))  # ! Placeholder to fix the type later
+            log_lastupdate_date: str = Field(sa_column=Column(String, nullable=False))  # ! Placeholder to fix the type later
 
         return ProjectMetadata
+
