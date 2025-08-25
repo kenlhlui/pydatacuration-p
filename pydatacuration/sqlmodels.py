@@ -6,32 +6,36 @@ from sqlmodel import Field
 from sqlmodel import SQLModel
 
 
-def project_metadata_record(schema_name: str) -> type[SQLModel]:
-    """Create a ProjectMetadata table class with the specified schema.
+class DuckDBmodels:
+    def __init__(self, schema_name: str) -> None:
+        self.schema_name = schema_name
 
-    Args:
-        schema_name (str): The schema name to use for the table.
+    def project_metadata_record(self) -> type[SQLModel]:
+        """Create a ProjectMetadata table class with the specified schema.
 
-    Returns:
-        type[SQLModel]: The ProjectMetadata class with the specified schema.
-    """
-    class ProjectMetadata(SQLModel, table=True):
-        """Project metadata table model."""
+        Args:
+            schema_name (str): The schema name to use for the table.
 
-        __tablename__ = 'project_metadata'
-        __table_args__ = {'schema': schema_name}
+        Returns:
+            type[SQLModel]: The ProjectMetadata class with the specified schema.
+        """
+        class ProjectMetadata(SQLModel, table=True):
+            """Project metadata table model."""
 
-        id: int | None = Field(
-            default=None,
-            sa_column=Column(
-                Integer,
-                Sequence('project_metadata_id_seq'),
-                server_default=Sequence('project_metadata_id_seq').next_value(),
-                primary_key=True
+            __tablename__ = 'project_metadata'
+            __table_args__ = {'schema': self.schema_name}
+
+            id: int | None = Field(
+                default=None,
+                sa_column=Column(
+                    Integer,
+                    Sequence('project_metadata_id_seq'),
+                    server_default=Sequence('project_metadata_id_seq').next_value(),
+                    primary_key=True
+                )
             )
-        )
-        name: str = Field(sa_column=Column(String, nullable=False))
-        description: str = Field(sa_column=Column(String, nullable=False))
-        created_at: str = Field(sa_column=Column(String, nullable=False))
+            name: str = Field(sa_column=Column(String, nullable=False))
+            description: str = Field(sa_column=Column(String, nullable=False))
+            created_at: str = Field(sa_column=Column(String, nullable=False))
 
-    return ProjectMetadata
+        return ProjectMetadata
