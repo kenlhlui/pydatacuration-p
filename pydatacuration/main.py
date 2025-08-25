@@ -117,7 +117,7 @@ def gen_curation_report(
     # Create the db (with schema named after ticket_number)
     duckdb = duck_db.DuckDB(schema_name=dir_manager.ticket_number, database=db_dir)
     duckdb.create_database()
-    duckdb.sql_create_schema()
+    duckdb.create_schema()
     project_metadata_schema = project_metadata_record(dir_manager.ticket_number)
 
     duckdb.sql_create_tables(project_metadata_schema(
