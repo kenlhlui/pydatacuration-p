@@ -5,12 +5,22 @@ from contextlib import contextmanager
 from pathlib import Path
 
 import duckdb
+from netCDF4 import Dataset
+from sqlmodel import Session
+from sqlmodel import SQLModel
+from sqlmodel import create_engine
+from sqlmodel import text
 
 from .custom_logging import logger
+from .sqlmodels import project_metadata_table
 
 
 class DuckDB:
-    def __init__(self, schema_name: str, database: Path | str = ':memory:', ) -> None:
+    def __init__(
+        self,
+        schema_name: str,
+        database: Path | str = ':memory:',
+    ) -> None:
         """Initialize the DuckDB connection.
 
         Args:
@@ -20,7 +30,7 @@ class DuckDB:
         """
         self.schema_name = schema_name
         self.database = Path(database, 'duckdb.db')
-        self.connection = None
+        self.connection: duckdb.DuckDBPyConnection | None = None
 
     def connect(self, retries: int = 3, delay: float = 1.0) -> None:
         """Establish a connection to the DuckDB database with retry logic."""
@@ -30,7 +40,7 @@ class DuckDB:
                 logger.info(f'Connected to DuckDB database at {self.database}')
                 return
             except Exception as e:
-                if "lock" in str(e).lower() and attempt < retries - 1:
+                if 'lock' in str(e).lower() and attempt < retries - 1:
                     logger.warning(f'Lock detected, retrying in {delay}s... (attempt {attempt + 1}/{retries})')
                     time.sleep(delay)
                     delay *= 2  # Exponential backoff
@@ -69,7 +79,7 @@ class DuckDB:
         """Delete a schema from the DuckDB database."""
         if not self.connection:
             self.connect()
-        self.connection.sql(f'DROP SCHEMA IF EXISTS "{schema_name}";')
+        self.connection.sql(f'DROP SCHEMA IF EXISTS "{schema_name}" CASCADE;')
         logger.info(f'Deleted schema: {schema_name}')
 
     def create_schema(self, schema_name: str) -> None:
@@ -86,9 +96,9 @@ class DuckDB:
                 with self.get_connection() as conn:
                     return conn.sql(sql)
             except Exception as e:
-                if "lock" in str(e).lower() and attempt < retries - 1:
+                if 'lock' in str(e).lower() and attempt < retries - 1:
                     logger.warning(f'Lock detected during SQL execution, retrying... (attempt {attempt + 1}/{retries})')
-                    time.sleep(0.5 * (2 ** attempt))  # Exponential backoff
+                    time.sleep(0.5 * (2**attempt))  # Exponential backoff
                 else:
                     raise
         return None
@@ -105,7 +115,7 @@ class DuckDB:
                 conn.sql('PRAGMA journal_mode=WAL;')
                 logger.info('Enabled WAL mode for better concurrency')
         except Exception as e:
-            logger.warning(f"Could not enable WAL mode: {e}")
+            logger.warning(f'Could not enable WAL mode: {e}')
 
     def create_metadata_table(self) -> None:
         """Create the metadata table in the DuckDB database."""
@@ -126,3 +136,38 @@ class DuckDB:
             self.delete_schema(self.schema_name)
         self.create_schema(self.schema_name)
         self.create_metadata_table()
+
+    # Create the database
+    def create_database(self) -> None:
+        self.connect()
+        self.close()
+
+    # The below uses sqlmodel to create the duckdb shcema
+    def sql_create_schema(self) -> None:
+        self.close()
+
+        conn = create_engine(f'duckdb:///{self.database}', echo=True).connect()
+
+        # Create the Schema
+        conn.execute(text(f'CREATE SCHEMA IF NOT EXISTS "{self.schema_name}";'))
+        logger.info(f'Created schema: {self.schema_name}')
+        conn.commit()
+        logger.info(f'Creating table in schema: {self.schema_name}')
+        # Create table base on SQLModel
+        conn.close()
+        logger.info('Closed the DuckDB connection.')
+
+    def sql_create_tables(self, sql_model: type[SQLModel]) -> None:
+        self.close()
+
+        # Use duckdb_engine connection string
+        engine = create_engine(f'duckdb:///{self.database}', echo=True)
+
+        # Now create the table under the schema
+        SQLModel.metadata.create_all(engine)
+
+        # Insert sample data
+        with Session(engine) as session:
+            ds = sql_model
+            session.add(ds)
+            session.commit()
