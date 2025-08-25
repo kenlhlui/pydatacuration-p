@@ -98,7 +98,7 @@ def gen_curation_report(
     workdir_path = dir_manager.workdir
 
     # Check if the working directory already exists and ask user for confirmation to delete it
-    utils.confirm_del_dir(workdir_path, force_del)
+    dir_manager.confirm_del_dir(workdir_path, force_del)
 
     # Create the working directory and its subdirectories plus the db directory
     dir_manager.make_dirs()

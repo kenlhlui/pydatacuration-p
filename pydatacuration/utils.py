@@ -220,27 +220,6 @@ def check_ticket_num_input(ticket_num: str) -> str:
     return ticket_num
 
 
-def confirm_del_dir(dir_path: Path, default: bool = False) -> None:
-    """Delete a directory after seeking user confirmation.
-
-    Args:
-        dir_path (Path): Path to the directory to delete
-        default (bool): If True, delete without confirmation; otherwise ask user
-    """
-    if dir_path.exists():
-        try:
-            if default or typer.confirm(
-                f'Do you want to replace {dir_path} with the new files?',
-                default=False,
-                abort=True,
-            ):
-                shutil.rmtree(dir_path)
-                typer.echo(f'Will Replace {dir_path} with the new files.')
-        except typer.Abort:
-            typer.echo('Aborted by user. Exiting...')
-            sys.exit(1)
-
-
 def check_ds_access(pid: str, base_url: str, api_token: str) -> None:
     """Check if the API token is valid; the PID is valid; and the user has access to the dataset.
 
