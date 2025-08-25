@@ -21,6 +21,7 @@ from pydantic import BaseModel
 from pydantic import ValidationError
 
 from pydatacuration.new_generate_log import render_report_from_yaml
+from pydatacuration.directory_manager import DirectoryManager
 
 
 class ChecklistItem(BaseModel):
@@ -243,8 +244,9 @@ async def setup(request: SetupRequest) -> JSONResponse:
         # Join command parts
         cmd = ' '.join(cmd_parts)
 
-        # Store state variables 
-        app.state.work_dir = Path(Path.cwd()) / request.parent_dir / request.ticket_number
+        # Store state variables using DirectoryManager
+        dir_manager = DirectoryManager(request.ticket_number, request.parent_dir)
+        app.state.work_dir = dir_manager.workdir
         app.state.base_url = request.base_url
         print(f'Working directory: {app.state.work_dir}')
         print(f'Base URL: {app.state.base_url}')
@@ -346,7 +348,8 @@ async def get_check_results(parent_dir: str, ticket_number: str) -> JSONResponse
         JSONResponse: Check results data
     """
     try:
-        check_results_path = Path(parent_dir) / ticket_number / 'log_files' / 'check_results.json'
+        dir_manager = DirectoryManager(ticket_number, parent_dir)
+        check_results_path = dir_manager.get_dir('logs') / 'check_results.json'
         if not check_results_path.exists():
             raise HTTPException(status_code=404, detail="Check results not found")
 
@@ -371,12 +374,13 @@ async def get_ds_metadata(parent_dir: str, ticket_number: str, base_url: str = '
         JSONResponse: Dataset metadata data
     """
     try:
+        dir_manager = DirectoryManager(ticket_number, parent_dir)
         # Try the main location first
-        ds_metadata_path = Path(parent_dir) / ticket_number / 'dataset' / 'metadata' / 'ds_metadata.json'
+        ds_metadata_path = dir_manager.get_dir('dataset/metadata') / 'ds_metadata.json'
 
         # If not found, try the log_files location
         if not ds_metadata_path.exists():
-            ds_metadata_path = Path(parent_dir) / ticket_number / 'log_files' / f'{ticket_number}_ds_metadata.json'
+            ds_metadata_path = dir_manager.get_dir('logs') / f'{ticket_number}_ds_metadata.json'
 
         if not ds_metadata_path.exists():
             raise HTTPException(status_code=404, detail='Dataset metadata not found')
@@ -418,7 +422,8 @@ async def get_check_results_from_session(request: Request) -> JSONResponse:
         if not ticket_number:
             return JSONResponse(content={'check_results': []})
 
-        check_results_path = Path(parent_dir) / ticket_number / 'log_files' / 'check_results.json'
+        dir_manager = DirectoryManager(ticket_number, parent_dir)
+        check_results_path = dir_manager.get_dir('logs') / 'check_results.json'
         if not check_results_path.exists():
             return JSONResponse(content={'check_results': []})
 
@@ -492,8 +497,8 @@ async def export_log_yaml(request: CurationLogRequest) -> JSONResponse:
         # Save to file
         ticket_number = metadata.get('ticket_number', 'unknown')
         parent_dir = metadata.get('parent_dir', 'workdir')
-        work_dir = Path(Path.cwd()) / parent_dir / ticket_number
-        output_path = Path(work_dir, 'log_files', f'{ticket_number}_new.yaml')
+        dir_manager = DirectoryManager(ticket_number, parent_dir)
+        output_path = dir_manager.get_dir('logs') / f'{ticket_number}_new.yaml'
 
         with output_path.open('w', encoding='utf-8') as f:
             yaml.dump(output_data, f,
@@ -569,11 +574,11 @@ async def render_report(request: Request) -> JSONResponse:
         yaml_data = yaml.safe_load(curation_log_data)
         ticket_number = yaml_data.get('metadata', {}).get('ticket_number', 'unknown')
         parent_dir = yaml_data.get('metadata', {}).get('parent_dir', 'workdir')
-        work_dir = Path(Path.cwd()) / parent_dir / ticket_number
+        dir_manager = DirectoryManager(ticket_number, parent_dir)
 
         # Render the report from the saved YAML file with dynamic paths
-        yaml_path = Path(work_dir, 'log_files', f'{ticket_number}_new.yaml')
-        output_path = Path(work_dir, 'log_files', f'{ticket_number}_new.docx')
+        yaml_path = dir_manager.get_dir('logs') / f'{ticket_number}_new.yaml'
+        output_path = dir_manager.get_dir('logs') / f'{ticket_number}_new.docx'
 
         render_report_from_yaml(
             yaml_path=yaml_path,
