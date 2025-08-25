@@ -115,17 +115,9 @@ def gen_curation_report(
     logger.info('Starting the pydatacuration script...')
 
     # Create the db (with schema named after ticket_number)
-    duckdb = duck_db.DuckDB(schema_name=dir_manager.ticket_number, database=db_dir)
-    duckdb.create_database()
-    duckdb.create_schema()
-    duckdb_models = DuckDBmodels(schema_name=dir_manager.ticket_number)
-    project_metadata_schema = duckdb_models.project_metadata_record()
-
-    duckdb.sql_write_records_to_table(project_metadata_schema(
-        name="test-dataset",
-        description="stored in myschema",
-        created_at="2023-01-01"
-    ))
+    duckdb_instance = duck_db.DuckDB(schema_name=dir_manager.ticket_number, database=db_dir)
+    duckdb_instance.create_database()
+    duckdb_instance.create_schema()
 
     with Progress(SpinnerColumn(), expand=True) as progress:
         progress.add_task('Processing...', total=None, visible=True)
@@ -139,7 +131,14 @@ def gen_curation_report(
         )
 
         # Run the checker
-        checker = Checker(base_url, api_token, ds_metadata, dv_tree, dir_manager.workdir, check_zip, collection_alias)
+        checker = Checker(base_url,
+                          api_token,
+                          ds_metadata,
+                          dv_tree,
+                          dir_manager.workdir,
+                          check_zip,
+                          duckdb_instance,
+                          collection_alias)
         new_check_results = checker.run_checks()
 
         # Export the new check results structure
