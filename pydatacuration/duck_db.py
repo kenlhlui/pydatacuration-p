@@ -81,12 +81,14 @@ class DuckDB:
         self.connection.sql(f'DROP SCHEMA IF EXISTS "{schema_name}" CASCADE;')
         logger.info(f'Deleted schema: {schema_name}')
 
-    def create_schema(self, schema_name: str) -> None:
+    def create_schema(self) -> None:
         """Create a schema in the DuckDB database."""
         if not self.connection:
             self.connect()
-        self.connection.sql(f'CREATE SCHEMA IF NOT EXISTS "{schema_name}";')
-        logger.info(f'Created schema: {schema_name}')
+        self.connection.sql(f'CREATE SCHEMA IF NOT EXISTS "{self.schema_name}";')
+        logger.info(f'Created schema: {self.schema_name}')
+        self.close()
+        logger.info('Closed the DuckDB connection after creating schema.')
 
     def execute_with_retry(self, sql: str, retries: int = 3):
         """Execute SQL with retry logic for handling locks."""
@@ -121,26 +123,11 @@ class DuckDB:
         self.connect()
         self.close()
 
-    # The below uses sqlmodel to create the duckdb shcema
-    def sql_create_schema(self) -> None:
-        self.close()
-
-        conn = create_engine(f'duckdb:///{self.database}', echo=True).connect()
-
-        # Create the Schema
-        conn.execute(text(f'CREATE SCHEMA IF NOT EXISTS "{self.schema_name}";'))
-        logger.info(f'Created schema: {self.schema_name}')
-        conn.commit()
-        logger.info(f'Creating table in schema: {self.schema_name}')
-        # Create table base on SQLModel
-        conn.close()
-        logger.info('Closed the DuckDB connection.')
-
     def sql_create_tables(self, sql_model: type[SQLModel]) -> None:
         self.close()
 
         # Use duckdb_engine connection string
-        engine = create_engine(f'duckdb:///{self.database}', echo=True)
+        engine = create_engine(f'duckdb:///{self.database}', echo=False)
 
         # Now create the table under the schema
         SQLModel.metadata.create_all(engine)
@@ -149,4 +136,6 @@ class DuckDB:
         with Session(engine) as session:
             ds = sql_model
             session.add(ds)
+            logger.info(f'Inserted sample data into table: {sql_model.__tablename__}')
             session.commit()
+            logger.info(f'Committed sample data to table: {sql_model.__tablename__}')
