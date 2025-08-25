@@ -17,7 +17,7 @@ from . import directory_manager
 from . import downloads
 from . import utils
 from .checker import Checker
-from .custom_logging import logger
+from .custom_logging import logger, setup_logging
 from .report_validation import validate_report
 from .utils import orjson_export
 
@@ -105,6 +105,9 @@ def gen_curation_report(
 
     # Define the database directory
     db_dir = dir_manager.db_dir
+
+    # Setup logging with file output to log_files directory and INFO level for console
+    setup_logging(log_file_dir=dir_manager.log_files_dir, log_level='INFO')
 
     # print the start message
     logger.info('Starting the pydatacuration script...')
