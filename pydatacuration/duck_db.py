@@ -5,11 +5,9 @@ from contextlib import contextmanager
 from pathlib import Path
 
 import duckdb
-from netCDF4 import Dataset
 from sqlmodel import Session
 from sqlmodel import SQLModel
 from sqlmodel import create_engine
-from sqlmodel import text
 
 from .custom_logging import logger
 
@@ -123,7 +121,7 @@ class DuckDB:
         self.connect()
         self.close()
 
-    def sql_create_tables(self, sql_model: type[SQLModel]) -> None:
+    def sql_write_records_to_table(self, sql_model: type[SQLModel]) -> None:
         self.close()
 
         # Use duckdb_engine connection string
