@@ -4,9 +4,12 @@ from pathlib import Path
 
 import jmespath
 import yaml
+from loguru import logger
+
+from pydatacuration.sqlmodels import DuckDBmodels
 
 from .checksum import Checksum
-from loguru import logger
+from .duck_db import DuckDB
 from .files_opener import FilesOpener
 from .httpx_client import HTTPXClient
 from .metadata_checker import MetadataChecker
@@ -75,6 +78,7 @@ class Checker:
         dv_tree: dict,
         workdir: Path,
         check_zip: bool,
+        duckdb_instance: DuckDB,
         collection_alias: str | None = None,
     ) -> None:
         """Initialize the Checker class.
@@ -86,6 +90,7 @@ class Checker:
             dv_tree (dict): The Dataverse tree metadata.
             workdir (Path): The working directory.
             check_zip (bool): Whether to check zip files.
+            duckdb_instance (DuckDB): An instance of the DuckDB class for database operations.
             collection_alias (str | None): The collection alias for the author name to be searched.
         """
         self.base_url = base_url
@@ -95,6 +100,7 @@ class Checker:
         self.workdir = workdir
         self.check_zip = check_zip
         self.collection_alias = collection_alias
+        self.duckdb_instance = duckdb_instance
 
         self.logger = logger
         self.checksums = Checksum()
@@ -634,6 +640,16 @@ class Checker:
             allow_empty=True,
         )
 
+    # The below writes the to the DuckDB database
+    def write_to_duckdb(self):
+        duckdb_models = DuckDBmodels(schema_name=self.duckdb_instance.schema_name)
+        project_metadata_schema = duckdb_models.project_metadata_record()
+
+        self.duckdb_instance.sql_write_records_to_table(project_metadata_schema(
+            name="test-dataset",
+            description="stored in myschema",
+            created_at="2023-01-01"
+        ))
     def run_checks(self) -> dict:
         """Run all the checks.
 
@@ -653,6 +669,8 @@ class Checker:
         self.check_terms_of_access()
         self.check_keywords()
         self.check_license()
+        # DEBUG: write to duckdb
+        self.write_to_duckdb()
 
         # Build the new structure
         new_results = {'check_results': self.result_builder.get_results()}
