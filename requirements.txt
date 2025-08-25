@@ -103,6 +103,8 @@ docxtpl==0.19.1
     # via
     #   -c (workspace)
     #   pydatacuration (pyproject.toml)
+duckdb==1.3.2
+    # via pydatacuration (pyproject.toml)
 et-xmlfile==2.0.0
     # via
     #   -c (workspace)
