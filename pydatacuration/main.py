@@ -21,7 +21,7 @@ from .checker import Checker
 from .custom_logging import logger
 from .custom_logging import setup_logging
 from .report_validation import validate_report
-from .sqlmodels import project_metadata_table
+from .sqlmodels import project_metadata_record
 
 
 # Load environment variables from .env file
@@ -118,9 +118,9 @@ def gen_curation_report(
     duckdb = duck_db.DuckDB(schema_name=dir_manager.ticket_number, database=db_dir)
     duckdb.create_database()
     duckdb.sql_create_schema()
-    project_metadata_table_cls = project_metadata_table(dir_manager.ticket_number)
+    project_metadata_schema = project_metadata_record(dir_manager.ticket_number)
 
-    duckdb.sql_create_tables(project_metadata_table_cls(
+    duckdb.sql_create_tables(project_metadata_schema(
         name="test-dataset",
         description="stored in myschema",
         created_at="2023-01-01"

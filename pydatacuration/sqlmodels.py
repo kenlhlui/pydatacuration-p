@@ -6,7 +6,7 @@ from sqlmodel import Field
 from sqlmodel import SQLModel
 
 
-def project_metadata_table(schema_name: str) -> type[SQLModel]:
+def project_metadata_record(schema_name: str) -> type[SQLModel]:
     """Create a ProjectMetadata table class with the specified schema.
 
     Args:
