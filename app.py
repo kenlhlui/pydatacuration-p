@@ -4,6 +4,7 @@ import json
 import os
 from pathlib import Path
 
+import duckdb
 import jmespath
 
 # import markdown
@@ -20,8 +21,10 @@ from fastapi.templating import Jinja2Templates
 from pydantic import BaseModel
 from pydantic import ValidationError
 
-from pydatacuration.new_generate_log import render_report_from_yaml
 from pydatacuration.directory_manager import DirectoryManager
+from pydatacuration.duck_db import DuckDB
+from pydatacuration.new_generate_log import render_report_from_yaml
+from pydatacuration.custom_logging import logger
 
 
 class ChecklistItem(BaseModel):
@@ -203,15 +206,18 @@ async def setup(request: SetupRequest) -> JSONResponse:
         JSONResponse: Result of the curation process
     """
     try:
-
         # Validate required fields
         if not request.pid or not request.pid.strip():
+            logger.error(f'Validation failed: PID is missing or empty. Received: "{request.pid}"')
             raise HTTPException(status_code=400, detail='PID is required')
         if not request.ticket_number or not request.ticket_number.strip():
+            logger.error(f'Validation failed: Ticket number is missing or empty. Received: "{request.ticket_number}"')
             raise HTTPException(status_code=400, detail='Ticket number is required')
         if not request.curator_name or not request.curator_name.strip():
+            logger.error(f'Validation failed: Curator name is missing or empty. Received: "{request.curator_name}"')
             raise HTTPException(status_code=400, detail='Curator name is required')
         if not request.curator_email or not request.curator_email.strip():
+            logger.error(f'Validation failed: Curator email is missing or empty. Received: "{request.curator_email}"')
             raise HTTPException(status_code=400, detail='Curator email is required')
 
         # Build the command to run pydatacuration CLI
@@ -248,8 +254,8 @@ async def setup(request: SetupRequest) -> JSONResponse:
         dir_manager = DirectoryManager(request.ticket_number, request.parent_dir)
         app.state.work_dir = dir_manager.workdir
         app.state.base_url = request.base_url
-        print(f'Working directory: {app.state.work_dir}')
-        print(f'Base URL: {app.state.base_url}')
+        logger.info(f'Working directory: {app.state.work_dir}')
+        logger.info(f'Base URL: {app.state.base_url}')
 
         # Run the command
         result = await run_command(cmd)
@@ -263,7 +269,7 @@ async def setup(request: SetupRequest) -> JSONResponse:
                 # Extract the content from the JSONResponse
                 ds_metadata = json.loads(ds_metadata_response.body.decode('utf-8'))
             except Exception as e:
-                print(f'Could not load ds_metadata using get_ds_metadata: {e}')
+                logger.info(f'Could not load ds_metadata using get_ds_metadata: {e}')
 
             return JSONResponse(content={
                 'success': True,
@@ -288,7 +294,8 @@ async def setup(request: SetupRequest) -> JSONResponse:
         )
 
     except ValidationError as e:
-        print(f'Validation error: {e}')
+        logger.error(f'Pydantic validation error: {e}')
+        logger.error(f'Validation errors details: {e.errors()}')
         return JSONResponse(
             status_code=422,
             content={
@@ -299,10 +306,10 @@ async def setup(request: SetupRequest) -> JSONResponse:
             }
         )
     except HTTPException as e:
-        print(f'HTTP exception: {e}')
+        logger.error(f'HTTP exception: status={e.status_code}, detail={e.detail}')
         raise e
     except Exception as e:
-        print(f'Unexpected error: {e}')
+        logger.error(f'Unexpected error in setup endpoint: {e}', exc_info=True)
         return JSONResponse(
             status_code=500,
             content={
@@ -361,7 +368,7 @@ async def get_check_results(parent_dir: str, ticket_number: str) -> JSONResponse
         raise HTTPException(status_code=500, detail=f"Error reading check results: {str(e)}")
 
 
-@app.get('/ds-metadata/{parent_dir}/{ticket_number}')
+@app.get('/ds-metadata')
 async def get_ds_metadata(parent_dir: str, ticket_number: str, base_url: str = '') -> JSONResponse:
     """Serve the dataset metadata file for a specific ticket.
 
@@ -375,33 +382,32 @@ async def get_ds_metadata(parent_dir: str, ticket_number: str, base_url: str = '
     """
     try:
         dir_manager = DirectoryManager(ticket_number, parent_dir)
-        # Try the main location first
-        ds_metadata_path = dir_manager.get_dir('dataset/metadata') / 'ds_metadata.json'
-
-        # If not found, try the log_files location
-        if not ds_metadata_path.exists():
-            ds_metadata_path = dir_manager.get_dir('logs') / f'{ticket_number}_ds_metadata.json'
-
-        if not ds_metadata_path.exists():
-            raise HTTPException(status_code=404, detail='Dataset metadata not found')
-
-        with ds_metadata_path.open('r', encoding='utf-8') as f:
-            ds_metadata = json.load(f)
-
-        # Get the relevant fields
-        dataset_pid = ds_metadata.get('data', {}).get('latestVersion', {}).get('datasetPersistentId', '')
-        processed_metadata = {
-            'dataset_pid': dataset_pid,
-            'dataset_title': jmespath.search('data.latestVersion.metadataBlocks.citation.fields[?typeName == `title`].value | [0]', ds_metadata),
-            'dataset_id': ds_metadata.get('data', {}).get('latestVersion', {}).get('id', ''),
-            'dataset_url': f'{base_url}/dataset.xhtml?persistentId={dataset_pid}' if base_url and dataset_pid else ''
-        }
-
-        print(f'Dataset metadata for {ticket_number}: {processed_metadata}')
-
+        processed_metadata = {}
+        
+        # Try to read from DuckDB first
+        db_path = dir_manager.workdir / 'duckdb.db'
+        logger.info(f'Looking for DuckDB database at {db_path}')
+        
+        if db_path.exists():
+            try:
+                # Use DuckDB to get metadata
+                duck_db = DuckDB(schema_name=ticket_number, database=dir_manager.workdir)
+                processed_metadata = duck_db.get_metadata_dict(ticket_number, base_url)
+                if processed_metadata and processed_metadata.get('dataset_pid'):
+                    logger.info(f'Loaded dataset metadata from DuckDB for ticket {ticket_number}: {processed_metadata}')
+                    return JSONResponse(content=processed_metadata)
+                else:
+                    logger.info(f'No data found in DuckDB for ticket {ticket_number}, falling back to file')
+            except Exception as db_error:
+                logger.warning(f'DuckDB query failed for ticket {ticket_number}: {db_error}, falling back to file')
+        
+        logger.info(f'Loaded dataset metadata from file for ticket {ticket_number}: {processed_metadata}')
         return JSONResponse(content=processed_metadata)
+        
     except Exception as e:
-        raise HTTPException(status_code=500, detail=f'Error reading dataset metadata: {str(e)}')
+        logger.error(f'Error reading dataset metadata for ticket {ticket_number}: {e}')
+        raise HTTPException(status_code=500, 
+                            detail=f'Error reading dataset metadata: {str(e)}')
 
 
 @app.get('/api/check-results')
