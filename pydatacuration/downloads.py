@@ -24,7 +24,7 @@ class Downloads:
             base_url (str): Base URL of the Dataverse repository
             api_token (str): API token of the Dataverse repository
             pid (str): Persistent identifier of the dataset
-            download_dir (Path): The parent directory to save the downloaded files
+            download_dir (Path): The directory to save the downloaded files
         """
         self.base_url = base_url
         self.pid = pid

@@ -59,11 +59,11 @@ def gen_curation_report(
         envvar='API_TOKEN',
         callback=utils.validate_api_token,
     ),
-    parent_dir: str = typer.Option(
+    main_dir: str = typer.Option(
         'workdir',
-        '--parent-dir',
+        '--main-dir',
         '-dir',
-        help='The working directory. If not specified, a directory "workdir" will be created in the current directory',
+        help='The main directory (top directory) for storing the sub-directories. If not specified, a directory "workdir" will be created in the current directory',
         show_default=True,
     ),
     ticket_number: str = typer.Option(
@@ -94,10 +94,10 @@ def gen_curation_report(
 ) -> None:
     """This script downloads the dataset files and metadata from a Dataverse instance and checks the files and metadata for data curation, and generates a curation report in spreadsheet (.xlsx) and world (.docx) format."""  # noqa: E501, W505
     # Initialize the directory manager class
-    dir_manager = directory_manager.DirectoryManager(ticket_number, parent_dir)
+    dir_manager = directory_manager.DirectoryManager(ticket_number, main_dir)
 
     # Define the working directory
-    workdir_path = dir_manager.workdir
+    workdir_path = dir_manager.project_dir
 
     # Check if the working directory already exists and ask user for confirmation to delete it
     dir_manager.confirm_del_dir(workdir_path, force_del)
@@ -127,7 +127,7 @@ def gen_curation_report(
 
         # Download the dataset files and metadata
         ds_metadata, dv_tree = asyncio.run(
-            downloads.Downloads(base_url, api_token, pid, dir_manager.workdir, ticket_number).downloader()
+            downloads.Downloads(base_url, api_token, pid, dir_manager.project_dir, ticket_number).downloader()
         )
 
         # Run the checker
@@ -135,7 +135,7 @@ def gen_curation_report(
                           api_token,
                           ds_metadata,
                           dv_tree,
-                          dir_manager.workdir,
+                          dir_manager.project_dir,
                           check_zip,
                           duckdb_instance,
                           collection_alias)
