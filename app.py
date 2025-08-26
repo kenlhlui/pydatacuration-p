@@ -59,7 +59,7 @@ class SetupRequest(BaseModel):
         ticket_number (str): Ticket number for the curation report
         curator_name (str): Curator's name
         curator_email (str): Curator's email
-        parent_dir (str): Working directory path
+        main_dir (str): Working directory path
         force_del (bool): Force delete existing directory
         check_zip (bool): Unzip and check contents of zip files
 
@@ -72,7 +72,7 @@ class SetupRequest(BaseModel):
     ticket_number: str
     curator_name: str
     curator_email: str
-    parent_dir: str = 'workdir'
+    main_dir: str = 'workdir'
     force_del: bool = False
     check_zip: bool = True
 
@@ -222,7 +222,7 @@ async def setup(request: SetupRequest) -> JSONResponse:
             'python', '-m', 'pydatacuration.main', 'gen-curation-report',
             '--pid', f'"{request.pid}"',
             '--ticket-number', f'"{request.ticket_number}"',
-            '--parent-dir', f'"{request.parent_dir}"'
+            '--main-dir', f'"{request.main_dir}"'
         ]
 
         # Add base URL if provided
@@ -248,8 +248,8 @@ async def setup(request: SetupRequest) -> JSONResponse:
         cmd = ' '.join(cmd_parts)
 
         # Store state variables using DirectoryManager
-        dir_manager = DirectoryManager(request.ticket_number, request.parent_dir)
-        app.state.work_dir = dir_manager.workdir
+        dir_manager = DirectoryManager(request.ticket_number, request.main_dir)
+        app.state.work_dir = dir_manager.project_dir
         app.state.base_url = request.base_url
         logger.debug(f'Working directory: {app.state.work_dir}')
         logger.debug(f'Base URL: {app.state.base_url}')
@@ -262,7 +262,7 @@ async def setup(request: SetupRequest) -> JSONResponse:
             ds_metadata = None
             try:
                 base_url = request.base_url or ''
-                ds_metadata_response = await get_ds_metadata(request.parent_dir, request.ticket_number, base_url)
+                ds_metadata_response = await get_ds_metadata(request.main_dir, request.ticket_number, base_url)
                 # Extract the content from the JSONResponse
                 ds_metadata = json.loads(ds_metadata_response.body.decode('utf-8'))
             except Exception as e:
@@ -276,7 +276,7 @@ async def setup(request: SetupRequest) -> JSONResponse:
                 'curator_name': request.curator_name,
                 'curator_email': request.curator_email,
                 'ds_metadata': ds_metadata,
-                'redirect_url': f'/checklist?parent_dir={request.parent_dir}&ticket_number={request.ticket_number}',
+                'redirect_url': f'/checklist?parent_dir={request.main_dir}&ticket_number={request.ticket_number}',
             })
         return JSONResponse(
             status_code=400,
@@ -316,43 +316,19 @@ async def setup(request: SetupRequest) -> JSONResponse:
         )
 
 
-# @app.get('/template-dict/{parent_dir}/{ticket_number}')
-# async def get_template_dict(parent_dir: str, ticket_number: str) -> JSONResponse:
-#     """Serve the template dictionary file for a specific ticket.
-
-#     Args:
-#         parent_dir (str): Parent directory name
-#         ticket_number (str): Ticket number
-
-#     Returns:
-#         JSONResponse: Template dictionary data
-#     """
-#     try:
-#         template_path = Path(parent_dir) / ticket_number / 'log_files' / 'template_dict.json'
-#         if not template_path.exists():
-#             raise HTTPException(status_code=404, detail="Template dictionary not found")
-
-#         with template_path.open('r', encoding='utf-8') as f:
-#             template_data = json.load(f)
-
-#         return JSONResponse(content=template_data)
-#     except Exception as e:
-#         raise HTTPException(status_code=500, detail=f"Error reading template dictionary: {str(e)}")
-
-
-@app.get('/check-results/{parent_dir}/{ticket_number}')
-async def get_check_results(parent_dir: str, ticket_number: str) -> JSONResponse:
+@app.get('/check-results/{main_dir}/{ticket_number}')
+async def get_check_results(main_dir: str, ticket_number: str) -> JSONResponse:
     """Serve the check results file for a specific ticket.
 
     Args:
-        parent_dir (str): Parent directory name
+        main_dir (str): Main directory name
         ticket_number (str): Ticket number
 
     Returns:
         JSONResponse: Check results data
     """
     try:
-        dir_manager = DirectoryManager(ticket_number, parent_dir)
+        dir_manager = DirectoryManager(ticket_number, main_dir)
         check_results_path = dir_manager.get_dir('logs') / 'check_results.json'
         if not check_results_path.exists():
             raise HTTPException(status_code=404, detail="Check results not found")
@@ -366,11 +342,11 @@ async def get_check_results(parent_dir: str, ticket_number: str) -> JSONResponse
 
 
 @app.get('/ds-metadata')
-async def get_ds_metadata(parent_dir: str, ticket_number: str, base_url: str = '') -> JSONResponse:
+async def get_ds_metadata(main_dir: str, ticket_number: str, base_url: str = '') -> JSONResponse:
     """Serve the dataset metadata file for a specific ticket.
 
     Args:
-        parent_dir (str): Parent directory name
+        main_dir (str): Main directory name
         ticket_number (str): Ticket number
         base_url (str): Base URL for dataset links (optional)
 
@@ -379,9 +355,7 @@ async def get_ds_metadata(parent_dir: str, ticket_number: str, base_url: str = '
     """
     try:
         processed_metadata = {}
-
-        # Try to read from DuckDB first
-        db_path = Path(parent_dir) / 'db'
+        db_path = Path(main_dir) / 'db'
         db_file: Path = db_path / 'duckdb.db'
         logger.info(f'Looking for DuckDB database at {db_path}')
 
