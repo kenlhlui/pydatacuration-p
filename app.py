@@ -553,7 +553,7 @@ async def render_report(request: Request) -> JSONResponse:
         dir_manager = DirectoryManager(ticket_number, main_dir)
 
         # Render the report from the saved YAML file with dynamic paths
-        yaml_path = dir_manager.get_dir('logs') / f'{ticket_number}_new.yaml'
+        yaml_path = dir_manager.get_dir('outputs') / f'{ticket_number}_new.yaml'
         output_path = dir_manager.get_dir('outputs') / f'{ticket_number}_new.docx'
 
         render_report_from_yaml(
