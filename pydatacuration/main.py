@@ -105,9 +105,6 @@ def gen_curation_report(
     # Create the working directory and its subdirectories plus the db directory
     dir_manager.make_dirs()
 
-    # Define the database directory
-    db_dir = dir_manager.db_dir
-
     # Setup logging with file output to log_files directory and INFO level for console
     setup_logging(log_file_dir=dir_manager.log_files_dir, log_level='INFO')
 
@@ -115,7 +112,7 @@ def gen_curation_report(
     logger.info('Starting the pydatacuration script...')
 
     # Create the db (with schema named after ticket_number)
-    duckdb_instance = duck_db.DuckDB(schema_name=dir_manager.ticket_number, database=db_dir)
+    duckdb_instance = duck_db.DuckDB(schema_name=dir_manager.ticket_number, db_file_path=dir_manager.db_path)
     duckdb_instance.create_database()
     duckdb_instance.create_schema()
 

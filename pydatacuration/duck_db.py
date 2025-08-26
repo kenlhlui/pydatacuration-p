@@ -16,25 +16,25 @@ class DuckDB:
     def __init__(
         self,
         schema_name: str,
-        database: Path | str = ':memory:',
+        db_file_path: Path
     ) -> None:
         """Initialize the DuckDB connection.
 
         Args:
             schema_name (str): The name of the schema to use.
-            database (Path | str): The path to the DuckDB database file or ':memory:' for an in-memory database.
+            db_file (Path): The path to the DuckDB database file.
 
         """
         self.schema_name = schema_name
-        self.database = Path(database, 'duckdb.db')
+        self.db_file_path = db_file_path
         self.connection: duckdb.DuckDBPyConnection | None = None
 
     def connect(self, retries: int = 3, delay: float = 1.0) -> None:
         """Establish a connection to the DuckDB database with retry logic."""
         for attempt in range(retries):
             try:
-                self.connection: duckdb.DuckDBPyConnection = duckdb.connect(self.database)
-                logger.info(f'Connected to DuckDB database at {self.database}')
+                self.connection: duckdb.DuckDBPyConnection = duckdb.connect(self.db_file_path)
+                logger.info(f'Connected to DuckDB database at {self.db_file_path}')
                 return
             except Exception as e:
                 if 'lock' in str(e).lower() and attempt < retries - 1:
@@ -126,7 +126,7 @@ class DuckDB:
         self.close()
 
         # Use duckdb_engine connection string
-        engine = create_engine(f'duckdb:///{self.database}', echo=False)
+        engine = create_engine(f'duckdb:///{self.db_file_path}', echo=False)
 
         # Now create the table under the schema
         SQLModel.metadata.create_all(engine)
@@ -150,8 +150,8 @@ class DuckDB:
         """
         logger.debug(f'Executing SQL to get metadata: {sql.strip()}')
         # Use read-only connection to avoid locks
-        logger.info(f'Opening read-only connection to {self.database}')
-        conn = self.create_read_only_connection(str(self.database))
+        logger.info(f'Opening read-only connection to {self.db_file_path}')
+        conn = self.create_read_only_connection(str(self.db_file_path))
 
         try:
             result = conn.sql(sql).fetchone()
