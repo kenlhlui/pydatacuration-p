@@ -217,7 +217,7 @@ mdurl==0.1.2
     # via
     #   -c (workspace)
     #   markdown-it-py
-msal==1.32.0
+msal==1.33.0
     # via
     #   -c (workspace)
     #   azure-identity
