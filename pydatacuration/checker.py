@@ -647,18 +647,59 @@ class Checker:
         duckdb_models = DuckDBmodels(schema_name=self.duckdb_instance.schema_name)
         project_metadata_schema = duckdb_models.project_metadata_record()
 
-        self.duckdb_instance.sql_write_records_to_table(
-            project_metadata_schema(
-                ticket_number=self.duckdb_instance.schema_name,
-                dataset_title=self.ds_title if self.ds_title else 'No Title',
-                dataset_pid=self.ds_metadata.get('data', {}).get('latestVersion', {}).get('datasetPersistentId', 'No ID'),
-                dataset_id=self.ds_metadata.get('data', {}).get('latestVersion', {}).get('id', 'No ID'),
-                dataset_url=self.ds_metadata.get('data', {}).get('latestVersion', {}).get('url', 'No URL'),
-                dataset_path=self.check_ds_tree_info(),
-                log_init_date="2023-01-01",  # ! Placeholder to fix later
-                log_lastupdate_date="2023-01-02"  # ! Placeholder to fix later
+        # Check if record already exists
+        if not self._record_exists(self.duckdb_instance.schema_name):
+            self.duckdb_instance.sql_write_records_to_table(
+                project_metadata_schema(
+                    ticket_number=self.duckdb_instance.schema_name,
+                    dataset_title=self.ds_title if self.ds_title else 'No Title',
+                    dataset_pid=self.ds_metadata.get('data', {}).get('latestVersion', {}).get('datasetPersistentId', 'No ID'),
+                    dataset_id=self.ds_metadata.get('data', {}).get('latestVersion', {}).get('id', 'No ID'),
+                    dataset_url=self.ds_metadata.get('data', {}).get('latestVersion', {}).get('url', 'No URL'),
+                    dataset_path=self.check_ds_tree_info(),
+                    log_init_date="2023-01-01",  # ! Placeholder to fix later
+                    log_lastupdate_date="2023-01-02"  # ! Placeholder to fix later
+                )
             )
-        )
+        else:
+            self._update_existing_record()
+
+    def _record_exists(self, ticket_number: str) -> bool:
+        """Check if a record with the given ticket_number already exists."""
+        try:
+            with self.duckdb_instance.get_connection() as conn:
+                sql_query = (
+                    f'SELECT COUNT(*) FROM "{self.duckdb_instance.schema_name}".project_metadata '
+                    f"WHERE ticket_number = '{ticket_number}'"
+                )
+                result = conn.sql(sql_query).fetchone()
+                return result[0] > 0 if result else False
+        except Exception:
+            return False
+
+    def _update_existing_record(self) -> None:
+        """Update the existing record with current metadata."""
+        try:
+            dataset_title = self.ds_title if self.ds_title else 'No Title'
+            dataset_pid = self.ds_metadata.get('data', {}).get('latestVersion', {}).get('datasetPersistentId', 'No ID')
+            dataset_id = self.ds_metadata.get('data', {}).get('latestVersion', {}).get('id', 'No ID')
+            dataset_url = self.ds_metadata.get('data', {}).get('latestVersion', {}).get('url', 'No URL')
+            dataset_path = self.check_ds_tree_info()
+
+            with self.duckdb_instance.get_connection() as conn:
+                conn.sql(f'''
+                    UPDATE "{self.duckdb_instance.schema_name}".project_metadata
+                    SET dataset_title = '{dataset_title}',
+                        dataset_pid = '{dataset_pid}',
+                        dataset_id = '{dataset_id}',
+                        dataset_url = '{dataset_url}',
+                        dataset_path = '{dataset_path}',
+                        log_lastupdate_date = '2023-01-02'
+                    WHERE ticket_number = '{self.duckdb_instance.schema_name}'
+                ''')
+        except Exception as e:
+            logger.error(f'Failed to update existing record: {e}')
+            raise
 
     def run_checks(self) -> dict:
         """Run all the checks.
