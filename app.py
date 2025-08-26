@@ -355,14 +355,12 @@ async def get_ds_metadata(main_dir: str, ticket_number: str, base_url: str = '')
     """
     try:
         processed_metadata = {}
-        db_path = Path(main_dir) / 'db'  # FIXME: use the directory manager
-        db_file: Path = db_path / 'duckdb.db'  # FIXME: use the directory manager
-        logger.info(f'Looking for DuckDB database at {db_path}')
+        dir_manager = DirectoryManager(ticket_number, main_dir)
 
-        if db_file.exists():
+        if dir_manager.db_path.exists():
             try:
                 # Use DuckDB to get metadata
-                duck_db = DuckDB(schema_name=ticket_number, database=db_path)
+                duck_db = DuckDB(schema_name=ticket_number, db_file_path=dir_manager.db_path)
                 processed_metadata = duck_db.get_metadata_dict(ticket_number, base_url)
                 if processed_metadata and processed_metadata.get('dataset_pid'):
                     logger.info(f'Loaded dataset metadata from DuckDB for ticket {ticket_number}: {processed_metadata}')
