@@ -105,6 +105,7 @@ class DuckDB:
     @classmethod
     def create_read_only_connection(cls, database_path: str):
         """Create a read-only connection to avoid write locks."""
+        logger.info(f'Creating read-only connection to {database_path}')
         return duckdb.connect(f'{database_path}?access_mode=read_only')
 
     def use_wal_mode(self):
@@ -137,3 +138,33 @@ class DuckDB:
             logger.info(f'Inserted sample data into table: {sql_model.__tablename__}')
             session.commit()
             logger.info(f'Committed sample data to table: {sql_model.__tablename__}')
+
+    def get_metadata_dict(self, ticket_number: str, base_url: str = '') -> dict:
+        """Get dataset metadata as dictionary for API response using read-only mode."""
+        sql = f"""
+        SELECT dataset_pid, dataset_title, dataset_id, dataset_url
+        FROM "{self.schema_name}".project_metadata 
+        WHERE ticket_number = '{ticket_number}'
+        LIMIT 1;
+        """
+        logger.info(f'Executing SQL to get metadata: {sql.strip()}')
+        # Use read-only connection to avoid locks
+        conn = self.create_read_only_connection(str(self.database))
+
+        try:
+            result = conn.sql(sql).fetchone()
+            logger.info(f'Query result: {result}')
+
+            if result:
+                dataset_pid = result[0] or ''
+                logger.info(f'Fetched metadata for ticket {ticket_number}: PID={dataset_pid}, Title={result[1]}, ID={result[2]}, URL={result[3]}')
+                return {
+                    'dataset_pid': dataset_pid,
+                    'dataset_title': result[1] or '',
+                    'dataset_id': result[2] or '',
+                    'dataset_url': f'{base_url}/dataset.xhtml?persistentId={dataset_pid}' if base_url and dataset_pid else (result[3] or '')
+                }
+        finally:
+            conn.close()
+
+        return {'dataset_pid': '', 'dataset_title': '', 'dataset_id': '', 'dataset_url': ''}
