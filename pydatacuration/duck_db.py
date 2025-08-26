@@ -106,7 +106,7 @@ class DuckDB:
     def create_read_only_connection(cls, database_path: str):
         """Create a read-only connection to avoid write locks."""
         logger.info(f'Creating read-only connection to {database_path}')
-        return duckdb.connect(f'{database_path}?access_mode=read_only')
+        return duckdb.connect(database_path, read_only=True)
 
     def use_wal_mode(self):
         """Enable WAL mode for better concurrency (if supported)."""
@@ -139,16 +139,18 @@ class DuckDB:
             session.commit()
             logger.info(f'Committed sample data to table: {sql_model.__tablename__}')
 
+
     def get_metadata_dict(self, ticket_number: str, base_url: str = '') -> dict:
         """Get dataset metadata as dictionary for API response using read-only mode."""
         sql = f"""
         SELECT dataset_pid, dataset_title, dataset_id, dataset_url
-        FROM "{self.schema_name}".project_metadata 
+        FROM "{self.schema_name}".project_metadata
         WHERE ticket_number = '{ticket_number}'
         LIMIT 1;
         """
-        logger.info(f'Executing SQL to get metadata: {sql.strip()}')
+        logger.debug(f'Executing SQL to get metadata: {sql.strip()}')
         # Use read-only connection to avoid locks
+        logger.info(f'Opening read-only connection to {self.database}')
         conn = self.create_read_only_connection(str(self.database))
 
         try:

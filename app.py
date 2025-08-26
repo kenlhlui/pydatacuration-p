@@ -4,9 +4,6 @@ import json
 import os
 from pathlib import Path
 
-import duckdb
-import jmespath
-
 # import markdown
 import markdown2
 import yaml
@@ -21,10 +18,10 @@ from fastapi.templating import Jinja2Templates
 from pydantic import BaseModel
 from pydantic import ValidationError
 
+from pydatacuration.custom_logging import logger
 from pydatacuration.directory_manager import DirectoryManager
 from pydatacuration.duck_db import DuckDB
 from pydatacuration.new_generate_log import render_report_from_yaml
-from pydatacuration.custom_logging import logger
 
 
 class ChecklistItem(BaseModel):
@@ -254,8 +251,8 @@ async def setup(request: SetupRequest) -> JSONResponse:
         dir_manager = DirectoryManager(request.ticket_number, request.parent_dir)
         app.state.work_dir = dir_manager.workdir
         app.state.base_url = request.base_url
-        logger.info(f'Working directory: {app.state.work_dir}')
-        logger.info(f'Base URL: {app.state.base_url}')
+        logger.debug(f'Working directory: {app.state.work_dir}')
+        logger.debug(f'Base URL: {app.state.base_url}')
 
         # Run the command
         result = await run_command(cmd)
@@ -381,29 +378,28 @@ async def get_ds_metadata(parent_dir: str, ticket_number: str, base_url: str = '
         JSONResponse: Dataset metadata data
     """
     try:
-        dir_manager = DirectoryManager(ticket_number, parent_dir)
         processed_metadata = {}
-        
+
         # Try to read from DuckDB first
-        db_path = dir_manager.workdir / 'duckdb.db'
+        db_path = Path(parent_dir) / 'db'
+        db_file: Path = db_path / 'duckdb.db'
         logger.info(f'Looking for DuckDB database at {db_path}')
-        
-        if db_path.exists():
+
+        if db_file.exists():
             try:
                 # Use DuckDB to get metadata
-                duck_db = DuckDB(schema_name=ticket_number, database=dir_manager.workdir)
+                duck_db = DuckDB(schema_name=ticket_number, database=db_path)
                 processed_metadata = duck_db.get_metadata_dict(ticket_number, base_url)
                 if processed_metadata and processed_metadata.get('dataset_pid'):
                     logger.info(f'Loaded dataset metadata from DuckDB for ticket {ticket_number}: {processed_metadata}')
                     return JSONResponse(content=processed_metadata)
-                else:
-                    logger.info(f'No data found in DuckDB for ticket {ticket_number}, falling back to file')
+                logger.warning(f'No data found in DuckDB for ticket {ticket_number}')
             except Exception as db_error:
-                logger.warning(f'DuckDB query failed for ticket {ticket_number}: {db_error}, falling back to file')
-        
+                logger.warning(f'DuckDB query failed for ticket {ticket_number}: {db_error}')
+
         logger.info(f'Loaded dataset metadata from file for ticket {ticket_number}: {processed_metadata}')
         return JSONResponse(content=processed_metadata)
-        
+
     except Exception as e:
         logger.error(f'Error reading dataset metadata for ticket {ticket_number}: {e}')
         raise HTTPException(status_code=500, 
