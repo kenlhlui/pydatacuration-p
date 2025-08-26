@@ -544,13 +544,13 @@ class Checker:
                     self.logger.debug(f'Dataset path in the dataverse repository: {dataset_path}')  # noqa: E501
 
                 # Add the result to self.result_builder
-                self.result_builder.add_check_result(
-                    check_id='dataset_path',
-                    check_name='Dataset Path Information',
-                    description="Information about the dataset's location in the Dataverse repository",
-                    result_name='dataset_path',
-                    results=[dataset_path],
-                )
+                # self.result_builder.add_check_result(
+                #     check_id='dataset_path',
+                #     check_name='Dataset Path Information',
+                #     description="Information about the dataset's location in the Dataverse repository",
+                #     result_name='dataset_path',
+                #     results=[dataset_path],
+                # )
                 # DEBUG: Add the returned path
                 return dataset_path
         return None

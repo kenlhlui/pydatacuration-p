@@ -143,7 +143,7 @@ class DuckDB:
     def get_metadata_dict(self, ticket_number: str, base_url: str = '') -> dict:
         """Get dataset metadata as dictionary for API response using read-only mode."""
         sql = f"""
-        SELECT dataset_pid, dataset_title, dataset_id, dataset_url
+        SELECT dataset_pid, dataset_title, dataset_id, dataset_url, dataset_path
         FROM "{self.schema_name}".project_metadata
         WHERE ticket_number = '{ticket_number}'
         LIMIT 1;
@@ -164,9 +164,10 @@ class DuckDB:
                     'dataset_pid': dataset_pid,
                     'dataset_title': result[1] or '',
                     'dataset_id': result[2] or '',
-                    'dataset_url': f'{base_url}/dataset.xhtml?persistentId={dataset_pid}' if base_url and dataset_pid else (result[3] or '')
+                    'dataset_url': f'{base_url}/dataset.xhtml?persistentId={dataset_pid}' if base_url and dataset_pid else (result[3] or ''),
+                    'dataset_path': result[4] or ''
                 }
         finally:
             conn.close()
 
-        return {'dataset_pid': '', 'dataset_title': '', 'dataset_id': '', 'dataset_url': ''}
+        return {'dataset_pid': '', 'dataset_title': '', 'dataset_id': '', 'dataset_url': '', 'dataset_path': ''}

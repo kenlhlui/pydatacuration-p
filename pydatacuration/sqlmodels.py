@@ -44,4 +44,3 @@ class DuckDBmodels:
             log_lastupdate_date: str = Field(sa_column=Column(String, nullable=False))  # ! Placeholder to fix the type later
 
         return ProjectMetadata
-

@@ -20,7 +20,7 @@ async function readDsMetadata(dsMetadataPath) {
 
 /**
  * Populate form fields from the processed ds_metadata structure returned by get_ds_metadata()
- * The backend returns: {dataset_pid, dataset_title, dataset_id, dataset_url}
+ * The backend returns: {dataset_pid, dataset_title, dataset_id, dataset_url, dataset_path}
  *
  * @param {Object} dsMetadata - The processed dataset metadata from backend
  */
@@ -33,7 +33,7 @@ function populateFieldsFromDsMetadata(dsMetadata) {
   console.log('Starting field population with processed ds metadata:', dsMetadata);
   
   // Map backend response keys to their corresponding data-key attributes in HTML
-  const dataKeys = ['dataset_pid', 'dataset_title', 'dataset_id', 'dataset_url'];
+  const dataKeys = ['dataset_pid', 'dataset_title', 'dataset_id', 'dataset_url', 'dataset_path'];
   
   dataKeys.forEach(dataKey => {
     const value = dsMetadata[dataKey];
@@ -104,7 +104,7 @@ function handleDsMetadata() {
   const ticketNumber = sessionStorage.getItem('ticket_number');
   
   if (ticketNumber) {
-    const dsMetadataPath = `/ds-metadata/${mainDir}/${ticketNumber}`;
+    const dsMetadataPath = `/ds-metadata?main_dir=${encodeURIComponent(mainDir)}&ticket_number=${encodeURIComponent(ticketNumber)}`;
     console.log('Loading ds metadata from API path:', dsMetadataPath);
     
     readDsMetadata(dsMetadataPath)
