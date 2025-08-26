@@ -100,11 +100,11 @@ function handleDsMetadata() {
   }
   
   // Fallback to API call if not in sessionStorage
-  const parentDir = sessionStorage.getItem('parent_dir') || 'workdir';
+  const mainDir = sessionStorage.getItem('main_dir') || 'workdir';
   const ticketNumber = sessionStorage.getItem('ticket_number');
   
   if (ticketNumber) {
-    const dsMetadataPath = `/ds-metadata/${parentDir}/${ticketNumber}`;
+    const dsMetadataPath = `/ds-metadata/${mainDir}/${ticketNumber}`;
     console.log('Loading ds metadata from API path:', dsMetadataPath);
     
     readDsMetadata(dsMetadataPath)

@@ -13,7 +13,7 @@ async function loadCheckResults() {
         }
         
         // Fetch check results from API
-        const response = await fetch(`/api/check-results?ticket_number=${encodeURIComponent(ticketNumber)}&parent_dir=workdir`);
+        const response = await fetch(`/api/check-results?ticket_number=${encodeURIComponent(ticketNumber)}&main_dir=workdir`);
         
         if (!response.ok) {
             console.error('Failed to fetch check results:', response.status);

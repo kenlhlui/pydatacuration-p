@@ -276,7 +276,7 @@ async def setup(request: SetupRequest) -> JSONResponse:
                 'curator_name': request.curator_name,
                 'curator_email': request.curator_email,
                 'ds_metadata': ds_metadata,
-                'redirect_url': f'/checklist?parent_dir={request.main_dir}&ticket_number={request.ticket_number}',
+                'redirect_url': f'/checklist?main_dir={request.main_dir}&ticket_number={request.ticket_number}',
             })
         return JSONResponse(
             status_code=400,
@@ -355,8 +355,8 @@ async def get_ds_metadata(main_dir: str, ticket_number: str, base_url: str = '')
     """
     try:
         processed_metadata = {}
-        db_path = Path(main_dir) / 'db'
-        db_file: Path = db_path / 'duckdb.db'
+        db_path = Path(main_dir) / 'db'  # FIXME: use the directory manager
+        db_file: Path = db_path / 'duckdb.db'  # FIXME: use the directory manager
         logger.info(f'Looking for DuckDB database at {db_path}')
 
         if db_file.exists():
@@ -386,19 +386,19 @@ async def get_check_results_from_session(request: Request) -> JSONResponse:
 
     Expected query parameters:
     - ticket_number: from sessionStorage
-    - parent_dir: optional, defaults to 'workdir'
+    - main_dir: optional, defaults to 'workdir'
 
     Returns:
         JSONResponse: Check results data or empty results if not found
     """
     try:
-        parent_dir = request.query_params.get('parent_dir', 'workdir')
+        main_dir = request.query_params.get('main_dir', 'workdir')
         ticket_number = request.query_params.get('ticket_number')
 
         if not ticket_number:
             return JSONResponse(content={'check_results': []})
 
-        dir_manager = DirectoryManager(ticket_number, parent_dir)
+        dir_manager = DirectoryManager(ticket_number, main_dir)
         check_results_path = dir_manager.get_dir('logs') / 'check_results.json'
         if not check_results_path.exists():
             return JSONResponse(content={'check_results': []})
@@ -472,9 +472,9 @@ async def export_log_yaml(request: CurationLogRequest) -> JSONResponse:
 
         # Save to file
         ticket_number = metadata.get('ticket_number', 'unknown')
-        parent_dir = metadata.get('parent_dir', 'workdir')
-        dir_manager = DirectoryManager(ticket_number, parent_dir)
-        output_path = dir_manager.get_dir('logs') / f'{ticket_number}_new.yaml'
+        main_dir = metadata.get('main_dir', 'workdir')
+        dir_manager = DirectoryManager(ticket_number, main_dir)
+        output_path = dir_manager.get_dir('outputs') / f'{ticket_number}_new.yaml'
 
         with output_path.open('w', encoding='utf-8') as f:
             yaml.dump(output_data, f,
@@ -549,12 +549,12 @@ async def render_report(request: Request) -> JSONResponse:
         # Parse YAML to get ticket number for dynamic file paths
         yaml_data = yaml.safe_load(curation_log_data)
         ticket_number = yaml_data.get('metadata', {}).get('ticket_number', 'unknown')
-        parent_dir = yaml_data.get('metadata', {}).get('parent_dir', 'workdir')
-        dir_manager = DirectoryManager(ticket_number, parent_dir)
+        main_dir = yaml_data.get('metadata', {}).get('main_dir', 'workdir')
+        dir_manager = DirectoryManager(ticket_number, main_dir)
 
         # Render the report from the saved YAML file with dynamic paths
         yaml_path = dir_manager.get_dir('logs') / f'{ticket_number}_new.yaml'
-        output_path = dir_manager.get_dir('logs') / f'{ticket_number}_new.docx'
+        output_path = dir_manager.get_dir('outputs') / f'{ticket_number}_new.docx'
 
         render_report_from_yaml(
             yaml_path=yaml_path,
