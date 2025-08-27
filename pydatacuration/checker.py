@@ -464,6 +464,23 @@ class Checker:
             results=potential_typos,
         )
 
+        # DEBUG: Try to add the potential_typos to duckdb
+        self.logger.debug(f'Potential typos collected: {potential_typos}')
+        # FIXME: fix the update logic; it won't work if there's table
+        try:
+            logger.debug('Writing potential typos to DuckDB for testing purpose...')
+            check_result_list_schema = self.sqlmodels.check_result_json('potential_typos')
+            self.duckdb_instance.sql_write_records_to_table(check_result_list_schema(
+                check_id='potential_typos',
+                description='Check for potential spelling errors in metadata fields',
+                result_name='typo',
+                results=potential_typos,
+                last_modified_datetime=datetime.now()
+            ))
+            logger.debug('Writing potential typos to DuckDB completed.')
+        except Exception as e:
+            logger.error(f'Failed to write potential typos to DuckDB: {e}')
+
     def check_dv_record(self) -> None:
         """Check if the author has deposited data in Dataverse.
 
@@ -641,7 +658,7 @@ class Checker:
         # FIXME: fix the update logic; it won't work if there's table
         try:
             logger.debug('Writing keywords to DuckDB for testing purpose...')
-            check_result_list_schema = self.sqlmodels.check_result_list('keywords_existence')
+            check_result_list_schema = self.sqlmodels.check_result_json('keywords_existence')
             self.duckdb_instance.sql_write_records_to_table(check_result_list_schema(
                 check_id='keywords_existence',
                 description='Check if keywords are present in the dataset',

@@ -4,12 +4,13 @@ from datetime import date
 from sqlalchemy import Column
 from sqlalchemy import Integer
 from sqlalchemy import Sequence
-from sqlmodel import ARRAY
 from sqlmodel import DATE
+from sqlmodel import DATETIME
+from sqlmodel import JSON
 from sqlmodel import Field
 from sqlmodel import SQLModel
 from sqlmodel import String
-from sqlmodel import DATETIME
+
 
 class DuckDBmodels:
     def __init__(self, schema_name: str) -> None:
@@ -48,13 +49,13 @@ class DuckDBmodels:
 
         return ProjectMetadata
 
-    def check_result_list(self, table_name: str) -> type[SQLModel]:
+    def check_result_json(self, table_name: str) -> type[SQLModel]:
         """Check the result list for the specified schema.
 
         Returns:
-            type[SQLModel]: The CheckResultList class with the specified schema.
+            type[SQLModel]: The CheckResultjson class with the specified schema.
         """
-        class CheckResultList(SQLModel, table=True):
+        class CheckResultjson(SQLModel, table=True):
             """Check result list table model."""
 
             __tablename__ = table_name
@@ -72,7 +73,7 @@ class DuckDBmodels:
             check_id: str = Field(sa_column=Column(String, nullable=False))
             description: str = Field(sa_column=Column(String, nullable=False))
             result_name: str = Field(sa_column=Column(String, nullable=False))
-            results: list[str] = Field(sa_column=Column(ARRAY(String), nullable=False))
+            results: list[str] | list[dict] = Field(sa_column=Column(JSON, nullable=False))  # This support writing a list[str] and list[dict] to duckdb # noqa
             last_modified_datetime: date = Field(sa_column=Column(DATETIME, nullable=False))
 
-        return CheckResultList
+        return CheckResultjson
