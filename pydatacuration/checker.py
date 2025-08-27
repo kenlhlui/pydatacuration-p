@@ -637,6 +637,22 @@ class Checker:
             allow_empty=True,
         )
 
+        # DEBUG: Test for writing to DuckDB using CheckResultList
+        # FIXME: fix the update logic; it won't work if there's table
+        try:
+            logger.debug('Writing keywords to DuckDB for testing purpose...')
+            check_result_list_schema = self.sqlmodels.check_result_list('keywords_existence')
+            self.duckdb_instance.sql_write_records_to_table(check_result_list_schema(
+                check_id='keywords_existence',
+                description='Check if keywords are present in the dataset',
+                result_name='keyword',
+                results=keyword_list,
+                last_modified_datetime=datetime.now()
+            ))
+            logger.debug('Writing keywords to DuckDB completed.')
+        except Exception as e:
+            logger.error(f'Failed to write keywords to DuckDB: {e}')
+
     # The below writes the to the DuckDB database
     def write_to_duckdb(self):
         project_metadata_schema = self.sqlmodels.project_metadata_record()
