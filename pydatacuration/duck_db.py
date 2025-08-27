@@ -56,6 +56,13 @@ class DuckDB:
         logger.info(f'Created database at {self.db_file_path}')
 
     def sql_write_records_to_table(self, sql_model: type[SQLModel]) -> None:
+        """Write records to a table in the DuckDB database using SQLmodel.
+
+        Args:
+            sql_model (type[SQLModel]): The SQLModel class to write records for.
+
+        """
+        logger.info(f'Writing records to table: {sql_model.__tablename__}')
         # Use duckdb_engine connection string
         engine = create_engine(f'duckdb:///{self.db_file_path}', echo=False)
 
