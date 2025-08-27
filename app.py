@@ -409,6 +409,7 @@ async def get_check_results_from_session(request: Request) -> JSONResponse:
             logger.debug(f'Result of duckdb_result: {duckdb_result}')
         except Exception as e:
             logger.error(f'Error fetching check results from DuckDB for ticket {ticket_number}: {e}')
+
         if not ticket_number:
             return JSONResponse(content={'check_results': []})
 

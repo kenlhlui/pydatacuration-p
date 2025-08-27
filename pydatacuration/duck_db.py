@@ -5,6 +5,7 @@ from contextlib import contextmanager
 from pathlib import Path
 
 import duckdb
+import orjson
 from sqlmodel import Session
 from sqlmodel import SQLModel
 from sqlmodel import create_engine
@@ -173,7 +174,7 @@ class DuckDB:
                         'check_id': result[0],
                         'description': result[1] or '',
                         'result_name': result[2] or '',
-                        'results': result[3] or '',
+                        'results': orjson.loads(result[3]) or '',
                     }
                 logger.debug(f'No check result found for {table_name}')
         except Exception as e:
