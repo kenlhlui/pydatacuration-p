@@ -361,7 +361,7 @@ async def get_ds_metadata(main_dir: str, ticket_number: str, base_url: str = '')
             try:
                 # Use DuckDB to get metadata
                 duck_db = DuckDB(schema_name=ticket_number, db_file_path=dir_manager.db_path)
-                processed_metadata = duck_db.get_metadata_dict(ticket_number, base_url)
+                processed_metadata = duck_db.get_metadata_dict()
                 if processed_metadata and processed_metadata.get('dataset_pid'):
                     logger.info(f'Loaded dataset metadata from DuckDB for ticket {ticket_number}: {processed_metadata}')
                     return JSONResponse(content=processed_metadata)
@@ -376,6 +376,15 @@ async def get_ds_metadata(main_dir: str, ticket_number: str, base_url: str = '')
         logger.error(f'Error reading dataset metadata for ticket {ticket_number}: {e}')
         raise HTTPException(status_code=500, 
                             detail=f'Error reading dataset metadata: {str(e)}')
+
+def _get_check_results_from_duckdb(ticket_number: str) -> dict:
+    """Get the check results from DuckDB for a specific ticket."""
+    try:
+        duck_db = DuckDB(schema_name=ticket_number)
+        return duck_db.get_check_results(ticket_number)
+    except Exception as e:
+        logger.error(f"Error fetching check results from DuckDB for ticket {ticket_number}: {e}")
+        return {"error": str(e)}
 
 
 @app.get('/api/check-results')

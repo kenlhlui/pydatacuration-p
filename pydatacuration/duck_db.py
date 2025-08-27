@@ -131,7 +131,7 @@ class DuckDB:
             session.commit()
             logger.info(f'Committed sample data to table: {sql_model.__tablename__}')
 
-    def get_metadata_dict(self, ticket_number: str, base_url: str = '') -> dict:
+    def get_metadata_dict(self) -> dict:
         """Get dataset metadata as dictionary for API response using read-only mode."""
         sql = f"""
         SELECT dataset_pid, dataset_title, dataset_id, dataset_url, dataset_path
@@ -140,18 +140,39 @@ class DuckDB:
         """
         try:
             with self.get_readonly_connection() as conn:
-                logger.info(f'Executing SQL to fetch dataset metadata for ticket {ticket_number} with read-only mode')
+                logger.info(f'Executing SQL to fetch dataset metadata with read-only mode')
                 result = conn.sql(sql).fetchone()
                 if result:
                     dataset_pid = result[0] or ''
-                    logger.debug(f'Fetched metadata for ticket {ticket_number}: {result}')
+                    logger.debug(f'Fetched metadata: {result}')
                     return {
                         'dataset_pid': dataset_pid,
                         'dataset_title': result[1] or '',
                         'dataset_id': result[2] or '',
-                        'dataset_url': f'{base_url}/dataset.xhtml?persistentId={dataset_pid}' if base_url and dataset_pid else (result[3] or ''),
+                        'dataset_url': result[3] or '',
                         'dataset_path': result[4] or ''
                     }
         except Exception as e:
-            logger.error(f'Error fetching metadata for ticket {ticket_number}: {e}')
+            logger.error(f'Error fetching metadata for table project_metadata: {e}')
         return {'dataset_pid': '', 'dataset_title': '', 'dataset_id': '', 'dataset_url': '', 'dataset_path': ''}
+
+    def get_check_results(self, table_name: str) -> dict:
+        """Get the check results from DuckDB for a specific ticket."""
+        sql = f"""
+        SELECT check_id, description, result_name, results
+        FROM "{self.schema_name}".{table_name};
+        """
+        try:
+            with self.get_readonly_connection() as conn:
+                logger.info(f'Executing SQL to fetch check results for table {table_name} with read-only mode')
+                result = conn.sql(sql).fetchone()
+                if result:
+                    logger.debug(f'Fetched check results for table {table_name}: {result}')
+                    return {
+                        'check_id': result[0],
+                        'description': result[1] or '',
+                        'result_name': result[2] or '',
+                        'results': result[3] or '',
+                    }
+        except Exception as e:
+            logger.error(f'Error fetching check results for table {table_name}: {e}')
