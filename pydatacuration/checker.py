@@ -2,6 +2,7 @@
 
 from pathlib import Path
 
+import duckdb
 import jmespath
 import yaml
 from loguru import logger
@@ -667,7 +668,7 @@ class Checker:
     def _record_exists(self, ticket_number: str) -> bool:
         """Check if a record with the given ticket_number already exists."""
         try:
-            with self.duckdb_instance.get_connection() as conn:
+            with duckdb.connect(self.duckdb_instance.db_file_path) as conn:
                 sql_query = (
                     f'SELECT COUNT(*) FROM "{self.duckdb_instance.schema_name}".project_metadata '
                     f"WHERE ticket_number = '{ticket_number}'"
@@ -686,8 +687,8 @@ class Checker:
             dataset_url = self.ds_metadata.get('data', {}).get('latestVersion', {}).get('url', 'No URL')
             dataset_path = self.check_ds_tree_info()
 
-            with self.duckdb_instance.get_connection() as conn:
-                conn.sql(f'''
+            with duckdb.connect(self.duckdb_instance.db_file_path) as conn:
+                conn.sql(f"""
                     UPDATE "{self.duckdb_instance.schema_name}".project_metadata
                     SET dataset_title = '{dataset_title}',
                         dataset_pid = '{dataset_pid}',
@@ -696,7 +697,7 @@ class Checker:
                         dataset_path = '{dataset_path}',
                         log_lastupdate_date = '2023-01-02'
                     WHERE ticket_number = '{self.duckdb_instance.schema_name}'
-                ''')
+                """)
         except Exception as e:
             logger.error(f'Failed to update existing record: {e}')
             raise
