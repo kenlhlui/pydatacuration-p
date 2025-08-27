@@ -56,7 +56,7 @@ class DuckDB:
         """Check if a schema exists in the DuckDB database."""
         try:
             logger.info(f'Checking if schema exists: {schema_name}')
-            with duckdb.connect(self.db_file_path) as conn:
+            with self.get_connection() as conn:
                 result = conn.sql(
                     f"SELECT schema_name FROM information_schema.schemata WHERE schema_name = '{schema_name}';"
                 )
@@ -68,7 +68,7 @@ class DuckDB:
     def delete_schema(self, schema_name: str) -> None:
         """Delete a schema from the DuckDB database."""
         try:
-            with duckdb.connect(self.db_file_path) as conn:
+            with self.get_connection() as conn:
                 conn.sql(f'DROP SCHEMA IF EXISTS "{schema_name}" CASCADE;')
             logger.info(f'Deleted schema: {schema_name}')
         except Exception as e:
@@ -78,7 +78,7 @@ class DuckDB:
         """Create a schema in the DuckDB database."""
         try:
             logger.info(f'Creating schema: {self.schema_name}')
-            with duckdb.connect(self.db_file_path) as conn:
+            with self.get_connection() as conn:
                 conn.sql(f'CREATE SCHEMA IF NOT EXISTS "{self.schema_name}";')
                 logger.info(f'Created schema: {self.schema_name}')
         except Exception as e:
@@ -87,7 +87,7 @@ class DuckDB:
     def create_database(self) -> None:
         """Create the database file."""
         try:
-            with duckdb.connect(self.db_file_path) as conn:
+            with self.get_connection():
                 # Just opening and closing creates the database file
                 pass
             logger.info(f'Created database at {self.db_file_path}')
@@ -97,7 +97,7 @@ class DuckDB:
     def check_table_has_records(self, table_name: str) -> bool:
         """Check whether there is an existing record."""
         try:
-            with duckdb.connect(self.db_file_path, read_only=True) as conn:
+            with self.get_readonly_connection() as conn:
                 logger.debug(f'Checking for existing records in table: {table_name}')
                 result = conn.sql(f'SELECT COUNT(*) FROM "{self.schema_name}".{table_name};').fetchone()
                 logger.debug(f'Query result for existing records in table {table_name}: {result}')
@@ -145,6 +145,7 @@ class DuckDB:
                 result = conn.sql(sql).fetchone()
                 if result:
                     dataset_pid = result[0] or ''
+                    logger.debug(f'Fetched metadata for ticket {ticket_number}: {result}')
                     return {
                         'dataset_pid': dataset_pid,
                         'dataset_title': result[1] or '',

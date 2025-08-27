@@ -44,7 +44,7 @@ def rich_sink(message) -> None:
     console.print(timestamp, '│', level_text, '│', location, '│', msg_text)
 
 
-def setup_logging(log_file_dir: Path | None = None, log_level: str = 'INFO') -> None:
+def setup_logging(log_file_dir: Path | None = None, log_level: str = 'DEBUG') -> None:
     """Setup loguru configuration for the entire application with Rich console support.
 
     Args:
