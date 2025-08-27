@@ -1,7 +1,6 @@
 """The module provides an interface for interacting with DuckDB databases."""
 
 import time
-from contextlib import contextmanager
 from pathlib import Path
 
 import duckdb
@@ -27,104 +26,36 @@ class DuckDB:
         """
         self.schema_name = schema_name
         self.db_file_path = db_file_path
-        self.connection: duckdb.DuckDBPyConnection | None = None
-
-    def connect(self, retries: int = 3, delay: float = 1.0) -> None:
-        """Establish a connection to the DuckDB database with retry logic."""
-        for attempt in range(retries):
-            try:
-                self.connection: duckdb.DuckDBPyConnection = duckdb.connect(self.db_file_path)
-                logger.info(f'Connected to DuckDB database at {self.db_file_path}')
-                return
-            except Exception as e:
-                if 'lock' in str(e).lower() and attempt < retries - 1:
-                    logger.warning(f'Lock detected, retrying in {delay}s... (attempt {attempt + 1}/{retries})')
-                    time.sleep(delay)
-                    delay *= 2  # Exponential backoff
-                else:
-                    logger.error(f'Failed to connect after {retries} attempts: {e}')
-                    raise
-
-    def close(self) -> None:
-        """Close the connection to the DuckDB database."""
-        if self.connection:
-            self.connection.close()
-            self.connection = None
-            logger.info('Closed the DuckDB connection.')
-
-    @contextmanager
-    def get_connection(self):
-        """Context manager for safe database connections."""
-        if not self.connection:
-            self.connect()
-        try:
-            yield self.connection
-        finally:
-            # Keep connection open for reuse, but you could close it here if needed
-            pass
 
     def check_schema_exists(self, schema_name: str) -> bool:
         """Check if a schema exists in the DuckDB database."""
-        if not self.connection:
-            self.connect()
-        result = self.connection.sql(
-            f"SELECT schema_name FROM information_schema.schemata WHERE schema_name = '{schema_name}';"
-        )
+        with duckdb.connect(self.db_file_path) as conn:
+            result = conn.sql(
+                f"SELECT schema_name FROM information_schema.schemata WHERE schema_name = '{schema_name}';"
+            )
         return len(result) > 0
 
     def delete_schema(self, schema_name: str) -> None:
         """Delete a schema from the DuckDB database."""
-        if not self.connection:
-            self.connect()
-        self.connection.sql(f'DROP SCHEMA IF EXISTS "{schema_name}" CASCADE;')
+        with duckdb.connect(self.db_file_path) as conn:
+            conn.sql(f'DROP SCHEMA IF EXISTS "{schema_name}" CASCADE;')
         logger.info(f'Deleted schema: {schema_name}')
 
     def create_schema(self) -> None:
         """Create a schema in the DuckDB database."""
-        if not self.connection:
-            self.connect()
-        self.connection.sql(f'CREATE SCHEMA IF NOT EXISTS "{self.schema_name}";')
-        logger.info(f'Created schema: {self.schema_name}')
-        self.close()
-        logger.info('Closed the DuckDB connection after creating schema.')
+        logger.info(f'Creating schema: {self.schema_name}')
+        with duckdb.connect(self.db_file_path) as conn:
+            conn.sql(f'CREATE SCHEMA IF NOT EXISTS "{self.schema_name}";')
+            logger.info(f'Created schema: {self.schema_name}')
 
-    def execute_with_retry(self, sql: str, retries: int = 3):
-        """Execute SQL with retry logic for handling locks."""
-        for attempt in range(retries):
-            try:
-                with self.get_connection() as conn:
-                    return conn.sql(sql)
-            except Exception as e:
-                if 'lock' in str(e).lower() and attempt < retries - 1:
-                    logger.warning(f'Lock detected during SQL execution, retrying... (attempt {attempt + 1}/{retries})')
-                    time.sleep(0.5 * (2**attempt))  # Exponential backoff
-                else:
-                    raise
-        return None
-
-    @classmethod
-    def create_read_only_connection(cls, database_path: str):
-        """Create a read-only connection to avoid write locks."""
-        logger.info(f'Creating read-only connection to {database_path}')
-        return duckdb.connect(database_path, read_only=True)
-
-    def use_wal_mode(self):
-        """Enable WAL mode for better concurrency (if supported)."""
-        try:
-            with self.get_connection() as conn:
-                conn.sql('PRAGMA journal_mode=WAL;')
-                logger.info('Enabled WAL mode for better concurrency')
-        except Exception as e:
-            logger.warning(f'Could not enable WAL mode: {e}')
-
-    # Create the database
     def create_database(self) -> None:
-        self.connect()
-        self.close()
+        """Create the database file."""
+        with duckdb.connect(self.db_file_path) as conn:
+            # Just opening and closing creates the database file
+            pass
+        logger.info(f'Created database at {self.db_file_path}')
 
     def sql_write_records_to_table(self, sql_model: type[SQLModel]) -> None:
-        self.close()
-
         # Use duckdb_engine connection string
         engine = create_engine(f'duckdb:///{self.db_file_path}', echo=False)
 
