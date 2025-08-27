@@ -139,7 +139,6 @@ class DuckDB:
             session.commit()
             logger.info(f'Committed sample data to table: {sql_model.__tablename__}')
 
-
     def get_metadata_dict(self, ticket_number: str, base_url: str = '') -> dict:
         """Get dataset metadata as dictionary for API response using read-only mode."""
         sql = f"""
@@ -148,26 +147,19 @@ class DuckDB:
         WHERE ticket_number = '{ticket_number}'
         LIMIT 1;
         """
-        logger.debug(f'Executing SQL to get metadata: {sql.strip()}')
-        # Use read-only connection to avoid locks
-        logger.info(f'Opening read-only connection to {self.db_file_path}')
-        conn = self.create_read_only_connection(str(self.db_file_path))
-
         try:
-            result = conn.sql(sql).fetchone()
-            logger.info(f'Query result: {result}')
-
-            if result:
-                dataset_pid = result[0] or ''
-                logger.info(f'Fetched metadata for ticket {ticket_number}: PID={dataset_pid}, Title={result[1]}, ID={result[2]}, URL={result[3]}')
-                return {
-                    'dataset_pid': dataset_pid,
-                    'dataset_title': result[1] or '',
-                    'dataset_id': result[2] or '',
-                    'dataset_url': f'{base_url}/dataset.xhtml?persistentId={dataset_pid}' if base_url and dataset_pid else (result[3] or ''),
-                    'dataset_path': result[4] or ''
-                }
-        finally:
-            conn.close()
-
+            with duckdb.connect(self.db_file_path, read_only=True) as conn:
+                logger.info(f'Executing SQL to fetch dataset metadata for ticket {ticket_number} with read-only mode')
+                result = conn.sql(sql).fetchone()
+                if result:
+                    dataset_pid = result[0] or ''
+                    return {
+                        'dataset_pid': dataset_pid,
+                        'dataset_title': result[1] or '',
+                        'dataset_id': result[2] or '',
+                        'dataset_url': f'{base_url}/dataset.xhtml?persistentId={dataset_pid}' if base_url and dataset_pid else (result[3] or ''),
+                        'dataset_path': result[4] or ''
+                    }
+        except Exception as e:
+            logger.error(f'Error fetching metadata for ticket {ticket_number}: {e}')
         return {'dataset_pid': '', 'dataset_title': '', 'dataset_id': '', 'dataset_url': '', 'dataset_path': ''}
