@@ -4,6 +4,7 @@ from sqlalchemy import Sequence
 from sqlalchemy import String
 from sqlmodel import Field
 from sqlmodel import SQLModel
+from sqlmodel import DATE
 
 
 class DuckDBmodels:
@@ -40,7 +41,7 @@ class DuckDBmodels:
             dataset_id: str = Field(sa_column=Column(String, nullable=False))
             dataset_url: str = Field(sa_column=Column(String, nullable=False))
             dataset_path: str = Field(sa_column=Column(String, nullable=False))
-            log_init_date: str = Field(sa_column=Column(String, nullable=False))  # ! Placeholder to fix the type later
-            log_lastupdate_date: str = Field(sa_column=Column(String, nullable=False))  # ! Placeholder to fix the type later
+            log_init_date: str = Field(sa_column=Column(DATE, nullable=False))
+            log_last_update_date: str = Field(sa_column=Column(DATE, nullable=False))
 
         return ProjectMetadata

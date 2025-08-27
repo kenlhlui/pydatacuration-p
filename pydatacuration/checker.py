@@ -9,6 +9,8 @@ from loguru import logger
 
 from pydatacuration.sqlmodels import DuckDBmodels
 
+from datetime import datetime
+
 from .checksum import Checksum
 from .duck_db import DuckDB
 from .files_opener import FilesOpener
@@ -649,21 +651,24 @@ class Checker:
         project_metadata_schema = duckdb_models.project_metadata_record()
 
         # Check if record already exists
-        if not self.duckdb_instance.check_table_has_records('project_metadata'):
-            self.duckdb_instance.sql_write_records_to_table(
-                project_metadata_schema(
-                    ticket_number=self.duckdb_instance.schema_name,
-                    dataset_title=self.ds_title if self.ds_title else 'No Title',
-                    dataset_pid=self.ds_metadata.get('data', {}).get('latestVersion', {}).get('datasetPersistentId', 'No ID'),
-                    dataset_id=self.ds_metadata.get('data', {}).get('latestVersion', {}).get('id', 'No ID'),
-                    dataset_url=self.ds_metadata.get('data', {}).get('latestVersion', {}).get('url', 'No URL'),
-                    dataset_path=self.check_ds_tree_info(),
-                    log_init_date="2023-01-01",  # ! Placeholder to fix later
-                    log_lastupdate_date="2023-01-02"  # ! Placeholder to fix later
+        try:
+            if not self.duckdb_instance.check_table_has_records('project_metadata'):
+                self.duckdb_instance.sql_write_records_to_table(
+                    project_metadata_schema(
+                        ticket_number=self.duckdb_instance.schema_name,
+                        dataset_title=self.ds_title if self.ds_title else 'No Title',
+                        dataset_pid=self.ds_metadata.get('data', {}).get('latestVersion', {}).get('datasetPersistentId', 'No ID'),
+                        dataset_id=self.ds_metadata.get('data', {}).get('latestVersion', {}).get('id', 'No ID'),
+                        dataset_url=self.ds_metadata.get('data', {}).get('latestVersion', {}).get('url', 'No URL'),
+                        dataset_path=self.check_ds_tree_info(),
+                        log_init_date=datetime.today(),
+                        log_last_update_date=datetime.today(),
+                    )
                 )
-            )
-        else:
-            self._update_existing_record()
+            else:
+                self._update_existing_record()
+        except Exception as e:
+            self.logger.error(f'Failed to write to DuckDB: {e}')
 
     def _update_existing_record(self) -> None:
         """Update the existing record with current metadata."""
@@ -682,7 +687,7 @@ class Checker:
                         dataset_id = '{dataset_id}',
                         dataset_url = '{dataset_url}',
                         dataset_path = '{dataset_path}',
-                        log_lastupdate_date = '2023-01-02'
+                        log_last_update_date = '{datetime.today()}'
                     WHERE ticket_number = '{self.duckdb_instance.schema_name}'
                 """)
         except Exception as e:
