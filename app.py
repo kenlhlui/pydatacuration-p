@@ -377,11 +377,12 @@ async def get_ds_metadata(main_dir: str, ticket_number: str, base_url: str = '')
         raise HTTPException(status_code=500, 
                             detail=f'Error reading dataset metadata: {str(e)}')
 
-def _get_check_results_from_duckdb(ticket_number: str) -> dict:
+def _get_check_results_from_duckdb(main_dir: str, ticket_number: str, table_name: str) -> dict:
     """Get the check results from DuckDB for a specific ticket."""
     try:
-        duck_db = DuckDB(schema_name=ticket_number)
-        return duck_db.get_check_results(ticket_number)
+        dir_manager = DirectoryManager(ticket_number, main_dir)
+        duck_db = DuckDB(schema_name=ticket_number, db_file_path=dir_manager.db_path)
+        return duck_db.get_check_results(table_name)
     except Exception as e:
         logger.error(f"Error fetching check results from DuckDB for ticket {ticket_number}: {e}")
         return {"error": str(e)}
@@ -401,7 +402,13 @@ async def get_check_results_from_session(request: Request) -> JSONResponse:
     try:
         main_dir = request.query_params.get('main_dir', 'workdir')
         ticket_number = request.query_params.get('ticket_number')
-
+        # DEBUG: Trying to load keywords from  _get_check_results_from_duckdb inside app.py
+        try:
+            logger.debug('Trying to load  _get_check_results_from_duckdb inside app.py')
+            duckdb_result = _get_check_results_from_duckdb(main_dir, ticket_number, 'keywords_existence')
+            logger.debug(f'Result of duckdb_result: {duckdb_result}')
+        except Exception as e:
+            logger.error(f'Error fetching check results from DuckDB for ticket {ticket_number}: {e}')
         if not ticket_number:
             return JSONResponse(content={'check_results': []})
 

@@ -160,11 +160,12 @@ class DuckDB:
         """Get the check results from DuckDB for a specific ticket."""
         sql = f"""
         SELECT check_id, description, result_name, results
-        FROM "{self.schema_name}".{table_name};
+        FROM "{self.schema_name}".{table_name}
+        LIMIT 1;
         """
         try:
             with self.get_readonly_connection() as conn:
-                logger.info(f'Executing SQL to fetch check results for table {table_name} with read-only mode')
+                logger.info(f'Executing SQL to fetch check results for table {table_name} in {self.schema_name} with read-only mode')
                 result = conn.sql(sql).fetchone()
                 if result:
                     logger.debug(f'Fetched check results for table {table_name}: {result}')
@@ -174,5 +175,7 @@ class DuckDB:
                         'result_name': result[2] or '',
                         'results': result[3] or '',
                     }
+                logger.debug(f'No check result found for {table_name}')
         except Exception as e:
             logger.error(f'Error fetching check results for table {table_name}: {e}')
+        return {'check_id': '', 'description': '', 'result_name': '', 'results': 'results'}
