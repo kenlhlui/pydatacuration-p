@@ -98,7 +98,7 @@ class DuckDB:
         """Check whether there is an existing record."""
         try:
             with self.get_readonly_connection() as conn:
-                logger.debug(f'Checking for existing records in table: {table_name}')
+                logger.debug(f'Checking for existing records in table: {table_name} from {self.schema_name}')
                 result = conn.sql(f'SELECT COUNT(*) FROM "{self.schema_name}".{table_name};').fetchone()
                 logger.debug(f'Query result for existing records in table {table_name}: {result}')
                 if result and result[0] > 0:
@@ -136,7 +136,6 @@ class DuckDB:
         sql = f"""
         SELECT dataset_pid, dataset_title, dataset_id, dataset_url, dataset_path
         FROM "{self.schema_name}".project_metadata
-        WHERE ticket_number = '{ticket_number}'
         LIMIT 1;
         """
         try:

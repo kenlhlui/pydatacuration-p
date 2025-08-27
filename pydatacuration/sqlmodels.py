@@ -1,10 +1,12 @@
+from datetime import date
+
 from sqlalchemy import Column
 from sqlalchemy import Integer
 from sqlalchemy import Sequence
-from sqlalchemy import String
+from sqlmodel import DATE
 from sqlmodel import Field
 from sqlmodel import SQLModel
-from sqlmodel import DATE
+from sqlmodel import String
 
 
 class DuckDBmodels:
@@ -41,7 +43,7 @@ class DuckDBmodels:
             dataset_id: str = Field(sa_column=Column(String, nullable=False))
             dataset_url: str = Field(sa_column=Column(String, nullable=False))
             dataset_path: str = Field(sa_column=Column(String, nullable=False))
-            log_init_date: str = Field(sa_column=Column(DATE, nullable=False))
-            log_last_update_date: str = Field(sa_column=Column(DATE, nullable=False))
+            log_init_date: date = Field(sa_column=Column(DATE, nullable=False))
+            log_last_update_date: date = Field(sa_column=Column(DATE, nullable=False))
 
         return ProjectMetadata
