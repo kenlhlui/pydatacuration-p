@@ -546,18 +546,9 @@ class Checker:
                     dataset_path = f'{path}/{ds_title}'
                     self.logger.debug(f'Dataset path in the dataverse repository: {dataset_path}')  # noqa: E501
 
-                # Add the result to self.result_builder
-                # self.result_builder.add_check_result(
-                #     check_id='dataset_path',
-                #     check_name='Dataset Path Information',
-                #     description="Information about the dataset's location in the Dataverse repository",
-                #     result_name='dataset_path',
-                #     results=[dataset_path],
-                # )
-                # DEBUG: Add the returned path
                 return dataset_path
         return None
-            # TODO: Add error handling for the case when the response is None or empty; or HTTP error
+        # TODO: Add error handling for the case when the response is None or empty; or HTTP error
 
     def check_restricted_files(self) -> None:
         """Check for restricted files."""
@@ -659,7 +650,7 @@ class Checker:
                         dataset_title=self.ds_title if self.ds_title else 'No Title',
                         dataset_pid=self.ds_metadata.get('data', {}).get('latestVersion', {}).get('datasetPersistentId', 'No ID'),
                         dataset_id=self.ds_metadata.get('data', {}).get('latestVersion', {}).get('id', 'No ID'),
-                        dataset_url=self.ds_metadata.get('data', {}).get('latestVersion', {}).get('url', 'No URL'),
+                        dataset_url=self.ds_metadata.get('data', {}).get('latestVersion', {}).get('url', 'No URL'),  # FIXME
                         dataset_path=self.check_ds_tree_info(),
                         log_init_date=datetime.today(),
                         log_last_update_date=datetime.today(),
@@ -676,7 +667,7 @@ class Checker:
             dataset_title = self.ds_title if self.ds_title else 'No Title'
             dataset_pid = self.ds_metadata.get('data', {}).get('latestVersion', {}).get('datasetPersistentId', 'No ID')
             dataset_id = self.ds_metadata.get('data', {}).get('latestVersion', {}).get('id', 'No ID')
-            dataset_url = self.ds_metadata.get('data', {}).get('latestVersion', {}).get('url', 'No URL')
+            dataset_url = self.ds_metadata.get('data', {}).get('latestVersion', {}).get('url', 'No URL')  # FIXME
             dataset_path = self.check_ds_tree_info()
 
             with duckdb.connect(self.duckdb_instance.db_file_path) as conn:
