@@ -55,6 +55,16 @@ class DuckDB:
             pass
         logger.info(f'Created database at {self.db_file_path}')
 
+    def check_table_has_records(self, table_name: str) -> bool:
+        """Check whether there is an existing record."""
+        with duckdb.connect(self.db_file_path) as conn:
+            logger.debug(f'Checking for existing records in table: {table_name}')
+            result = conn.sql(f'SELECT COUNT(*) FROM "{self.schema_name}".{table_name};').fetchone()
+            if result and result[0] > 0:
+                logger.info(f'Found existing record in "{self.schema_name}".{table_name}')
+                return True
+        return False
+
     def sql_write_records_to_table(self, sql_model: type[SQLModel]) -> None:
         """Write records to a table in the DuckDB database using SQLmodel.
 

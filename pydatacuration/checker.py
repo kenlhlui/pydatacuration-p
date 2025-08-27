@@ -649,7 +649,7 @@ class Checker:
         project_metadata_schema = duckdb_models.project_metadata_record()
 
         # Check if record already exists
-        if not self._record_exists(self.duckdb_instance.schema_name):
+        if not self.duckdb_instance.check_table_has_records('project_metadata'):
             self.duckdb_instance.sql_write_records_to_table(
                 project_metadata_schema(
                     ticket_number=self.duckdb_instance.schema_name,
@@ -664,19 +664,6 @@ class Checker:
             )
         else:
             self._update_existing_record()
-
-    def _record_exists(self, ticket_number: str) -> bool:
-        """Check if a record with the given ticket_number already exists."""
-        try:
-            with duckdb.connect(self.duckdb_instance.db_file_path) as conn:
-                sql_query = (
-                    f'SELECT COUNT(*) FROM "{self.duckdb_instance.schema_name}".project_metadata '
-                    f"WHERE ticket_number = '{ticket_number}'"
-                )
-                result = conn.sql(sql_query).fetchone()
-                return result[0] > 0 if result else False
-        except Exception:
-            return False
 
     def _update_existing_record(self) -> None:
         """Update the existing record with current metadata."""
