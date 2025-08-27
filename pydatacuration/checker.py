@@ -1,6 +1,6 @@
 """The checker module provides functions to check the validity of data files and metadata."""
 
-from datetime import datetime
+from datetime import date, datetime
 from pathlib import Path
 
 import duckdb
@@ -643,16 +643,15 @@ class Checker:
 
         # Check if record already exists
         try:
-            ticket_number = (self.duckdb_instance.schema_name,)
-            dataset_title = (self.ds_title if self.ds_title else 'No Title',)
-            dataset_pid = (
-                self.ds_metadata.get('data', {}).get('latestVersion', {}).get('datasetPersistentId', 'No ID'),
-            )
-            dataset_id = (self.ds_metadata.get('data', {}).get('latestVersion', {}).get('id', 'No ID'),)
-            dataset_url = (parse_dataset_url(self.base_url, dataset_pid),)
-            dataset_path = (self.check_ds_tree_info(),)
-            log_init_date = (datetime.today(),)
-            log_last_update_date = (datetime.today(),)
+            ticket_number = self.duckdb_instance.schema_name
+            dataset_title = self.ds_title if self.ds_title else 'No Title'
+            dataset_pid = self.ds_metadata.get('data', {}).get('latestVersion', {}).get('datasetPersistentId', 'No ID')
+            dataset_id = self.ds_metadata.get('data', {}).get('latestVersion', {}).get('id', 'No ID')
+            dataset_url = parse_dataset_url(self.base_url, dataset_pid)
+            dataset_path = self.check_ds_tree_info()
+            log_init_date = date.today()
+            log_last_update_date = date.today()
+            logger.debug(f'Dataset URL: {dataset_url} from write_to_duckdb')
             if not self.duckdb_instance.check_table_has_records('project_metadata'):
                 self.duckdb_instance.sql_write_records_to_table(
                     project_metadata_schema(
@@ -675,7 +674,7 @@ class Checker:
                             dataset_id = '{dataset_id}',
                             dataset_url = '{dataset_url}',
                             dataset_path = '{dataset_path}',
-                            log_last_update_date = '{datetime.today()}'
+                            log_last_update_date = '{datetime.today().date()}'
                         WHERE ticket_number = '{self.duckdb_instance.schema_name}'
                     """)
         except Exception as e:
