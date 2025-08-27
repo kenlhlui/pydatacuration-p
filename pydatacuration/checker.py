@@ -1,9 +1,9 @@
 """The checker module provides functions to check the validity of data files and metadata."""
 
-from datetime import date, datetime
+from datetime import date
+from datetime import datetime
 from pathlib import Path
 
-import duckdb
 import jmespath
 import yaml
 from loguru import logger
@@ -104,6 +104,7 @@ class Checker:
         self.check_zip = check_zip
         self.collection_alias = collection_alias
         self.duckdb_instance = duckdb_instance
+        self.sqlmodels = DuckDBmodels(self.duckdb_instance.schema_name)
 
         self.logger = logger
         self.checksums = Checksum()
@@ -638,8 +639,7 @@ class Checker:
 
     # The below writes the to the DuckDB database
     def write_to_duckdb(self):
-        duckdb_models = DuckDBmodels(schema_name=self.duckdb_instance.schema_name)
-        project_metadata_schema = duckdb_models.project_metadata_record()
+        project_metadata_schema = self.sqlmodels.project_metadata_record()
 
         # Check if record already exists
         try:
@@ -649,8 +649,6 @@ class Checker:
             dataset_id = self.ds_metadata.get('data', {}).get('latestVersion', {}).get('id', 'No ID')
             dataset_url = parse_dataset_url(self.base_url, dataset_pid)
             dataset_path = self.check_ds_tree_info()
-            log_init_date = date.today()
-            log_last_update_date = date.today()
             logger.debug(f'Dataset URL: {dataset_url} from write_to_duckdb')
             if not self.duckdb_instance.check_table_has_records('project_metadata'):
                 self.duckdb_instance.sql_write_records_to_table(
@@ -661,8 +659,9 @@ class Checker:
                         dataset_id=dataset_id,
                         dataset_url=dataset_url,
                         dataset_path=dataset_path,
-                        log_init_date=log_init_date,
-                        log_last_update_date=log_last_update_date,
+                        log_init_date=date.today(),
+                        log_last_update_date=date.today(),
+                        last_modified_datetime=datetime.now(),
                     )
                 )
             else:
@@ -674,7 +673,8 @@ class Checker:
                             dataset_id = '{dataset_id}',
                             dataset_url = '{dataset_url}',
                             dataset_path = '{dataset_path}',
-                            log_last_update_date = '{datetime.today().date()}'
+                            log_last_update_date = '{date.today()}',
+                            last_modified_datetime = '{datetime.now()}'
                         WHERE ticket_number = '{self.duckdb_instance.schema_name}'
                     """)
         except Exception as e:
