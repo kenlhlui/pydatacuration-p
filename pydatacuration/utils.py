@@ -1,11 +1,12 @@
-"""This module contains utility functions for data curation tasks."""
+"""Utility functions."""
 
 import os
 import re
-import shutil
 import sys
 from pathlib import Path
 from pathlib import PurePosixPath
+from urllib.parse import urlencode
+from urllib.parse import urljoin
 
 import deepdiff
 import orjson
@@ -278,3 +279,27 @@ def orjson_export(file_path: Path | str, obj: dict) -> None:
     except Exception as e:
         logger.error(f'Error exporting JSON: {e}')
         raise e
+
+
+def parse_dataset_url(base_url: str | None, pid: str | None) -> str:
+    """Construct a Dataverse dataset URL from a base URL and persistent ID.
+
+    Args:
+        base_url (str): The base URL of the Dataverse installation (with or without trailing slash).
+        pid (str): The persistent identifier (PID) of the dataset.
+
+    Returns:
+        str: A properly constructed and encoded dataset URL.
+    """
+    # Ensure correct path joining
+    if base_url and pid:
+
+        api_path = 'api/datasets/:persistentId/'
+        base = base_url.rstrip('/') + '/'  # guarantee single trailing slash
+
+        # Encode query params safely
+        query = urlencode({'persistentId': pid})
+
+        return urljoin(base, api_path) + '?' + query
+
+    return 'No URL'

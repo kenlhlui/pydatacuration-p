@@ -1,6 +1,7 @@
 """The module provides an interface for interacting with DuckDB databases."""
 
 import time
+from contextlib import contextmanager
 from pathlib import Path
 
 import duckdb
@@ -26,6 +27,30 @@ class DuckDB:
         """
         self.schema_name = schema_name
         self.db_file_path = db_file_path
+
+    @contextmanager
+    def get_connection(self):
+        """Get a connection to the DuckDB database."""
+        time.sleep(0.1)  # Small delay to avoid connection issues
+        conn = duckdb.connect(self.db_file_path)
+        try:
+            logger.debug(f'Opened connection to DuckDB at {self.db_file_path}')
+            yield conn
+        finally:
+            conn.close()
+            logger.debug(f'Closed connection to DuckDB at {self.db_file_path}')
+
+    @contextmanager
+    def get_readonly_connection(self):
+        """Get a read-only connection to the DuckDB database."""
+        time.sleep(0.1)  # Small delay to avoid connection issues
+        conn = duckdb.connect(self.db_file_path, read_only=True)
+        try:
+            logger.debug(f'Opened read-only connection to DuckDB at {self.db_file_path}')
+            yield conn
+        finally:
+            conn.close()
+            logger.debug(f'Closed read-only connection to DuckDB at {self.db_file_path}')
 
     def check_schema_exists(self, schema_name: str) -> bool:
         """Check if a schema exists in the DuckDB database."""
@@ -115,7 +140,7 @@ class DuckDB:
         LIMIT 1;
         """
         try:
-            with duckdb.connect(self.db_file_path, read_only=True) as conn:
+            with self.get_readonly_connection() as conn:
                 logger.info(f'Executing SQL to fetch dataset metadata for ticket {ticket_number} with read-only mode')
                 result = conn.sql(sql).fetchone()
                 if result:
