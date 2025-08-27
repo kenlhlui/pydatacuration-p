@@ -48,7 +48,7 @@ class DuckDBmodels:
 
         return ProjectMetadata
 
-    def check_result_list(self, schema_name: str) -> type[SQLModel]:
+    def check_result_list(self, table_name: str) -> type[SQLModel]:
         """Check the result list for the specified schema.
 
         Returns:
@@ -57,7 +57,7 @@ class DuckDBmodels:
         class CheckResultList(SQLModel, table=True):
             """Check result list table model."""
 
-            __tablename__ = schema_name
+            __tablename__ = table_name
             __table_args__ = {'schema': self.schema_name}
 
             id: int | None = Field(
