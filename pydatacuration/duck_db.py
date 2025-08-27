@@ -29,41 +29,60 @@ class DuckDB:
 
     def check_schema_exists(self, schema_name: str) -> bool:
         """Check if a schema exists in the DuckDB database."""
-        with duckdb.connect(self.db_file_path) as conn:
-            result = conn.sql(
-                f"SELECT schema_name FROM information_schema.schemata WHERE schema_name = '{schema_name}';"
-            )
-        return len(result) > 0
+        try:
+            logger.info(f'Checking if schema exists: {schema_name}')
+            with duckdb.connect(self.db_file_path) as conn:
+                result = conn.sql(
+                    f"SELECT schema_name FROM information_schema.schemata WHERE schema_name = '{schema_name}';"
+                )
+            return len(result) > 0
+        except Exception as e:
+            logger.error(f'Error checking schema {schema_name}: {e}')
+            return False
 
     def delete_schema(self, schema_name: str) -> None:
         """Delete a schema from the DuckDB database."""
-        with duckdb.connect(self.db_file_path) as conn:
-            conn.sql(f'DROP SCHEMA IF EXISTS "{schema_name}" CASCADE;')
-        logger.info(f'Deleted schema: {schema_name}')
+        try:
+            with duckdb.connect(self.db_file_path) as conn:
+                conn.sql(f'DROP SCHEMA IF EXISTS "{schema_name}" CASCADE;')
+            logger.info(f'Deleted schema: {schema_name}')
+        except Exception as e:
+            logger.error(f'Error deleting schema {schema_name}: {e}')
 
     def create_schema(self) -> None:
         """Create a schema in the DuckDB database."""
-        logger.info(f'Creating schema: {self.schema_name}')
-        with duckdb.connect(self.db_file_path) as conn:
-            conn.sql(f'CREATE SCHEMA IF NOT EXISTS "{self.schema_name}";')
-            logger.info(f'Created schema: {self.schema_name}')
+        try:
+            logger.info(f'Creating schema: {self.schema_name}')
+            with duckdb.connect(self.db_file_path) as conn:
+                conn.sql(f'CREATE SCHEMA IF NOT EXISTS "{self.schema_name}";')
+                logger.info(f'Created schema: {self.schema_name}')
+        except Exception as e:
+            logger.error(f'Error creating schema {self.schema_name}: {e}')
 
     def create_database(self) -> None:
         """Create the database file."""
-        with duckdb.connect(self.db_file_path) as conn:
-            # Just opening and closing creates the database file
-            pass
-        logger.info(f'Created database at {self.db_file_path}')
+        try:
+            with duckdb.connect(self.db_file_path) as conn:
+                # Just opening and closing creates the database file
+                pass
+            logger.info(f'Created database at {self.db_file_path}')
+        except Exception as e:
+            logger.error(f'Error creating database at {self.db_file_path}: {e}')
 
     def check_table_has_records(self, table_name: str) -> bool:
         """Check whether there is an existing record."""
-        with duckdb.connect(self.db_file_path) as conn:
-            logger.debug(f'Checking for existing records in table: {table_name}')
-            result = conn.sql(f'SELECT COUNT(*) FROM "{self.schema_name}".{table_name};').fetchone()
-            if result and result[0] > 0:
-                logger.info(f'Found existing record in "{self.schema_name}".{table_name}')
-                return True
-        return False
+        try:
+            with duckdb.connect(self.db_file_path, read_only=True) as conn:
+                logger.debug(f'Checking for existing records in table: {table_name}')
+                result = conn.sql(f'SELECT COUNT(*) FROM "{self.schema_name}".{table_name};').fetchone()
+                logger.debug(f'Query result for existing records in table {table_name}: {result}')
+                if result and result[0] > 0:
+                    logger.info(f'Found existing record in "{self.schema_name}".{table_name}')
+                    return True
+            return False
+        except Exception as e:
+            logger.error(f'Error checking records in table {table_name}: {e}')
+            return False
 
     def sql_write_records_to_table(self, sql_model: type[SQLModel]) -> None:
         """Write records to a table in the DuckDB database using SQLmodel.
