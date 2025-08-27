@@ -1,13 +1,15 @@
+"""Module for SQLmodels."""
 from datetime import date
 
 from sqlalchemy import Column
 from sqlalchemy import Integer
 from sqlalchemy import Sequence
+from sqlmodel import ARRAY
 from sqlmodel import DATE
 from sqlmodel import Field
 from sqlmodel import SQLModel
 from sqlmodel import String
-
+from sqlmodel import DATETIME
 
 class DuckDBmodels:
     def __init__(self, schema_name: str) -> None:
@@ -15,9 +17,6 @@ class DuckDBmodels:
 
     def project_metadata_record(self) -> type[SQLModel]:
         """Create a ProjectMetadata table class with the specified schema.
-
-        Args:
-            schema_name (str): The schema name to use for the table.
 
         Returns:
             type[SQLModel]: The ProjectMetadata class with the specified schema.
@@ -45,5 +44,35 @@ class DuckDBmodels:
             dataset_path: str = Field(sa_column=Column(String, nullable=False))
             log_init_date: date = Field(sa_column=Column(DATE, nullable=False))
             log_last_update_date: date = Field(sa_column=Column(DATE, nullable=False))
+            last_modified_datetime: date = Field(sa_column=Column(DATETIME, nullable=False))
 
         return ProjectMetadata
+
+    def check_result_list(self, schema_name: str) -> type[SQLModel]:
+        """Check the result list for the specified schema.
+
+        Returns:
+            type[SQLModel]: The CheckResultList class with the specified schema.
+        """
+        class CheckResultList(SQLModel, table=True):
+            """Check result list table model."""
+
+            __tablename__ = schema_name
+            __table_args__ = {'schema': self.schema_name}
+
+            id: int | None = Field(
+                default=None,
+                sa_column=Column(
+                    Integer,
+                    Sequence('check_result_list_id_seq'),
+                    server_default=Sequence('check_result_list_id_seq').next_value(),
+                    primary_key=True
+                )
+            )
+            check_id: str = Field(sa_column=Column(String, nullable=False))
+            description: str = Field(sa_column=Column(String, nullable=False))
+            result_name: str = Field(sa_column=Column(String, nullable=False))
+            results: list[str] = Field(sa_column=Column(ARRAY(String), nullable=False))
+            last_modified_datetime: date = Field(sa_column=Column(DATETIME, nullable=False))
+
+        return CheckResultList
