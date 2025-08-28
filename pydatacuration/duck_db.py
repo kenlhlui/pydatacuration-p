@@ -224,4 +224,6 @@ class DuckDB:
 
         """
         table_names = self.read_schema_tables()
-        return [name for name in table_names if name != 'project_metadata']
+        filtered_names = [name for name in table_names if name != 'project_metadata']
+        logger.debug(f'Check item tables: {filtered_names}')
+        return filtered_names
