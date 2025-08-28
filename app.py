@@ -404,9 +404,15 @@ async def get_check_results_from_session(request: Request) -> JSONResponse:
         ticket_number = request.query_params.get('ticket_number')
         # DEBUG: Trying to load keywords from  _get_check_results_from_duckdb inside app.py
         try:
+            _check_results = {'check_results': []}
             logger.debug('Trying to load  _get_check_results_from_duckdb inside app.py')
-            duckdb_result = _get_check_results_from_duckdb(main_dir, ticket_number, 'keywords_existence')
-            logger.debug(f'Result of duckdb_result: {duckdb_result}')
+            dir_manager = DirectoryManager(ticket_number, main_dir)
+            duck_db = DuckDB(schema_name=ticket_number, db_file_path=dir_manager.db_path)
+            table_names: list = duck_db.read_check_item_table_names()
+            for table_name in table_names:
+                duckdb_result = _get_check_results_from_duckdb(main_dir, ticket_number, table_name)
+                _check_results['check_results'].append(duckdb_result)
+                logger.debug(f'Result of duckdb_result: {duckdb_result}')
         except Exception as e:
             logger.error(f'Error fetching check results from DuckDB for ticket {ticket_number}: {e}')
 
@@ -420,8 +426,7 @@ async def get_check_results_from_session(request: Request) -> JSONResponse:
 
         with check_results_path.open('r', encoding='utf-8') as f:
             check_results_data = json.load(f)
-
-        return JSONResponse(content=check_results_data)
+        return JSONResponse(content=_check_results)
     except Exception as e:
         print(f'Error loading check results: {e}')
         return JSONResponse(content={'check_results': []})
