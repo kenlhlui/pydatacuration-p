@@ -109,13 +109,14 @@ class DuckDBmodels:
                 ),
                 description='Primary key ID',
             )
+            check_name: str = Field(sa_column=Column(String, nullable=False), description='Name of the check')
             check_id: str = Field(sa_column=Column(String, nullable=False), description='ID of the check')
             description: str = Field(sa_column=Column(String, nullable=False), description='Description of the check')
             result_name: str = Field(sa_column=Column(String, nullable=False), description='Name of the result')
             results: list[str] | list[dict] = Field(
                 sa_column=Column(JSON, nullable=False), description='(Nested) List of check results'
             )  # This support writing a list[str] and list[dict] to duckdb # noqa
-            last_modified_datetime: datetime = Field(
+            last_modified_datetime: datetime = Field(default=datetime.today(),
                 sa_column=Column(DATETIME, nullable=False), description='Last modified datetime'
             )
 
