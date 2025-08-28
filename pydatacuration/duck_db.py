@@ -17,11 +17,7 @@ from .sqlmodels import DuckDBmodels
 
 
 class DuckDB:
-    def __init__(
-        self,
-        schema_name: str,
-        db_file_path: Path
-    ) -> None:
+    def __init__(self, schema_name: str, db_file_path: Path) -> None:
         """Initialize the DuckDB connection.
 
         Args:
@@ -71,7 +67,7 @@ class DuckDB:
             logger.debug(f'Closed SQLModel engine connection to DuckDB at {self.db_file_path}')
 
     @contextmanager
-    def sql_get_readonly_connection(self) :
+    def sql_get_readonly_connection(self):
         """Get a read-only connection using the SQLmodel interface."""
         time.sleep(0.1)  # Small delay to avoid connection issues
         engine = create_engine(f'duckdb:///{self.db_file_path}', echo=False, connect_args={'read_only': True})
@@ -82,7 +78,6 @@ class DuckDB:
             # Explicitly close the engine to free up connections
             engine.dispose()
             logger.debug(f'Closed SQLModel engine (read-only) connection to DuckDB at {self.db_file_path}')
-
 
     def check_schema_exists(self, schema_name: str) -> bool:
         """Check if a schema exists in the DuckDB database."""
@@ -196,27 +191,3 @@ class DuckDB:
         """
         model_class = self.duckdb_models.check_result_json(table_name)
         return self.sql_read_table(model_class)
-
-    def get_check_results(self, table_name: str) -> dict[str, Any]:
-        """Get the check results from DuckDB for a specific ticket."""
-        sql = f"""
-        SELECT check_id, description, result_name, results
-        FROM "{self.schema_name}".{table_name}
-        LIMIT 1;
-        """
-        try:
-            with self.get_readonly_connection() as conn:
-                logger.info(f'Executing SQL to fetch check results for table {table_name} in {self.schema_name} with read-only mode')
-                result = conn.sql(sql).fetchone()
-                if result:
-                    logger.debug(f'Fetched check results for table {table_name}: {result}')
-                    return {
-                        'check_id': result[0],
-                        'description': result[1] or '',
-                        'result_name': result[2] or '',
-                        'results': orjson.loads(result[3]) or '',
-                    }
-                logger.debug(f'No check result found for {table_name}')
-        except Exception as e:
-            logger.error(f'Error fetching check results for table {table_name}: {e}')
-        return {'check_id': '', 'description': '', 'result_name': '', 'results': 'results'}
