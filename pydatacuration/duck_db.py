@@ -117,7 +117,7 @@ class DuckDB:
             sql_model (type[SQLModel]): The SQLModel class to write records for.
 
         """
-        logger.info(f'Writing records to table: {sql_model.__tablename__}')
+        logger.debug(f'Writing records to table: {sql_model.__tablename__}')
         # Use duckdb_engine connection string
         engine = create_engine(f'duckdb:///{self.db_file_path}', echo=False)
 
