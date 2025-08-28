@@ -471,11 +471,11 @@ class Checker:
             logger.debug('Writing potential typos to DuckDB for testing purpose...')
             check_result_list_schema = self.sqlmodels.check_result_json('potential_typos')
             self.duckdb_instance.sql_write_records_to_table(check_result_list_schema(
+                check_name='Potential Spelling Errors',
                 check_id='potential_typos',
                 description='Check for potential spelling errors in metadata fields',
                 result_name='typo',
                 results=potential_typos,
-                last_modified_datetime=datetime.now()
             ))
             logger.debug('Writing potential typos to DuckDB completed.')
         except Exception as e:
@@ -660,11 +660,11 @@ class Checker:
             logger.debug('Writing keywords to DuckDB for testing purpose...')
             check_result_list_schema = self.sqlmodels.check_result_json('keywords_existence')
             self.duckdb_instance.sql_write_records_to_table(check_result_list_schema(
+                check_name='Keywords Existence',
                 check_id='keywords_existence',
                 description='Check if keywords are present in the dataset',
                 result_name='keyword',
                 results=keyword_list,
-                last_modified_datetime=datetime.now()
             ))
             logger.debug('Writing keywords to DuckDB completed.')
         except Exception as e:
@@ -693,9 +693,6 @@ class Checker:
                         dataset_id=dataset_id,
                         dataset_url=dataset_url,
                         dataset_path=dataset_path,
-                        log_init_date=date.today(),
-                        log_last_update_date=date.today(),
-                        last_modified_datetime=datetime.now(),
                     )
                 )
             else:
