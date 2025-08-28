@@ -671,7 +671,8 @@ class Checker:
             logger.error(f'Failed to write keywords to DuckDB: {e}')
 
     # The below writes the to the DuckDB database
-    def write_to_duckdb(self):
+    def write_project_metadata_to_duckdb(self):
+        """Write the project metadata to the DuckDB database."""
         project_metadata_schema = self.sqlmodels.project_metadata_record()
 
         # Check if record already exists
@@ -733,7 +734,7 @@ class Checker:
         self.check_keywords()
         self.check_license()
         # DEBUG: write to duckdb
-        self.write_to_duckdb()
+        self.write_project_metadata_to_duckdb()
 
         # Build the new structure
         new_results = {'check_results': self.result_builder.get_results()}
