@@ -53,6 +53,33 @@ class DuckDB:
             conn.close()
             logger.debug(f'Closed read-only connection to DuckDB at {self.db_file_path}')
 
+    @contextmanager
+    def sql_get_connection(self):
+        """Get a connection using the SQLmodel interface."""
+        time.sleep(0.1)  # Small delay to avoid connection issues
+        engine = create_engine(f'duckdb:///{self.db_file_path}', echo=False)
+        try:
+            logger.debug(f'Opened SQLModel engine connection to DuckDB at {self.db_file_path}')
+            yield Session(engine), engine
+        finally:
+            # Explicitly close the engine to free up connections
+            engine.dispose()
+            logger.debug(f'Closed SQLModel engine connection to DuckDB at {self.db_file_path}')
+
+    @contextmanager
+    def sql_get_readonly_connection(self) :
+        """Get a read-only connection using the SQLmodel interface."""
+        time.sleep(0.1)  # Small delay to avoid connection issues
+        engine = create_engine(f'duckdb:///{self.db_file_path}', echo=False, connect_args={'read_only': True})
+        try:
+            logger.debug(f'Opened SQLModel engine (read-only) connection to DuckDB at {self.db_file_path}')
+            yield Session(engine), engine
+        finally:
+            # Explicitly close the engine to free up connections
+            engine.dispose()
+            logger.debug(f'Closed SQLModel engine (read-only) connection to DuckDB at {self.db_file_path}')
+
+
     def check_schema_exists(self, schema_name: str) -> bool:
         """Check if a schema exists in the DuckDB database."""
         try:
@@ -118,24 +145,16 @@ class DuckDB:
 
         """
         logger.debug(f'Writing records to table: {sql_model.__tablename__}')
-        # Use duckdb_engine connection string
-        engine = create_engine(f'duckdb:///{self.db_file_path}', echo=False)
-
         try:
-            # Now create the table under the schema
-            SQLModel.metadata.create_all(engine)
-
-            # Insert sample data
-            with Session(engine) as session:
+            with self.sql_get_connection() as (session, engine):
+                SQLModel.metadata.create_all(engine)  # create the table under the schema
                 ds = sql_model
                 session.add(ds)
                 logger.info(f'Inserted sample data into table: {sql_model.__tablename__}')
                 session.commit()
                 logger.info(f'Committed sample data to table: {sql_model.__tablename__}')
-        finally:
-            # Explicitly close the engine to free up connections
-            engine.dispose()
-            logger.debug(f'Closed SQLModel engine for table: {sql_model.__tablename__}')
+        except Exception as e:
+            logger.error(f'Error writing records to table {sql_model.__tablename__}: {e}')
 
     def get_metadata_dict(self) -> dict:
         """Get dataset metadata as dictionary for API response using read-only mode."""
