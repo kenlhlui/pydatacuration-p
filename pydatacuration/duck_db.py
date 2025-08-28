@@ -160,52 +160,42 @@ class DuckDB:
         except Exception as e:
             logger.error(f'Error writing records to table {sql_model.__tablename__}: {e}')
 
-    # def get_metadata_dict(self) -> dict:
-    #     """Get dataset metadata as dictionary for API response using read-only mode."""
-    #     sql = f"""
-    #     SELECT dataset_pid, dataset_title, dataset_id, dataset_url, dataset_path
-    #     FROM "{self.schema_name}".project_metadata
-    #     LIMIT 1;
-    #     """
-    #     try:
-    #         with self.get_readonly_connection() as conn:
-    #             logger.info(f'Executing SQL to fetch dataset metadata with read-only mode')
-    #             result = conn.sql(sql).fetchone()
-    #             if result:
-    #                 dataset_pid = result[0] or ''
-    #                 logger.debug(f'Fetched metadata: {result}')
-    #                 return {
-    #                     'dataset_pid': dataset_pid,
-    #                     'dataset_title': result[1] or '',
-    #                     'dataset_id': result[2] or '',
-    #                     'dataset_url': result[3] or '',
-    #                     'dataset_path': result[4] or ''
-    #                 }
-    #     except Exception as e:
-    #         logger.error(f'Error fetching metadata for table project_metadata: {e}')
-    #     return {'dataset_pid': '', 'dataset_title': '', 'dataset_id': '', 'dataset_url': '', 'dataset_path': ''}
-
-    def sql_get_metadata_dict(self) -> dict[str, Any]:
-        """Get metadata dictionary with proper instance creation.
-
-        Returns:
-            dict[str, Any]: Metadata dictionary
-
-        """
+    def sql_read_table(self, model: type[SQLModel]):
         try:
             # Clear any existing table definitions
             SQLModel.metadata.clear()
-            project_metadata_model = self.duckdb_models.project_metadata_record()
             with self.sql_get_readonly_connection() as (session, _engine):
-                result: SQLModel | None = session.exec(select(project_metadata_model)).first()
+                result: SQLModel | None = session.exec(select(model)).first()
                 if result:
                     return result.model_dump(mode='json')
         except Exception as e:
             logger.error(f'Error fetching metadata for table project_metadata: {e}')
 
         # Create an INSTANCE of the model class (add parentheses)
-        empty_instance = self.duckdb_models.project_metadata_record()()
-        return empty_instance.model_dump(mode='json')  # TODO: verify the output of this
+        empty_instance = model()
+        return empty_instance.model_dump(mode='json')
+
+    def read_project_metadata_record(self) -> dict[str, Any]:
+        """Read project metadata record.
+
+        Returns:
+            dict[str, Any]: Project metadata dictionary
+
+        """
+        return self.sql_read_table(self.duckdb_models.project_metadata_record())
+
+    def read_check_results(self, table_name: str) -> dict[str, Any]:
+        """Read check results for specific table (with check_id as table_name).
+
+        Args:
+            table_name (str): Name of the table
+
+        Returns:
+            dict[str, Any]: Check results dictionary
+
+        """
+        model_class = self.duckdb_models.check_result_json(table_name)
+        return self.sql_read_table(model_class)
 
     def get_check_results(self, table_name: str) -> dict[str, Any]:
         """Get the check results from DuckDB for a specific ticket."""
