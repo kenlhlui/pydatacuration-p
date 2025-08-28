@@ -121,16 +121,21 @@ class DuckDB:
         # Use duckdb_engine connection string
         engine = create_engine(f'duckdb:///{self.db_file_path}', echo=False)
 
-        # Now create the table under the schema
-        SQLModel.metadata.create_all(engine)
+        try:
+            # Now create the table under the schema
+            SQLModel.metadata.create_all(engine)
 
-        # Insert sample data
-        with Session(engine) as session:
-            ds = sql_model
-            session.add(ds)
-            logger.info(f'Inserted sample data into table: {sql_model.__tablename__}')
-            session.commit()
-            logger.info(f'Committed sample data to table: {sql_model.__tablename__}')
+            # Insert sample data
+            with Session(engine) as session:
+                ds = sql_model
+                session.add(ds)
+                logger.info(f'Inserted sample data into table: {sql_model.__tablename__}')
+                session.commit()
+                logger.info(f'Committed sample data to table: {sql_model.__tablename__}')
+        finally:
+            # Explicitly close the engine to free up connections
+            engine.dispose()
+            logger.debug(f'Closed SQLModel engine for table: {sql_model.__tablename__}')
 
     def get_metadata_dict(self) -> dict:
         """Get dataset metadata as dictionary for API response using read-only mode."""

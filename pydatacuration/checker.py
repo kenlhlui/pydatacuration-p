@@ -683,7 +683,7 @@ class Checker:
             dataset_id = self.ds_metadata.get('data', {}).get('latestVersion', {}).get('id', 'No ID')
             dataset_url = parse_dataset_url(self.base_url, dataset_pid)
             dataset_path = self.check_ds_tree_info()
-            logger.debug(f'Dataset URL: {dataset_url} from write_to_duckdb')
+
             if not self.duckdb_instance.check_table_has_records('project_metadata'):
                 self.duckdb_instance.sql_write_records_to_table(
                     project_metadata_schema(
