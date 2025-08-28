@@ -6,10 +6,10 @@ from pathlib import Path
 from typing import Any
 
 import duckdb
-import orjson
 from sqlmodel import Session
 from sqlmodel import SQLModel
 from sqlmodel import create_engine
+from sqlmodel import inspect
 from sqlmodel import select
 
 from .custom_logging import logger
@@ -155,7 +155,15 @@ class DuckDB:
         except Exception as e:
             logger.error(f'Error writing records to table {sql_model.__tablename__}: {e}')
 
-    def sql_read_table(self, model: type[SQLModel]):
+    def sql_read_table_records(self, model: type[SQLModel]):
+        """Read all records from a table in the DuckDB database.
+
+        Args:
+            model (type[SQLModel]): The SQLModel class to read records for.
+
+        Returns:
+            dict[str, Any]: Dictionary of all records in the table.
+        """
         try:
             # Clear any existing table definitions
             SQLModel.metadata.clear()
@@ -177,7 +185,7 @@ class DuckDB:
             dict[str, Any]: Project metadata dictionary
 
         """
-        return self.sql_read_table(self.duckdb_models.project_metadata_record())
+        return self.sql_read_table_records(self.duckdb_models.project_metadata_record())
 
     def read_check_results(self, table_name: str) -> dict[str, Any]:
         """Read check results for specific table (with check_id as table_name).
@@ -190,4 +198,30 @@ class DuckDB:
 
         """
         model_class = self.duckdb_models.check_result_json(table_name)
-        return self.sql_read_table(model_class)
+        return self.sql_read_table_records(model_class)
+
+    def read_schema_tables(self) -> list[str]:
+        """Get the names of the tables inside a schema.
+
+        Returns:
+            list[str]: Schema tables list
+
+        """
+        try:
+            with self.sql_get_readonly_connection() as (_session, engine):
+                inspector = inspect(engine)
+                table_names = inspector.get_table_names(schema=self.schema_name)
+                return table_names or []
+        except Exception as e:
+            logger.error(f'Error fetching schema tables for {self.schema_name}: {e}')
+            return []
+
+    def read_check_item_table_names(self) -> list[str]:
+        """Get the names of the tables inside a schema, without the project_metadata table.
+
+        Returns:
+            list[str]: Schema tables list
+
+        """
+        table_names = self.read_schema_tables()
+        return [name for name in table_names if name != 'project_metadata']
