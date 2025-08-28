@@ -361,9 +361,9 @@ async def get_ds_metadata(main_dir: str, ticket_number: str, base_url: str = '')
             try:
                 # Use DuckDB to get metadata
                 duck_db = DuckDB(schema_name=ticket_number, db_file_path=dir_manager.db_path)
-                processed_metadata = duck_db.get_metadata_dict()
+                processed_metadata = duck_db.sql_get_metadata_dict()
                 if processed_metadata and processed_metadata.get('dataset_pid'):
-                    logger.info(f'Loaded dataset metadata from DuckDB for ticket {ticket_number}: {processed_metadata}')
+                    logger.debug(f'Loaded dataset metadata from DuckDB for ticket {ticket_number}: {processed_metadata}')
                     return JSONResponse(content=processed_metadata)
                 logger.warning(f'No data found in DuckDB for ticket {ticket_number}')
             except Exception as db_error:

@@ -3,14 +3,17 @@
 import time
 from contextlib import contextmanager
 from pathlib import Path
+from typing import Any
 
 import duckdb
 import orjson
 from sqlmodel import Session
 from sqlmodel import SQLModel
 from sqlmodel import create_engine
+from sqlmodel import select
 
 from .custom_logging import logger
+from .sqlmodels import DuckDBmodels
 
 
 class DuckDB:
@@ -28,6 +31,7 @@ class DuckDB:
         """
         self.schema_name = schema_name
         self.db_file_path = db_file_path
+        self.duckdb_models = DuckDBmodels(schema_name)
 
     @contextmanager
     def get_connection(self):
@@ -156,32 +160,54 @@ class DuckDB:
         except Exception as e:
             logger.error(f'Error writing records to table {sql_model.__tablename__}: {e}')
 
-    def get_metadata_dict(self) -> dict:
-        """Get dataset metadata as dictionary for API response using read-only mode."""
-        sql = f"""
-        SELECT dataset_pid, dataset_title, dataset_id, dataset_url, dataset_path
-        FROM "{self.schema_name}".project_metadata
-        LIMIT 1;
+    # def get_metadata_dict(self) -> dict:
+    #     """Get dataset metadata as dictionary for API response using read-only mode."""
+    #     sql = f"""
+    #     SELECT dataset_pid, dataset_title, dataset_id, dataset_url, dataset_path
+    #     FROM "{self.schema_name}".project_metadata
+    #     LIMIT 1;
+    #     """
+    #     try:
+    #         with self.get_readonly_connection() as conn:
+    #             logger.info(f'Executing SQL to fetch dataset metadata with read-only mode')
+    #             result = conn.sql(sql).fetchone()
+    #             if result:
+    #                 dataset_pid = result[0] or ''
+    #                 logger.debug(f'Fetched metadata: {result}')
+    #                 return {
+    #                     'dataset_pid': dataset_pid,
+    #                     'dataset_title': result[1] or '',
+    #                     'dataset_id': result[2] or '',
+    #                     'dataset_url': result[3] or '',
+    #                     'dataset_path': result[4] or ''
+    #                 }
+    #     except Exception as e:
+    #         logger.error(f'Error fetching metadata for table project_metadata: {e}')
+    #     return {'dataset_pid': '', 'dataset_title': '', 'dataset_id': '', 'dataset_url': '', 'dataset_path': ''}
+
+    def sql_get_metadata_dict(self) -> dict[str, Any]:
+        """Get metadata dictionary with proper instance creation.
+
+        Returns:
+            dict[str, Any]: Metadata dictionary
+
         """
         try:
-            with self.get_readonly_connection() as conn:
-                logger.info(f'Executing SQL to fetch dataset metadata with read-only mode')
-                result = conn.sql(sql).fetchone()
+            # Clear any existing table definitions
+            SQLModel.metadata.clear()
+            project_metadata_model = self.duckdb_models.project_metadata_record()
+            with self.sql_get_readonly_connection() as (session, _engine):
+                result: SQLModel | None = session.exec(select(project_metadata_model)).first()
                 if result:
-                    dataset_pid = result[0] or ''
-                    logger.debug(f'Fetched metadata: {result}')
-                    return {
-                        'dataset_pid': dataset_pid,
-                        'dataset_title': result[1] or '',
-                        'dataset_id': result[2] or '',
-                        'dataset_url': result[3] or '',
-                        'dataset_path': result[4] or ''
-                    }
+                    return result.model_dump(mode='json')
         except Exception as e:
             logger.error(f'Error fetching metadata for table project_metadata: {e}')
-        return {'dataset_pid': '', 'dataset_title': '', 'dataset_id': '', 'dataset_url': '', 'dataset_path': ''}
 
-    def get_check_results(self, table_name: str) -> dict:
+        # Create an INSTANCE of the model class (add parentheses)
+        empty_instance = self.duckdb_models.project_metadata_record()()
+        return empty_instance.model_dump(mode='json')  # TODO: verify the output of this
+
+    def get_check_results(self, table_name: str) -> dict[str, Any]:
         """Get the check results from DuckDB for a specific ticket."""
         sql = f"""
         SELECT check_id, description, result_name, results
