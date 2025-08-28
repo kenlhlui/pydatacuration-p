@@ -1,4 +1,5 @@
 """pydatacuration-p: FastAPI application for curation report generation."""
+
 import asyncio
 import json
 import os
@@ -39,6 +40,7 @@ class ChecklistItem(BaseModel):
     Returns:
         None: data container
     """
+
     id: str
     action: str
     instructions: str
@@ -66,6 +68,7 @@ class SetupRequest(BaseModel):
     Returns:
         None: data container
     """
+
     pid: str
     base_url: str | None = None
     api_token: str | None = None
@@ -81,7 +84,7 @@ app = FastAPI()
 templates = Jinja2Templates(directory='pydatacuration/frontend/')
 
 # Mount static files for CSS, JS, and other assets
-app.mount("/static", StaticFiles(directory='pydatacuration/frontend'), name='static')
+app.mount('/static', StaticFiles(directory='pydatacuration/frontend'), name='static')
 
 # Load environment variables
 load_dotenv()
@@ -107,11 +110,13 @@ def get_checklist_items() -> list[ChecklistItem]:
             automated_check_ids=item.get('automated_check_ids', []),
             information_location=markdown2.markdown(  # Convert Markdown to HTML
                 item.get('information_location', '')
-            ) if item.get('information_location') else '',  # Handle missing information_location
-            check_type=item.get('check_type', 'Manual')  # Optional field for check type
+            )
+            if item.get('information_location')
+            else '',  # Handle missing information_location
+            check_type=item.get('check_type', 'Manual'),  # Optional field for check type
         )
         if checklist_item.automated_check_ids:
-            print(f"Item {checklist_item.id} has automated_check_ids: {checklist_item.automated_check_ids}")
+            print(f'Item {checklist_item.id} has automated_check_ids: {checklist_item.automated_check_ids}')
         items.append(checklist_item)
     return items
 
@@ -134,10 +139,7 @@ def landing(request: Request) -> HTMLResponse:
         'curator_email': os.getenv('CURATOR_EMAIL', ''),
     }
 
-    return templates.TemplateResponse('landing.html', {
-        'request': request,
-        'env_data': env_data
-    })
+    return templates.TemplateResponse('landing.html', {'request': request, 'env_data': env_data})
 
 
 @app.get('/checklist', response_class=HTMLResponse)
@@ -153,11 +155,14 @@ def checklist(request: Request) -> HTMLResponse:
     items = get_checklist_items()
 
     # Check results will be loaded via JavaScript from session storage
-    return templates.TemplateResponse('index.html', {
-        'request': request, 
-        'items': items, 
-        'check_results': []  # Empty, will be populated by frontend JavaScript
-    })
+    return templates.TemplateResponse(
+        'index.html',
+        {
+            'request': request,
+            'items': items,
+            'check_results': [],  # Empty, will be populated by frontend JavaScript
+        },
+    )
 
 
 async def run_command(command: str) -> dict:
@@ -181,15 +186,10 @@ async def run_command(command: str) -> dict:
             'stdout': stdout.decode(),
             'stderr': stderr.decode(),
             'return_code': process.returncode,
-            'success': process.returncode == 0
+            'success': process.returncode == 0,
         }
     except Exception as e:
-        return {
-            'stdout': '',
-            'stderr': str(e),
-            'return_code': -1,
-            'success': False
-        }
+        return {'stdout': '', 'stderr': str(e), 'return_code': -1, 'success': False}
 
 
 @app.post('/setup')
@@ -219,10 +219,16 @@ async def setup(request: SetupRequest) -> JSONResponse:
 
         # Build the command to run pydatacuration CLI
         cmd_parts = [
-            'python', '-m', 'pydatacuration.main', 'gen-curation-report',
-            '--pid', f'"{request.pid}"',
-            '--ticket-number', f'"{request.ticket_number}"',
-            '--main-dir', f'"{request.main_dir}"'
+            'python',
+            '-m',
+            'pydatacuration.main',
+            'gen-curation-report',
+            '--pid',
+            f'"{request.pid}"',
+            '--ticket-number',
+            f'"{request.ticket_number}"',
+            '--main-dir',
+            f'"{request.main_dir}"',
         ]
 
         # Add base URL if provided
@@ -268,16 +274,18 @@ async def setup(request: SetupRequest) -> JSONResponse:
             except Exception as e:
                 logger.info(f'Could not load ds_metadata using get_ds_metadata: {e}')
 
-            return JSONResponse(content={
-                'success': True,
-                'message': 'Curation report generated successfully',
-                'output': result['stdout'],
-                'command': cmd,
-                'curator_name': request.curator_name,
-                'curator_email': request.curator_email,
-                'ds_metadata': ds_metadata,
-                'redirect_url': f'/checklist?main_dir={request.main_dir}&ticket_number={request.ticket_number}',
-            })
+            return JSONResponse(
+                content={
+                    'success': True,
+                    'message': 'Curation report generated successfully',
+                    'output': result['stdout'],
+                    'command': cmd,
+                    'curator_name': request.curator_name,
+                    'curator_email': request.curator_email,
+                    'ds_metadata': ds_metadata,
+                    'redirect_url': f'/checklist?main_dir={request.main_dir}&ticket_number={request.ticket_number}',
+                }
+            )
         return JSONResponse(
             status_code=400,
             content={
@@ -287,7 +295,7 @@ async def setup(request: SetupRequest) -> JSONResponse:
                 'output': result['stdout'],
                 'command': cmd,
                 'return_code': result['return_code'],
-            }
+            },
         )
 
     except ValidationError as e:
@@ -295,25 +303,14 @@ async def setup(request: SetupRequest) -> JSONResponse:
         logger.error(f'Validation errors details: {e.errors()}')
         return JSONResponse(
             status_code=422,
-            content={
-                'success': False,
-                'message': 'Validation error',
-                'detail': str(e),
-                'errors': e.errors()
-            }
+            content={'success': False, 'message': 'Validation error', 'detail': str(e), 'errors': e.errors()},
         )
     except HTTPException as e:
         logger.error(f'HTTP exception: status={e.status_code}, detail={e.detail}')
         raise e
     except Exception as e:
         logger.error(f'Unexpected error in setup endpoint: {e}', exc_info=True)
-        return JSONResponse(
-            status_code=500,
-            content={
-                'success': False,
-                'message': f'Error during setup: {str(e)}'
-            }
-        )
+        return JSONResponse(status_code=500, content={'success': False, 'message': f'Error during setup: {str(e)}'})
 
 
 @app.get('/check-results/{main_dir}/{ticket_number}')
@@ -331,14 +328,14 @@ async def get_check_results(main_dir: str, ticket_number: str) -> JSONResponse:
         dir_manager = DirectoryManager(ticket_number, main_dir)
         check_results_path = dir_manager.get_dir('logs') / 'check_results.json'
         if not check_results_path.exists():
-            raise HTTPException(status_code=404, detail="Check results not found")
+            raise HTTPException(status_code=404, detail='Check results not found')
 
         with check_results_path.open('r', encoding='utf-8') as f:
             check_results_data = json.load(f)
 
         return JSONResponse(content=check_results_data)
     except Exception as e:
-        raise HTTPException(status_code=500, detail=f"Error reading check results: {str(e)}")
+        raise HTTPException(status_code=500, detail=f'Error reading check results: {str(e)}')
 
 
 @app.get('/ds-metadata')
@@ -363,7 +360,9 @@ async def get_ds_metadata(main_dir: str, ticket_number: str, base_url: str = '')
                 duck_db = DuckDB(schema_name=ticket_number, db_file_path=dir_manager.db_path)
                 processed_metadata = duck_db.read_project_metadata_record()
                 if processed_metadata and processed_metadata.get('dataset_pid'):
-                    logger.debug(f'Loaded dataset metadata from DuckDB for ticket {ticket_number}: {processed_metadata}')
+                    logger.debug(
+                        f'Loaded dataset metadata from DuckDB for ticket {ticket_number}: {processed_metadata}'
+                    )
                     return JSONResponse(content=processed_metadata)
                 logger.warning(f'No data found in DuckDB for ticket {ticket_number}')
             except Exception as db_error:
@@ -374,18 +373,18 @@ async def get_ds_metadata(main_dir: str, ticket_number: str, base_url: str = '')
 
     except Exception as e:
         logger.error(f'Error reading dataset metadata for ticket {ticket_number}: {e}')
-        raise HTTPException(status_code=500, 
-                            detail=f'Error reading dataset metadata: {str(e)}')
+        raise HTTPException(status_code=500, detail=f'Error reading dataset metadata: {str(e)}')
+
 
 def _get_check_results_from_duckdb(main_dir: str, ticket_number: str, table_name: str) -> dict:
     """Get the check results from DuckDB for a specific ticket."""
     try:
         dir_manager = DirectoryManager(ticket_number, main_dir)
         duck_db = DuckDB(schema_name=ticket_number, db_file_path=dir_manager.db_path)
-        return duck_db.get_check_results(table_name)
+        return duck_db.read_check_results(table_name)
     except Exception as e:
-        logger.error(f"Error fetching check results from DuckDB for ticket {ticket_number}: {e}")
-        return {"error": str(e)}
+        logger.error(f'Error fetching check results from DuckDB for ticket {ticket_number}: {e}')
+        return {'error': str(e)}
 
 
 @app.get('/api/check-results')
@@ -423,7 +422,7 @@ async def get_check_results_from_session(request: Request) -> JSONResponse:
 
         return JSONResponse(content=check_results_data)
     except Exception as e:
-        print(f"Error loading check results: {e}")
+        print(f'Error loading check results: {e}')
         return JSONResponse(content={'check_results': []})
 
 
@@ -470,10 +469,7 @@ async def export_log_yaml(request: CurationLogRequest) -> JSONResponse:
             item['time_spent'] = data.get('time', '')
 
         # Create the final output structure
-        output_data = {
-            'metadata': {},
-            'checklist': check_list_template_items
-        }
+        output_data = {'metadata': {}, 'checklist': check_list_template_items}
 
         # Add metadata from the YAML data
         metadata = yaml_data.get('metadata', {})
@@ -492,24 +488,20 @@ async def export_log_yaml(request: CurationLogRequest) -> JSONResponse:
         output_path = dir_manager.get_dir('outputs') / f'{ticket_number}_new.yaml'
 
         with output_path.open('w', encoding='utf-8') as f:
-            yaml.dump(output_data, f,
-                      default_flow_style=False,
-                      sort_keys=False,
-                      allow_unicode=True)
+            yaml.dump(output_data, f, default_flow_style=False, sort_keys=False, allow_unicode=True)
 
-        return JSONResponse(content={
-            'success': True,
-            'message': f'Curation log in YAML format exported successfully to {output_path}',
-            'data': output_data,
-            'file_path': str(output_path)
-        })
+        return JSONResponse(
+            content={
+                'success': True,
+                'message': f'Curation log in YAML format exported successfully to {output_path}',
+                'data': output_data,
+                'file_path': str(output_path),
+            }
+        )
 
     except Exception as e:
         print(f'Error in export_log_yaml: {e}')
-        return JSONResponse(
-            status_code=500,
-            content={'success': False, 'message': str(e)}
-        )
+        return JSONResponse(status_code=500, content={'success': False, 'message': str(e)})
 
 
 @app.post('/render-report')
@@ -538,11 +530,7 @@ async def render_report(request: Request) -> JSONResponse:
                 # If no YAML data in form, try to reconstruct from session storage
                 # This might require getting it from the frontend differently
                 return JSONResponse(
-                    status_code=400,
-                    content={
-                        'success': False,
-                        'message': 'No curation log data found in request'
-                    }
+                    status_code=400, content={'success': False, 'message': 'No curation log data found in request'}
                 )
 
         # Create CurationLogRequest object for save_log_yaml
@@ -554,11 +542,7 @@ async def render_report(request: Request) -> JSONResponse:
         # Check if save was successful
         if not save_result.status_code == 200:
             return JSONResponse(
-                status_code=500,
-                content={
-                    'success': False,
-                    'message': 'Failed to save curation log before rendering'
-                }
+                status_code=500, content={'success': False, 'message': 'Failed to save curation log before rendering'}
             )
 
         # Parse YAML to get ticket number for dynamic file paths
@@ -572,22 +556,18 @@ async def render_report(request: Request) -> JSONResponse:
         output_path = dir_manager.get_dir('outputs') / f'{ticket_number}_new.docx'
 
         render_report_from_yaml(
-            yaml_path=yaml_path,
-            template_path=Path('res/new_template_high.docx'),
-            output_path=output_path
+            yaml_path=yaml_path, template_path=Path('res/new_template_high.docx'), output_path=output_path
         )
 
-        return JSONResponse(content={
-            'success': True,
-            'message': f'Curation log saved to {output_path} successfully',
-            'output_file': str(output_path)
-        })
+        return JSONResponse(
+            content={
+                'success': True,
+                'message': f'Curation log saved to {output_path} successfully',
+                'output_file': str(output_path),
+            }
+        )
 
     except Exception as e:
         return JSONResponse(
-            status_code=500,
-            content={
-                'success': False,
-                'message': f'Error when rendering report: {str(e)}'
-            }
+            status_code=500, content={'success': False, 'message': f'Error when rendering report: {str(e)}'}
         )
