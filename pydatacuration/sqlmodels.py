@@ -1,6 +1,7 @@
 """Module for SQLmodels."""
 
 from datetime import date
+from datetime import datetime
 
 from sqlalchemy import Column
 from sqlalchemy import Integer
@@ -48,25 +49,39 @@ class DuckDBmodels:
                 ),
             )
             ticket_number: str = Field(
-                sa_column=Column(String, nullable=False, unique=True), description='Unique ticket number'
+                default='', sa_column=Column(String, nullable=False, unique=True), description='Unique ticket number'
             )
-            dataset_title: str = Field(sa_column=Column(String, nullable=False), description='Title of the dataset')
+            dataset_title: str = Field(
+                default='', sa_column=Column(String, nullable=False), description='Title of the dataset'
+            )
             dataset_pid: str = Field(
-                sa_column=Column(String, nullable=False), description='Persistent identifier of the dataset'
+                default='', sa_column=Column(String, nullable=False), description='Persistent identifier of the dataset'
             )
-            dataset_id: str = Field(sa_column=Column(String, nullable=False), description='Versioned ID of the dataset')
-            dataset_url: str = Field(sa_column=Column(String, nullable=False), description='URL of the dataset')
+            dataset_id: str = Field(
+                default='', sa_column=Column(String, nullable=False), description='Versioned ID of the dataset'
+            )
+            dataset_url: str = Field(
+                default='', sa_column=Column(String, nullable=False), description='URL of the dataset'
+            )
             dataset_path: str = Field(
-                sa_column=Column(String, nullable=False), description='Path of the dataset in the repository'
+                default='',
+                sa_column=Column(String, nullable=False),
+                description='Path of the dataset in the repository',
             )
             log_init_date: date = Field(
-                sa_column=Column(DATE, nullable=False), description='Date when the log was initialized'
+                default=date.today(),
+                sa_column=Column(DATE, nullable=False),
+                description='Date when the log was initialized',
             )
             log_last_update_date: date = Field(
-                sa_column=Column(DATE, nullable=False), description='Date when the log was last updated'
+                default=date.today(),
+                sa_column=Column(DATE, nullable=False),
+                description='Date when the log was last updated',
             )
-            last_modified_datetime: date = Field(
-                sa_column=Column(DATETIME, nullable=False), description='Timestamp when the log was last modified'
+            last_modified_datetime: datetime = Field(
+                default=datetime.today(),
+                sa_column=Column(DATETIME, nullable=False),
+                description='Timestamp when the log was last modified',
             )
 
         return ProjectMetadata
@@ -100,7 +115,7 @@ class DuckDBmodels:
             results: list[str] | list[dict] = Field(
                 sa_column=Column(JSON, nullable=False), description='(Nested) List of check results'
             )  # This support writing a list[str] and list[dict] to duckdb # noqa
-            last_modified_datetime: date = Field(
+            last_modified_datetime: datetime = Field(
                 sa_column=Column(DATETIME, nullable=False), description='Last modified datetime'
             )
 
