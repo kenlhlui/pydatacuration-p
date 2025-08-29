@@ -112,7 +112,7 @@ def gen_curation_report(
     logger.info('Starting the pydatacuration script...')
 
     # Create the db (with schema named after ticket_number)
-    duckdb_instance = duck_db.DuckDB(schema_name=dir_manager.ticket_number, db_file_path=dir_manager.db_path)
+    duckdb_instance = duck_db.DuckDB(schema_name=dir_manager.ticket_number, db_file=dir_manager.db_path)
     duckdb_instance.create_database()
     duckdb_instance.create_schema()
 
