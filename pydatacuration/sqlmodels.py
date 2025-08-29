@@ -39,15 +39,6 @@ class DuckDBmodels:
             __tablename__ = 'project_metadata'
             __table_args__ = {'schema': self.schema_name}
 
-            id: int | None = Field(
-                default=None,
-                sa_column=Column(
-                    Integer,
-                    Sequence('project_metadata_id_seq'),
-                    server_default=Sequence('project_metadata_id_seq').next_value(),
-                    primary_key=True,
-                ),
-            )
             ticket_number: str = Field(
                 default='', sa_column=Column(String, nullable=False, unique=True), description='Unique ticket number'
             )
@@ -58,7 +49,7 @@ class DuckDBmodels:
                 default='', sa_column=Column(String, nullable=False), description='Persistent identifier of the dataset'
             )
             dataset_id: int = Field(
-                sa_column=Column(Integer, nullable=False), description='Versioned ID of the dataset'
+                sa_column=Column(Integer, primary_key=True, autoincrement=False, nullable=False), description='Versioned ID of the dataset'
             )
             datasetid: int = Field(
                 sa_column=Column(Integer, nullable=False), description='Persistent ID of the dataset'
