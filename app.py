@@ -357,7 +357,7 @@ async def get_ds_metadata(main_dir: str, ticket_number: str, base_url: str = '')
         if dir_manager.db_path.exists():
             try:
                 # Use DuckDB to get metadata
-                duck_db = DuckDB(schema_name=ticket_number, db_file_path=dir_manager.db_path)
+                duck_db = DuckDB(schema_name=ticket_number, db_file=dir_manager.db_path)
                 processed_metadata = duck_db.read_project_metadata_record()
                 if processed_metadata and processed_metadata.get('dataset_pid'):
                     logger.debug(
@@ -380,7 +380,7 @@ def _get_check_results_from_duckdb(main_dir: str, ticket_number: str, table_name
     """Get the check results from DuckDB for a specific ticket."""
     try:
         dir_manager = DirectoryManager(ticket_number, main_dir)
-        duck_db = DuckDB(schema_name=ticket_number, db_file_path=dir_manager.db_path)
+        duck_db = DuckDB(schema_name=ticket_number, db_file=dir_manager.db_path)
         return duck_db.read_check_results(table_name)
     except Exception as e:
         logger.error(f'Error fetching check results from DuckDB for ticket {ticket_number}: {e}')
@@ -404,7 +404,7 @@ async def get_check_results_from_session(request: Request) -> JSONResponse:
         _check_results = {'check_results': []}
         logger.debug('Trying to load  _get_check_results_from_duckdb inside app.py')
         dir_manager = DirectoryManager(ticket_number, main_dir)
-        duck_db = DuckDB(schema_name=ticket_number, db_file_path=dir_manager.db_path)
+        duck_db = DuckDB(schema_name=ticket_number, db_file=dir_manager.db_path)
         table_names: list = duck_db.read_check_item_table_names()
         for table_name in table_names:
             duckdb_result = _get_check_results_from_duckdb(main_dir, ticket_number, table_name)

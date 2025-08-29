@@ -20,7 +20,7 @@ from .sqlmodels import DuckDBmodels
 
 
 class DuckDB:
-    def __init__(self, schema_name: str, db_file_path: Path) -> None:
+    def __init__(self, schema_name: str, db_file: Path) -> None:
         """Initialize the DuckDB connection.
 
         Args:
@@ -29,58 +29,56 @@ class DuckDB:
 
         """
         self.schema_name = schema_name
-        self.db_file_path = db_file_path
+        self.db_file = db_file
         self.duckdb_models = DuckDBmodels(schema_name)
 
     @contextmanager
     def get_connection(self):
-        """Get a connection to the DuckDB database."""
-        time.sleep(0.1)  # Small delay to avoid connection issues
-        conn = duckdb.connect(self.db_file_path)
+        """Get a connection to the DuckDB database using duckdb connect."""
+        time.sleep(0.01)  # Small delay to avoid connection issues
+        conn = duckdb.connect(self.db_file)
         try:
-            logger.debug(f'Opened connection to DuckDB at {self.db_file_path}')
+            logger.debug(f'Opened connection to DuckDB at {self.db_file}')
             yield conn
         finally:
             conn.close()
-            logger.debug(f'Closed connection to DuckDB at {self.db_file_path}')
+            logger.debug(f'Closed connection to DuckDB at {self.db_file}')
 
     @contextmanager
     def get_readonly_connection(self):
-        """Get a read-only connection to the DuckDB database."""
-        time.sleep(0.1)  # Small delay to avoid connection issues
-        conn = duckdb.connect(self.db_file_path, read_only=True)
+        """Get a read-only connection to the DuckDB database using duckdb connect."""
+        conn = duckdb.connect(self.db_file, read_only=True)
         try:
-            logger.debug(f'Opened read-only connection to DuckDB at {self.db_file_path}')
+            logger.debug(f'Opened read-only connection to DuckDB at {self.db_file}')
             yield conn
         finally:
             conn.close()
-            logger.debug(f'Closed read-only connection to DuckDB at {self.db_file_path}')
+            logger.debug(f'Closed read-only connection to DuckDB at {self.db_file}')
 
     @contextmanager
     def sql_get_connection(self):
         """Get a connection using the SQLmodel interface."""
-        time.sleep(0.1)  # Small delay to avoid connection issues
-        engine = create_engine(f'duckdb:///{self.db_file_path}', echo=False)
+        time.sleep(0.01)  # Small delay to avoid connection issues
+        engine = create_engine(f'duckdb:///{self.db_file}', echo=False)
         try:
-            logger.debug(f'Opened SQLModel engine connection to DuckDB at {self.db_file_path}')
+            logger.debug(f'Opened SQLModel engine connection to DuckDB at {self.db_file}')
             yield Session(engine), engine
         finally:
             # Explicitly close the engine to free up connections
             engine.dispose()
-            logger.debug(f'Closed SQLModel engine connection to DuckDB at {self.db_file_path}')
+            logger.debug(f'Closed SQLModel engine connection to DuckDB at {self.db_file}')
 
     @contextmanager
     def sql_get_readonly_connection(self):
         """Get a read-only connection using the SQLmodel interface."""
-        time.sleep(0.1)  # Small delay to avoid connection issues
-        engine = create_engine(f'duckdb:///{self.db_file_path}', echo=False, connect_args={'read_only': True})
+        engine = create_engine(f'duckdb:///{self.db_file}', echo=False, connect_args={'read_only': True},)
         try:
-            logger.debug(f'Opened SQLModel engine (read-only) connection to DuckDB at {self.db_file_path}')
+            logger.debug(f'Opened SQLModel engine (read-only) connection to DuckDB at {self.db_file}')
             yield Session(engine), engine
         finally:
             # Explicitly close the engine to free up connections
             engine.dispose()
-            logger.debug(f'Closed SQLModel engine (read-only) connection to DuckDB at {self.db_file_path}')
+            logger.debug(f'Closed SQLModel engine (read-only) connection to DuckDB at {self.db_file}')
 
     def sql_check_schema_exists(self, schema_name: str) -> bool:
         """Check if a schema exists in the DuckDB database.
@@ -127,9 +125,9 @@ class DuckDB:
             with self.get_connection():
                 # Just opening and closing creates the database file
                 pass
-            logger.info(f'Created database at {self.db_file_path}')
+            logger.info(f'Created database at {self.db_file}')
         except Exception as e:
-            logger.error(f'Error creating database at {self.db_file_path}: {e}')
+            logger.error(f'Error creating database at {self.db_file}: {e}')
 
     def check_table_has_records(self, table_name: str) -> bool:
         """Check whether there is an existing record."""
