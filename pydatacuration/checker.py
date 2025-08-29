@@ -866,8 +866,8 @@ class Checker:
             dataset_url = parse_dataset_url(self.base_url, dataset_pid)
             dataset_path = self.check_ds_tree_info()
 
-            if not self.duckdb_instance.check_table_has_records('project_metadata'):
-                self.duckdb_instance.sql_write_records_to_table(
+            # if not self.duckdb_instance.check_table_has_records('project_metadata'):
+            self.duckdb_instance.sql_write_records_to_table(
                     project_metadata_schema(
                         ticket_number=ticket_number,
                         dataset_title=dataset_title,
@@ -876,21 +876,9 @@ class Checker:
                         datasetid=datasetid,
                         dataset_url=dataset_url,
                         dataset_path=dataset_path,
+                        log_last_update_date=date.today(),
                     )
                 )
-            else:
-                with self.duckdb_instance.get_connection() as conn:
-                    conn.sql(f"""
-                        UPDATE "{self.duckdb_instance.schema_name}".project_metadata
-                        SET dataset_title = '{dataset_title}',
-                            dataset_pid = '{dataset_pid}',
-                            dataset_id = '{dataset_id}',
-                            dataset_url = '{dataset_url}',
-                            dataset_path = '{dataset_path}',
-                            log_last_update_date = '{date.today()}',
-                            last_modified_datetime = '{datetime.now()}'
-                        WHERE ticket_number = '{self.duckdb_instance.schema_name}'
-                    """)
         except Exception as e:
             self.logger.error(f'Failed to write to DuckDB: {e}')
 
