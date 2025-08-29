@@ -861,6 +861,7 @@ class Checker:
             dataset_title = self.ds_title if self.ds_title else 'No Title'
             dataset_pid = self.ds_metadata.get('data', {}).get('latestVersion', {}).get('datasetPersistentId', 'No ID')
             dataset_id = self.ds_metadata.get('data', {}).get('latestVersion', {}).get('id', 'No ID')
+            datasetid = self.ds_metadata.get('data', {}).get('latestVersion', {}).get('datasetId', 'No ID')
             dataset_url = parse_dataset_url(self.base_url, dataset_pid)
             dataset_path = self.check_ds_tree_info()
 
@@ -871,6 +872,7 @@ class Checker:
                         dataset_title=dataset_title,
                         dataset_pid=dataset_pid,
                         dataset_id=dataset_id,
+                        datasetid=datasetid,
                         dataset_url=dataset_url,
                         dataset_path=dataset_path,
                     )

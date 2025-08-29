@@ -57,8 +57,11 @@ class DuckDBmodels:
             dataset_pid: str = Field(
                 default='', sa_column=Column(String, nullable=False), description='Persistent identifier of the dataset'
             )
-            dataset_id: str = Field(
-                default='', sa_column=Column(String, nullable=False), description='Versioned ID of the dataset'
+            dataset_id: int = Field(
+                sa_column=Column(Integer, nullable=False), description='Versioned ID of the dataset'
+            )
+            datasetid: int = Field(
+                sa_column=Column(Integer, nullable=False), description='Persistent ID of the dataset'
             )
             dataset_url: str = Field(
                 default='', sa_column=Column(String, nullable=False), description='URL of the dataset'
