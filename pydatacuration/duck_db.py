@@ -4,11 +4,14 @@ import time
 from contextlib import contextmanager
 from pathlib import Path
 from typing import Any
+from unittest import result
 
 import duckdb
+from sqlalchemy import Inspector
 from sqlmodel import Session
 from sqlmodel import SQLModel
 from sqlmodel import create_engine
+from sqlmodel import desc
 from sqlmodel import inspect
 from sqlmodel import select
 
@@ -79,15 +82,22 @@ class DuckDB:
             engine.dispose()
             logger.debug(f'Closed SQLModel engine (read-only) connection to DuckDB at {self.db_file_path}')
 
-    def check_schema_exists(self, schema_name: str) -> bool:
-        """Check if a schema exists in the DuckDB database."""
+    def sql_check_schema_exists(self, schema_name: str) -> bool:
+        """Check if a schema exists in the DuckDB database.
+
+        Args:
+            schema_name (str): The name of the schema to check.
+
+        Returns:
+            bool: True if the schema exists, False otherwise.
+        """
         try:
-            logger.info(f'Checking if schema exists: {schema_name}')
-            with self.get_connection() as conn:
-                result = conn.sql(
-                    f"SELECT schema_name FROM information_schema.schemata WHERE schema_name = '{schema_name}';"
-                )
-            return len(result) > 0
+            logger.debug(f'Checking if schema exists (SQLModel): {schema_name}')
+            with self.sql_get_readonly_connection() as (_session, _engine):
+                inspector: Inspector = inspect(_engine)
+                result = inspector.has_schema(schema_name)
+            logger.debug(f'Schema {schema_name} exists: {result}')
+            return result
         except Exception as e:
             logger.error(f'Error checking schema {schema_name}: {e}')
             return False
