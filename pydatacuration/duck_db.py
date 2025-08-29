@@ -149,24 +149,26 @@ class DuckDB:
             logger.error(f'Error checking records in table {table_name}: {e}')
             return False
 
-    def sql_write_records_to_table(self, sql_model: type[SQLModel]) -> None:
-        """Write records to a table in the DuckDB database using SQLmodel.
+    def sql_merge_records_to_table(self, sql_model: type[SQLModel]) -> None:
+        """Merge records into a table in the DuckDB database using SQLmodel.
+
+        * Note: This will replace existing records with the same primary key.
 
         Args:
-            sql_model (type[SQLModel]): The SQLModel class to write records for.
+            sql_model (type[SQLModel]): The SQLModel class to merge records for.
 
         """
-        logger.debug(f'Writing records to table: {sql_model.__tablename__}')
+        logger.debug(f'Merging records into table: {sql_model.__tablename__}')
         try:
             with self.sql_get_connection() as (session, engine):
                 SQLModel.metadata.create_all(engine)  # create the table under the schema
                 ds = sql_model
-                session.add(ds)
-                logger.info(f'Inserted sample data into table: {sql_model.__tablename__}')
+                session.merge(ds)
+                logger.info(f'Merged sample data into table: {sql_model.__tablename__}')
                 session.commit()
                 logger.info(f'Committed sample data to table: {sql_model.__tablename__}')
         except Exception as e:
-            logger.error(f'Error writing records to table {sql_model.__tablename__}: {e}')
+            logger.error(f'Error merging records to table {sql_model.__tablename__}: {e}')
 
     def sql_read_table_records(self, model: type[SQLModel]):
         """Read all records from a table in the DuckDB database.
