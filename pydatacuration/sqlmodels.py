@@ -6,7 +6,7 @@ from datetime import datetime
 from sqlalchemy import Column
 from sqlalchemy import Integer
 from sqlalchemy import Sequence
-from sqlmodel import DATE
+from sqlmodel import DATE, text
 from sqlmodel import DATETIME
 from sqlmodel import JSON
 from sqlmodel import Field
@@ -63,8 +63,7 @@ class DuckDBmodels:
                 description='Path of the dataset in the repository',
             )
             log_init_date: date = Field(
-                default=date.today(),
-                sa_column=Column(DATE, nullable=False),
+                sa_column=Column(DATE, nullable=False, server_default=text("CURRENT_DATE")),
                 description='Date when the log was initialized',
             )
             log_last_update_date: date = Field(
