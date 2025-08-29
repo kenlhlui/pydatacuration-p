@@ -47,6 +47,7 @@ class DuckDB:
     @contextmanager
     def get_readonly_connection(self):
         """Get a read-only connection to the DuckDB database using duckdb connect."""
+        time.sleep(0.01)
         conn = duckdb.connect(self.db_file, read_only=True)
         try:
             logger.debug(f'Opened read-only connection to DuckDB at {self.db_file}')
@@ -59,24 +60,28 @@ class DuckDB:
     def sql_get_connection(self):
         """Get a connection using the SQLmodel interface."""
         time.sleep(0.01)  # Small delay to avoid connection issues
-        engine = create_engine(f'duckdb:///{self.db_file}', echo=False)
+        engine = create_engine(f'duckdb:///{self.db_file}', echo=False, pool_timeout=10, pool_recycle=300)
+        session = Session(engine)
         try:
             logger.debug(f'Opened SQLModel engine connection to DuckDB at {self.db_file}')
-            yield Session(engine), engine
+            yield session, engine
         finally:
             # Explicitly close the engine to free up connections
+            session.close()
             engine.dispose()
             logger.debug(f'Closed SQLModel engine connection to DuckDB at {self.db_file}')
 
     @contextmanager
     def sql_get_readonly_connection(self):
         """Get a read-only connection using the SQLmodel interface."""
-        engine = create_engine(f'duckdb:///{self.db_file}', echo=False, connect_args={'read_only': True},)
+        engine = create_engine(f'duckdb:///{self.db_file}', echo=False, connect_args={'read_only': True}, pool_timeout=10, pool_recycle=300)
+        session = Session(engine)
         try:
             logger.debug(f'Opened SQLModel engine (read-only) connection to DuckDB at {self.db_file}')
-            yield Session(engine), engine
+            yield session, engine
         finally:
             # Explicitly close the engine to free up connections
+            session.close()
             engine.dispose()
             logger.debug(f'Closed SQLModel engine (read-only) connection to DuckDB at {self.db_file}')
 
@@ -174,8 +179,8 @@ class DuckDB:
         """
         try:
             # Clear any existing table definitions
-            SQLModel.metadata.clear()
             with self.sql_get_readonly_connection() as (session, _engine):
+                SQLModel.metadata.clear()
                 result: SQLModel | None = session.exec(select(model)).first()
                 if result:
                     return result.model_dump(mode='json')
