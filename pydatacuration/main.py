@@ -136,10 +136,7 @@ def gen_curation_report(
                           check_zip,
                           duckdb_instance,
                           collection_alias)
-        new_check_results = checker.run_checks()
-
-        # Export the new check results structure
-        utils.orjson_export(dir_manager.log_files_dir.joinpath('check_results.json'), new_check_results)
+        checker.run_checks()
 
         # Generate the tree diagram of the dataset files
         utils.gen_tree_diagram(Path(workdir_path, 'dataset', 'files'), Path(dir_manager.log_files_dir))
