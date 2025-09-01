@@ -462,6 +462,7 @@ async def get_check_results_from_session(request: Request) -> JSONResponse:
         dir_manager = DirectoryManager(ticket_number, main_dir)
         duck_db = DuckDB(schema_name=ticket_number, db_file=dir_manager.db_path)
         table_names: list = duck_db.read_check_item_table_names()
+        # FIXME: Turn this not to use for loop; instead in a single table.
         for table_name in table_names:
             duckdb_result = _get_check_results_from_duckdb(main_dir, ticket_number, table_name)
             _check_results['check_results'].append(duckdb_result)

@@ -173,7 +173,25 @@ class DuckDB:
         except Exception as e:
             logger.error(f'Error merging records to table {sql_model.__tablename__}: {e}')
 
-    def sql_read_table_records(self, model: type[SQLModel]):
+    def sql_write_records_to_table(self, sql_model: type[SQLModel], ) -> None:
+        """Write records into a table in the DuckDB database using SQLmodel.
+
+        Args:
+            sql_model (type[SQLModel]): The SQLModel class to write records for.
+
+        """
+        logger.debug(f'Writing records into table: {sql_model.__tablename__}')
+        try:
+            with self.sql_get_connection() as (session, engine):
+                SQLModel.metadata.create_all(engine)  # create the table under the schema
+                session.add(sql_model)
+                logger.info(f'Wrote sample data into table: {sql_model.__tablename__}')
+                session.commit()
+                logger.info(f'Committed sample data to table: {sql_model.__tablename__}')
+        except Exception as e:
+            logger.error(f'Error writing records to table {sql_model.__tablename__}: {e}')
+
+    def sql_read_table_records(self, model: type[SQLModel]) -> dict[str, Any]:
         """Read all records from a table in the DuckDB database.
 
         Args:
@@ -183,7 +201,6 @@ class DuckDB:
             dict[str, Any]: Dictionary of all records in the table.
         """
         try:
-            # Clear any existing table definitions
             with self.sql_get_readonly_connection() as (session, _engine):
                 SQLModel.metadata.clear()
                 result: SQLModel | None = session.exec(select(model)).first()
@@ -215,7 +232,7 @@ class DuckDB:
             dict[str, Any]: Check results dictionary
 
         """
-        model_class = self.duckdb_models.check_result_json(table_name)
+        model_class = self.duckdb_models.check_result_json_single()
         return self.sql_read_table_records(model_class)
 
     def read_schema_tables(self) -> list[str]:
