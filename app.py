@@ -122,14 +122,27 @@ def get_checklist_items() -> list[ChecklistItem]:
 
 
 @app.get('/', response_class=HTMLResponse)
-def landing(request: Request) -> HTMLResponse:
-    """Render the landing page for setup.
+def main_landing(request: Request) -> HTMLResponse:
+    """Render the main landing page with navigation options.
 
     Args:
         request (Request): incoming HTTP request
 
     Returns:
-        HTMLResponse: setup landing page
+        HTMLResponse: main landing page
+    """
+    return templates.TemplateResponse('main.html', {'request': request})
+
+
+@app.get('/new-dataset', response_class=HTMLResponse)
+def new_dataset(request: Request) -> HTMLResponse:
+    """Render the new dataset setup page.
+
+    Args:
+        request (Request): incoming HTTP request
+
+    Returns:
+        HTMLResponse: new dataset setup page
     """
     # Get environment variables for prefilling form fields
     env_data = {
@@ -154,6 +167,13 @@ def checklist(request: Request) -> HTMLResponse:
     """
     items = get_checklist_items()
 
+    # Check if we're resuming work from a specific schema
+    resume_schema = request.query_params.get('resume')
+    if resume_schema:
+        # Pre-populate session storage with the schema information
+        # The frontend will handle loading the data
+        pass
+
     # Check results will be loaded via JavaScript from session storage
     return templates.TemplateResponse(
         'index.html',
@@ -161,6 +181,7 @@ def checklist(request: Request) -> HTMLResponse:
             'request': request,
             'items': items,
             'check_results': [],  # Empty, will be populated by frontend JavaScript
+            'resume_schema': resume_schema,  # Pass to frontend for handling
         },
     )
 
@@ -385,6 +406,62 @@ def _get_check_results_from_duckdb(main_dir: str, ticket_number: str, table_name
     except Exception as e:
         logger.error(f'Error fetching check results from DuckDB for ticket {ticket_number}: {e}')
         return {'error': str(e)}
+
+
+@app.get('/api/schemas')
+async def get_schemas() -> JSONResponse:
+    """Get all available schemas (projects) from DuckDB.
+
+    Returns:
+        JSONResponse: List of available schemas with metadata
+    """
+    try:
+        # Use default main database directory to find the main database file
+        main_dir = 'workdir'
+        db_dir = Path(main_dir) / 'db'
+        db_file = db_dir / 'duckdb.db'
+
+        if not db_file.exists():
+            logger.warning(f'Database file not found at {db_file}')
+            return JSONResponse(content={'schemas': []})
+
+        # Create a DuckDB instance to get schemas (schema_name doesn't matter for this operation)
+        duck_db = DuckDB(schema_name='temp', db_file=db_file)
+        schema_names = duck_db.get_all_schema_names()
+
+        # Get additional metadata for each schema
+        schemas_with_metadata = []
+        for schema_name in schema_names:
+            try:
+                # Try to get project metadata for last modified date
+                schema_duck_db = DuckDB(schema_name=schema_name, db_file=db_file)
+                metadata = schema_duck_db.read_project_metadata_record()
+
+                last_modified = 'Unknown'
+                if metadata and 'log_last_update_date' in metadata:
+                    last_modified = metadata['log_last_update_date']
+                elif metadata and 'log_init_date' in metadata:
+                    last_modified = metadata['log_init_date']
+
+                schemas_with_metadata.append(
+                    {
+                        'name': schema_name,
+                        'last_modified': last_modified,
+                        'has_metadata': bool(metadata and metadata.get('dataset_pid')),
+                    }
+                )
+            except Exception as e:
+                logger.warning(f'Could not get metadata for schema {schema_name}: {e}')
+                schemas_with_metadata.append({'name': schema_name, 'last_modified': 'Unknown', 'has_metadata': False})
+
+        # Sort by last modified (most recent first)
+        schemas_with_metadata.sort(key=lambda x: x['last_modified'], reverse=True)
+
+        return JSONResponse(content={'schemas': schemas_with_metadata})
+
+    except Exception as e:
+        logger.error(f'Error fetching schemas: {e}')
+        return JSONResponse(status_code=500, content={'error': f'Error fetching schemas: {str(e)}'})
 
 
 @app.get('/api/check-results')
