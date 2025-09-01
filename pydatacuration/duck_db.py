@@ -74,7 +74,9 @@ class DuckDB:
     @contextmanager
     def sql_get_readonly_connection(self):
         """Get a read-only connection using the SQLmodel interface."""
-        engine = create_engine(f'duckdb:///{self.db_file}', echo=False, connect_args={'read_only': True}, pool_timeout=10, pool_recycle=300)
+        engine = create_engine(
+            f'duckdb:///{self.db_file}', echo=False, connect_args={'read_only': True}, pool_timeout=10, pool_recycle=300
+        )
         session = Session(engine)
         try:
             logger.debug(f'Opened SQLModel engine (read-only) connection to DuckDB at {self.db_file}')
@@ -242,3 +244,22 @@ class DuckDB:
         filtered_names = [name for name in table_names if name != 'project_metadata']
         logger.debug(f'Check item tables: {filtered_names}')
         return filtered_names
+
+    def get_all_schema_names(self) -> list[str]:
+        """Get all schema names from the DuckDB database.
+
+        Returns:
+            list[str]: List of schema names, excluding system schemas
+        """
+        try:
+            with self.sql_get_readonly_connection() as (_session, engine):
+                inspector = inspect(engine)
+                all_schemas = inspector.get_schema_names()
+                # Filter out system schemas
+                system_schemas = {'information_schema', 'main', 'pg_catalog'}
+                user_schemas = [schema for schema in all_schemas if schema not in system_schemas]
+                logger.debug(f'Found user schemas: {user_schemas}')
+                return user_schemas
+        except Exception as e:
+            logger.error(f'Error fetching schema names: {e}')
+            return []
