@@ -334,31 +334,6 @@ async def setup(request: SetupRequest) -> JSONResponse:
         return JSONResponse(status_code=500, content={'success': False, 'message': f'Error during setup: {str(e)}'})
 
 
-@app.get('/check-results/{main_dir}/{ticket_number}')
-async def get_check_results(main_dir: str, ticket_number: str) -> JSONResponse:
-    """Serve the check results file for a specific ticket.
-
-    Args:
-        main_dir (str): Main directory name
-        ticket_number (str): Ticket number
-
-    Returns:
-        JSONResponse: Check results data
-    """
-    try:
-        dir_manager = DirectoryManager(ticket_number, main_dir)
-        check_results_path = dir_manager.get_dir('logs') / 'check_results.json'
-        if not check_results_path.exists():
-            raise HTTPException(status_code=404, detail='Check results not found')
-
-        with check_results_path.open('r', encoding='utf-8') as f:
-            check_results_data = json.load(f)
-
-        return JSONResponse(content=check_results_data)
-    except Exception as e:
-        raise HTTPException(status_code=500, detail=f'Error reading check results: {str(e)}')
-
-
 @app.get('/ds-metadata')
 async def get_ds_metadata(main_dir: str, ticket_number: str, base_url: str = '') -> JSONResponse:
     """Serve the dataset metadata file for a specific ticket.
