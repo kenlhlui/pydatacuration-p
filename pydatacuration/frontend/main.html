@@ -210,7 +210,7 @@
                     data.schemas.forEach(schema => {
                         const option = document.createElement('option');
                         option.value = schema.name;
-                        option.textContent = `${schema.name} (${schema.last_modified})`;
+                        option.textContent = `${schema.display_name} (Last Modified: ${schema.last_modified})`;
                         select.appendChild(option);
                     });
                     
