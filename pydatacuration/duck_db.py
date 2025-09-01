@@ -7,7 +7,7 @@ from typing import Any
 from unittest import result
 
 import duckdb
-from sqlalchemy import Inspector
+from sqlalchemy import Inspector, ScalarResult
 from sqlmodel import Session
 from sqlmodel import SQLModel
 from sqlmodel import create_engine
@@ -191,7 +191,7 @@ class DuckDB:
         except Exception as e:
             logger.error(f'Error writing records to table {sql_model.__tablename__}: {e}')
 
-    def sql_read_table_records(self, model: type[SQLModel]) -> dict[str, Any]:
+    def sql_read_table_records(self, model: type[SQLModel]) -> list[dict[str, Any]]:
         """Read all records from a table in the DuckDB database.
 
         Args:
@@ -203,9 +203,11 @@ class DuckDB:
         try:
             with self.sql_get_readonly_connection() as (session, _engine):
                 SQLModel.metadata.clear()
-                result: SQLModel | None = session.exec(select(model)).first()
-                if result:
-                    return result.model_dump(mode='json')
+                result: ScalarResult[SQLModel] = session.exec(select(model))
+                rows = result.all()
+                if rows:
+                    new_result = [row.model_dump(mode='json') for row in rows]
+                    return new_result
         except Exception as e:
             logger.error(f'Error fetching metadata for table project_metadata: {e}')
 
@@ -213,7 +215,7 @@ class DuckDB:
         empty_instance = model()
         return empty_instance.model_dump(mode='json')
 
-    def read_project_metadata_record(self) -> dict[str, Any]:
+    def read_project_metadata_record(self) -> list[dict[str, Any]]:
         """Read project metadata record.
 
         Returns:
@@ -233,7 +235,8 @@ class DuckDB:
 
         """
         model_class = self.duckdb_models.check_result_json_single()
-        return self.sql_read_table_records(model_class)
+        check_results = {'check_results': self.sql_read_table_records(model_class)}
+        return check_results
 
     def read_schema_tables(self) -> list[str]:
         """Get the names of the tables inside a schema.

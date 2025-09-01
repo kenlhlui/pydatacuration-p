@@ -1,7 +1,5 @@
 """The checker module provides functions to check the validity of data files and metadata."""
 
-from datetime import date
-from datetime import datetime
 from pathlib import Path
 
 import jmespath
