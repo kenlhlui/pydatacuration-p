@@ -364,9 +364,6 @@ async def get_ds_metadata(main_dir: str, ticket_number: str, base_url: str = '')
             except Exception as db_error:
                 logger.warning(f'DuckDB query failed for ticket {ticket_number}: {db_error}')
 
-        logger.info(f'Loaded dataset metadata from file for ticket {ticket_number}: {processed_metadata}')
-        return JSONResponse(content=processed_metadata)
-
     except Exception as e:
         logger.error(f'Error reading dataset metadata for ticket {ticket_number}: {e}')
         raise HTTPException(status_code=500, detail=f'Error reading dataset metadata: {str(e)}')
@@ -457,8 +454,6 @@ async def get_check_results_from_session(request: Request) -> JSONResponse:
     try:
         main_dir = request.query_params.get('main_dir', 'workdir')
         ticket_number = request.query_params.get('ticket_number')
-        logger.debug('Trying to load  _get_check_results_from_duckdb inside app.py')
-        # FIXME: Turn this not to use for loop; instead in a single table.
         _check_results = _get_check_results_from_duckdb(main_dir, ticket_number, 'check_results')
         logger.debug(f'Result of duckdb_result: {_check_results}')
 

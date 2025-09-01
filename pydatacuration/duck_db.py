@@ -215,14 +215,14 @@ class DuckDB:
         empty_instance = model()
         return empty_instance.model_dump(mode='json')
 
-    def read_project_metadata_record(self) -> list[dict[str, Any]]:
+    def read_project_metadata_record(self) -> dict[str, Any]:
         """Read project metadata record.
 
         Returns:
             dict[str, Any]: Project metadata dictionary
 
         """
-        return self.sql_read_table_records(self.duckdb_models.project_metadata_record())
+        return self.sql_read_table_records(self.duckdb_models.project_metadata_record())[0]
 
     def read_check_results(self, table_name: str) -> dict[str, Any]:
         """Read check results for specific table (with check_id as table_name).
