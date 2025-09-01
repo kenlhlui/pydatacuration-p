@@ -443,8 +443,12 @@ async def get_schemas() -> JSONResponse:
                 elif metadata and 'log_init_date' in metadata:
                     last_modified = metadata['log_init_date']
 
+                # Prune the schema, removing the prefixes
+                schema_name_display = schema_name.replace('duckdb.', '').replace('"', '')
+
                 schemas_with_metadata.append(
                     {
+                        'display_name': schema_name_display,
                         'name': schema_name,
                         'last_modified': last_modified,
                         'has_metadata': bool(metadata and metadata.get('dataset_pid')),
