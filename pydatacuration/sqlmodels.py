@@ -79,31 +79,21 @@ class DuckDBmodels:
 
         return ProjectMetadata
 
-    def check_result_json(self, table_name: str) -> type[SQLModel]:
+    def check_result_json_single(self) -> type[SQLModel]:
         """Check the result list for the specified schema.
 
         Returns:
             type[SQLModel]: The CheckResultJson class with the specified schema.
         """
 
-        class CheckResultJson(SQLModel, table=True):
+        class CheckResultJsonNew(SQLModel, table=True):
             """Check result list table model."""
 
-            __tablename__ = table_name
-            __table_args__ = {'schema': self.schema_name}
+            __tablename__ = 'check_results'
+            __table_args__ = {'schema': self.schema_name, 'extend_existing': True}
 
-            id: int | None = Field(
-                default=None,
-                sa_column=Column(
-                    Integer,
-                    Sequence('check_result_list_id_seq'),
-                    server_default=Sequence('check_result_list_id_seq').next_value(),
-                    primary_key=True,
-                ),
-                description='Primary key ID',
-            )
             check_name: str = Field(sa_column=Column(String, nullable=False), description='Name of the check')
-            check_id: str = Field(sa_column=Column(String, nullable=False), description='ID of the check')
+            check_id: str = Field(sa_column=Column(String, nullable=False, primary_key=True), description='ID of the check')
             description: str = Field(sa_column=Column(String, nullable=False), description='Description of the check')
             result_name: str = Field(sa_column=Column(String, nullable=False), description='Name of the result')
             results: list[str] | list[dict] = Field(
@@ -113,4 +103,4 @@ class DuckDBmodels:
                 sa_column=Column(DATETIME, nullable=False), description='Last modified datetime'
             )
 
-        return CheckResultJson
+        return CheckResultJsonNew
