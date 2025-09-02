@@ -59,7 +59,7 @@ chardet==5.2.0
     # via
     #   -c (workspace)
     #   pydatacuration (pyproject.toml)
-charset-normalizer==3.4.1
+charset-normalizer==3.4.3
     # via
     #   -c (workspace)
     #   markitdown
