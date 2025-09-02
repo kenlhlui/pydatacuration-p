@@ -394,7 +394,7 @@ async def get_schemas() -> JSONResponse:
     """
     try:
         # Use default main database directory to find the main database file
-        main_dir = 'workdir'
+        main_dir = MAIN_DIR
         db_dir = Path(main_dir) / 'db'
         db_file = db_dir / 'duckdb.db'
 
@@ -457,7 +457,7 @@ async def get_check_results_from_session(request: Request) -> JSONResponse:
         JSONResponse: Check results data or empty results if not found
     """
     try:
-        main_dir = request.query_params.get('main_dir', 'workdir')
+        main_dir = MAIN_DIR
         ticket_number = request.query_params.get('ticket_number')
         _check_results = _get_check_results_from_duckdb(main_dir, ticket_number, 'check_results')
         logger.debug(f'Result of duckdb_result: {_check_results}')
