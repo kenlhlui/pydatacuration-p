@@ -89,7 +89,7 @@
                                 <td colspan="7" class="section-header">{{ item.section }}</td>
                             </tr>
                         {% endif %}
-                        <tr data-item-id="{{ item.id }}" data-automated-check-ids="{{ item.automated_check_ids|join(',') }}" data-information-location="{{ item.information_location|default('') }}" data-check-type="{{ item.check_type|default('') }}">
+                        <tr data-item-id="{{ item.id }}" data-automated-check-ids="{{ (item.automated_check_ids or [])|join(',') }}" data-information-location="{{ item.information_location|default('') }}" data-check-type="{{ item.check_type|default('') }}">
                             <td class="item-id">{{ item.id }}</td>
                             <td class="details-cell">
                                 <div class="action-item">

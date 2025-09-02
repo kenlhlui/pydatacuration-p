@@ -281,7 +281,7 @@
                     
                     // Redirect to checklist page after 2 seconds
                     setTimeout(() => {
-                        window.location.href = '/checklist';
+                        window.location.href = result.redirect_url || '/checklist';
                     }, 2000);
                 } else {
                     document.getElementById('error-message').textContent = result.detail || 'An error occurred';
