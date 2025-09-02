@@ -4,7 +4,6 @@ import time
 from contextlib import contextmanager
 from pathlib import Path
 from typing import Any
-from unittest import result
 
 import duckdb
 from sqlalchemy import Inspector
@@ -12,7 +11,6 @@ from sqlalchemy import ScalarResult
 from sqlmodel import Session
 from sqlmodel import SQLModel
 from sqlmodel import create_engine
-from sqlmodel import desc
 from sqlmodel import inspect
 from sqlmodel import select
 
@@ -238,7 +236,7 @@ class DuckDB:
             dict[str, Any]: Check results dictionary
 
         """
-        model_class = self.duckdb_models.check_result_json_single()
+        model_class = self.duckdb_models.check_results()
         check_results = {'check_results': self.sql_read_table_records(model_class)}
         return check_results
 
