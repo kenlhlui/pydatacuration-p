@@ -240,6 +240,20 @@ class DuckDB:
         check_results = {'check_results': self.sql_read_table_records(model_class)}
         return check_results
 
+    def read_checklist(self) -> dict[str, Any]:
+        """Read checklist checklist table.
+
+        Args:
+            table_name (str): Name of the table
+
+        Returns:
+            dict[str, Any]: Checklist dictionary
+
+        """
+        model_class = self.duckdb_models.checklist()
+        checklist = {'checklist': self.sql_read_table_records(model_class)}
+        return checklist
+
     def read_schema_tables(self) -> list[str]:
         """Get the names of the tables inside a schema.
 

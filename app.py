@@ -50,7 +50,7 @@ class ChecklistItem(BaseModel):
     instructions: str
     priority: str
     section: str = ''
-    automated_check_ids: list[str] = []
+    automated_check_ids: list[str] | None = []
     information_location: str = ''
     check_type: str = ''
 
@@ -94,17 +94,19 @@ app.mount('/static', StaticFiles(directory='pydatacuration/frontend'), name='sta
 load_dotenv()
 
 
-def get_checklist_items() -> list[ChecklistItem]:
+def get_checklist_items(ticket_number: str) -> list[ChecklistItem]:
     """Get all checklist items from the check-list_template_high.yaml file.
 
     Returns:
         list[ChecklistItem]: List of checklist items with their details.
 
     """
-    with Path('res/check-list_template_high.yaml').open('r', encoding='utf-8') as f:
-        data = yaml.safe_load(f)
+    dir_manager = DirectoryManager(ticket_number, MAIN_DIR)
+    duck_db = DuckDB(schema_name=ticket_number, db_file=dir_manager.db_path)
+    duck_db_data = duck_db.read_checklist()
     items = []
-    for item in data.get('checklist', []):
+    for item in duck_db_data.get('checklist', []):
+        logger.debug(f'Processing item ID: {item["id"]} with automated_check_ids: {item.get("automated_check_ids")}')
         checklist_item = ChecklistItem(
             id=item['id'],
             action=item['action'],
@@ -119,8 +121,6 @@ def get_checklist_items() -> list[ChecklistItem]:
             else '',  # Handle missing information_location
             check_type=item.get('check_type', 'Manual'),  # Optional field for check type
         )
-        if checklist_item.automated_check_ids:
-            print(f'Item {checklist_item.id} has automated_check_ids: {checklist_item.automated_check_ids}')
         items.append(checklist_item)
     return items
 
@@ -161,7 +161,7 @@ def new_dataset(request: Request) -> HTMLResponse:
 
 
 @app.get('/checklist', response_class=HTMLResponse)
-def checklist(request: Request) -> HTMLResponse:
+async def checklist(request: Request) -> HTMLResponse:
     """Render the checklist UI with a table.
 
     Args:
@@ -170,9 +170,9 @@ def checklist(request: Request) -> HTMLResponse:
     Returns:
         HTMLResponse: page with checklist table
     """
-    items = get_checklist_items()
+    ticket_number = request.query_params.get('ticket_number')
+    items = get_checklist_items(ticket_number)
 
-    # Check if we're resuming work from a specific schema
     resume_schema = request.query_params.get('resume')
     if resume_schema:
         # Pre-populate session storage with the schema information
@@ -290,57 +290,24 @@ async def setup(request: SetupRequest) -> JSONResponse:
         result = await run_command(cmd)
 
         if result['success']:
-            # Use get_ds_metadata function to get processed metadata
-            ds_metadata = None
-            try:
-                base_url = request.base_url or ''
-                ds_metadata_response = await get_ds_metadata(request.main_dir, request.ticket_number, base_url)
-                # Extract the content from the JSONResponse
-                ds_metadata = json.loads(ds_metadata_response.body.decode('utf-8'))
-            except Exception as e:
-                logger.info(f'Could not load ds_metadata using get_ds_metadata: {e}')
-
-            return JSONResponse(
-                content={
-                    'success': True,
-                    'message': 'Curation report generated successfully',
-                    'output': result['stdout'],
-                    'command': cmd,
-                    'curator_name': request.curator_name,
-                    'curator_email': request.curator_email,
-                    'ds_metadata': ds_metadata,
-                    'redirect_url': f'/checklist?main_dir={request.main_dir}&ticket_number={request.ticket_number}',
-                }
-            )
-        return JSONResponse(
-            status_code=400,
-            content={
-                'success': False,
-                'message': 'Curation command failed',
-                'error': result['stderr'],
-                'output': result['stdout'],
-                'command': cmd,
-                'return_code': result['return_code'],
-            },
-        )
-
+            url = f'/checklist?ticket_number={request.ticket_number}'
+            return JSONResponse(content={
+                'success': True,
+                'redirect_url': url
+            })
+        raise HTTPException(status_code=400, detail='Curation command failed')
     except ValidationError as e:
         logger.error(f'Pydantic validation error: {e}')
         logger.error(f'Validation errors details: {e.errors()}')
-        return JSONResponse(
-            status_code=422,
-            content={'success': False, 'message': 'Validation error', 'detail': str(e), 'errors': e.errors()},
-        )
     except HTTPException as e:
         logger.error(f'HTTP exception: status={e.status_code}, detail={e.detail}')
         raise e
     except Exception as e:
         logger.error(f'Unexpected error in setup endpoint: {e}', exc_info=True)
-        return JSONResponse(status_code=500, content={'success': False, 'message': f'Error during setup: {str(e)}'})
-
+    return JSONResponse(content={'success': False, 'message': 'Unexpected error occurred'})
 
 @app.get('/ds-metadata')
-async def get_ds_metadata(main_dir: str, ticket_number: str, base_url: str = '') -> JSONResponse:
+async def get_ds_metadata(main_dir: str, ticket_number: str, base_url: str = ''):
     """Serve the dataset metadata file for a specific ticket.
 
     Args:
@@ -361,9 +328,6 @@ async def get_ds_metadata(main_dir: str, ticket_number: str, base_url: str = '')
                 duck_db = DuckDB(schema_name=ticket_number, db_file=dir_manager.db_path)
                 processed_metadata = duck_db.read_project_metadata_record()
                 if processed_metadata and processed_metadata.get('dataset_pid'):
-                    logger.debug(
-                        f'Loaded dataset metadata from DuckDB for ticket {ticket_number}: {processed_metadata}'
-                    )
                     return JSONResponse(content=processed_metadata)
                 logger.warning(f'No data found in DuckDB for ticket {ticket_number}')
             except Exception as db_error:
@@ -382,6 +346,17 @@ def _get_check_results_from_duckdb(main_dir: str, ticket_number: str, table_name
         return duck_db.read_check_results(table_name)
     except Exception as e:
         logger.error(f'Error fetching check results from DuckDB for ticket {ticket_number}: {e}')
+        return {'error': str(e)}
+
+
+def get_checklist_from_duckdb(main_dir: str | Path, ticket_number: str) -> dict:
+    """Get the checklist from DuckDB for a specific ticket."""
+    try:
+        dir_manager = DirectoryManager(ticket_number, main_dir)
+        duck_db = DuckDB(schema_name=ticket_number, db_file=dir_manager.db_path)
+        return duck_db.read_checklist()
+    except Exception as e:
+        logger.error(f'Error fetching checklist from DuckDB for ticket {ticket_number}: {e}')
         return {'error': str(e)}
 
 
@@ -445,6 +420,30 @@ async def get_schemas() -> JSONResponse:
         return JSONResponse(status_code=500, content={'error': f'Error fetching schemas: {str(e)}'})
 
 
+# @app.get('/api/checklist')
+# async def get_checklist_from_duckdb(request: Request) -> JSONResponse:
+#     """Serve check results based on session storage data (via query params).
+
+#     Expected query parameters:
+#     - ticket_number: from sessionStorage
+#     - main_dir: optional, defaults to 'workdir'
+
+#     Returns:
+#         JSONResponse: Check results data or empty results if not found
+#     """
+#     try:
+#         main_dir = MAIN_DIR
+#         ticket_number = request.query_params.get('ticket_number')
+#         logger.debug(f'Fetching checklist for ticket_number={ticket_number} in main_dir={main_dir}')
+#         _checklist = _get_checklist_from_duckdb(main_dir, ticket_number)
+
+#         return JSONResponse(content=_checklist)
+#     except Exception as e:
+#         logger.error(f'Error loading checklist: {e}')
+#         return JSONResponse(content={'checklist': []})
+
+
+
 @app.get('/api/check-results')
 async def get_check_results_from_session(request: Request) -> JSONResponse:
     """Serve check results based on session storage data (via query params).
@@ -460,7 +459,6 @@ async def get_check_results_from_session(request: Request) -> JSONResponse:
         main_dir = MAIN_DIR
         ticket_number = request.query_params.get('ticket_number')
         _check_results = _get_check_results_from_duckdb(main_dir, ticket_number, 'check_results')
-        logger.debug(f'Result of duckdb_result: {_check_results}')
 
         return JSONResponse(content=_check_results)
     except Exception as e:
