@@ -420,30 +420,6 @@ async def get_schemas() -> JSONResponse:
         return JSONResponse(status_code=500, content={'error': f'Error fetching schemas: {str(e)}'})
 
 
-# @app.get('/api/checklist')
-# async def get_checklist_from_duckdb(request: Request) -> JSONResponse:
-#     """Serve check results based on session storage data (via query params).
-
-#     Expected query parameters:
-#     - ticket_number: from sessionStorage
-#     - main_dir: optional, defaults to 'workdir'
-
-#     Returns:
-#         JSONResponse: Check results data or empty results if not found
-#     """
-#     try:
-#         main_dir = MAIN_DIR
-#         ticket_number = request.query_params.get('ticket_number')
-#         logger.debug(f'Fetching checklist for ticket_number={ticket_number} in main_dir={main_dir}')
-#         _checklist = _get_checklist_from_duckdb(main_dir, ticket_number)
-
-#         return JSONResponse(content=_checklist)
-#     except Exception as e:
-#         logger.error(f'Error loading checklist: {e}')
-#         return JSONResponse(content={'checklist': []})
-
-
-
 @app.get('/api/check-results')
 async def get_check_results_from_session(request: Request) -> JSONResponse:
     """Serve check results based on session storage data (via query params).
