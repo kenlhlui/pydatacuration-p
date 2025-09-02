@@ -189,7 +189,7 @@ class Checker:
 
         # DEBUG: Write to duckDB
         try:
-            check_result_list_schema = self.sqlmodels.check_result_json_single()
+            check_result_list_schema = self.sqlmodels.check_results()
             self.duckdb_instance.sql_merge_records_to_table(check_result_list_schema(
                 check_id='filename_special_chars',
                 check_name='Files with Special Characters',
@@ -201,7 +201,7 @@ class Checker:
             logger.error(f'Failed to write special character files to DuckDB: {e}')
 
         try:
-            check_result_list_schema = self.sqlmodels.check_result_json_single()
+            check_result_list_schema = self.sqlmodels.check_results()
             self.duckdb_instance.sql_merge_records_to_table(check_result_list_schema(
                 check_id='missing_file_extensions',
                 check_name='Files Missing Extensions',
@@ -213,7 +213,7 @@ class Checker:
             logger.error(f'Failed to write missing_file_extensions to DuckDB: {e}')
 
         try:
-            check_result_list_schema = self.sqlmodels.check_result_json_single()
+            check_result_list_schema = self.sqlmodels.check_results()
             self.duckdb_instance.sql_merge_records_to_table(check_result_list_schema(
                 check_id='readme_files',
                 check_name='README Files Found',
@@ -273,7 +273,7 @@ class Checker:
                     unsupported_files.append(str(file_rel_path))
 
         try:
-            check_result_list_schema = self.sqlmodels.check_result_json_single()
+            check_result_list_schema = self.sqlmodels.check_results()
             self.duckdb_instance.sql_merge_records_to_table(check_result_list_schema(
                 check_id='file_accessibility',
                 check_name='Inaccessible Files',
@@ -285,7 +285,7 @@ class Checker:
             logger.error(f'Failed to write file_accessibility to DuckDB: {e}')
 
         try:
-            check_result_list_schema = self.sqlmodels.check_result_json_single()
+            check_result_list_schema = self.sqlmodels.check_results()
             self.duckdb_instance.sql_merge_records_to_table(check_result_list_schema(
                 check_id='unsupported_files',
                 check_name='Files with Unsupported Formats',
@@ -313,7 +313,7 @@ class Checker:
             self.logger.error('No common file format found in the res directory. Skipping this check.')
 
         try:
-            check_result_list_schema = self.sqlmodels.check_result_json_single()
+            check_result_list_schema = self.sqlmodels.check_results()
             self.duckdb_instance.sql_merge_records_to_table(check_result_list_schema(
                 check_id='uncommon_file_formats',
                 check_name='Files with Uncommon Formats',
@@ -374,7 +374,7 @@ class Checker:
             self.logger.info('None of the authors have listed affiliation with University of Toronto')
 
         try:
-            check_result_list_schema = self.sqlmodels.check_result_json_single()
+            check_result_list_schema = self.sqlmodels.check_results()
             self.duckdb_instance.sql_merge_records_to_table(check_result_list_schema(
                 check_id='missing_required_fields',
                 check_name='Missing Required Metadata Fields',
@@ -386,7 +386,7 @@ class Checker:
             logger.error(f'Failed to write missing_required_fields to DuckDB: {e}')
 
         try:
-            check_result_list_schema = self.sqlmodels.check_result_json_single()
+            check_result_list_schema = self.sqlmodels.check_results()
             self.duckdb_instance.sql_merge_records_to_table(check_result_list_schema(
                 check_id='authors_missing_affiliation',
                 check_name='Authors Without Affiliation',
@@ -398,7 +398,7 @@ class Checker:
             logger.error(f'Failed to write authors_missing_affiliation to DuckDB: {e}')
 
         try:
-            check_result_list_schema = self.sqlmodels.check_result_json_single()
+            check_result_list_schema = self.sqlmodels.check_results()
             self.duckdb_instance.sql_merge_records_to_table(check_result_list_schema(
                 check_id='authors_missing_identifier',
                 check_name='Authors Without Identifier',
@@ -410,7 +410,7 @@ class Checker:
             logger.error(f'Failed to write authors_missing_identifier to DuckDB: {e}')
 
         try:
-            check_result_list_schema = self.sqlmodels.check_result_json_single()
+            check_result_list_schema = self.sqlmodels.check_results()
             self.duckdb_instance.sql_merge_records_to_table(check_result_list_schema(
                 check_id='authors_missing_scheme',
                 check_name='Authors Without Identifier Scheme',
@@ -450,7 +450,7 @@ class Checker:
                         )
 
         try:
-            check_result_list_schema = self.sqlmodels.check_result_json_single()
+            check_result_list_schema = self.sqlmodels.check_results()
             self.duckdb_instance.sql_merge_records_to_table(check_result_list_schema(
                 check_name='Potential Spelling Errors',
                 check_id='potential_typos',
@@ -507,7 +507,7 @@ class Checker:
                 # TODO: Add error handling for the case when the response is None or empty; or HTTP error
 
         try:
-            check_result_list_schema = self.sqlmodels.check_result_json_single()
+            check_result_list_schema = self.sqlmodels.check_results()
             self.duckdb_instance.sql_merge_records_to_table(check_result_list_schema(
                 check_id='author_dataverse_history',
                 check_name='Author Publication History',
@@ -564,7 +564,7 @@ class Checker:
                 restricted_files.append(str(file_path))
 
         try:
-            check_result_list_schema: type[SQLModel] = self.sqlmodels.check_result_json_single()
+            check_result_list_schema: type[SQLModel] = self.sqlmodels.check_results()
             self.duckdb_instance.sql_merge_records_to_table(check_result_list_schema(
                 check_id='restricted_files',
                 check_name='Restricted Access Files',
@@ -580,7 +580,7 @@ class Checker:
         terms_of_use = self.ds_metadata.get('data', {}).get('latestVersion', {}).get('termsOfUse', None)
 
         try:
-            check_result_list_schema = self.sqlmodels.check_result_json_single()
+            check_result_list_schema = self.sqlmodels.check_results()
             self.duckdb_instance.sql_merge_records_to_table(check_result_list_schema(
                 check_id='termsOfUse',
                 check_name='Terms of Use of the Dataset',
@@ -598,7 +598,7 @@ class Checker:
         terms_of_access = self.ds_metadata.get('data', {}).get('latestVersion', {}).get('termsOfAccess', None)
 
         try:
-            check_result_list_schema = self.sqlmodels.check_result_json_single()
+            check_result_list_schema = self.sqlmodels.check_results()
             self.duckdb_instance.sql_merge_records_to_table(check_result_list_schema(
                 check_id='termsOfAccess',
                 check_name='Terms of Access of the Dataset',
@@ -616,7 +616,7 @@ class Checker:
         license_name = self.ds_metadata.get('data', {}).get('latestVersion', {}).get('license', {}).get('name', None)
 
         try:
-            check_result_list_schema = self.sqlmodels.check_result_json_single()
+            check_result_list_schema = self.sqlmodels.check_results()
             self.duckdb_instance.sql_merge_records_to_table(check_result_list_schema(
                 check_id='license',
                 check_name='License of the Dataset',
@@ -644,7 +644,7 @@ class Checker:
         # DEBUG: Test for writing to DuckDB using CheckResultList
         # FIXME: fix the update logic; it won't work if there's table
         try:
-            check_result_list_schema = self.sqlmodels.check_result_json_single()
+            check_result_list_schema = self.sqlmodels.check_results()
             self.duckdb_instance.sql_merge_records_to_table(check_result_list_schema(
                 check_name='Keywords Existence',
                 check_id='keywords_existence',
@@ -685,6 +685,35 @@ class Checker:
         except Exception as e:
             self.logger.error(f'Failed to write to DuckDB: {e}')
 
+    # Note: maybe to migrate this to main.py
+    def write_checklist_to_duckdb(self):
+        try:
+            self.logger.debug('Writing the checklist to DuckDB...')
+            checklist_schema = self.sqlmodels.checklist()
+            # FIXME: hardcoded checklist that only support one type of checklist
+            checklist_file: Path = RES_DIR.joinpath('check-list_template_high.yaml')
+
+            with Path.open(checklist_file, 'r') as f:
+                checklist_data = yaml.safe_load(f)
+
+            # Write each checklist item to DuckDB
+            for item in checklist_data.get('checklist', []):
+                self.logger.debug(f'Writing checklist item to DuckDB: {item}')
+                self.duckdb_instance.sql_merge_records_to_table(
+                    checklist_schema(
+                        id=item.get('id'),
+                        action=item.get('action'),
+                        instructions=item.get('instructions'),
+                        priority=item.get('priority'),
+                        section=item.get('section'),
+                        automated_check_ids=item.get('automated_check_ids'),
+                        information_location=item.get('information_location'),
+                        check_type=item.get('check_type'),
+                    )
+                )
+        except Exception as e:
+            self.logger.error(f'Failed to write checklist to DuckDB: {e}')
+
     def run_checks(self) -> None:
         """Run all the checks."""
         self.logger.info('Running the checks...')
@@ -701,3 +730,5 @@ class Checker:
         self.check_keywords()
         self.check_license()
         self.write_project_metadata_to_duckdb()
+        # DEBUG: Write the checklist to DuckDB
+        self.write_checklist_to_duckdb()
