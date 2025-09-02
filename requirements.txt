@@ -439,7 +439,7 @@ rich==13.9.4
     #   -c (workspace)
     #   textual
     #   typer
-scipy==1.15.2
+scipy==1.15.3
     # via
     #   -c (workspace)
     #   pyjanitor
