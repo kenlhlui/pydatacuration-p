@@ -7,7 +7,8 @@ from typing import Any
 from unittest import result
 
 import duckdb
-from sqlalchemy import Inspector, ScalarResult
+from sqlalchemy import Inspector
+from sqlalchemy import ScalarResult
 from sqlmodel import Session
 from sqlmodel import SQLModel
 from sqlmodel import create_engine
@@ -173,7 +174,10 @@ class DuckDB:
         except Exception as e:
             logger.error(f'Error merging records to table {sql_model.__tablename__}: {e}')
 
-    def sql_write_records_to_table(self, sql_model: type[SQLModel], ) -> None:
+    def sql_write_records_to_table(
+        self,
+        sql_model: type[SQLModel],
+    ) -> None:
         """Write records into a table in the DuckDB database using SQLmodel.
 
         Args:
