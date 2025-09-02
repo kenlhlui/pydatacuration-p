@@ -21,7 +21,6 @@ from .checker import Checker
 from .custom_logging import logger
 from .custom_logging import setup_logging
 from .report_validation import validate_report
-from .sqlmodels import DuckDBmodels
 
 
 # Load environment variables from .env file
@@ -60,7 +59,7 @@ def gen_curation_report(
         callback=utils.validate_api_token,
     ),
     main_dir: str = typer.Option(
-        'workdir',
+        str(Path(os.getenv('MAIN_DIR', 'workdir')).resolve()),
         '--main-dir',
         '-dir',
         help='The main directory (top directory) for storing the sub-directories. If not specified, a directory "workdir" will be created in the current directory',
@@ -128,14 +127,16 @@ def gen_curation_report(
         )
 
         # Run the checker
-        checker = Checker(base_url,
-                          api_token,
-                          ds_metadata,
-                          dv_tree,
-                          dir_manager.project_dir,
-                          check_zip,
-                          duckdb_instance,
-                          collection_alias)
+        checker = Checker(
+            base_url,
+            api_token,
+            ds_metadata,
+            dv_tree,
+            dir_manager.project_dir,
+            check_zip,
+            duckdb_instance,
+            collection_alias,
+        )
         checker.run_checks()
 
         # Generate the tree diagram of the dataset files

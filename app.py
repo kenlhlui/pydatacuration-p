@@ -25,6 +25,10 @@ from pydatacuration.duck_db import DuckDB
 from pydatacuration.new_generate_log import render_report_from_yaml
 
 
+load_dotenv(override=True)
+MAIN_DIR: Path = Path(os.getenv('MAIN_DIR', 'workdir'))
+
+
 class ChecklistItem(BaseModel):
     """Model a single checklist item.
 
@@ -75,7 +79,7 @@ class SetupRequest(BaseModel):
     ticket_number: str
     curator_name: str
     curator_email: str
-    main_dir: str = 'workdir'
+    main_dir: str = str(MAIN_DIR.resolve())
     force_del: bool = False
     check_zip: bool = True
 
@@ -150,6 +154,7 @@ def new_dataset(request: Request) -> HTMLResponse:
         'api_token': os.getenv('API_TOKEN', ''),
         'curator_name': os.getenv('CURATOR_NAME', ''),
         'curator_email': os.getenv('CURATOR_EMAIL', ''),
+        'main_dir': str(MAIN_DIR.resolve()),
     }
 
     return templates.TemplateResponse('landing.html', {'request': request, 'env_data': env_data})
