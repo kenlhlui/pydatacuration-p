@@ -1,1 +1,1 @@
-1. Please use single quotes when doing auto-completion, then fall back to double quotes if single quotes have been used in the same line.
+1. Please use single quotes (') when doing auto-completion, then fall back to double quotes (") if single quotes have been used in the same line.
