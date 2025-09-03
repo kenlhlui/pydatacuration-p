@@ -361,6 +361,43 @@ def get_checklist_from_duckdb(main_dir: str | Path, ticket_number: str) -> dict:
         return {'error': str(e)}
 
 
+@app.delete('/api/schemas/{schema_name}')
+async def delete_schema(schema_name: str) -> JSONResponse:
+    """Delete a specific schema from DuckDB.
+
+    Args:
+        schema_name (str): Name of the schema to delete
+
+    Returns:
+        JSONResponse: Result of the delete operation
+    """
+    try:
+        # Use default main database directory to find the main database file
+        main_dir = MAIN_DIR
+        db_dir = Path(main_dir) / 'db'
+        db_file = db_dir / 'duckdb.db'
+
+        if not db_file.exists():
+            logger.warning(f'Database file not found at {db_file}')
+            return JSONResponse(status_code=404, content={'error': 'Database file not found'})
+
+        # Create a DuckDB instance to delete the schema
+        duck_db = DuckDB(schema_name='temp', db_file=db_file)
+
+        # Prune the schema name
+        schema_name_pruned = schema_name.replace('duckdb.', '').replace('"', '')
+
+        # Delete the schema
+        duck_db.sql_drop_schema(schema_name_pruned)
+        logger.info(f'Successfully deleted schema: {schema_name_pruned}')
+
+        return JSONResponse(content={'success': True, 'message': f'Schema {schema_name_pruned} deleted successfully'})
+
+    except Exception as e:
+        logger.error(f'Error deleting schema {schema_name_pruned}: {e}')
+        return JSONResponse(status_code=500, content={'error': f'Error deleting schema: {str(e)}'})
+
+
 @app.get('/api/schemas')
 async def get_schemas() -> JSONResponse:
     """Get all available schemas (projects) from DuckDB.
