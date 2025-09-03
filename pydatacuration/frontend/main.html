@@ -3,13 +3,14 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Data Curation Tool</title>
+    <title>Data Curation Tool - Main</title>
+    <link href="https://fonts.googleapis.com/css2?family=Poppins:wght@400;600;700&display=swap" rel="stylesheet">
     <style>
         body {
             font-family: Arial, sans-serif;
             margin: 0;
             padding: 0;
-            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            background: #1E3765;
             min-height: 100vh;
             display: flex;
             align-items: center;
@@ -19,16 +20,18 @@
             max-width: 600px;
             margin: 0 auto;
             background-color: white;
-            padding: 40px;
+            padding: 20px;
             border-radius: 12px;
             box-shadow: 0 10px 30px rgba(0,0,0,0.2);
             text-align: center;
         }
         h1 {
-            color: #2c3e50;
-            font-size: 2.5rem;
-            margin-bottom: 15px;
-            font-weight: 300;
+            color: #1E3765;
+            font-size: 2.6rem;
+            margin-bottom: 10px;
+            font-weight: 500; /* make title bolder */
+            font-family: 'Poppins', 'Arial', sans-serif; /* use Poppins with fallbacks */
+            letter-spacing: -0.5px;
         }
         .subtitle {
             color: #7f8c8d;
@@ -158,12 +161,18 @@
         .delete-section {
             margin-top: 20px;
         }
+        .logo {
+        height: 60px;
+        display: block;
+        margin: 0 auto 8px; /* top 0, centered, bottom 8px */
+        }
     </style>
 </head>
 <body>
     <div class="container">
-        <h1>Data Curation Tool</h1>
-        <p class="subtitle">Choose how you want to proceed with your curation work</p>
+        <img src="/static/UTL.png" alt="University of Toronto Libraries Logo" class="logo">
+        <h1><b>Data Curation Tool</b></h1>
+        <!-- <p class="subtitle">Choose how you want to proceed with your curation work</p> -->
         
         <div id="error-message" class="error"></div>
         
@@ -172,16 +181,16 @@
             <!-- New Dataset Option -->
             <div class="option-card" onclick="startNewDataset()">
                 <div class="icon new-icon">📁</div>
-                <div class="option-title">New Dataset</div>
-                <div class="option-description">Start a new curation process for a fresh dataset</div>
+                <div class="option-title">New Project</div>
+                <div class="option-description">Start a new curation process for a new project</div>
             </div>
             
-            <!-- Delete Dataset Option -->
+            <!-- Delete Project Option -->
             <div class="option-card">
                 <div class="delete-header" onclick="toggleDeleteSection()">
                     <div class="icon delete-icon">🗑️</div>
-                    <div class="option-title">Delete Dataset</div>
-                    <div class="option-description">Permanently delete an existing dataset</div>
+                    <div class="option-title">Delete Project</div>
+                    <div class="option-description">Delete a project from the database</div>
                 </div>
                 
                 <div class="delete-section" id="delete-section" style="display: none;">
@@ -204,7 +213,7 @@
         <div class="option-card">
             <div class="icon resume-icon">📋</div>
             <div class="option-title">Resume Work</div>
-            <div class="option-description">Continue working on an existing dataset</div>
+            <div class="option-description">Continue working on an existing project</div>
             
             <div class="resume-section">
                 <div class="loading" id="loading-schemas">
@@ -231,6 +240,7 @@
 
         function startNewDataset() {
             window.location.href = '/new-dataset';
+            sessionStorage.clear()
         }
 
         function toggleDeleteSection() {
