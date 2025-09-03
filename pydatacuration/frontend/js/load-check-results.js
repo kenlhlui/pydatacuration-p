@@ -4,11 +4,21 @@
 
 async function loadCheckResults() {
     try {
-        // Get ticket_number from sessionStorage
-        const ticketNumber = sessionStorage.getItem('ticket_number');
+        // Get ticket_number from sessionStorage or URL params
+        let ticketNumber = sessionStorage.getItem('ticket_number');
         
         if (!ticketNumber) {
-            console.log('No ticket number found in session storage');
+            const urlParams = new URLSearchParams(window.location.search);
+            ticketNumber = urlParams.get('ticket_number');
+            // Store it in sessionStorage for future use
+            if (ticketNumber) {
+                sessionStorage.setItem('ticket_number', ticketNumber);
+                console.log('Got ticket number from URL params and stored in sessionStorage:', ticketNumber);
+            }
+        }
+        
+        if (!ticketNumber) {
+            console.log('No ticket number found in session storage or URL params');
             return;
         }
         

@@ -174,10 +174,11 @@ async def checklist(request: Request) -> HTMLResponse:
     items = get_checklist_items(ticket_number)
 
     resume_schema = request.query_params.get('resume')
-    if resume_schema:
-        # Pre-populate session storage with the schema information
-        # The frontend will handle loading the data
-        pass
+    logger.debug(f'Checklist page accessed with ticket_number={ticket_number}, resume_schema={resume_schema}')
+    # if resume_schema:
+    #     # Pre-populate session storage with the schema information
+    #     # The frontend will handle loading the data
+    #     pass
 
     # Check results will be loaded via JavaScript from session storage
     return templates.TemplateResponse(
@@ -434,6 +435,7 @@ async def get_check_results_from_session(request: Request) -> JSONResponse:
     try:
         main_dir = MAIN_DIR
         ticket_number = request.query_params.get('ticket_number')
+        logger.debug(f'Fetching check results for ticket_number={ticket_number} in main_dir={main_dir}')
         _check_results = _get_check_results_from_duckdb(main_dir, ticket_number, 'check_results')
 
         return JSONResponse(content=_check_results)

@@ -239,9 +239,15 @@
                 errorElement.style.display = 'block';
                 return;
             }
-            
+            // Remove the duckdb in selectedSchema
+            const duckdbPattern = /duckdb/g;
+            const cleanedSchema = selectedSchema.replace(duckdbPattern, '');
+            // Also Remove the double quotes and the .
+            const doubleQuotePattern = /"/g;
+            const dotPattern = /\./g;
+            const finalSchema = cleanedSchema.replace(doubleQuotePattern, '').replace(dotPattern, '');
             // Redirect to checklist with the selected schema
-            window.location.href = `/checklist?resume=${encodeURIComponent(selectedSchema)}`;
+            window.location.href = `/checklist?ticket_number=${encodeURIComponent(finalSchema)}`;
         }
     </script>
 </body>
