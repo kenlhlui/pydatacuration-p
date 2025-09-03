@@ -13,6 +13,7 @@ from sqlmodel import SQLModel
 from sqlmodel import create_engine
 from sqlmodel import inspect
 from sqlmodel import select
+from sqlmodel import text
 
 from .custom_logging import logger
 from .sqlmodels import DuckDBmodels
@@ -59,7 +60,6 @@ class DuckDB:
     @contextmanager
     def sql_get_connection(self):
         """Get a connection using the SQLmodel interface."""
-        time.sleep(0.01)  # Small delay to avoid connection issues
         engine = create_engine(f'duckdb:///{self.db_file}', echo=False, pool_timeout=10, pool_recycle=300)
         session = Session(engine)
         try:
@@ -100,21 +100,31 @@ class DuckDB:
             logger.debug(f'Checking if schema exists (SQLModel): {schema_name}')
             with self.sql_get_readonly_connection() as (_session, _engine):
                 inspector: Inspector = inspect(_engine)
+                
+                # Try the schema name as-is first
                 result = inspector.has_schema(schema_name)
-            logger.debug(f'Schema {schema_name} exists: {result}')
-            return result
+                logger.debug(f'Schema {schema_name} exists (direct): {result}')
+                
+                if not result:
+                    # Try without quotes if it has them
+                    clean_name = schema_name.strip('"')
+                    if clean_name != schema_name:
+                        result = inspector.has_schema(clean_name)
+                        logger.debug(f'Schema {clean_name} exists (unquoted): {result}')
+                
+                return result
         except Exception as e:
             logger.error(f'Error checking schema {schema_name}: {e}')
             return False
 
-    def delete_schema(self, schema_name: str) -> None:
-        """Delete a schema from the DuckDB database."""
-        try:
-            with self.get_connection() as conn:
-                conn.sql(f'DROP SCHEMA IF EXISTS "{schema_name}" CASCADE;')
-            logger.info(f'Deleted schema: {schema_name}')
-        except Exception as e:
-            logger.error(f'Error deleting schema {schema_name}: {e}')
+    # def delete_schema(self, schema_name: str) -> None:
+    #     """Delete a schema from the DuckDB database."""
+    #     try:
+    #         with self.get_connection() as conn:
+    #             conn.sql(f'DROP SCHEMA IF EXISTS "{schema_name}" CASCADE;')
+    #         logger.info(f'Deleted schema: {schema_name}')
+    #     except Exception as e:
+    #         logger.error(f'Error deleting schema {schema_name}: {e}')
 
     def create_schema(self) -> None:
         """Create a schema in the DuckDB database."""
@@ -299,3 +309,13 @@ class DuckDB:
         except Exception as e:
             logger.error(f'Error fetching schema names: {e}')
             return []
+
+    def sql_drop_schema(self, schema_name: str) -> None:
+        """Drop the current schema."""
+        try:
+            with self.sql_get_connection() as (_session, engine):
+                with engine.begin() as conn:
+                    conn.execute(text(f'DROP SCHEMA IF EXISTS "{schema_name}" CASCADE;'))
+                    logger.info(f'Dropped schema: {schema_name}')
+        except Exception as e:
+            logger.error(f'Error dropping schema {schema_name}: {e}')
