@@ -7,6 +7,16 @@
     <link rel="stylesheet" href="/static/css/styles.css">
 </head>
 <body>
+    <script>
+        // Clear sessionStorage if there's a ticket_number in URL to force fresh data load
+        const urlParams = new URLSearchParams(window.location.search);
+        const urlTicketNumber = urlParams.get('ticket_number');
+        if (urlTicketNumber) {
+            console.log('URL ticket_number detected, clearing sessionStorage for fresh data load');
+            sessionStorage.clear();
+            sessionStorage.setItem('ticket_number', urlTicketNumber);
+        }
+    </script>
 
     <div class="container">
         <h1>High Level Curation Log</h1>
