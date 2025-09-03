@@ -239,6 +239,11 @@
                 errorElement.style.display = 'block';
                 return;
             }
+            
+            // Clear sessionStorage to force fresh data load for the selected dataset
+            console.log('Clearing sessionStorage before resuming work');
+            sessionStorage.clear();
+            
             // Remove the duckdb in selectedSchema
             const duckdbPattern = /duckdb/g;
             const cleanedSchema = selectedSchema.replace(duckdbPattern, '');
