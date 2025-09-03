@@ -20,7 +20,6 @@ from . import utils
 from .checker import Checker
 from .custom_logging import logger
 from .custom_logging import setup_logging
-from .report_validation import validate_report
 
 
 # Load environment variables from .env file
@@ -152,7 +151,6 @@ def gen_curation_report(
 
 
 init_tui(app)
-app.command()(validate_report)
 
 if __name__ == '__main__':
     app()
