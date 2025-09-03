@@ -40,7 +40,7 @@ brotli==1.1.0
     # via
     #   -c (workspace)
     #   py7zr
-certifi==2025.8.3
+certifi==2025.1.31
     # via
     #   -c (workspace)
     #   httpcore
@@ -59,7 +59,7 @@ chardet==5.2.0
     # via
     #   -c (workspace)
     #   pydatacuration (pyproject.toml)
-charset-normalizer==3.4.3
+charset-normalizer==3.4.1
     # via
     #   -c (workspace)
     #   markitdown
@@ -439,7 +439,7 @@ rich==13.9.4
     #   -c (workspace)
     #   textual
     #   typer
-scipy==1.15.3
+scipy==1.15.2
     # via
     #   -c (workspace)
     #   pyjanitor
