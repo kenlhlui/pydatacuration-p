@@ -469,10 +469,15 @@ async def export_log_yaml(request: CurationLogRequest) -> JSONResponse:
         elif isinstance(checklist_items, dict):
             checklist_map = checklist_items
 
+        # Load the metadata block
+        metadata = yaml_data.get('metadata', {})
+
+        # Get the ticket number from metadata
+        ticket_number = metadata.get('ticket_number', 'unknown')
+
         # Read the check-list_template_high.yaml to get the checklist items
-        with Path('res/check-list_template_high.yaml').open('r', encoding='utf-8') as f:
-            template_data = yaml.safe_load(f)
-            check_list_template_items = template_data.get('checklist', [])
+        checklist = get_checklist_from_duckdb(MAIN_DIR, ticket_number)
+        check_list_template_items = checklist.get('checklist', [])
 
         # Update checklist items with user data
         for item in check_list_template_items:
@@ -501,7 +506,7 @@ async def export_log_yaml(request: CurationLogRequest) -> JSONResponse:
         ticket_number = metadata.get('ticket_number', 'unknown')
         main_dir = metadata.get('main_dir', 'workdir')
         dir_manager = DirectoryManager(ticket_number, main_dir)
-        output_path = dir_manager.get_dir('outputs') / f'{ticket_number}_new.yaml'
+        output_path = dir_manager.get_dir('outputs') / f'{ticket_number}.yaml'
 
         with output_path.open('w', encoding='utf-8') as f:
             yaml.dump(output_data, f, default_flow_style=False, sort_keys=False, allow_unicode=True)
@@ -568,8 +573,8 @@ async def render_report(request: Request) -> JSONResponse:
         dir_manager = DirectoryManager(ticket_number, main_dir)
 
         # Render the report from the saved YAML file with dynamic paths
-        yaml_path = dir_manager.get_dir('outputs') / f'{ticket_number}_new.yaml'
-        output_path = dir_manager.get_dir('outputs') / f'{ticket_number}_new.docx'
+        yaml_path = dir_manager.get_dir('outputs') / f'{ticket_number}.yaml'
+        output_path = dir_manager.get_dir('outputs') / f'{ticket_number}.docx'
 
         render_report_from_yaml(
             yaml_path=yaml_path, template_path=Path('res/new_template_high.docx'), output_path=output_path
