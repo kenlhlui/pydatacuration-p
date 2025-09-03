@@ -154,7 +154,11 @@
                 return;
             }
             
-            const response = await fetch('/export-curation-log', {
+            // Get ticket_number from URL parameters
+            const urlParams = new URLSearchParams(window.location.search);
+            const ticketNumber = urlParams.get('ticket_number');
+            
+            const response = await fetch(`/export-curation-log${ticketNumber ? `?ticket_number=${ticketNumber}` : ''}`, {
                 method: 'POST',
                 headers: {
                     'Content-Type': 'application/json',
