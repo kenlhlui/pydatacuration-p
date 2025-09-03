@@ -100,18 +100,18 @@ class DuckDB:
             logger.debug(f'Checking if schema exists (SQLModel): {schema_name}')
             with self.sql_get_readonly_connection() as (_session, _engine):
                 inspector: Inspector = inspect(_engine)
-                
+
                 # Try the schema name as-is first
                 result = inspector.has_schema(schema_name)
                 logger.debug(f'Schema {schema_name} exists (direct): {result}')
-                
+
                 if not result:
                     # Try without quotes if it has them
                     clean_name = schema_name.strip('"')
                     if clean_name != schema_name:
                         result = inspector.has_schema(clean_name)
                         logger.debug(f'Schema {clean_name} exists (unquoted): {result}')
-                
+
                 return result
         except Exception as e:
             logger.error(f'Error checking schema {schema_name}: {e}')

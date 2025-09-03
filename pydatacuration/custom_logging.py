@@ -1,6 +1,5 @@
 """This module provides a simple logging setup using loguru with Rich console support."""
 
-
 from pathlib import Path
 
 from loguru import logger

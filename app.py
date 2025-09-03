@@ -106,7 +106,6 @@ def get_checklist_items(ticket_number: str) -> list[ChecklistItem]:
     duck_db_data = duck_db.read_checklist()
     items = []
     for item in duck_db_data.get('checklist', []):
-        logger.debug(f'Processing item ID: {item["id"]} with automated_check_ids: {item.get("automated_check_ids")}')
         checklist_item = ChecklistItem(
             id=item['id'],
             action=item['action'],
@@ -174,11 +173,6 @@ async def checklist(request: Request) -> HTMLResponse:
     items = get_checklist_items(ticket_number)
 
     resume_schema = request.query_params.get('resume')
-    logger.debug(f'Checklist page accessed with ticket_number={ticket_number}, resume_schema={resume_schema}')
-    # if resume_schema:
-    #     # Pre-populate session storage with the schema information
-    #     # The frontend will handle loading the data
-    #     pass
 
     # Check results will be loaded via JavaScript from session storage
     return templates.TemplateResponse(
@@ -284,18 +278,12 @@ async def setup(request: SetupRequest) -> JSONResponse:
         dir_manager = DirectoryManager(request.ticket_number, request.main_dir)
         app.state.work_dir = dir_manager.project_dir
         app.state.base_url = request.base_url
-        logger.debug(f'Working directory: {app.state.work_dir}')
-        logger.debug(f'Base URL: {app.state.base_url}')
-
         # Run the command
         result = await run_command(cmd)
 
         if result['success']:
             url = f'/checklist?ticket_number={request.ticket_number}'
-            return JSONResponse(content={
-                'success': True,
-                'redirect_url': url
-            })
+            return JSONResponse(content={'success': True, 'redirect_url': url})
         raise HTTPException(status_code=400, detail='Curation command failed')
     except ValidationError as e:
         logger.error(f'Pydantic validation error: {e}')
@@ -306,6 +294,7 @@ async def setup(request: SetupRequest) -> JSONResponse:
     except Exception as e:
         logger.error(f'Unexpected error in setup endpoint: {e}', exc_info=True)
     return JSONResponse(content={'success': False, 'message': 'Unexpected error occurred'})
+
 
 @app.get('/ds-metadata')
 async def get_ds_metadata(main_dir: str, ticket_number: str, base_url: str = ''):
@@ -472,7 +461,6 @@ async def get_check_results_from_session(request: Request) -> JSONResponse:
     try:
         main_dir = MAIN_DIR
         ticket_number = request.query_params.get('ticket_number')
-        logger.debug(f'Fetching check results for ticket_number={ticket_number} in main_dir={main_dir}')
         _check_results = _get_check_results_from_duckdb(main_dir, ticket_number, 'check_results')
 
         return JSONResponse(content=_check_results)

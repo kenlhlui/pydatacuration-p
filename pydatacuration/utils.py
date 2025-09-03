@@ -293,7 +293,6 @@ def parse_dataset_url(base_url: str | None, pid: str | None) -> str:
     """
     # Ensure correct path joining
     if base_url and pid:
-
         api_path = 'dataset.xhtml'
         base = base_url.rstrip('/') + '/'  # guarantee single trailing slash
 
