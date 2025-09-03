@@ -101,7 +101,18 @@ function handleDsMetadata() {
   
   // Fallback to API call if not in sessionStorage
   const mainDir = sessionStorage.getItem('main_dir') || 'workdir';
-  const ticketNumber = sessionStorage.getItem('ticket_number');
+  let ticketNumber = sessionStorage.getItem('ticket_number');
+  
+  // If not in sessionStorage, check URL parameters
+  if (!ticketNumber) {
+    const urlParams = new URLSearchParams(window.location.search);
+    ticketNumber = urlParams.get('ticket_number');
+    // Store it in sessionStorage for future use
+    if (ticketNumber) {
+      sessionStorage.setItem('ticket_number', ticketNumber);
+      console.log('Got ticket number from URL params and stored in sessionStorage:', ticketNumber);
+    }
+  }
   
   if (ticketNumber) {
     const dsMetadataPath = `/ds-metadata?main_dir=${encodeURIComponent(mainDir)}&ticket_number=${encodeURIComponent(ticketNumber)}`;
