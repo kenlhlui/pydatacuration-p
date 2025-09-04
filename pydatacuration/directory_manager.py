@@ -166,28 +166,6 @@ class DirectoryManager:
         return self._directory_structure.copy()
 
     @staticmethod
-    def confirm_del_dir(dir_path: Path, force_del: bool) -> None:
-        """Confirm deletion of a directory.
-
-        Args:
-            dir_path (Path): The directory path to delete.
-            force_del (bool): Whether to force deletion without confirmation.
-        """
-        if dir_path.exists() and not force_del:
-            try:
-                confirm = input(f"Directory '{dir_path}' already exists. Do you want to delete it? (y/n): ")
-                if confirm.lower() not in {'y', 'yes'}:
-                    logger.warning('Aborted by user. Exiting...')
-                    sys.exit(1)
-            except Exception as e:
-                logger.error(f'Error occurred while confirming deletion: {e}')
-                sys.exit(1)
-
-        if dir_path.exists():
-            rmtree(dir_path, ignore_errors=True)
-            logger.info(f'Will replace {dir_path} with the new files.')
-
-    @staticmethod
     def delete_dir(dir: Path) -> None:
         """Delete a specific directory by name.
 
