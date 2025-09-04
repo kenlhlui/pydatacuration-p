@@ -274,7 +274,7 @@ orderly-set==5.3.0
     # via
     #   -c (workspace)
     #   deepdiff
-orjson==3.10.16
+orjson==3.11.3
     # via
     #   -c (workspace)
     #   pydatacuration (pyproject.toml)
