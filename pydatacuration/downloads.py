@@ -7,7 +7,6 @@ from urllib.parse import urljoin
 
 import httpx
 import jmespath
-import orjson
 from loguru import logger
 
 from .httpx_client import HTTPXClient

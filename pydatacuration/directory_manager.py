@@ -1,6 +1,5 @@
 """This module is used to manage the directories in the project."""
 
-import sys
 from pathlib import Path
 from shutil import rmtree
 
