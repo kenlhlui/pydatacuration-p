@@ -5,6 +5,7 @@
 import asyncio
 import os
 import subprocess
+import sys
 from pathlib import Path
 
 import typer
@@ -77,7 +78,7 @@ def gen_curation_report(
         False,
         '--force-del/--no-force-del',
         '-f/-nf',
-        help='To force replace (delete) an existing working directory, if any',
+        help='To force replace (delete) an existing working directory and database record, if any',
         show_default=True,
     ),
     check_zip: bool = typer.Option(
@@ -97,8 +98,11 @@ def gen_curation_report(
     # Define the working directory
     workdir_path = dir_manager.project_dir
 
-    # Check if the working directory already exists and ask user for confirmation to delete it
-    dir_manager.confirm_del_dir(workdir_path, force_del)
+    # Abort if the working directory already exists and force_del is not set
+    if workdir_path.exists() and not force_del:
+        logger.error(f"Working directory '{workdir_path}' already exists. Aborting...")
+        sys.exit(1)
+    dir_manager.delete_dir(workdir_path)
 
     # Create the working directory and its subdirectories plus the db directory
     dir_manager.make_dirs()
@@ -109,9 +113,10 @@ def gen_curation_report(
     # print the start message
     logger.info('Starting the pydatacuration script...')
 
-    # Create the db (with schema named after ticket_number)
+    # Initialize the DuckDB instance and delete the existing schema
     duckdb_instance = duck_db.DuckDB(schema_name=dir_manager.ticket_number, db_file=dir_manager.db_path)
     duckdb_instance.create_database()
+    duckdb_instance.sql_drop_schema(ticket_number)
     duckdb_instance.create_schema()
 
     with Progress(SpinnerColumn(), expand=True) as progress:

@@ -187,6 +187,22 @@ class DirectoryManager:
             rmtree(dir_path, ignore_errors=True)
             logger.info(f'Will replace {dir_path} with the new files.')
 
+    @staticmethod
+    def delete_dir(dir: Path) -> None:
+        """Delete a specific directory by name.
+
+        Args:
+            dir (Path): The directory path to delete.
+        """
+        try:
+            if dir.exists():
+                rmtree(dir, ignore_errors=True)
+                logger.info(f'Deleted directory: {dir}')
+            else:
+                logger.warning(f'Directory does not exist: {dir}')
+        except KeyError as e:
+            logger.error(f'Error deleting directory: {e}')
+
     # Backward compatibility properties
     @property
     def log_files_dir(self) -> Path:
