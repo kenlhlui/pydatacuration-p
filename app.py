@@ -1,12 +1,10 @@
 """pydatacuration-p: FastAPI application for curation report generation."""
 
 import asyncio
-import json
 import os
 import re
 from pathlib import Path
 
-# import markdown
 import markdown2
 import yaml
 from dotenv import load_dotenv
@@ -229,7 +227,7 @@ async def run_command(command: str) -> dict:
                     # Strip ANSI codes before logging to prevent double formatting
                     clean_line = strip_ansi_codes(decoded_line)
                     if clean_line.strip():  # Only log if there's content after stripping
-                        log_func(f"[CLI] {clean_line}")
+                        log_func(f'[CLI] {clean_line}')
 
         # Create tasks to read both streams concurrently
         stdout_task = asyncio.create_task(read_stream(process.stdout, stdout_lines, logger.info))
@@ -237,7 +235,7 @@ async def run_command(command: str) -> dict:
 
         # Wait for both streams to complete
         await asyncio.gather(stdout_task, stderr_task)
-        
+
         # Wait for process to finish
         return_code = await process.wait()
 
@@ -247,7 +245,7 @@ async def run_command(command: str) -> dict:
             'return_code': return_code,
             'success': return_code == 0,
         }
-        
+
         logger.info(f'✅ Command completed with return code: {return_code}')
         return result
 
@@ -332,18 +330,22 @@ async def setup(request: SetupRequest) -> JSONResponse:
             # Extract the last meaningful error message from CLI output
             error_details = []
             if result['stderr']:
-                error_details.append(f"CLI Error: {result['stderr'].strip()}")
+                error_details.append(f'CLI Error: {result["stderr"].strip()}')
             if result['stdout']:
                 # Look for error patterns in stdout (CLI logs errors there too)
                 stdout_lines = result['stdout'].strip().split('\n')
                 for line in reversed(stdout_lines):
                     clean_line = line.strip()
-                    if 'error' in clean_line.lower() or 'aborting' in clean_line.lower() or 'failed' in clean_line.lower():
-                        error_details.append(f"CLI Message: {clean_line}")
+                    if (
+                        'error' in clean_line.lower()
+                        or 'aborting' in clean_line.lower()
+                        or 'failed' in clean_line.lower()
+                    ):
+                        error_details.append(f'CLI Message: {clean_line}')
                         break
 
             error_message = '. '.join(error_details) if error_details else 'Curation command failed'
-            logger.error(f"Command failed with return code {result['return_code']}: {error_message}")
+            logger.error(f'Command failed with return code {result["return_code"]}: {error_message}')
             raise HTTPException(status_code=400, detail=error_message)
     except ValidationError as e:
         logger.error(f'Pydantic validation error: {e}')
