@@ -362,7 +362,7 @@ pyjwt==2.10.1
     # via
     #   -c (workspace)
     #   msal
-pypdf==5.4.0
+pypdf==6.0.0
     # via
     #   -c (workspace)
     #   pydatacuration (pyproject.toml)
