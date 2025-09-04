@@ -290,8 +290,6 @@ async def setup(request: SetupRequest) -> JSONResponse:
             f'"{request.pid}"',
             '--ticket-number',
             f'"{request.ticket_number}"',
-            '--main-dir',
-            f'"{request.main_dir}"',
             '--curator-name',
             f'"{request.curator_name}"',
             '--curator-email',
