@@ -29,7 +29,7 @@ load_dotenv(override=True)
 MAIN_DIR: Path = Path(os.getenv('MAIN_DIR', 'workdir'))
 
 # Setup logging with your custom style
-setup_logging(log_file_dir=MAIN_DIR / 'logs', log_level='INFO')
+setup_logging(log_file_dir=MAIN_DIR / 'logs', log_level='DEBUG')
 
 
 class ChecklistItem(BaseModel):

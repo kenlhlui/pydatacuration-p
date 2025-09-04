@@ -19,8 +19,9 @@ from . import downloads
 from . import duck_db
 from . import utils
 from .checker import Checker
+from .custom_logging import add_cli_run_logging
 from .custom_logging import logger
-from .custom_logging import setup_logging
+from .custom_logging import setup_global_logging
 
 
 load_dotenv(override=True)
@@ -55,7 +56,7 @@ def main(
         None: Sets ctx.obj with shared state.
     """
     ctx.obj = CtxObj(main_dir=main_dir)
-    setup_logging(log_file_dir=Path(main_dir, 'logs'), log_level='INFO')
+    setup_global_logging(log_file_dir=Path(main_dir, 'logs'), log_level='DEBUG')
 
 
 def get_dirs(ticket_number: str, main_dir: Path) -> directory_manager.DirectoryManager:
@@ -115,6 +116,8 @@ def init(
     """
     dirs: directory_manager.DirectoryManager = get_dirs(ticket_number, ctx.obj.main_dir)
     workdir_path = dirs.project_dir
+
+    add_cli_run_logging(dirs.log_files_dir)
 
     if workdir_path.exists() and not force_del:
         logger.error(f'Working directory {workdir_path} already exists. Use --force-del to overwrite.')
@@ -180,6 +183,7 @@ def fetch(
     """
     dirs = get_dirs(ticket_number, ctx.obj.main_dir)
 
+    add_cli_run_logging(dirs.log_files_dir)
     with Progress(SpinnerColumn(), expand=True) as progress:
         progress.add_task('Checking dataset access...', total=None, visible=True)
         utils.check_ds_access(pid, base_url, api_token)
@@ -230,6 +234,8 @@ def check(
     dirs: directory_manager.DirectoryManager = get_dirs(ticket_number, ctx.obj.main_dir)
     duck = get_duck(schema_name=dirs.ticket_number, db_file=dirs.db_path)
 
+    add_cli_run_logging(dirs.log_files_dir)
+
     # Get the dataset metadata dir
     with Path(dirs.metadata_dir, 'ds_metadata.json').open('rb') as f:
         ds_metadata = orjson.loads(f.read())
@@ -277,6 +283,8 @@ def report(
         None: Produces report artifacts.
     """
     dirs = get_dirs(ticket_number, ctx.obj.main_dir)
+
+    add_cli_run_logging(dirs.log_files_dir)
 
     utils.gen_tree_diagram(Path(dirs.project_dir, 'dataset', 'files'), Path(dirs.log_files_dir))
 
