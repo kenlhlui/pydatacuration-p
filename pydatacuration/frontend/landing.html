@@ -210,16 +210,16 @@
                            placeholder="workdir" value="{{ env_data.main_dir }}">
                     <small>The main (base) directory that contains the database sub-directory and project directories (default: workdir)</small>
                 </div>
-                <div class="checkbox-group">
-                    <div class="checkbox-item">
-                        <input type="checkbox" id="force_del" name="force_del" value="False">
-                        <label for="force_del">Force delete existing directory</label>
-                    </div>
-                </div>
             </div>
 
             <div class="section">
                 <h3>Processing Options</h3>
+                <div class="checkbox-group">
+                    <div class="checkbox-item">
+                        <input type="checkbox" id="force_del" name="force_del" value="False">
+                        <label for="force_del">Force delete existing project (Database record, directory and files)</label>
+                    </div>
+                </div>
                 <div class="checkbox-group">
                     <div class="checkbox-item">
                         <input type="checkbox" id="check_zip" name="check_zip" value="true" checked>

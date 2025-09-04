@@ -3,6 +3,7 @@
 import asyncio
 import json
 import os
+import re
 from pathlib import Path
 
 # import markdown
@@ -20,6 +21,7 @@ from pydantic import BaseModel
 from pydantic import ValidationError
 
 from pydatacuration.custom_logging import logger
+from pydatacuration.custom_logging import setup_logging
 from pydatacuration.directory_manager import DirectoryManager
 from pydatacuration.duck_db import DuckDB
 from pydatacuration.new_generate_log import render_report_from_yaml
@@ -27,6 +29,9 @@ from pydatacuration.new_generate_log import render_report_from_yaml
 
 load_dotenv(override=True)
 MAIN_DIR: Path = Path(os.getenv('MAIN_DIR', 'workdir'))
+
+# Setup logging with your custom style
+setup_logging(log_file_dir=MAIN_DIR / 'logs', log_level='INFO')
 
 
 class ChecklistItem(BaseModel):
@@ -187,7 +192,7 @@ async def checklist(request: Request) -> HTMLResponse:
 
 
 async def run_command(command: str) -> dict:
-    """Run a command and return the result.
+    """Run a command and return the result with real-time output streaming to logger.
 
     Args:
         command (str): Command to run
@@ -196,21 +201,60 @@ async def run_command(command: str) -> dict:
         dict: Command result with stdout, stderr, and return code
     """
     try:
+        logger.info('🚀 Starting the CLI application')
+
         process = await asyncio.create_subprocess_shell(
             command,
             stdout=asyncio.subprocess.PIPE,
             stderr=asyncio.subprocess.PIPE,
         )
-        stdout, stderr = await process.communicate()
 
-        return {
-            'stdout': stdout.decode(),
-            'stderr': stderr.decode(),
-            'return_code': process.returncode,
-            'success': process.returncode == 0,
+        stdout_lines = []
+        stderr_lines = []
+
+        def strip_ansi_codes(text: str) -> str:
+            """Remove ANSI escape codes from text."""
+            ansi_escape = re.compile(r'\x1b\[[0-9;]*m')
+            return ansi_escape.sub('', text)
+
+        async def read_stream(stream, lines_list, log_func):
+            """Read stream line by line and log in real-time."""
+            while True:
+                line = await stream.readline()
+                if not line:
+                    break
+                decoded_line = line.decode().rstrip()
+                if decoded_line:  # Only log non-empty lines
+                    lines_list.append(decoded_line)
+                    # Strip ANSI codes before logging to prevent double formatting
+                    clean_line = strip_ansi_codes(decoded_line)
+                    if clean_line.strip():  # Only log if there's content after stripping
+                        log_func(f"[CLI] {clean_line}")
+
+        # Create tasks to read both streams concurrently
+        stdout_task = asyncio.create_task(read_stream(process.stdout, stdout_lines, logger.info))
+        stderr_task = asyncio.create_task(read_stream(process.stderr, stderr_lines, logger.error))
+
+        # Wait for both streams to complete
+        await asyncio.gather(stdout_task, stderr_task)
+        
+        # Wait for process to finish
+        return_code = await process.wait()
+
+        result = {
+            'stdout': '\n'.join(stdout_lines),
+            'stderr': '\n'.join(stderr_lines),
+            'return_code': return_code,
+            'success': return_code == 0,
         }
+        
+        logger.info(f'✅ Command completed with return code: {return_code}')
+        return result
+
     except Exception as e:
-        return {'stdout': '', 'stderr': str(e), 'return_code': -1, 'success': False}
+        error_msg = f'❌ Command execution failed: {str(e)}'
+        logger.error(error_msg)
+        return {'stdout': '', 'stderr': error_msg, 'return_code': -1, 'success': False}
 
 
 @app.post('/setup')
@@ -284,7 +328,23 @@ async def setup(request: SetupRequest) -> JSONResponse:
         if result['success']:
             url = f'/checklist?ticket_number={request.ticket_number}'
             return JSONResponse(content={'success': True, 'redirect_url': url})
-        raise HTTPException(status_code=400, detail='Curation command failed')
+        else:
+            # Extract the last meaningful error message from CLI output
+            error_details = []
+            if result['stderr']:
+                error_details.append(f"CLI Error: {result['stderr'].strip()}")
+            if result['stdout']:
+                # Look for error patterns in stdout (CLI logs errors there too)
+                stdout_lines = result['stdout'].strip().split('\n')
+                for line in reversed(stdout_lines):
+                    clean_line = line.strip()
+                    if 'error' in clean_line.lower() or 'aborting' in clean_line.lower() or 'failed' in clean_line.lower():
+                        error_details.append(f"CLI Message: {clean_line}")
+                        break
+
+            error_message = '. '.join(error_details) if error_details else 'Curation command failed'
+            logger.error(f"Command failed with return code {result['return_code']}: {error_message}")
+            raise HTTPException(status_code=400, detail=error_message)
     except ValidationError as e:
         logger.error(f'Pydantic validation error: {e}')
         logger.error(f'Validation errors details: {e.errors()}')
