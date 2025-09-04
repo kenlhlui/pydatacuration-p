@@ -176,9 +176,7 @@ class DuckDB:
                 SQLModel.metadata.create_all(engine)  # create the table under the schema
                 ds = sql_model
                 session.merge(ds)
-                logger.info(f'Merged sample data into table: {sql_model.__tablename__}')
                 session.commit()
-                logger.info(f'Committed sample data to table: {sql_model.__tablename__}')
         except Exception as e:
             logger.error(f'Error merging records to table {sql_model.__tablename__}: {e}')
 
@@ -313,9 +311,8 @@ class DuckDB:
     def sql_drop_schema(self, schema_name: str) -> None:
         """Drop the current schema."""
         try:
-            with self.sql_get_connection() as (_session, engine):
-                with engine.begin() as conn:
-                    conn.execute(text(f'DROP SCHEMA IF EXISTS "{schema_name}" CASCADE;'))
-                    logger.info(f'Dropped schema: {schema_name}')
+            with self.sql_get_connection() as (_session, engine), engine.begin() as conn:
+                conn.execute(text(f'DROP SCHEMA IF EXISTS "{schema_name}" CASCADE;'))
+                logger.info(f'Dropped schema: {schema_name}')
         except Exception as e:
             logger.error(f'Error dropping schema {schema_name}: {e}')
