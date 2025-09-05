@@ -117,7 +117,7 @@ def init(
     dirs: directory_manager.DirectoryManager = get_dirs(ticket_number, ctx.obj.main_dir)
     workdir_path = dirs.project_dir
 
-    add_cli_run_logging(dirs.log_files_dir)
+
 
     if workdir_path.exists() and not force_del:
         logger.error(f'Working directory {workdir_path} already exists. Use --force-del to overwrite.')
@@ -125,6 +125,7 @@ def init(
 
     dirs.delete_dir(workdir_path)
     dirs.make_dirs()
+    add_cli_run_logging(dirs.log_files_dir)
 
     duck = get_duck(schema_name=dirs.ticket_number, db_file=dirs.db_path)
     duck.create_database()
