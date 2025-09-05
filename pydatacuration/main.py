@@ -31,13 +31,15 @@ app = typer.Typer(rich_markup_mode='rich')
 class TyperOptions:
     """Helper class for Typer options with types and defaults."""
 
-    api_token_option = typer.Option(
-        ...,
+    api_token_option: str = typer.Option(
+        None,
         '--api-token',
         '-a',
-        help='Dataverse API token',
+        help=f'The API token for the Dataverse installation (current: [bold {"green" if os.getenv("API_TOKEN") else "red"}]{"Set" if os.getenv("API_TOKEN") else "Not set"}[/bold {"green" if os.getenv("API_TOKEN") else "red"}])',  # noqa: E501
         prompt='Input the API token for the Dataverse',
         hide_input=True,
+        show_default=False,
+        envvar=os.getenv('API_TOKEN', ''),
         callback=utils.validate_api_token,
     )
 
@@ -51,12 +53,12 @@ class TyperOptions:
     )
 
     base_url_option: str = typer.Option(
-        ...,
+        os.getenv('BASE_URL') or ...,
         '--base-url',
         '-b',
         envvar='BASE_URL',
         prompt='Input the base URL of the Dataverse installation',
-        help='Dataverse base URL',
+        help=f'The base URL of the Dataverse installation (current value: [bold yellow]{os.getenv("BASE_URL", "None")}[/bold yellow])',  # noqa: E501
     )
 
     force_del_option: bool = typer.Option(
@@ -74,15 +76,37 @@ class TyperOptions:
         prompt='Input the Dataset Persistent Identifier (doi or hdl)',
         help='Dataset Persistent Identifier',
     )
-    curator_name_option: str = typer.Option(None, '--curator-name', '-cn', help='Curator name')
 
-    curator_email_option: str = typer.Option(None, '--curator-email', '-ce', help='Curator email')
+    curator_name_option: str = typer.Option(os.getenv('CURATOR_NAME'), '--curator-name', '-cn', help='Curator name')
 
-    open_dir_option: bool = typer.Option(True, '--open-dir/--no-open-dir', help='Open working directory in Explorer')
+    curator_email_option: str = typer.Option(os.getenv('CURATOR_EMAIL'), '--curator-email', '-ce', help='Curator email')
 
-    check_zip_option: bool = typer.Option(True, '--check-zip/--no-check-zip', '-z/-nz')
+    open_dir_option: bool = typer.Option(
+        True,
+        '--open-dir/--no-open-dir',
+        help='Open working directory in Explorer (WSL compatible only)',
+    )
 
-    collection_alias_option: str | None = typer.Option(None, '--collection-alias', '-c')
+    check_zip_option: bool = typer.Option(
+        True,
+        '--check-zip/--no-check-zip',
+        '-z/-nz',
+        help='Unzip archives and inspect their contents',
+    )
+
+    collection_alias_option: str | None = typer.Option(
+        None,
+        '--collection-alias',
+        '-c',
+        help="Alias of Dataverse collection to search for the datasets' author history",
+    )
+
+    main_dir_option: Path = typer.Option(
+        Path(os.getenv('MAIN_DIR', 'workdir')).resolve(),
+        '--main-dir',
+        help='Top-level working directory for all runs',
+        show_default=True
+    )
 
 
 class CtxObj:
@@ -91,18 +115,12 @@ class CtxObj:
     def __init__(self, main_dir: Path) -> None:
         """Initialize with main working directory and env vars."""
         self.main_dir = main_dir
-        env_dict = {k: v for k, v in os.environ.items()}
 
 
 @app.callback()
 def main(
     ctx: typer.Context,
-    main_dir: Path = typer.Option(
-        Path(os.getenv('MAIN_DIR', 'workdir')).resolve(),
-        '--main-dir',
-        help='Top-level working directory for all runs',
-        show_default=True,
-    ),
+    main_dir: Path = TyperOptions.main_dir_option,
 ) -> None:
     """Initialize shared context.
 
