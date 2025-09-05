@@ -202,11 +202,6 @@ class DirectoryManager:
         return self._define_db_path()
 
     @property
-    def data_dir(self) -> Path:
-        """Get data directory path."""
-        return self.get_dir('data')
-
-    @property
     def outputs_dir(self) -> Path:
         """Get outputs directory path."""
         return self.get_dir('outputs')

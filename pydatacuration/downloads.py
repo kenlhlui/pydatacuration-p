@@ -157,7 +157,6 @@ class Downloads:
             if response.status_code == self.success_code and response.json():
                 return response.json()
             sys.exit(1)
-            return {}
 
         except httpx.HTTPStatusError as e:
             self.logger.info(f'HTTP error occurred: {e}')
