@@ -105,7 +105,7 @@ class TyperOptions:
         Path(os.getenv('MAIN_DIR', 'workdir')).resolve(),
         '--main-dir',
         help='Top-level working directory for all runs',
-        show_default=True
+        show_default=True,
     )
 
 
@@ -218,14 +218,13 @@ def fetch(
     dirs = get_dirs(ticket_number, ctx.obj.main_dir)
 
     add_cli_run_logging(dirs.log_files_dir)
+
     with Progress(SpinnerColumn(), expand=True) as progress:
         progress.add_task('Checking dataset access...', total=None, visible=True)
         utils.check_ds_access(pid, base_url, api_token)
 
         progress.add_task('Downloading dataset...', total=None, visible=True)
-        ds_metadata, dv_tree = asyncio.run(
-            downloads.Downloads(base_url, api_token, pid, dirs.project_dir, ticket_number).downloader()
-        )
+        asyncio.run(downloads.Downloads(base_url, api_token, pid, dirs.project_dir, ticket_number).downloader())
 
     # Cache metadata for later stages if you persist it (e.g., JSON in logs dir)
     logger.info(f'Downloaded dataset for PID {pid} to {dirs.project_dir}')
@@ -265,11 +264,15 @@ def check(
     add_cli_run_logging(dirs.log_files_dir)
 
     # Get the dataset metadata dir
+    # TODO: maybe refactor to avoid re-reading from disk
     with Path(dirs.metadata_dir, 'ds_metadata.json').open('rb') as f:
         ds_metadata = orjson.loads(f.read())
 
-    # FIXME: PLACEHOLDER
-    dv_tree = {}
+    # Get the dv_tree metadata
+    # TODO: maybe refactor to avoid re-reading from disk
+    with Path(dirs.metadata_dir, 'dv_tree.json').open('rb') as f:
+        dv_tree = orjson.loads(f.read())
+
     checker = Checker(
         base_url,
         api_token,
