@@ -9,7 +9,6 @@ from pathlib import Path
 import orjson
 import typer
 from dotenv import load_dotenv
-from pydantic import EmailStr
 from rich.progress import Progress
 from rich.progress import SpinnerColumn
 from trogon.typer import init_tui
@@ -29,11 +28,70 @@ load_dotenv(override=True)
 app = typer.Typer(rich_markup_mode='rich')
 
 
+class TyperOptions:
+    """Helper class for Typer options with types and defaults."""
+
+    api_token_option = typer.Option(
+        ...,
+        '--api-token',
+        '-a',
+        help='Dataverse API token',
+        prompt='Input the API token for the Dataverse',
+        hide_input=True,
+        callback=utils.validate_api_token,
+    )
+
+    ticket_number_option: str = typer.Option(
+        ...,
+        '--ticket-number',
+        '-t',
+        help='Ticket number (also used as schema and folder name)',
+        prompt='Input the ticket number for the curation report',
+        callback=utils.check_ticket_num_input,
+    )
+
+    base_url_option: str = typer.Option(
+        ...,
+        '--base-url',
+        '-b',
+        envvar='BASE_URL',
+        prompt='Input the base URL of the Dataverse installation',
+        help='Dataverse base URL',
+    )
+
+    force_del_option: bool = typer.Option(
+        False,
+        '--force-del/--no-force-del',
+        '-f/-nf',
+        help='Delete existing working directory and DB schema if present',
+        show_default=True,
+    )
+
+    pid_option: str = typer.Option(
+        ...,
+        '--pid',
+        '-p',
+        prompt='Input the Dataset Persistent Identifier (doi or hdl)',
+        help='Dataset Persistent Identifier',
+    )
+    curator_name_option: str = typer.Option(None, '--curator-name', '-cn', help='Curator name')
+
+    curator_email_option: str = typer.Option(None, '--curator-email', '-ce', help='Curator email')
+
+    open_dir_option: bool = typer.Option(True, '--open-dir/--no-open-dir', help='Open working directory in Explorer')
+
+    check_zip_option: bool = typer.Option(True, '--check-zip/--no-check-zip', '-z/-nz')
+
+    collection_alias_option: str | None = typer.Option(None, '--collection-alias', '-c')
+
+
 class CtxObj:
     """Lightweight context object for sharing state across commands."""
 
     def __init__(self, main_dir: Path) -> None:
+        """Initialize with main working directory and env vars."""
         self.main_dir = main_dir
+        env_dict = {k: v for k, v in os.environ.items()}
 
 
 @app.callback()
@@ -88,21 +146,8 @@ def get_duck(schema_name: str, db_file: Path) -> duck_db.DuckDB:
 @app.command()
 def init(
     ctx: typer.Context,
-    ticket_number: str = typer.Option(
-        ...,
-        '--ticket-number',
-        '-t',
-        help='Ticket number (also used as schema and folder name)',
-        prompt='Input the ticket number for the curation report',
-        callback=utils.check_ticket_num_input,
-    ),
-    force_del: bool = typer.Option(
-        False,
-        '--force-del/--no-force-del',
-        '-f/-nf',
-        help='Delete existing working directory and DB schema if present',
-        show_default=True,
-    ),
+    ticket_number: str = TyperOptions.ticket_number_option,
+    force_del: bool = TyperOptions.force_del_option,
 ) -> None:
     """Prepare working directory and DuckDB schema.
 
@@ -116,8 +161,6 @@ def init(
     """
     dirs: directory_manager.DirectoryManager = get_dirs(ticket_number, ctx.obj.main_dir)
     workdir_path = dirs.project_dir
-
-
 
     if workdir_path.exists() and not force_del:
         logger.error(f'Working directory {workdir_path} already exists. Use --force-del to overwrite.')
@@ -137,38 +180,10 @@ def init(
 @app.command()
 def fetch(
     ctx: typer.Context,
-    pid: str = typer.Option(
-        ...,
-        '--pid',
-        '-p',
-        prompt='Input the Dataset Persistent Identifier (doi or hdl)',
-        help='Dataset Persistent Identifier',
-    ),
-    base_url: str = typer.Option(
-        None,
-        '--base-url',
-        '-b',
-        envvar='BASE_URL',
-        prompt='Input the base URL of the Dataverse installation',
-        help='Dataverse base URL',
-    ),
-    api_token: str = typer.Option(
-        None,
-        '--api-token',
-        '-a',
-        envvar='API_TOKEN',
-        prompt='Input the API token for the Dataverse installation',
-        hide_input=True,
-        callback=utils.validate_api_token,
-        help='Dataverse API token',
-    ),
-    ticket_number: str = typer.Option(
-        ...,
-        '--ticket-number',
-        '-t',
-        prompt='Input the ticket number for the curation report',
-        callback=utils.check_ticket_num_input,
-    ),
+    pid: str = TyperOptions.pid_option,
+    base_url: str = TyperOptions.base_url_option,
+    api_token: str = TyperOptions.api_token_option,
+    ticket_number: str = TyperOptions.ticket_number_option,
 ) -> None:
     """Download dataset files and metadata.
 
@@ -201,15 +216,9 @@ def fetch(
 @app.command()
 def check(
     ctx: typer.Context,
-    ticket_number: str = typer.Option(
-        ...,
-        '--ticket-number',
-        '-t',
-        prompt='Input the ticket number for the curation report',
-        callback=utils.check_ticket_num_input,
-    ),
-    base_url: str = typer.Option(None, '--base-url', envvar='BASE_URL', help='Dataverse base URL'),
-    api_token: str = typer.Option(None, '--api-token', envvar='API_TOKEN', help='Dataverse API token'),
+    ticket_number: str = TyperOptions.ticket_number_option,
+    base_url: str = TyperOptions.base_url_option,
+    api_token: str = TyperOptions.api_token_option,
     check_zip: bool = typer.Option(
         True,
         '--check-zip/--no-check-zip',
@@ -260,16 +269,10 @@ def check(
 @app.command()
 def report(
     ctx: typer.Context,
-    ticket_number: str = typer.Option(
-        ...,
-        '--ticket-number',
-        '-t',
-        prompt='Input the ticket number for the curation report',
-        callback=utils.check_ticket_num_input,
-    ),
-    curator_name: str | None = typer.Option(None, '--curator-name', '-cn', help='Curator name'),
-    curator_email: str | None = typer.Option(None, '--curator-email', '-ce', help='Curator email'),
-    open_dir: bool = typer.Option(True, '--open-dir/--no-open-dir', help='Open working directory in Explorer'),
+    ticket_number: str = TyperOptions.ticket_number_option,
+    curator_name: str | None = TyperOptions.curator_name_option,
+    curator_email: str | None = TyperOptions.curator_email_option,
+    open_dir: bool = TyperOptions.open_dir_option,
 ) -> None:
     """Generate artifacts (tree diagram, spreadsheets/docs) and optionally open the folder.
 
@@ -299,26 +302,16 @@ def report(
 @app.command('all')
 def run_all(
     ctx: typer.Context,
-    pid: str = typer.Option(..., '--pid', '-p', prompt='Input the Dataset Persistent Identifier (doi or hdl)'),
-    base_url: str = typer.Option(None, '--base-url', '-b', envvar='BASE_URL', prompt='Input the base URL'),
-    api_token: str = typer.Option(
-        None,
-        '--api-token',
-        '-a',
-        envvar='API_TOKEN',
-        prompt='Input the API token',
-        hide_input=True,
-        callback=utils.validate_api_token,
-    ),
-    ticket_number: str = typer.Option(
-        ..., '--ticket-number', '-t', prompt='Input the ticket number', callback=utils.check_ticket_num_input
-    ),
-    force_del: bool = typer.Option(False, '--force-del/--no-force-del', '-f/-nf'),
-    check_zip: bool = typer.Option(True, '--check-zip/--no-check-zip', '-z/-nz'),
-    collection_alias: str | None = typer.Option(None, '--collection-alias', '-c'),
-    curator_name: str | None = typer.Option(None, '--curator-name', '-cn'),
-    curator_email: str | None = typer.Option(None, '--curator-email', '-ce'),
-    open_dir: bool = typer.Option(True, '--open-dir/--no-open-dir'),
+    pid: str = TyperOptions.pid_option,
+    base_url: str = TyperOptions.base_url_option,
+    api_token: str = TyperOptions.api_token_option,
+    ticket_number: str = TyperOptions.ticket_number_option,
+    force_del: bool = TyperOptions.force_del_option,
+    check_zip: bool = TyperOptions.check_zip_option,
+    collection_alias: str | None = TyperOptions.collection_alias_option,
+    curator_name: str = TyperOptions.curator_name_option,
+    curator_email: str = TyperOptions.curator_email_option,
+    open_dir: bool = TyperOptions.open_dir_option,
 ) -> None:
     """Run the full pipeline: init ➜ fetch ➜ check ➜ report.
 
