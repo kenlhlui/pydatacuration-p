@@ -215,3 +215,8 @@ class DirectoryManager:
     def metadata_dir(self) -> Path:
         """Get metadata directory path."""
         return self.get_dir('dataset/metadata')
+
+    @property
+    def files_dir(self) -> Path:
+        """Get files directory path."""
+        return self.get_dir('dataset/files')
