@@ -99,15 +99,3 @@ def setup_logging(log_file_dir: Path | None = None, log_level: str = 'DEBUG') ->
         None: Calls setup_global_logging.
     """
     setup_global_logging(log_file_dir=log_file_dir, log_level=log_level)
-
-
-def get_logger(name: str):
-    """Return the shared loguru logger.
-
-    Args:
-        name (str): Kept for interface compatibility.
-
-    Returns:
-        logger: The loguru logger instance.
-    """
-    return logger
