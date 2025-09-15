@@ -177,12 +177,33 @@ async def checklist(request: Request) -> HTMLResponse:
 
     resume_schema = request.query_params.get('resume')
 
+    # Get curator information from project metadata
+    curator_name = ''
+    curator_email = ''
+
+    if ticket_number:
+        try:
+            dir_manager = DirectoryManager(ticket_number, MAIN_DIR)
+            duck_db = DuckDB(schema_name=ticket_number, db_file=dir_manager.db_path)
+            metadata = duck_db.read_project_metadata_record()
+
+            curator_name = metadata.get('curator_name', '')
+            curator_email = metadata.get('curator_email', '')
+
+            logger.debug(f'Loaded curator info for {ticket_number}: {curator_name}, {curator_email}')
+
+        except Exception as e:
+            logger.warning(f'Could not load curator info for {ticket_number}: {e}')
+
     # Check results will be loaded via JavaScript from session storage
     return templates.TemplateResponse(
         'index.html',
         {
             'request': request,
             'items': items,
+            'curator_name': curator_name,
+            'curator_email': curator_email,
+            'ticket_number': ticket_number or '',
             'check_results': [],  # Empty, will be populated by frontend JavaScript
             'resume_schema': resume_schema,  # Pass to frontend for handling
         },
@@ -328,27 +349,26 @@ async def setup(request: SetupRequest) -> JSONResponse:
         if result['success']:
             url = f'/checklist?ticket_number={request.ticket_number}'
             return JSONResponse(content={'success': True, 'redirect_url': url})
-        else:
-            # Extract the last meaningful error message from CLI output
-            error_details = []
-            if result['stderr']:
-                error_details.append(f'CLI Error: {result["stderr"].strip()}')
-            if result['stdout']:
-                # Look for error patterns in stdout (CLI logs errors there too)
-                stdout_lines = result['stdout'].strip().split('\n')
-                for line in reversed(stdout_lines):
-                    clean_line = line.strip()
-                    if (
-                        'error' in clean_line.lower()
-                        or 'aborting' in clean_line.lower()
-                        or 'failed' in clean_line.lower()
-                    ):
-                        error_details.append(f'CLI Message: {clean_line}')
-                        break
+        # Extract the last meaningful error message from CLI output
+        error_details = []
+        if result['stderr']:
+            error_details.append(f'CLI Error: {result["stderr"].strip()}')
+        if result['stdout']:
+            # Look for error patterns in stdout (CLI logs errors there too)
+            stdout_lines = result['stdout'].strip().split('\n')
+            for line in reversed(stdout_lines):
+                clean_line = line.strip()
+                if (
+                    'error' in clean_line.lower()
+                    or 'aborting' in clean_line.lower()
+                    or 'failed' in clean_line.lower()
+                ):
+                    error_details.append(f'CLI Message: {clean_line}')
+                    break
 
-            error_message = '. '.join(error_details) if error_details else 'Curation command failed'
-            logger.error(f'Command failed with return code {result["return_code"]}: {error_message}')
-            raise HTTPException(status_code=400, detail=error_message)
+        error_message = '. '.join(error_details) if error_details else 'Curation command failed'
+        logger.error(f'Command failed with return code {result["return_code"]}: {error_message}')
+        raise HTTPException(status_code=400, detail=error_message)
     except ValidationError as e:
         logger.error(f'Pydantic validation error: {e}')
         logger.error(f'Validation errors details: {e.errors()}')
@@ -714,6 +734,25 @@ async def get_checklist_data(request: Request) -> JSONResponse:
 
         # Get checklist data from DuckDB
         checklist_data = get_checklist_from_duckdb(MAIN_DIR, ticket_number)
+
+        # Also get curator information and log dates from project metadata
+        try:
+            dir_manager = DirectoryManager(ticket_number, MAIN_DIR)
+            duck_db = DuckDB(schema_name=ticket_number, db_file=dir_manager.db_path)
+            metadata = duck_db.read_project_metadata_record()
+
+            # Add curator info and log dates to response
+            checklist_data['curator_name'] = metadata.get('curator_name', '')
+            checklist_data['curator_email'] = metadata.get('curator_email', '')
+            checklist_data['log_init_date'] = metadata.get('log_init_date', '')
+            checklist_data['log_last_update_date'] = metadata.get('log_last_update_date', '')
+
+        except Exception as e:
+            logger.warning(f'Could not load metadata for API response: {e}')
+            checklist_data['curator_name'] = ''
+            checklist_data['curator_email'] = ''
+            checklist_data['log_init_date'] = ''
+            checklist_data['log_last_update_date'] = ''
 
         return JSONResponse(content=checklist_data)
 

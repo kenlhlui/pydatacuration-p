@@ -244,6 +244,8 @@ def check(
         show_default=True,
     ),
     collection_alias: str | None = typer.Option(None, '--collection-alias', '-c', help='Collection alias to search'),
+    curator_name: str | None = TyperOptions.curator_name_option,
+    curator_email: str | None = TyperOptions.curator_email_option,
 ) -> None:
     """Run curation checks on downloaded files/metadata.
 
@@ -282,6 +284,8 @@ def check(
         check_zip,
         duck,
         collection_alias,
+        curator_name,
+        curator_email,
     )
     checker.run_checks()
     logger.info('Checks completed')
@@ -362,6 +366,8 @@ def run_all(
         api_token=api_token,
         check_zip=check_zip,
         collection_alias=collection_alias,
+        curator_name=curator_name,
+        curator_email=curator_email,
     )
     report(ctx, ticket_number=ticket_number, curator_name=curator_name, curator_email=curator_email, open_dir=open_dir)
 

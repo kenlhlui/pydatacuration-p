@@ -32,19 +32,16 @@
             <div class="info-grid">
                 <div class="info-item">
                     <span class="info-label">Ticket number:</span>
-                    <input type="text" name="ticket_number" placeholder="Enter ticket number"
-                    value="{{ ticket_number }}" class="auto-populate pre-filled">
+                    <span id="ticket-number-display" name="ticket_number" class="auto-populate display-field" data-key="ticket_number"></span>
                     <!-- Read the value from the Session storage-->
                 </div>
                 <div class="info-item">
                     <span class="info-label">Curator name:</span>
-                    <input type="text" name="curator_name" placeholder="Enter curator name" 
-                    value="{{ curator_name }}" class="auto-populate pre-filled">
+                    <span id="curator-name-display" name="curator_name" class="auto-populate display-field" data-key="curator_name"></span>
                 </div>
                 <div class="info-item">
                     <span class="info-label">Curator email:</span>
-                    <input type="email" name="curator_email" placeholder="Enter curator email" 
-                    value="{{ curator_email }}" class="auto-populate pre-filled">
+                    <span id="curator-email-display" name="curator_email" class="auto-populate display-field" data-key="curator_email"></span>
                 </div>
                 <div class="info-item">
                     <span class="info-label">Dataset title:</span>
@@ -72,7 +69,7 @@
                 </div>
                 <div class="info-item">
                     <span class="info-label">Log last updated date:</span>
-                    <input type="date" name="log_updated_date" id="log_updated_date" class="auto-populate display-field" data-key="log_updated_date">
+                    <span id="log-updated-date-display" name="log_updated_date" class="auto-populate display-field" data-key="log_updated_date"></span>
                 </div>
             </div>
         </div>
@@ -210,15 +207,15 @@
       var today = generateTodayDate();      
       // Set both log date fields to today's date
       const initialDateField = document.getElementById('log_initial_date');
-      const updatedDateField = document.getElementById('log_updated_date');
+      const updatedDateField = document.getElementById('log-updated-date-display');
       
-      if (initialDateField && !initialDateField.value) {
+      if (initialDateField && !initialDateField.textContent) {
         initialDateField.textContent = today;
         console.log('Set log_initial_date to:', today);
       }
-      
-      if (updatedDateField && !updatedDateField.value) {
-        updatedDateField.value = today;
+
+      if (updatedDateField && !updatedDateField.textContent) {
+        updatedDateField.textContent = today;
         console.log('Set log_updated_date to:', today);
       }
     });

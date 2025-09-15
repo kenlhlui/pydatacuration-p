@@ -38,9 +38,14 @@ class DuckDBmodels:
 
             __tablename__ = 'project_metadata'
             __table_args__ = {'schema': self.schema_name}
-
             ticket_number: str = Field(
                 default='', sa_column=Column(String, nullable=False, unique=True), description='Unique ticket number'
+            )
+            curator_name: str = Field(
+                default='', sa_column=Column(String, nullable=False), description='Name of the data curator'
+            )
+            curator_email: str = Field(
+                default='', sa_column=Column(String, nullable=False), description='Email of the data curator'
             )
             dataset_title: str = Field(
                 default='', sa_column=Column(String, nullable=False), description='Title of the dataset'

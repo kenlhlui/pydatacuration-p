@@ -39,6 +39,8 @@ class Checker:
         check_zip: bool,
         duckdb_instance: DuckDB,
         collection_alias: str | None = None,
+        curator_name: str | None = None,
+        curator_email: str | None = None,
     ) -> None:
         """Initialize the Checker class.
 
@@ -51,6 +53,8 @@ class Checker:
             check_zip (bool): Whether to check zip files.
             duckdb_instance (DuckDB): An instance of the DuckDB class for database operations.
             collection_alias (str | None): The collection alias for the author name to be searched.
+            curator_name (str | None): The name of the data curator.
+            curator_email (str | None): The email of the data curator.
         """
         self.base_url = base_url
         self.api_token = api_token
@@ -61,6 +65,8 @@ class Checker:
         self.collection_alias = collection_alias
         self.duckdb_instance = duckdb_instance
         self.sqlmodels = DuckDBmodels(self.duckdb_instance.schema_name)
+        self.curator_name = curator_name
+        self.curator_email = curator_email
 
         self.logger = logger
         self.checksums = Checksum()
@@ -688,13 +694,15 @@ class Checker:
             logger.error(f'Failed to write keywords to DuckDB: {e}')
 
     # The below writes the to the DuckDB database
-    def write_project_metadata_to_duckdb(self):
+    def write_project_metadata_to_duckdb(self) -> None:
         """Write the project metadata to the DuckDB database."""
         project_metadata_schema = self.sqlmodels.project_metadata_record()
 
         # Check if record already exists
         try:
             ticket_number = self.duckdb_instance.schema_name
+            curator_name: str | None = self.curator_name
+            curator_email: str | None = self.curator_email
             dataset_title = self.ds_title if self.ds_title else 'No Title'
             dataset_pid = self.ds_metadata.get('data', {}).get('latestVersion', {}).get('datasetPersistentId', 'No ID')
             # dataset_id = self.ds_metadata.get('data', {}).get('latestVersion', {}).get('id', 'No ID')
@@ -705,6 +713,8 @@ class Checker:
             # if not self.duckdb_instance.check_table_has_records('project_metadata'):
             self.duckdb_instance.sql_merge_records_to_table(
                 project_metadata_schema(
+                    curator_name=curator_name,
+                    curator_email=curator_email,
                     ticket_number=ticket_number,
                     dataset_title=dataset_title,
                     dataset_pid=dataset_pid,

@@ -33,7 +33,7 @@ function populateFieldsFromDsMetadata(dsMetadata) {
   console.log('Starting field population with processed ds metadata:', dsMetadata);
   
   // Map backend response keys to their corresponding data-key attributes in HTML
-  const dataKeys = ['dataset_pid', 'dataset_title', 'dataset_id', 'dataset_url', 'dataset_path'];
+  const dataKeys = ['dataset_pid', 'dataset_title', 'dataset_id', 'dataset_url', 'dataset_path', 'curator_name', 'curator_email'];
   
   dataKeys.forEach(dataKey => {
     const value = dsMetadata[dataKey];

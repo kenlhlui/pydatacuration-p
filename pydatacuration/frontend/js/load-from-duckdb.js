@@ -52,13 +52,80 @@ async function loadChecklistDataFromDuckDB() {
  * @param {object} checklistData - The checklist data from DuckDB
  */
 function populateFormWithDuckDBData(checklistData) {
-    if (!checklistData || !checklistData.checklist) {
+    if (!checklistData) {
         duckdbLoadDebugLog('No checklist data available to populate form');
         return;
     }
 
-    const checklist = checklistData.checklist;
     let populatedCount = 0;
+
+    // Populate curator information if available
+    if (checklistData.curator_name) {
+        const curatorNameField = document.querySelector('[name="curator_name"]');
+        if (curatorNameField) {
+            if (curatorNameField.tagName === 'INPUT' || curatorNameField.tagName === 'TEXTAREA') {
+                curatorNameField.value = checklistData.curator_name;
+            } else {
+                curatorNameField.textContent = checklistData.curator_name;
+            }
+            curatorNameField.classList.add('pre-filled');
+            // Also store in sessionStorage for consistency
+            sessionStorage.setItem('curator_name', checklistData.curator_name);
+            populatedCount++;
+        }
+    }
+
+    if (checklistData.curator_email) {
+        const curatorEmailField = document.querySelector('[name="curator_email"]');
+        if (curatorEmailField) {
+            if (curatorEmailField.tagName === 'INPUT' || curatorEmailField.tagName === 'TEXTAREA') {
+                curatorEmailField.value = checklistData.curator_email;
+            } else {
+                curatorEmailField.textContent = checklistData.curator_email;
+            }
+            curatorEmailField.classList.add('pre-filled');
+            // Also store in sessionStorage for consistency
+            sessionStorage.setItem('curator_email', checklistData.curator_email);
+            populatedCount++;
+        }
+    }
+
+    // Populate log dates if available
+    if (checklistData.log_init_date) {
+        const logInitDateField = document.querySelector('[name="log_initial_date"]');
+        if (logInitDateField) {
+            if (logInitDateField.tagName === 'INPUT' || logInitDateField.tagName === 'TEXTAREA') {
+                logInitDateField.value = checklistData.log_init_date;
+            } else {
+                logInitDateField.textContent = checklistData.log_init_date;
+            }
+            logInitDateField.classList.add('pre-filled');
+            sessionStorage.setItem('log_generated_date', checklistData.log_init_date);
+            populatedCount++;
+        }
+    }
+
+    if (checklistData.log_last_update_date) {
+        const logUpdatedDateField = document.querySelector('[name="log_updated_date"]');
+        if (logUpdatedDateField) {
+            if (logUpdatedDateField.tagName === 'INPUT' || logUpdatedDateField.tagName === 'TEXTAREA') {
+                logUpdatedDateField.value = checklistData.log_last_update_date;
+            } else {
+                logUpdatedDateField.textContent = checklistData.log_last_update_date;
+            }
+            logUpdatedDateField.classList.add('pre-filled');
+            sessionStorage.setItem('log_updated_date', checklistData.log_last_update_date);
+            populatedCount++;
+        }
+    }
+
+    // Populate checklist items if available
+    if (!checklistData.checklist) {
+        duckdbLoadDebugLog('No checklist items available to populate form');
+        return;
+    }
+
+    const checklist = checklistData.checklist;
 
     checklist.forEach(item => {
         if (!item.id) return;
