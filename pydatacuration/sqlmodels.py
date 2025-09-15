@@ -91,7 +91,7 @@ class DuckDBmodels:
             """Checklist table model."""
 
             __tablename__ = 'checklist'
-            __table_args__ = {'schema': self.schema_name}
+            __table_args__ = {'schema': self.schema_name, 'extend_existing': True}
 
             id: str = Field(
                 sa_column=Column(String, nullable=False, primary_key=True), description='Unique checklist identifier'
@@ -107,6 +107,14 @@ class DuckDBmodels:
                 sa_column=Column(String, nullable=True), description='Location of information'
             )
             check_type: str = Field(sa_column=Column(String, nullable=True), description='Type of check')
+            status: str = Field(sa_column=Column(String, nullable=True), description='Checklist status')
+            comments: str = Field(sa_column=Column(String, nullable=True), description="Curator's Comments")
+            time_spent: str = Field(sa_column=Column(String, nullable=True), description='Time spent on this item')
+            last_modified_datetime: datetime = Field(
+                default=datetime.today(),
+                sa_column=Column(DATETIME, nullable=False),
+                description='Last modified datetime',
+            )
 
         return Checklist
 

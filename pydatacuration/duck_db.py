@@ -316,3 +316,59 @@ class DuckDB:
                 logger.info(f'Dropped schema: {schema_name}')
         except Exception as e:
             logger.error(f'Error dropping schema {schema_name}: {e}')
+
+    def sql_update_checklist_item(self, item_id: str, status: str | None = None, comments: str | None = None, time_spent: str | None = None) -> bool:
+        """Update a checklist item in the DuckDB database.
+
+        Args:
+            item_id (str): The checklist item ID to update
+            status (str, optional): The status value (P, F, TBD, NA)
+            comments (str, optional): The comments value
+            time_spent (str, optional): The time spent value
+
+        Returns:
+            bool: True if update was successful, False otherwise
+        """
+        try:
+            logger.debug(f'Updating checklist item {item_id} in schema {self.schema_name}')
+
+            with self.sql_get_connection() as (session, engine):
+                # First check if the item exists
+                checklist_model = self.duckdb_models.checklist()
+                existing_item = session.exec(
+                    select(checklist_model).where(checklist_model.id == item_id)
+                ).first()
+
+                if not existing_item:
+                    logger.warning(f'Checklist item {item_id} not found in schema {self.schema_name}')
+                    return False
+
+                # Update the fields that were provided
+                if status is not None:
+                    existing_item.status = status
+                    logger.debug(f'Updated status for item {item_id}: {status}')
+
+                if comments is not None:
+                    existing_item.comments = comments
+                    logger.debug(f'Updated comments for item {item_id}')
+
+                if time_spent is not None:
+                    # Assuming there's a time_spent field in the model
+                    if hasattr(existing_item, 'time_spent'):
+                        existing_item.time_spent = time_spent
+                        logger.debug(f'Updated time_spent for item {item_id}: {time_spent}')
+
+                # Update the last modified timestamp if it exists
+                if hasattr(existing_item, 'last_modified_datetime'):
+                    from datetime import datetime
+                    existing_item.last_modified_datetime = datetime.now()
+
+                session.add(existing_item)
+                session.commit()
+
+                logger.info(f'Successfully updated checklist item {item_id}')
+                return True
+
+        except Exception as e:
+            logger.error(f'Error updating checklist item {item_id}: {e}')
+            return False

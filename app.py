@@ -543,6 +543,15 @@ class CurationLogRequest(BaseModel):
     curationLog: str
 
 
+class ChecklistUpdateRequest(BaseModel):
+    """Model for updating checklist items in DuckDB."""
+    ticket_number: str
+    item_id: str
+    status: str | None = None
+    comments: str | None = None
+    time_spent: str | None = None
+
+
 @app.post('/export-curation-log')
 async def export_log_yaml(request: CurationLogRequest) -> JSONResponse:
     """Export the curationLog from sessionStorage to a YAML file."""
@@ -682,4 +691,63 @@ async def render_report(request: Request) -> JSONResponse:
     except Exception as e:
         return JSONResponse(
             status_code=500, content={'success': False, 'message': f'Error when rendering report: {str(e)}'}
+        )
+
+
+@app.post('/update-checklist-item')
+async def update_checklist_item(request: ChecklistUpdateRequest) -> JSONResponse:
+    """Update a single checklist item in DuckDB.
+
+    Args:
+        request (ChecklistUpdateRequest): Request containing checklist item update data
+
+    Returns:
+        JSONResponse: Result of the update operation
+    """
+    try:
+        logger.info(f'Updating checklist item {request.item_id} for ticket {request.ticket_number}')
+
+        # Get the database file path
+        dir_manager = DirectoryManager(request.ticket_number, MAIN_DIR)
+        db_file = dir_manager.db_path
+
+        # Create DuckDB instance for the ticket's schema
+        duck_db = DuckDB(schema_name=request.ticket_number, db_file=db_file)
+
+        # Check if schema exists
+        if not duck_db.sql_check_schema_exists(request.ticket_number):
+            logger.warning(f'Schema {request.ticket_number} does not exist')
+            return JSONResponse(
+                status_code=404,
+                content={'success': False, 'message': f'Ticket schema {request.ticket_number} not found'}
+            )
+
+        # Update the checklist item
+        success = duck_db.sql_update_checklist_item(
+            item_id=request.item_id,
+            status=request.status,
+            comments=request.comments,
+            time_spent=request.time_spent
+        )
+
+        if success:
+            logger.info(f'Successfully updated checklist item {request.item_id}')
+            return JSONResponse(
+                content={
+                    'success': True,
+                    'message': f'Checklist item {request.item_id} updated successfully'
+                }
+            )
+        else:
+            logger.error(f'Failed to update checklist item {request.item_id}')
+            return JSONResponse(
+                status_code=400,
+                content={'success': False, 'message': f'Failed to update checklist item {request.item_id}'}
+            )
+            
+    except Exception as e:
+        logger.error(f'Error updating checklist item {request.item_id}: {e}')
+        return JSONResponse(
+            status_code=500,
+            content={'success': False, 'message': f'Internal server error: {str(e)}'}
         )
