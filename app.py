@@ -694,6 +694,38 @@ async def render_report(request: Request) -> JSONResponse:
         )
 
 
+@app.get('/api/checklist-data')
+async def get_checklist_data(request: Request) -> JSONResponse:
+    """Get checklist data with saved status, comments, and time_spent from DuckDB.
+
+    Expected query parameters:
+    - ticket_number: The ticket number to get data for
+
+    Returns:
+        JSONResponse: Checklist data with saved values
+    """
+    try:
+        ticket_number = request.query_params.get('ticket_number')
+        if not ticket_number:
+            return JSONResponse(
+                status_code=400,
+                content={'success': False, 'message': 'ticket_number parameter is required'}
+            )
+
+        # Get checklist data from DuckDB
+        checklist_data = get_checklist_from_duckdb(MAIN_DIR, ticket_number)
+
+        return JSONResponse(content=checklist_data)
+
+    except Exception as e:
+        ticket_number = request.query_params.get('ticket_number', 'unknown')
+        logger.error(f'Error fetching checklist data for ticket {ticket_number}: {e}')
+        return JSONResponse(
+            status_code=500,
+            content={'success': False, 'message': f'Error fetching checklist data: {str(e)}'}
+        )
+
+
 @app.post('/update-checklist-item')
 async def update_checklist_item(request: ChecklistUpdateRequest) -> JSONResponse:
     """Update a single checklist item in DuckDB.
@@ -738,13 +770,13 @@ async def update_checklist_item(request: ChecklistUpdateRequest) -> JSONResponse
                     'message': f'Checklist item {request.item_id} updated successfully'
                 }
             )
-        else:
-            logger.error(f'Failed to update checklist item {request.item_id}')
-            return JSONResponse(
-                status_code=400,
-                content={'success': False, 'message': f'Failed to update checklist item {request.item_id}'}
-            )
-            
+
+        logger.error(f'Failed to update checklist item {request.item_id}')
+        return JSONResponse(
+            status_code=400,
+            content={'success': False, 'message': f'Failed to update checklist item {request.item_id}'}
+        )
+
     except Exception as e:
         logger.error(f'Error updating checklist item {request.item_id}: {e}')
         return JSONResponse(
