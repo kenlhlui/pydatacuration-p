@@ -196,17 +196,17 @@
         }
     }
     </script>
+    <script src="/static/js/utilities.js"></script>
+    <script src="/static/js/session-manager.js"></script>
     <script src="/static/js/yaml-autosave.js"></script>
-    <script src="/static/js/readsessionstorage.js"></script>
     <script src="/static/js/load-from-duckdb.js"></script>
     <script src="/static/js/readdsmetadata.js"></script>
-    <script src="/static/js/today.js"></script>
     <script src="/static/js/validation.js"></script>
     <script src="/static/js/load-check-results.js"></script>
     <script src="/static/js/write-to-duckdb.js"></script>
     <script>
     window.addEventListener('DOMContentLoaded', function() {
-      // Call the function from today.js
+      // Call the function from utilities.js
       var today = generateTodayDate();      
       // Set both log date fields to today's date
       const initialDateField = document.getElementById('log_initial_date');
