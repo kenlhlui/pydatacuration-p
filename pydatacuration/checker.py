@@ -4,9 +4,13 @@ from pathlib import Path
 
 import jmespath
 import yaml
+from loguru import logger
+from sqlmodel import SQLModel
+
+from pydatacuration.sqlmodels import DuckDBmodels
 
 from .checksum import Checksum
-from loguru import logger
+from .duck_db import DuckDB
 from .files_opener import FilesOpener
 from .httpx_client import HTTPXClient
 from .metadata_checker import MetadataChecker
@@ -14,54 +18,12 @@ from .spell_checker import SpellCheckerCustomized
 from .unzip import Unzipper
 from .utils import FileNameFormatChecker
 from .utils import compare_files_and_metadata
+from .utils import parse_dataset_url
 from .utils import parse_file_list_metadata
 from .utils import readme_file_checker
 
 
 RES_DIR = Path('res')
-
-
-class CheckResultBuilder:
-    """Builder class for collecting check results in a structured format."""
-
-    def __init__(self) -> None:
-        """Initialize the CheckResultBuilder."""
-        self.results = []
-
-    def add_check_result(
-        self,
-        check_id: str,
-        check_name: str,
-        description: str,
-        result_name: str,
-        results: list,
-        allow_empty: bool = False,
-    ) -> None:
-        """Add a check result to the collection.
-
-        Args:
-            check_id (str): Unique identifier for the check
-            check_name (str): Human-readable name of the check
-            description (str): Description of what the check finds
-            result_name (str): Name of the result (value, file, keyword, etc)
-            results (list): List of findings from the check
-            allow_empty (bool): Whether to allow empty results
-        """
-        # Only add if there are actual results
-        if results or allow_empty:
-            self.results.append(
-                {
-                    'check_id': check_id,
-                    'check_name': check_name,
-                    'description': description,
-                    'result_type': result_name,
-                    'results': results,
-                }
-            )
-
-    def get_results(self) -> list:
-        """Get all collected check results."""
-        return self.results
 
 
 class Checker:
@@ -75,7 +37,10 @@ class Checker:
         dv_tree: dict,
         workdir: Path,
         check_zip: bool,
+        duckdb_instance: DuckDB,
         collection_alias: str | None = None,
+        curator_name: str | None = None,
+        curator_email: str | None = None,
     ) -> None:
         """Initialize the Checker class.
 
@@ -86,7 +51,10 @@ class Checker:
             dv_tree (dict): The Dataverse tree metadata.
             workdir (Path): The working directory.
             check_zip (bool): Whether to check zip files.
+            duckdb_instance (DuckDB): An instance of the DuckDB class for database operations.
             collection_alias (str | None): The collection alias for the author name to be searched.
+            curator_name (str | None): The name of the data curator.
+            curator_email (str | None): The email of the data curator.
         """
         self.base_url = base_url
         self.api_token = api_token
@@ -95,10 +63,13 @@ class Checker:
         self.workdir = workdir
         self.check_zip = check_zip
         self.collection_alias = collection_alias
+        self.duckdb_instance = duckdb_instance
+        self.sqlmodels = DuckDBmodels(self.duckdb_instance.schema_name)
+        self.curator_name = curator_name
+        self.curator_email = curator_email
 
         self.logger = logger
         self.checksums = Checksum()
-        self.result_builder = CheckResultBuilder()
         self.files_opener = FilesOpener
         self.metadata_checker = MetadataChecker(self.workdir.joinpath('dataset', 'metadata', 'ds_metadata.json'))
         self.spell_checker = SpellCheckerCustomized()
@@ -109,6 +80,7 @@ class Checker:
         self.ds_title = jmespath.search(
             'data.latestVersion.metadataBlocks.citation.fields[?typeName == `title`].value | [0]', self.ds_metadata
         )  # noqa
+        self.dataset_id = self.ds_metadata.get('data', {}).get('latestVersion', {}).get('id')
 
     def _get_ds_tree_info(self, identifier_of_dataverse: str) -> dict:
         """Get the dataset tree information in the Dataverse repository.
@@ -221,30 +193,48 @@ class Checker:
                 self.logger.info(f'README file found: {file_rel_path}')
                 readme_files.append(str(file_rel_path))
 
-        # Add results to the new structure
-        self.result_builder.add_check_result(
-            check_id='filename_special_chars',
-            check_name='Files with Special Characters',
-            description='Files containing special characters in filename',
-            result_name='file',
-            results=special_char_files,
-        )
+        # DEBUG: Write to duckDB
+        try:
+            check_result_list_schema = self.sqlmodels.check_results()
+            self.duckdb_instance.sql_merge_records_to_table(
+                check_result_list_schema(
+                    check_id='filename_special_chars',
+                    check_name='Files with Special Characters',
+                    description='Files containing special characters in filename',
+                    result_name='file',
+                    results=special_char_files,
+                )
+            )
+        except Exception as e:
+            logger.error(f'Failed to write special character files to DuckDB: {e}')
 
-        self.result_builder.add_check_result(
-            check_id='missing_file_extensions',
-            check_name='Files Missing Extensions',
-            description='Files without proper file extensions',
-            result_name='file',
-            results=missing_ext_files,
-        )
+        try:
+            check_result_list_schema = self.sqlmodels.check_results()
+            self.duckdb_instance.sql_merge_records_to_table(
+                check_result_list_schema(
+                    check_id='missing_file_extensions',
+                    check_name='Files Missing Extensions',
+                    description='Files without proper file extensions',
+                    result_name='file',
+                    results=missing_ext_files,
+                )
+            )
+        except Exception as e:
+            logger.error(f'Failed to write missing_file_extensions to DuckDB: {e}')
 
-        self.result_builder.add_check_result(
-            check_id='readme_files',
-            check_name='README Files Found',
-            description='README files detected in the dataset',
-            result_name='file',
-            results=readme_files,
-        )
+        try:
+            check_result_list_schema = self.sqlmodels.check_results()
+            self.duckdb_instance.sql_merge_records_to_table(
+                check_result_list_schema(
+                    check_id='readme_files',
+                    check_name='README Files Found',
+                    description='README files detected in the dataset',
+                    result_name='file',
+                    results=readme_files,
+                )
+            )
+        except Exception as e:
+            logger.error(f'Failed to write readme_files to DuckDB: {e}')
 
     def check_file_open(self) -> None:
         """Check if the file can be opened."""
@@ -294,22 +284,33 @@ class Checker:
                     )  # noqa: E501
                     unsupported_files.append(str(file_rel_path))
 
-        # Add results to the new structure
-        self.result_builder.add_check_result(
-            check_id='file_accessibility',
-            check_name='Inaccessible Files',
-            description='Files that cannot be opened or read by the validation tool',
-            result_name='file',
-            results=inaccessible_files,
-        )
+        try:
+            check_result_list_schema = self.sqlmodels.check_results()
+            self.duckdb_instance.sql_merge_records_to_table(
+                check_result_list_schema(
+                    check_id='file_accessibility',
+                    check_name='Inaccessible Files',
+                    description='Files that cannot be opened or read by the validation tool',
+                    result_name='file',
+                    results=inaccessible_files,
+                )
+            )
+        except Exception as e:
+            logger.error(f'Failed to write file_accessibility to DuckDB: {e}')
 
-        self.result_builder.add_check_result(
-            check_id='unsupported_files',
-            check_name='Files with Unsupported Formats',
-            description='Files in formats not supported by the validation tool',
-            result_name='file',
-            results=unsupported_files,
-        )
+        try:
+            check_result_list_schema = self.sqlmodels.check_results()
+            self.duckdb_instance.sql_merge_records_to_table(
+                check_result_list_schema(
+                    check_id='unsupported_files',
+                    check_name='Files with Unsupported Formats',
+                    description='Files in formats not supported by the validation tool',
+                    result_name='file',
+                    results=unsupported_files,
+                )
+            )
+        except Exception as e:
+            logger.error(f'Failed to write unsupported_files to DuckDB: {e}')
 
     def check_common_file_format(self) -> None:
         """Check if the file format is in the common file format."""
@@ -327,14 +328,19 @@ class Checker:
         else:
             self.logger.error('No common file format found in the res directory. Skipping this check.')
 
-        # Add results to the new structure
-        self.result_builder.add_check_result(
-            check_id='uncommon_file_formats',
-            check_name='Files with Uncommon Formats',
-            description='Files using uncommon or proprietary file formats',
-            result_name='file',
-            results=uncommon_format_files,
-        )
+        try:
+            check_result_list_schema = self.sqlmodels.check_results()
+            self.duckdb_instance.sql_merge_records_to_table(
+                check_result_list_schema(
+                    check_id='uncommon_file_formats',
+                    check_name='Files with Uncommon Formats',
+                    description='Files using uncommon or proprietary file formats',
+                    result_name='file',
+                    results=uncommon_format_files,
+                )
+            )
+        except Exception as e:
+            logger.error(f'Failed to write uncommon_file_formats to DuckDB: {e}')
 
     def check_missing_metadata(self) -> None:
         """Check for missing metadata."""
@@ -385,38 +391,61 @@ class Checker:
         if author_affiliation_ut_num == 0:
             self.logger.info('None of the authors have listed affiliation with University of Toronto')
 
-        # Add results to the new structure
-        self.result_builder.add_check_result(
-            check_id='missing_required_fields',
-            check_name='Missing Required Metadata Fields',
-            description='Required metadata fields that are empty or missing',
-            result_name='file',
-            results=missing_required_fields,
-        )
+        try:
+            check_result_list_schema = self.sqlmodels.check_results()
+            self.duckdb_instance.sql_merge_records_to_table(
+                check_result_list_schema(
+                    check_id='missing_required_fields',
+                    check_name='Missing Required Metadata Fields',
+                    description='Required metadata fields that are empty or missing',
+                    result_name='field',
+                    results=missing_required_fields,
+                )
+            )
+        except Exception as e:
+            logger.error(f'Failed to write missing_required_fields to DuckDB: {e}')
 
-        self.result_builder.add_check_result(
-            check_id='authors_missing_affiliation',
-            check_name='Authors Without Affiliation',
-            description='Authors missing institutional affiliation information',
-            result_name='author',
-            results=authors_missing_affiliation,
-        )
+        try:
+            check_result_list_schema = self.sqlmodels.check_results()
+            self.duckdb_instance.sql_merge_records_to_table(
+                check_result_list_schema(
+                    check_id='authors_missing_affiliation',
+                    check_name='Authors Without Affiliation',
+                    description='Authors missing institutional affiliation information',
+                    result_name='author',
+                    results=authors_missing_affiliation,
+                )
+            )
+        except Exception as e:
+            logger.error(f'Failed to write authors_missing_affiliation to DuckDB: {e}')
 
-        self.result_builder.add_check_result(
-            check_id='authors_missing_identifier',
-            check_name='Authors Without Identifier',
-            description='Authors missing personal identifier (ORCID, etc.)',
-            result_name='author',
-            results=authors_missing_identifier,
-        )
+        try:
+            check_result_list_schema = self.sqlmodels.check_results()
+            self.duckdb_instance.sql_merge_records_to_table(
+                check_result_list_schema(
+                    check_id='authors_missing_identifier',
+                    check_name='Authors Without Identifier',
+                    description='Authors missing personal identifier (ORCID, etc.)',
+                    result_name='author',
+                    results=authors_missing_identifier,
+                )
+            )
+        except Exception as e:
+            logger.error(f'Failed to write authors_missing_identifier to DuckDB: {e}')
 
-        self.result_builder.add_check_result(
-            check_id='authors_missing_scheme',
-            check_name='Authors Without Identifier Scheme',
-            description='Authors missing identifier scheme information',
-            result_name='author',
-            results=authors_missing_scheme,
-        )
+        try:
+            check_result_list_schema = self.sqlmodels.check_results()
+            self.duckdb_instance.sql_merge_records_to_table(
+                check_result_list_schema(
+                    check_id='authors_missing_scheme',
+                    check_name='Authors Without Identifier Scheme',
+                    description='Authors missing identifier scheme information',
+                    result_name='author',
+                    results=authors_missing_scheme,
+                )
+            )
+        except Exception as e:
+            logger.error(f'Failed to write authors_missing_scheme to DuckDB: {e}')
 
     def check_spelling(self) -> None:
         """Check for spelling mistakes in the metadata."""
@@ -445,14 +474,19 @@ class Checker:
                             }
                         )
 
-        # Add results to the new structure
-        self.result_builder.add_check_result(
-            check_id='potential_typos',
-            check_name='Potential Spelling Errors',
-            description='Words that may contain spelling mistakes in metadata fields',
-            result_name='typo',
-            results=potential_typos,
-        )
+        try:
+            check_result_list_schema = self.sqlmodels.check_results()
+            self.duckdb_instance.sql_merge_records_to_table(
+                check_result_list_schema(
+                    check_name='Potential Spelling Errors',
+                    check_id='potential_typos',
+                    description='Check for potential spelling errors in metadata fields',
+                    result_name='typo',
+                    results=potential_typos,
+                )
+            )
+        except Exception as e:
+            logger.error(f'Failed to write potential typos to DuckDB: {e}')
 
     def check_dv_record(self) -> None:
         """Check if the author has deposited data in Dataverse.
@@ -499,16 +533,21 @@ class Checker:
 
                 # TODO: Add error handling for the case when the response is None or empty; or HTTP error
 
-        # Add results to the new structure
-        self.result_builder.add_check_result(
-            check_id='author_dataverse_history',
-            check_name='Author Publication History',
-            description='Previous datasets published by authors in this Dataverse instance',
-            result_name='author record',
-            results=author_publication_history,
-        )
+        try:
+            check_result_list_schema = self.sqlmodels.check_results()
+            self.duckdb_instance.sql_merge_records_to_table(
+                check_result_list_schema(
+                    check_id='author_dataverse_history',
+                    check_name='Author Publication History',
+                    description='Previous datasets published by authors in this Dataverse instance',
+                    result_name='author record',
+                    results=author_publication_history,
+                )
+            )
+        except Exception as e:
+            logger.error(f'Failed to write author publication history to DuckDB: {e}')
 
-    def check_ds_tree_info(self) -> None:
+    def check_ds_tree_info(self) -> str | None:
         """Check the path of the dataset in the dataverse Repository."""
         ds_version_id = self.ds_metadata.get('data', {}).get('latestVersion', {}).get('id')
         if ds_version_id:
@@ -537,16 +576,9 @@ class Checker:
                     dataset_path = f'{path}/{ds_title}'
                     self.logger.debug(f'Dataset path in the dataverse repository: {dataset_path}')  # noqa: E501
 
-                # Add the result to self.result_builder
-                self.result_builder.add_check_result(
-                    check_id='dataset_path',
-                    check_name='Dataset Path Information',
-                    description="Information about the dataset's location in the Dataverse repository",
-                    result_name='dataset_path',
-                    results=[dataset_path],
-                )
-
-            # TODO: Add error handling for the case when the response is None or empty; or HTTP error
+                return dataset_path
+        return None
+        # TODO: Add error handling for the case when the response is None or empty; or HTTP error
 
     def check_restricted_files(self) -> None:
         """Check for restricted files."""
@@ -559,58 +591,79 @@ class Checker:
                 self.logger.info(f'Restricted file found: {file_path}')
                 restricted_files.append(str(file_path))
 
-        # Add results to the new structure
-        self.result_builder.add_check_result(
-            check_id='restricted_files',
-            check_name='Restricted Access Files',
-            description='Files with access restrictions in the dataset',
-            result_name='file',
-            results=restricted_files,
-        )
+        try:
+            check_result_list_schema: type[SQLModel] = self.sqlmodels.check_results()
+            self.duckdb_instance.sql_merge_records_to_table(
+                check_result_list_schema(
+                    check_id='restricted_files',
+                    check_name='Restricted Access Files',
+                    description='Files with access restrictions in the dataset',
+                    result_name='file',
+                    results=restricted_files,
+                )
+            )
+        except Exception as e:
+            logger.error(f'Failed to write restricted_files to DuckDB: {e}')
 
     def check_terms_of_use(self) -> None:
         """Check if the terms of use are present."""
         terms_of_use = self.ds_metadata.get('data', {}).get('latestVersion', {}).get('termsOfUse', None)
 
-        # Add results to the new structure
-        self.result_builder.add_check_result(
-            check_id='termsOfUse',
-            check_name='Terms of Use of the Dataset',
-            description='Terms of Use information in the dataset',
-            result_name='terms of use',
-            results=[
-                terms_of_use,
-            ],
-        )
+        try:
+            check_result_list_schema = self.sqlmodels.check_results()
+            self.duckdb_instance.sql_merge_records_to_table(
+                check_result_list_schema(
+                    check_id='termsOfUse',
+                    check_name='Terms of Use of the Dataset',
+                    description='Terms of Use information in the dataset',
+                    result_name='terms of use',
+                    results=[
+                        terms_of_use,
+                    ],
+                )
+            )
+        except Exception as e:
+            logger.error(f'Failed to write termsOfUse to DuckDB: {e}')
 
     def check_terms_of_access(self) -> None:
         """Check if the terms of access are present."""
         terms_of_access = self.ds_metadata.get('data', {}).get('latestVersion', {}).get('termsOfAccess', None)
 
-        # Add results to the new structure
-        self.result_builder.add_check_result(
-            check_id='termsOfAccess',
-            check_name='Terms of Access of the Dataset',
-            description='Terms of Access information in the dataset',
-            result_name='term of access',
-            results=[
-                terms_of_access,
-            ],
-        )
+        try:
+            check_result_list_schema = self.sqlmodels.check_results()
+            self.duckdb_instance.sql_merge_records_to_table(
+                check_result_list_schema(
+                    check_id='termsOfAccess',
+                    check_name='Terms of Access of the Dataset',
+                    description='Terms of Access information in the dataset',
+                    result_name='term of access',
+                    results=[
+                        terms_of_access,
+                    ],
+                )
+            )
+        except Exception as e:
+            logger.error(f'Failed to write termsOfAccess to DuckDB: {e}')
 
     def check_license(self) -> None:
         """Check if the terms of use and license are present."""
         license_name = self.ds_metadata.get('data', {}).get('latestVersion', {}).get('license', {}).get('name', None)
 
-        self.result_builder.add_check_result(
-            check_id='license',
-            check_name='License of the Dataset',
-            description='License information in the dataset',
-            result_name='license',
-            results=[
-                license_name,
-            ],
-        )
+        try:
+            check_result_list_schema = self.sqlmodels.check_results()
+            self.duckdb_instance.sql_merge_records_to_table(
+                check_result_list_schema(
+                    check_id='license',
+                    check_name='License of the Dataset',
+                    description='License information in the dataset',
+                    result_name='license',
+                    results=[
+                        license_name,
+                    ],
+                )
+            )
+        except Exception as e:
+            logger.error(f'Failed to write license to DuckDB: {e}')
 
         if license_name == 'CC0 1.0':
             self.logger.info('The license is CC0 1.0')
@@ -624,22 +677,87 @@ class Checker:
         if isinstance(keyword_list, list):
             self.logger.info(f'Keywords found in the metadata: {keyword_list}')
 
-        # Add the result to self.result_builder
-        self.result_builder.add_check_result(
-            check_id='keywords_existence',
-            check_name='Keywords Existence',
-            description='Check if keywords are present in the dataset',
-            result_name='keyword',
-            results=keyword_list,
-            allow_empty=True,
-        )
+        # DEBUG: Test for writing to DuckDB using CheckResultList
+        # FIXME: fix the update logic; it won't work if there's table
+        try:
+            check_result_list_schema = self.sqlmodels.check_results()
+            self.duckdb_instance.sql_merge_records_to_table(
+                check_result_list_schema(
+                    check_name='Keywords Existence',
+                    check_id='keywords_existence',
+                    description='Check if keywords are present in the dataset',
+                    result_name='keyword',
+                    results=keyword_list,
+                )
+            )
+        except Exception as e:
+            logger.error(f'Failed to write keywords to DuckDB: {e}')
 
-    def run_checks(self) -> dict:
-        """Run all the checks.
+    # The below writes the to the DuckDB database
+    def write_project_metadata_to_duckdb(self) -> None:
+        """Write the project metadata to the DuckDB database."""
+        project_metadata_schema = self.sqlmodels.project_metadata_record()
 
-        Returns:
-            dict: new check_results structure
-        """
+        # Check if record already exists
+        try:
+            ticket_number = self.duckdb_instance.schema_name
+            curator_name: str | None = self.curator_name
+            curator_email: str | None = self.curator_email
+            dataset_title = self.ds_title if self.ds_title else 'No Title'
+            dataset_pid = self.ds_metadata.get('data', {}).get('latestVersion', {}).get('datasetPersistentId', 'No ID')
+            # dataset_id = self.ds_metadata.get('data', {}).get('latestVersion', {}).get('id', 'No ID')
+            datasetid = self.ds_metadata.get('data', {}).get('latestVersion', {}).get('datasetId', 'No ID')
+            dataset_url = parse_dataset_url(self.base_url, dataset_pid)
+            dataset_path = self.check_ds_tree_info()
+
+            # if not self.duckdb_instance.check_table_has_records('project_metadata'):
+            self.duckdb_instance.sql_merge_records_to_table(
+                project_metadata_schema(
+                    curator_name=curator_name,
+                    curator_email=curator_email,
+                    ticket_number=ticket_number,
+                    dataset_title=dataset_title,
+                    dataset_pid=dataset_pid,
+                    dataset_id=self.dataset_id,
+                    datasetid=datasetid,
+                    dataset_url=dataset_url,
+                    dataset_path=dataset_path,
+                )
+            )
+        except Exception as e:
+            self.logger.error(f'Failed to write to DuckDB: {e}')
+
+    # Note: maybe to migrate this to main.py
+    def write_checklist_to_duckdb(self):
+        try:
+            self.logger.debug('Writing the checklist to DuckDB...')
+            checklist_schema = self.sqlmodels.checklist()
+            # FIXME: hardcoded checklist that only support one type of checklist
+            checklist_file: Path = RES_DIR.joinpath('check-list_template_high.yaml')
+
+            with Path.open(checklist_file, 'r') as f:
+                checklist_data = yaml.safe_load(f)
+
+            # Write each checklist item to DuckDB
+            for item in checklist_data.get('checklist', []):
+                self.logger.debug(f'Writing checklist item to DuckDB: {item}')
+                self.duckdb_instance.sql_merge_records_to_table(
+                    checklist_schema(
+                        id=item.get('id'),
+                        action=item.get('action'),
+                        instructions=item.get('instructions'),
+                        priority=item.get('priority'),
+                        section=item.get('section'),
+                        automated_check_ids=item.get('automated_check_ids'),
+                        information_location=item.get('information_location'),
+                        check_type=item.get('check_type'),
+                    )
+                )
+        except Exception as e:
+            self.logger.error(f'Failed to write checklist to DuckDB: {e}')
+
+    def run_checks(self) -> None:
+        """Run all the checks."""
         self.logger.info('Running the checks...')
         self.check_file_name_format()
         self.check_file_open()
@@ -653,8 +771,6 @@ class Checker:
         self.check_terms_of_access()
         self.check_keywords()
         self.check_license()
-
-        # Build the new structure
-        new_results = {'check_results': self.result_builder.get_results()}
-
-        return new_results
+        self.write_project_metadata_to_duckdb()
+        # DEBUG: Write the checklist to DuckDB
+        self.write_checklist_to_duckdb()

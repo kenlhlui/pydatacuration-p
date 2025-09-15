@@ -4,16 +4,26 @@
 
 async function loadCheckResults() {
     try {
-        // Get ticket_number from sessionStorage
-        const ticketNumber = sessionStorage.getItem('ticket_number');
+        // Get ticket_number from sessionStorage or URL params
+        let ticketNumber = sessionStorage.getItem('ticket_number');
         
         if (!ticketNumber) {
-            console.log('No ticket number found in session storage');
+            const urlParams = new URLSearchParams(window.location.search);
+            ticketNumber = urlParams.get('ticket_number');
+            // Store it in sessionStorage for future use
+            if (ticketNumber) {
+                sessionStorage.setItem('ticket_number', ticketNumber);
+                console.log('Got ticket number from URL params and stored in sessionStorage:', ticketNumber);
+            }
+        }
+        
+        if (!ticketNumber) {
+            console.log('No ticket number found in session storage or URL params');
             return;
         }
         
         // Fetch check results from API
-        const response = await fetch(`/api/check-results?ticket_number=${encodeURIComponent(ticketNumber)}&parent_dir=workdir`);
+        const response = await fetch(`/api/check-results?ticket_number=${encodeURIComponent(ticketNumber)}&main_dir=workdir`);
         
         if (!response.ok) {
             console.error('Failed to fetch check results:', response.status);
@@ -25,43 +35,12 @@ async function loadCheckResults() {
         
         console.log(`Loaded ${checkResults.length} check results for ticket ${ticketNumber}`);
         console.log('Check results data:', checkResults); // Debug: see the actual data structure
-        
-        // Populate dataset_path specifically from check results
-        populateDatasetPath(data);
-        
+                
         // Update the automated check column for each checklist item
         updateAutomatedCheckColumn(checkResults);
         
     } catch (error) {
         console.error('Error loading check results:', error);
-    }
-}
-
-/**
- * Populate dataset_path from check results data
- */
-function populateDatasetPath(checkResultsData) {
-    console.log('Checking for dataset_path in check results:', checkResultsData);
-    
-    // Look for dataset_path in the check_results array
-    const checkResults = checkResultsData.check_results || [];
-    const datasetPathCheck = checkResults.find(check => check.check_id === 'dataset_path');
-    
-    if (datasetPathCheck && datasetPathCheck.results && datasetPathCheck.results.length > 0) {
-        const datasetPath = datasetPathCheck.results[0]; // Get the first result
-        console.log('Found dataset_path:', datasetPath);
-        
-        // Find the dataset path element
-        const datasetPathElement = document.getElementById('dataset_path');
-        
-        if (datasetPathElement) {
-            datasetPathElement.textContent = datasetPath;
-            console.log('Set dataset_path element to:', datasetPath);
-        } else {
-            console.log('dataset_path element not found');
-        }
-    } else {
-        console.log('No dataset_path check found in check results data');
     }
 }
 

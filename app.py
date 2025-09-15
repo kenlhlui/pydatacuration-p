@@ -1,12 +1,10 @@
 """pydatacuration-p: FastAPI application for curation report generation."""
+
 import asyncio
-import json
 import os
+import re
 from pathlib import Path
 
-import jmespath
-
-# import markdown
 import markdown2
 import yaml
 from dotenv import load_dotenv
@@ -20,8 +18,18 @@ from fastapi.templating import Jinja2Templates
 from pydantic import BaseModel
 from pydantic import ValidationError
 
-from pydatacuration.new_generate_log import render_report_from_yaml
+from pydatacuration.custom_logging import logger
+from pydatacuration.custom_logging import setup_logging
 from pydatacuration.directory_manager import DirectoryManager
+from pydatacuration.duck_db import DuckDB
+from pydatacuration.new_generate_log import render_report_from_yaml
+
+
+load_dotenv(override=True)
+MAIN_DIR: Path = Path(os.getenv('MAIN_DIR', 'workdir'))
+
+# Setup logging with your custom style
+setup_logging(log_file_dir=MAIN_DIR / 'logs', log_level='DEBUG')
 
 
 class ChecklistItem(BaseModel):
@@ -39,12 +47,13 @@ class ChecklistItem(BaseModel):
     Returns:
         None: data container
     """
+
     id: str
     action: str
     instructions: str
     priority: str
     section: str = ''
-    automated_check_ids: list[str] = []
+    automated_check_ids: list[str] | None = []
     information_location: str = ''
     check_type: str = ''
 
@@ -59,20 +68,21 @@ class SetupRequest(BaseModel):
         ticket_number (str): Ticket number for the curation report
         curator_name (str): Curator's name
         curator_email (str): Curator's email
-        parent_dir (str): Working directory path
+        main_dir (str): Working directory path
         force_del (bool): Force delete existing directory
         check_zip (bool): Unzip and check contents of zip files
 
     Returns:
         None: data container
     """
+
     pid: str
     base_url: str | None = None
     api_token: str | None = None
     ticket_number: str
     curator_name: str
     curator_email: str
-    parent_dir: str = 'workdir'
+    main_dir: str = str(MAIN_DIR.resolve())
     force_del: bool = False
     check_zip: bool = True
 
@@ -81,23 +91,24 @@ app = FastAPI()
 templates = Jinja2Templates(directory='pydatacuration/frontend/')
 
 # Mount static files for CSS, JS, and other assets
-app.mount("/static", StaticFiles(directory='pydatacuration/frontend'), name='static')
+app.mount('/static', StaticFiles(directory='pydatacuration/frontend'), name='static')
 
 # Load environment variables
 load_dotenv()
 
 
-def get_checklist_items() -> list[ChecklistItem]:
+def get_checklist_items(ticket_number: str) -> list[ChecklistItem]:
     """Get all checklist items from the check-list_template_high.yaml file.
 
     Returns:
         list[ChecklistItem]: List of checklist items with their details.
 
     """
-    with Path('res/check-list_template_high.yaml').open('r', encoding='utf-8') as f:
-        data = yaml.safe_load(f)
+    dir_manager = DirectoryManager(ticket_number, MAIN_DIR)
+    duck_db = DuckDB(schema_name=ticket_number, db_file=dir_manager.db_path)
+    duck_db_data = duck_db.read_checklist()
     items = []
-    for item in data.get('checklist', []):
+    for item in duck_db_data.get('checklist', []):
         checklist_item = ChecklistItem(
             id=item['id'],
             action=item['action'],
@@ -107,24 +118,37 @@ def get_checklist_items() -> list[ChecklistItem]:
             automated_check_ids=item.get('automated_check_ids', []),
             information_location=markdown2.markdown(  # Convert Markdown to HTML
                 item.get('information_location', '')
-            ) if item.get('information_location') else '',  # Handle missing information_location
-            check_type=item.get('check_type', 'Manual')  # Optional field for check type
+            )
+            if item.get('information_location')
+            else '',  # Handle missing information_location
+            check_type=item.get('check_type', 'Manual'),  # Optional field for check type
         )
-        if checklist_item.automated_check_ids:
-            print(f"Item {checklist_item.id} has automated_check_ids: {checklist_item.automated_check_ids}")
         items.append(checklist_item)
     return items
 
 
 @app.get('/', response_class=HTMLResponse)
-def landing(request: Request) -> HTMLResponse:
-    """Render the landing page for setup.
+def main_landing(request: Request) -> HTMLResponse:
+    """Render the main landing page with navigation options.
 
     Args:
         request (Request): incoming HTTP request
 
     Returns:
-        HTMLResponse: setup landing page
+        HTMLResponse: main landing page
+    """
+    return templates.TemplateResponse('main.html', {'request': request})
+
+
+@app.get('/new-dataset', response_class=HTMLResponse)
+def new_dataset(request: Request) -> HTMLResponse:
+    """Render the new dataset setup page.
+
+    Args:
+        request (Request): incoming HTTP request
+
+    Returns:
+        HTMLResponse: new dataset setup page
     """
     # Get environment variables for prefilling form fields
     env_data = {
@@ -132,16 +156,14 @@ def landing(request: Request) -> HTMLResponse:
         'api_token': os.getenv('API_TOKEN', ''),
         'curator_name': os.getenv('CURATOR_NAME', ''),
         'curator_email': os.getenv('CURATOR_EMAIL', ''),
+        'main_dir': str(MAIN_DIR.resolve()),
     }
 
-    return templates.TemplateResponse('landing.html', {
-        'request': request,
-        'env_data': env_data
-    })
+    return templates.TemplateResponse('landing.html', {'request': request, 'env_data': env_data})
 
 
 @app.get('/checklist', response_class=HTMLResponse)
-def checklist(request: Request) -> HTMLResponse:
+async def checklist(request: Request) -> HTMLResponse:
     """Render the checklist UI with a table.
 
     Args:
@@ -150,18 +172,46 @@ def checklist(request: Request) -> HTMLResponse:
     Returns:
         HTMLResponse: page with checklist table
     """
-    items = get_checklist_items()
+    ticket_number = request.query_params.get('ticket_number')
+    items = get_checklist_items(ticket_number)
+
+    resume_schema = request.query_params.get('resume')
+
+    # Get curator information from project metadata
+    curator_name = ''
+    curator_email = ''
+
+    if ticket_number:
+        try:
+            dir_manager = DirectoryManager(ticket_number, MAIN_DIR)
+            duck_db = DuckDB(schema_name=ticket_number, db_file=dir_manager.db_path)
+            metadata = duck_db.read_project_metadata_record()
+
+            curator_name = metadata.get('curator_name', '')
+            curator_email = metadata.get('curator_email', '')
+
+            logger.debug(f'Loaded curator info for {ticket_number}: {curator_name}, {curator_email}')
+
+        except Exception as e:
+            logger.warning(f'Could not load curator info for {ticket_number}: {e}')
 
     # Check results will be loaded via JavaScript from session storage
-    return templates.TemplateResponse('index.html', {
-        'request': request, 
-        'items': items, 
-        'check_results': []  # Empty, will be populated by frontend JavaScript
-    })
+    return templates.TemplateResponse(
+        'index.html',
+        {
+            'request': request,
+            'items': items,
+            'curator_name': curator_name,
+            'curator_email': curator_email,
+            'ticket_number': ticket_number or '',
+            'check_results': [],  # Empty, will be populated by frontend JavaScript
+            'resume_schema': resume_schema,  # Pass to frontend for handling
+        },
+    )
 
 
 async def run_command(command: str) -> dict:
-    """Run a command and return the result.
+    """Run a command and return the result with real-time output streaming to logger.
 
     Args:
         command (str): Command to run
@@ -170,26 +220,60 @@ async def run_command(command: str) -> dict:
         dict: Command result with stdout, stderr, and return code
     """
     try:
+        logger.info('🚀 Starting the CLI application')
+
         process = await asyncio.create_subprocess_shell(
             command,
             stdout=asyncio.subprocess.PIPE,
             stderr=asyncio.subprocess.PIPE,
         )
-        stdout, stderr = await process.communicate()
 
-        return {
-            'stdout': stdout.decode(),
-            'stderr': stderr.decode(),
-            'return_code': process.returncode,
-            'success': process.returncode == 0
+        stdout_lines = []
+        stderr_lines = []
+
+        def strip_ansi_codes(text: str) -> str:
+            """Remove ANSI escape codes from text."""
+            ansi_escape = re.compile(r'\x1b\[[0-9;]*m')
+            return ansi_escape.sub('', text)
+
+        async def read_stream(stream, lines_list, log_func):
+            """Read stream line by line and log in real-time."""
+            while True:
+                line = await stream.readline()
+                if not line:
+                    break
+                decoded_line = line.decode().rstrip()
+                if decoded_line:  # Only log non-empty lines
+                    lines_list.append(decoded_line)
+                    # Strip ANSI codes before logging to prevent double formatting
+                    clean_line = strip_ansi_codes(decoded_line)
+                    if clean_line.strip():  # Only log if there's content after stripping
+                        log_func(f'[CLI] {clean_line}')
+
+        # Create tasks to read both streams concurrently
+        stdout_task = asyncio.create_task(read_stream(process.stdout, stdout_lines, logger.info))
+        stderr_task = asyncio.create_task(read_stream(process.stderr, stderr_lines, logger.error))
+
+        # Wait for both streams to complete
+        await asyncio.gather(stdout_task, stderr_task)
+
+        # Wait for process to finish
+        return_code = await process.wait()
+
+        result = {
+            'stdout': '\n'.join(stdout_lines),
+            'stderr': '\n'.join(stderr_lines),
+            'return_code': return_code,
+            'success': return_code == 0,
         }
+
+        logger.info(f'✅ Command completed with return code: {return_code}')
+        return result
+
     except Exception as e:
-        return {
-            'stdout': '',
-            'stderr': str(e),
-            'return_code': -1,
-            'success': False
-        }
+        error_msg = f'❌ Command execution failed: {str(e)}'
+        logger.error(error_msg)
+        return {'stdout': '', 'stderr': error_msg, 'return_code': -1, 'success': False}
 
 
 @app.post('/setup')
@@ -203,23 +287,34 @@ async def setup(request: SetupRequest) -> JSONResponse:
         JSONResponse: Result of the curation process
     """
     try:
-
         # Validate required fields
         if not request.pid or not request.pid.strip():
+            logger.error(f'Validation failed: PID is missing or empty. Received: "{request.pid}"')
             raise HTTPException(status_code=400, detail='PID is required')
         if not request.ticket_number or not request.ticket_number.strip():
+            logger.error(f'Validation failed: Ticket number is missing or empty. Received: "{request.ticket_number}"')
             raise HTTPException(status_code=400, detail='Ticket number is required')
         if not request.curator_name or not request.curator_name.strip():
+            logger.error(f'Validation failed: Curator name is missing or empty. Received: "{request.curator_name}"')
             raise HTTPException(status_code=400, detail='Curator name is required')
         if not request.curator_email or not request.curator_email.strip():
+            logger.error(f'Validation failed: Curator email is missing or empty. Received: "{request.curator_email}"')
             raise HTTPException(status_code=400, detail='Curator email is required')
 
         # Build the command to run pydatacuration CLI
         cmd_parts = [
-            'python', '-m', 'pydatacuration.main', 'gen-curation-report',
-            '--pid', f'"{request.pid}"',
-            '--ticket-number', f'"{request.ticket_number}"',
-            '--parent-dir', f'"{request.parent_dir}"'
+            'python',
+            '-m',
+            'pydatacuration.main',
+            'all',
+            '--pid',
+            f'"{request.pid}"',
+            '--ticket-number',
+            f'"{request.ticket_number}"',
+            '--curator-name',
+            f'"{request.curator_name}"',
+            '--curator-email',
+            f'"{request.curator_email}"',
         ]
 
         # Add base URL if provided
@@ -245,128 +340,52 @@ async def setup(request: SetupRequest) -> JSONResponse:
         cmd = ' '.join(cmd_parts)
 
         # Store state variables using DirectoryManager
-        dir_manager = DirectoryManager(request.ticket_number, request.parent_dir)
-        app.state.work_dir = dir_manager.workdir
+        dir_manager = DirectoryManager(request.ticket_number, request.main_dir)
+        app.state.work_dir = dir_manager.project_dir
         app.state.base_url = request.base_url
-        print(f'Working directory: {app.state.work_dir}')
-        print(f'Base URL: {app.state.base_url}')
-
         # Run the command
         result = await run_command(cmd)
 
         if result['success']:
-            # Use get_ds_metadata function to get processed metadata
-            ds_metadata = None
-            try:
-                base_url = request.base_url or ''
-                ds_metadata_response = await get_ds_metadata(request.parent_dir, request.ticket_number, base_url)
-                # Extract the content from the JSONResponse
-                ds_metadata = json.loads(ds_metadata_response.body.decode('utf-8'))
-            except Exception as e:
-                print(f'Could not load ds_metadata using get_ds_metadata: {e}')
+            url = f'/checklist?ticket_number={request.ticket_number}'
+            return JSONResponse(content={'success': True, 'redirect_url': url})
+        # Extract the last meaningful error message from CLI output
+        error_details = []
+        if result['stderr']:
+            error_details.append(f'CLI Error: {result["stderr"].strip()}')
+        if result['stdout']:
+            # Look for error patterns in stdout (CLI logs errors there too)
+            stdout_lines = result['stdout'].strip().split('\n')
+            for line in reversed(stdout_lines):
+                clean_line = line.strip()
+                if (
+                    'error' in clean_line.lower()
+                    or 'aborting' in clean_line.lower()
+                    or 'failed' in clean_line.lower()
+                ):
+                    error_details.append(f'CLI Message: {clean_line}')
+                    break
 
-            return JSONResponse(content={
-                'success': True,
-                'message': 'Curation report generated successfully',
-                'output': result['stdout'],
-                'command': cmd,
-                'curator_name': request.curator_name,
-                'curator_email': request.curator_email,
-                'ds_metadata': ds_metadata,
-                'redirect_url': f'/checklist?parent_dir={request.parent_dir}&ticket_number={request.ticket_number}',
-            })
-        return JSONResponse(
-            status_code=400,
-            content={
-                'success': False,
-                'message': 'Curation command failed',
-                'error': result['stderr'],
-                'output': result['stdout'],
-                'command': cmd,
-                'return_code': result['return_code'],
-            }
-        )
-
+        error_message = '. '.join(error_details) if error_details else 'Curation command failed'
+        logger.error(f'Command failed with return code {result["return_code"]}: {error_message}')
+        raise HTTPException(status_code=400, detail=error_message)
     except ValidationError as e:
-        print(f'Validation error: {e}')
-        return JSONResponse(
-            status_code=422,
-            content={
-                'success': False,
-                'message': 'Validation error',
-                'detail': str(e),
-                'errors': e.errors()
-            }
-        )
+        logger.error(f'Pydantic validation error: {e}')
+        logger.error(f'Validation errors details: {e.errors()}')
     except HTTPException as e:
-        print(f'HTTP exception: {e}')
+        logger.error(f'HTTP exception: status={e.status_code}, detail={e.detail}')
         raise e
     except Exception as e:
-        print(f'Unexpected error: {e}')
-        return JSONResponse(
-            status_code=500,
-            content={
-                'success': False,
-                'message': f'Error during setup: {str(e)}'
-            }
-        )
+        logger.error(f'Unexpected error in setup endpoint: {e}', exc_info=True)
+    return JSONResponse(content={'success': False, 'message': 'Unexpected error occurred'})
 
 
-# @app.get('/template-dict/{parent_dir}/{ticket_number}')
-# async def get_template_dict(parent_dir: str, ticket_number: str) -> JSONResponse:
-#     """Serve the template dictionary file for a specific ticket.
-
-#     Args:
-#         parent_dir (str): Parent directory name
-#         ticket_number (str): Ticket number
-
-#     Returns:
-#         JSONResponse: Template dictionary data
-#     """
-#     try:
-#         template_path = Path(parent_dir) / ticket_number / 'log_files' / 'template_dict.json'
-#         if not template_path.exists():
-#             raise HTTPException(status_code=404, detail="Template dictionary not found")
-
-#         with template_path.open('r', encoding='utf-8') as f:
-#             template_data = json.load(f)
-
-#         return JSONResponse(content=template_data)
-#     except Exception as e:
-#         raise HTTPException(status_code=500, detail=f"Error reading template dictionary: {str(e)}")
-
-
-@app.get('/check-results/{parent_dir}/{ticket_number}')
-async def get_check_results(parent_dir: str, ticket_number: str) -> JSONResponse:
-    """Serve the check results file for a specific ticket.
-
-    Args:
-        parent_dir (str): Parent directory name
-        ticket_number (str): Ticket number
-
-    Returns:
-        JSONResponse: Check results data
-    """
-    try:
-        dir_manager = DirectoryManager(ticket_number, parent_dir)
-        check_results_path = dir_manager.get_dir('logs') / 'check_results.json'
-        if not check_results_path.exists():
-            raise HTTPException(status_code=404, detail="Check results not found")
-
-        with check_results_path.open('r', encoding='utf-8') as f:
-            check_results_data = json.load(f)
-
-        return JSONResponse(content=check_results_data)
-    except Exception as e:
-        raise HTTPException(status_code=500, detail=f"Error reading check results: {str(e)}")
-
-
-@app.get('/ds-metadata/{parent_dir}/{ticket_number}')
-async def get_ds_metadata(parent_dir: str, ticket_number: str, base_url: str = '') -> JSONResponse:
+@app.get('/ds-metadata')
+async def get_ds_metadata(main_dir: str, ticket_number: str, base_url: str = ''):
     """Serve the dataset metadata file for a specific ticket.
 
     Args:
-        parent_dir (str): Parent directory name
+        main_dir (str): Main directory name
         ticket_number (str): Ticket number
         base_url (str): Base URL for dataset links (optional)
 
@@ -374,34 +393,142 @@ async def get_ds_metadata(parent_dir: str, ticket_number: str, base_url: str = '
         JSONResponse: Dataset metadata data
     """
     try:
-        dir_manager = DirectoryManager(ticket_number, parent_dir)
-        # Try the main location first
-        ds_metadata_path = dir_manager.get_dir('dataset/metadata') / 'ds_metadata.json'
+        processed_metadata = {}
+        dir_manager = DirectoryManager(ticket_number, main_dir)
 
-        # If not found, try the log_files location
-        if not ds_metadata_path.exists():
-            ds_metadata_path = dir_manager.get_dir('logs') / f'{ticket_number}_ds_metadata.json'
+        if dir_manager.db_path.exists():
+            try:
+                # Use DuckDB to get metadata
+                duck_db = DuckDB(schema_name=ticket_number, db_file=dir_manager.db_path)
+                processed_metadata = duck_db.read_project_metadata_record()
+                if processed_metadata and processed_metadata.get('dataset_pid'):
+                    return JSONResponse(content=processed_metadata)
+                logger.warning(f'No data found in DuckDB for ticket {ticket_number}')
+            except Exception as db_error:
+                logger.warning(f'DuckDB query failed for ticket {ticket_number}: {db_error}')
 
-        if not ds_metadata_path.exists():
-            raise HTTPException(status_code=404, detail='Dataset metadata not found')
-
-        with ds_metadata_path.open('r', encoding='utf-8') as f:
-            ds_metadata = json.load(f)
-
-        # Get the relevant fields
-        dataset_pid = ds_metadata.get('data', {}).get('latestVersion', {}).get('datasetPersistentId', '')
-        processed_metadata = {
-            'dataset_pid': dataset_pid,
-            'dataset_title': jmespath.search('data.latestVersion.metadataBlocks.citation.fields[?typeName == `title`].value | [0]', ds_metadata),
-            'dataset_id': ds_metadata.get('data', {}).get('latestVersion', {}).get('id', ''),
-            'dataset_url': f'{base_url}/dataset.xhtml?persistentId={dataset_pid}' if base_url and dataset_pid else ''
-        }
-
-        print(f'Dataset metadata for {ticket_number}: {processed_metadata}')
-
-        return JSONResponse(content=processed_metadata)
     except Exception as e:
+        logger.error(f'Error reading dataset metadata for ticket {ticket_number}: {e}')
         raise HTTPException(status_code=500, detail=f'Error reading dataset metadata: {str(e)}')
+
+
+def _get_check_results_from_duckdb(main_dir: str, ticket_number: str, table_name: str) -> dict:
+    """Get the check results from DuckDB for a specific ticket."""
+    try:
+        dir_manager = DirectoryManager(ticket_number, main_dir)
+        duck_db = DuckDB(schema_name=ticket_number, db_file=dir_manager.db_path)
+        return duck_db.read_check_results(table_name)
+    except Exception as e:
+        logger.error(f'Error fetching check results from DuckDB for ticket {ticket_number}: {e}')
+        return {'error': str(e)}
+
+
+def get_checklist_from_duckdb(main_dir: str | Path, ticket_number: str) -> dict:
+    """Get the checklist from DuckDB for a specific ticket."""
+    try:
+        dir_manager = DirectoryManager(ticket_number, main_dir)
+        duck_db = DuckDB(schema_name=ticket_number, db_file=dir_manager.db_path)
+        return duck_db.read_checklist()
+    except Exception as e:
+        logger.error(f'Error fetching checklist from DuckDB for ticket {ticket_number}: {e}')
+        return {'error': str(e)}
+
+
+@app.delete('/api/schemas/{schema_name}')
+async def delete_schema(schema_name: str) -> JSONResponse:
+    """Delete a specific schema from DuckDB.
+
+    Args:
+        schema_name (str): Name of the schema to delete
+
+    Returns:
+        JSONResponse: Result of the delete operation
+    """
+    try:
+        # Use default main database directory to find the main database file
+        main_dir = MAIN_DIR
+        db_dir = Path(main_dir) / 'db'
+        db_file = db_dir / 'duckdb.db'
+
+        if not db_file.exists():
+            logger.warning(f'Database file not found at {db_file}')
+            return JSONResponse(status_code=404, content={'error': 'Database file not found'})
+
+        # Create a DuckDB instance to delete the schema
+        duck_db = DuckDB(schema_name='temp', db_file=db_file)
+
+        # Prune the schema name
+        schema_name_pruned = schema_name.replace('duckdb.', '').replace('"', '')
+
+        # Delete the schema
+        duck_db.sql_drop_schema(schema_name_pruned)
+        logger.info(f'Successfully deleted schema: {schema_name_pruned}')
+
+        return JSONResponse(content={'success': True, 'message': f'Schema {schema_name_pruned} deleted successfully'})
+
+    except Exception as e:
+        logger.error(f'Error deleting schema {schema_name_pruned}: {e}')
+        return JSONResponse(status_code=500, content={'error': f'Error deleting schema: {str(e)}'})
+
+
+@app.get('/api/schemas')
+async def get_schemas() -> JSONResponse:
+    """Get all available schemas (projects) from DuckDB.
+
+    Returns:
+        JSONResponse: List of available schemas with metadata
+    """
+    try:
+        # Use default main database directory to find the main database file
+        main_dir = MAIN_DIR
+        db_dir = Path(main_dir) / 'db'
+        db_file = db_dir / 'duckdb.db'
+
+        if not db_file.exists():
+            logger.warning(f'Database file not found at {db_file}')
+            return JSONResponse(content={'schemas': []})
+
+        # Create a DuckDB instance to get schemas (schema_name doesn't matter for this operation)
+        duck_db = DuckDB(schema_name='temp', db_file=db_file)
+        schema_names = duck_db.get_all_schema_names()
+
+        # Get additional metadata for each schema
+        schemas_with_metadata = []
+        for schema_name in schema_names:
+            try:
+                # Try to get project metadata for last modified date
+                schema_duck_db = DuckDB(schema_name=schema_name, db_file=db_file)
+                metadata = schema_duck_db.read_project_metadata_record()
+
+                last_modified = 'Unknown'
+                if metadata and 'log_last_update_date' in metadata:
+                    last_modified = metadata['log_last_update_date']
+                elif metadata and 'log_init_date' in metadata:
+                    last_modified = metadata['log_init_date']
+
+                # Prune the schema, removing the prefixes
+                schema_name_display = schema_name.replace('duckdb.', '').replace('"', '')
+
+                schemas_with_metadata.append(
+                    {
+                        'display_name': schema_name_display,
+                        'name': schema_name,
+                        'last_modified': last_modified,
+                        'has_metadata': bool(metadata and metadata.get('dataset_pid')),
+                    }
+                )
+            except Exception as e:
+                logger.warning(f'Could not get metadata for schema {schema_name}: {e}')
+                schemas_with_metadata.append({'name': schema_name, 'last_modified': 'Unknown', 'has_metadata': False})
+
+        # Sort by last modified (most recent first)
+        schemas_with_metadata.sort(key=lambda x: x['last_modified'], reverse=True)
+
+        return JSONResponse(content={'schemas': schemas_with_metadata})
+
+    except Exception as e:
+        logger.error(f'Error fetching schemas: {e}')
+        return JSONResponse(status_code=500, content={'error': f'Error fetching schemas: {str(e)}'})
 
 
 @app.get('/api/check-results')
@@ -410,29 +537,19 @@ async def get_check_results_from_session(request: Request) -> JSONResponse:
 
     Expected query parameters:
     - ticket_number: from sessionStorage
-    - parent_dir: optional, defaults to 'workdir'
+    - main_dir: optional, defaults to 'workdir'
 
     Returns:
         JSONResponse: Check results data or empty results if not found
     """
     try:
-        parent_dir = request.query_params.get('parent_dir', 'workdir')
+        main_dir = MAIN_DIR
         ticket_number = request.query_params.get('ticket_number')
+        _check_results = _get_check_results_from_duckdb(main_dir, ticket_number, 'check_results')
 
-        if not ticket_number:
-            return JSONResponse(content={'check_results': []})
-
-        dir_manager = DirectoryManager(ticket_number, parent_dir)
-        check_results_path = dir_manager.get_dir('logs') / 'check_results.json'
-        if not check_results_path.exists():
-            return JSONResponse(content={'check_results': []})
-
-        with check_results_path.open('r', encoding='utf-8') as f:
-            check_results_data = json.load(f)
-
-        return JSONResponse(content=check_results_data)
+        return JSONResponse(content=_check_results)
     except Exception as e:
-        print(f"Error loading check results: {e}")
+        print(f'Error loading check results: {e}')
         return JSONResponse(content={'check_results': []})
 
 
@@ -444,6 +561,15 @@ async def shutdown() -> None:
 
 class CurationLogRequest(BaseModel):
     curationLog: str
+
+
+class ChecklistUpdateRequest(BaseModel):
+    """Model for updating checklist items in DuckDB."""
+    ticket_number: str
+    item_id: str
+    status: str | None = None
+    comments: str | None = None
+    time_spent: str | None = None
 
 
 @app.post('/export-curation-log')
@@ -463,10 +589,15 @@ async def export_log_yaml(request: CurationLogRequest) -> JSONResponse:
         elif isinstance(checklist_items, dict):
             checklist_map = checklist_items
 
+        # Load the metadata block
+        metadata = yaml_data.get('metadata', {})
+
+        # Get the ticket number from metadata
+        ticket_number = metadata.get('ticket_number', 'unknown')
+
         # Read the check-list_template_high.yaml to get the checklist items
-        with Path('res/check-list_template_high.yaml').open('r', encoding='utf-8') as f:
-            template_data = yaml.safe_load(f)
-            check_list_template_items = template_data.get('checklist', [])
+        checklist = get_checklist_from_duckdb(MAIN_DIR, ticket_number)
+        check_list_template_items = checklist.get('checklist', [])
 
         # Update checklist items with user data
         for item in check_list_template_items:
@@ -479,10 +610,7 @@ async def export_log_yaml(request: CurationLogRequest) -> JSONResponse:
             item['time_spent'] = data.get('time', '')
 
         # Create the final output structure
-        output_data = {
-            'metadata': {},
-            'checklist': check_list_template_items
-        }
+        output_data = {'metadata': {}, 'checklist': check_list_template_items}
 
         # Add metadata from the YAML data
         metadata = yaml_data.get('metadata', {})
@@ -496,29 +624,25 @@ async def export_log_yaml(request: CurationLogRequest) -> JSONResponse:
 
         # Save to file
         ticket_number = metadata.get('ticket_number', 'unknown')
-        parent_dir = metadata.get('parent_dir', 'workdir')
-        dir_manager = DirectoryManager(ticket_number, parent_dir)
-        output_path = dir_manager.get_dir('logs') / f'{ticket_number}_new.yaml'
+        main_dir = metadata.get('main_dir', 'workdir')
+        dir_manager = DirectoryManager(ticket_number, main_dir)
+        output_path = dir_manager.get_dir('outputs') / f'{ticket_number}.yaml'
 
         with output_path.open('w', encoding='utf-8') as f:
-            yaml.dump(output_data, f,
-                      default_flow_style=False,
-                      sort_keys=False,
-                      allow_unicode=True)
+            yaml.dump(output_data, f, default_flow_style=False, sort_keys=False, allow_unicode=True)
 
-        return JSONResponse(content={
-            'success': True,
-            'message': f'Curation log in YAML format exported successfully to {output_path}',
-            'data': output_data,
-            'file_path': str(output_path)
-        })
+        return JSONResponse(
+            content={
+                'success': True,
+                'message': f'Curation log in YAML format exported successfully to {output_path}',
+                'data': output_data,
+                'file_path': str(output_path),
+            }
+        )
 
     except Exception as e:
         print(f'Error in export_log_yaml: {e}')
-        return JSONResponse(
-            status_code=500,
-            content={'success': False, 'message': str(e)}
-        )
+        return JSONResponse(status_code=500, content={'success': False, 'message': str(e)})
 
 
 @app.post('/render-report')
@@ -547,11 +671,7 @@ async def render_report(request: Request) -> JSONResponse:
                 # If no YAML data in form, try to reconstruct from session storage
                 # This might require getting it from the frontend differently
                 return JSONResponse(
-                    status_code=400,
-                    content={
-                        'success': False,
-                        'message': 'No curation log data found in request'
-                    }
+                    status_code=400, content={'success': False, 'message': 'No curation log data found in request'}
                 )
 
         # Create CurationLogRequest object for save_log_yaml
@@ -563,40 +683,142 @@ async def render_report(request: Request) -> JSONResponse:
         # Check if save was successful
         if not save_result.status_code == 200:
             return JSONResponse(
-                status_code=500,
-                content={
-                    'success': False,
-                    'message': 'Failed to save curation log before rendering'
-                }
+                status_code=500, content={'success': False, 'message': 'Failed to save curation log before rendering'}
             )
 
         # Parse YAML to get ticket number for dynamic file paths
         yaml_data = yaml.safe_load(curation_log_data)
         ticket_number = yaml_data.get('metadata', {}).get('ticket_number', 'unknown')
-        parent_dir = yaml_data.get('metadata', {}).get('parent_dir', 'workdir')
-        dir_manager = DirectoryManager(ticket_number, parent_dir)
+        main_dir = yaml_data.get('metadata', {}).get('main_dir', 'workdir')
+        dir_manager = DirectoryManager(ticket_number, main_dir)
 
         # Render the report from the saved YAML file with dynamic paths
-        yaml_path = dir_manager.get_dir('logs') / f'{ticket_number}_new.yaml'
-        output_path = dir_manager.get_dir('logs') / f'{ticket_number}_new.docx'
+        yaml_path = dir_manager.get_dir('outputs') / f'{ticket_number}.yaml'
+        output_path = dir_manager.get_dir('outputs') / f'{ticket_number}.docx'
 
         render_report_from_yaml(
-            yaml_path=yaml_path,
-            template_path=Path('res/new_template_high.docx'),
-            output_path=output_path
+            yaml_path=yaml_path, template_path=Path('res/new_template_high.docx'), output_path=output_path
         )
 
-        return JSONResponse(content={
-            'success': True,
-            'message': f'Curation log saved to {output_path} successfully',
-            'output_file': str(output_path)
-        })
+        return JSONResponse(
+            content={
+                'success': True,
+                'message': f'Curation log saved to {output_path} successfully',
+                'output_file': str(output_path),
+            }
+        )
 
     except Exception as e:
         return JSONResponse(
+            status_code=500, content={'success': False, 'message': f'Error when rendering report: {str(e)}'}
+        )
+
+
+@app.get('/api/checklist-data')
+async def get_checklist_data(request: Request) -> JSONResponse:
+    """Get checklist data with saved status, comments, and time_spent from DuckDB.
+
+    Expected query parameters:
+    - ticket_number: The ticket number to get data for
+
+    Returns:
+        JSONResponse: Checklist data with saved values
+    """
+    try:
+        ticket_number = request.query_params.get('ticket_number')
+        if not ticket_number:
+            return JSONResponse(
+                status_code=400,
+                content={'success': False, 'message': 'ticket_number parameter is required'}
+            )
+
+        # Get checklist data from DuckDB
+        checklist_data = get_checklist_from_duckdb(MAIN_DIR, ticket_number)
+
+        # Also get curator information and log dates from project metadata
+        try:
+            dir_manager = DirectoryManager(ticket_number, MAIN_DIR)
+            duck_db = DuckDB(schema_name=ticket_number, db_file=dir_manager.db_path)
+            metadata = duck_db.read_project_metadata_record()
+
+            # Add curator info and log dates to response
+            checklist_data['curator_name'] = metadata.get('curator_name', '')
+            checklist_data['curator_email'] = metadata.get('curator_email', '')
+            checklist_data['log_init_date'] = metadata.get('log_init_date', '')
+            checklist_data['log_last_update_date'] = metadata.get('log_last_update_date', '')
+
+        except Exception as e:
+            logger.warning(f'Could not load metadata for API response: {e}')
+            checklist_data['curator_name'] = ''
+            checklist_data['curator_email'] = ''
+            checklist_data['log_init_date'] = ''
+            checklist_data['log_last_update_date'] = ''
+
+        return JSONResponse(content=checklist_data)
+
+    except Exception as e:
+        ticket_number = request.query_params.get('ticket_number', 'unknown')
+        logger.error(f'Error fetching checklist data for ticket {ticket_number}: {e}')
+        return JSONResponse(
             status_code=500,
-            content={
-                'success': False,
-                'message': f'Error when rendering report: {str(e)}'
-            }
+            content={'success': False, 'message': f'Error fetching checklist data: {str(e)}'}
+        )
+
+
+@app.post('/update-checklist-item')
+async def update_checklist_item(request: ChecklistUpdateRequest) -> JSONResponse:
+    """Update a single checklist item in DuckDB.
+
+    Args:
+        request (ChecklistUpdateRequest): Request containing checklist item update data
+
+    Returns:
+        JSONResponse: Result of the update operation
+    """
+    try:
+        logger.info(f'Updating checklist item {request.item_id} for ticket {request.ticket_number}')
+
+        # Get the database file path
+        dir_manager = DirectoryManager(request.ticket_number, MAIN_DIR)
+        db_file = dir_manager.db_path
+
+        # Create DuckDB instance for the ticket's schema
+        duck_db = DuckDB(schema_name=request.ticket_number, db_file=db_file)
+
+        # Check if schema exists
+        if not duck_db.sql_check_schema_exists(request.ticket_number):
+            logger.warning(f'Schema {request.ticket_number} does not exist')
+            return JSONResponse(
+                status_code=404,
+                content={'success': False, 'message': f'Ticket schema {request.ticket_number} not found'}
+            )
+
+        # Update the checklist item
+        success = duck_db.sql_update_checklist_item(
+            item_id=request.item_id,
+            status=request.status,
+            comments=request.comments,
+            time_spent=request.time_spent
+        )
+
+        if success:
+            logger.info(f'Successfully updated checklist item {request.item_id}')
+            return JSONResponse(
+                content={
+                    'success': True,
+                    'message': f'Checklist item {request.item_id} updated successfully'
+                }
+            )
+
+        logger.error(f'Failed to update checklist item {request.item_id}')
+        return JSONResponse(
+            status_code=400,
+            content={'success': False, 'message': f'Failed to update checklist item {request.item_id}'}
+        )
+
+    except Exception as e:
+        logger.error(f'Error updating checklist item {request.item_id}: {e}')
+        return JSONResponse(
+            status_code=500,
+            content={'success': False, 'message': f'Internal server error: {str(e)}'}
         )

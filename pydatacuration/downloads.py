@@ -1,4 +1,4 @@
-"""Downloads class to download a dataset from a Dataverse repository."""
+"""Downloads class to download a dataset's metadata and files from a Dataverse repository."""
 
 import asyncio
 import sys
@@ -7,9 +7,9 @@ from urllib.parse import urljoin
 
 import httpx
 import jmespath
-import orjson
 from loguru import logger
 
+from .directory_manager import DirectoryManager
 from .httpx_client import HTTPXClient
 from .utils import orjson_export
 
@@ -17,49 +17,26 @@ from .utils import orjson_export
 class Downloads:
     """Class to download a dataset from a Dataverse repository."""
 
-    def __init__(self, base_url: str, api_token: str, pid: str, download_dir: Path, ticket_number: str) -> None:
+    def __init__(self, base_url: str, api_token: str, pid: str, main_dir: Path, ticket_number: str) -> None:
         """Initialize the class.
 
         Args:
             base_url (str): Base URL of the Dataverse repository
             api_token (str): API token of the Dataverse repository
             pid (str): Persistent identifier of the dataset
-            download_dir (Path): The parent directory to save the downloaded files
+            main_dir (Path): The directory to save the downloaded files
         """
         self.base_url = base_url
         self.pid = pid
-        self.download_dir = download_dir
+        self.download_dir = main_dir
         self.ticket_number = ticket_number
 
         self.success_code = 200
 
         self.httpx_client = HTTPXClient(base_url, api_token)
         self.semaphore = asyncio.Semaphore(5)
+        self.directory_manager = DirectoryManager(ticket_number, main_dir)
         self.logger = logger
-
-    def _metadata_dir(self) -> Path:
-        """Create the metadata directory.
-
-        Returns:
-            metadata_dir (Path): Path to the metadata directory
-        """
-        # TODO: integrate this with directory_manager module
-        metadata_dir = Path(self.download_dir, 'dataset', 'metadata')
-        metadata_dir.mkdir(parents=True, exist_ok=True)
-
-        return metadata_dir
-
-    def _files_dir(self) -> Path:
-        """Create the files directory.
-
-        Returns:
-            files_dir (Path): Path to the files directory
-        """
-        # TODO: integrate this with directory_manager module
-        files_dir = Path(self.download_dir, 'dataset', 'files')
-        files_dir.mkdir(parents=True, exist_ok=True)
-
-        return files_dir
 
     @staticmethod
     def _get_file_list(metadata: dict) -> list:
@@ -100,12 +77,12 @@ class Downloads:
         if dir_list:
             dir_set = set(dir_list)
             for directory in dir_set:
-                Path.mkdir(Path(self._files_dir(), directory), parents=True, exist_ok=True)
+                Path.mkdir(Path(self.directory_manager.files_dir, directory), parents=True, exist_ok=True)
 
     async def _get_data_file_async(self, file_id: str, file_path: str) -> Path | None:
         """Get the data file of the dataset asynchronously."""
         api_endpoint = f'/api/access/datafile/{file_id}'
-        file_path_obj = Path(self._files_dir(), file_path)
+        file_path_obj = Path(self.directory_manager.files_dir, file_path)
 
         try:
             url = urljoin(self.base_url, api_endpoint)
@@ -134,10 +111,12 @@ class Downloads:
         Returns:
             list: List of downloaded files
         """
+        self.logger.info(f'Starting download of {len(file_list)} files...')
         tasks = [self._get_data_file_async(file_id, file_path) for file_id, file_path in file_list]
         results = await asyncio.gather(*tasks, return_exceptions=True)
 
         successful = [r for r in results if r is not None]
+        self.logger.info(f'Finished downloading files: {successful}')
         return successful
 
     def _get_dv_tree(self) -> dict:
@@ -149,6 +128,7 @@ class Downloads:
         url = f'{self.base_url}/api/info/metrics/tree'
 
         try:
+            self.logger.info(f'Fetching dataverse tree structure from {url}...')
             response = self.httpx_client.sync_get(url)
             response.raise_for_status()
             if response.status_code == self.success_code and response.json():
@@ -171,12 +151,12 @@ class Downloads:
         url = f'{self.base_url}/api/datasets/:persistentId/?persistentId={self.pid}'
 
         try:
+            self.logger.info(f'Fetching dataset metadata from {url}...')
             response = self.httpx_client.sync_get(url)
             response.raise_for_status()
             if response.status_code == self.success_code and response.json():
                 return response.json()
             sys.exit(1)
-            return {}
 
         except httpx.HTTPStatusError as e:
             self.logger.info(f'HTTP error occurred: {e}')
@@ -185,40 +165,28 @@ class Downloads:
             self.logger.info(f'An error occurred: {e}')
             sys.exit(1)
 
-    def save_ds_metadata(self) -> None:
+    def export_metadata(self, file_name: str, dictionary: dict) -> None:
         """Save the dataset metadata to a JSON file."""
-        file_path = Path(self._metadata_dir(), 'ds_metadata.json')
+        file_path = Path(self.directory_manager.metadata_dir, file_name)
         try:
-            response_json = self._get_ds_metadata()
-            # Save the metadata to dataset/metadata directory
-            orjson_export(file_path, response_json)
+            self.logger.info(f'Saving dataset metadata to {file_path}...')
+            orjson_export(file_path, dictionary)
 
         except Exception as e:
             self.logger.info(f'An error occurred: {e}\nProgram exiting...')
             sys.exit(1)
 
-    async def downloader(self) -> tuple:
-        """Download the dataset as a zip file asynchronously.
-
-        Returns:
-            tuple: Tuple containing the dataset metadata and the dataverse tree structure
-        """
+    async def downloader(self) -> None:
+        """Download the dataset as a zip file asynchronously."""
         # Get the dataset metadata
-        self.logger.info('Downloading dataset metadata...')
-        ds_metadata_json = self._get_ds_metadata()
-        self.save_ds_metadata()
-        self.logger.info('Dataset metadata downloaded')
+        ds_metadata = self._get_ds_metadata()
+        self.export_metadata('ds_metadata.json', ds_metadata)
 
         # Get the tree structure of the whole dataverse repository
-        self.logger.info('Downloading dataverse tree structure...')
         dv_tree = self._get_dv_tree()
-        self.logger.info('Dataverse tree structure downloaded')
+        self.export_metadata('dv_tree.json', dv_tree)
 
         # Download the data files using async method
-        self.logger.info('Downloading data files...')
-        file_list = self._get_file_list(ds_metadata_json)
-        self.make_dir_structure(ds_metadata_json)
-
+        file_list = self._get_file_list(ds_metadata)
+        self.make_dir_structure(ds_metadata)
         await self.save_files_async(file_list)
-        self.logger.info('Data files downloaded')
-        return ds_metadata_json, dv_tree

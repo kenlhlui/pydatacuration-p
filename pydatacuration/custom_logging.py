@@ -1,5 +1,6 @@
-"""This module provides a simple logging setup using loguru with Rich console support."""
+"""Logging setup using loguru with Rich console plus global and per-ticket sinks."""
 
+from __future__ import annotations
 
 from pathlib import Path
 
@@ -9,20 +10,20 @@ from rich.highlighter import ReprHighlighter
 from rich.text import Text
 
 
-# Create a global Rich console instance
+# Console highlighter
 console = Console()
 highlighter = ReprHighlighter()
 
+# Keep track of added sinks to avoid duplicates when commands run multiple times
+_CONSOLE_SINK_ID: int | None = None
+_GLOBAL_SINK_ID: int | None = None
+_CLI_SINK_IDS: dict[Path, int] = {}
+
 
 def rich_sink(message) -> None:
-    """Custom sink function that uses Rich console for enhanced output."""
-    # Extract the message record
+    """Render a log record with Rich to the terminal."""
     record = message.record
-
-    # Format timestamp
     timestamp = Text(record['time'].strftime('%Y-%m-%d %H:%M:%S'), style='green')
-
-    # Format level with color
     level = record['level']
     level_styles = {
         'DEBUG': 'dim cyan',
@@ -32,57 +33,69 @@ def rich_sink(message) -> None:
         'CRITICAL': 'bold red',
     }
     level_text = Text(f'{level.name:<8}', style=level_styles.get(level.name, 'white'))
-
-    # Format location info
     location = Text(f'{record["name"]}:{record["function"]}:{record["line"]}', style='dim cyan')
-
-    # Format the actual message with syntax highlighting
-    msg_text = Text(str(record['message']))
-    msg_text = highlighter(msg_text)
-
-    # Combine all parts
+    msg_text = highlighter(Text(str(record['message'])))
     console.print(timestamp, '│', level_text, '│', location, '│', msg_text)
 
 
-def setup_logging(log_file_dir: Path | None = None, log_level: str = 'INFO') -> None:
-    """Setup loguru configuration for the entire application with Rich console support.
+def setup_global_logging(log_file_dir: Path | None = None, log_level: str = 'INFO') -> None:
+    """Configure console + global file sink.
 
     Args:
-        log_file_dir: Optional directory path for log files. If provided, creates debug.log
-        log_level: Minimum log level for console output (default: INFO)
+        log_file_dir (Path | None): Directory for the global log file (debug.log).
+        log_level (str): Minimum level for console output.
+
+    Returns:
+        None: Adds console sink and an optional global file sink.
     """
-    # Remove default handler
+    global _CONSOLE_SINK_ID, _GLOBAL_SINK_ID
     logger.remove()
+    _CONSOLE_SINK_ID = logger.add(rich_sink, level=log_level, format='{message}')
 
-    # Add Rich console handler for colorful, syntax-highlighted output with location info
-    logger.add(
-        rich_sink,
-        level=log_level,
-        format='{message}',  # Message formatting is handled by rich_sink
-    )
-
-    # Add file handler with simple format (no location info)
     if log_file_dir:
-        log_file_path = Path(log_file_dir) / 'debug.log'
-        log_file_path.parent.mkdir(parents=True, exist_ok=True)
-
-        logger.add(
-            str(log_file_path),
-            format='{time:YYYY-MM-DD HH:mm:SS} | {name}:{function}:{line} | {level} | {message}',
+        path = Path(log_file_dir) / 'debug.log'
+        path.parent.mkdir(parents=True, exist_ok=True)
+        _GLOBAL_SINK_ID = logger.add(
+            str(path),
+            format='{time:YYYY-MM-DD HH:mm:ss} | {name}:{function}:{line} | {level} | {message}',
             level='DEBUG',
+            rotation='10 MB',
+            retention='14 days',
+            enqueue=True,
         )
 
 
-def get_logger(name: str):
-    """Get the loguru logger instance.
-
-    Note: loguru uses a singleton logger, so the name parameter is kept
-    for compatibility but doesn't create separate logger instances.
+def add_cli_run_logging(cli_log_dir: Path) -> Path:
+    """Attach a per-ticket file sink (e.g., <ticket>/log_files/debug.log).
 
     Args:
-        name: Logger name (kept for compatibility)
+        cli_log_dir (Path): Ticket-specific log directory.
 
     Returns:
-        The loguru logger instance
+        Path: The path to the CLI ticket log file.
     """
-    return logger
+    path = Path(cli_log_dir) / 'debug.log'
+    if cli_log_dir not in _CLI_SINK_IDS:
+        path.parent.mkdir(parents=True, exist_ok=True)
+        _CLI_SINK_IDS[cli_log_dir] = logger.add(
+            str(path),
+            format='{time:YYYY-MM-DD HH:mm:ss} | {name}:{function}:{line} | {level} | {message}',
+            level='DEBUG',
+            rotation='10 MB',
+            retention='14 days',
+            enqueue=True,
+        )
+    return path
+
+
+def setup_logging(log_file_dir: Path | None = None, log_level: str = 'DEBUG') -> None:
+    """Backward-compatible wrapper (kept so existing imports keep working).
+
+    Args:
+        log_file_dir (Path | None): Directory for a single log file.
+        log_level (str): Console log level.
+
+    Returns:
+        None: Calls setup_global_logging.
+    """
+    setup_global_logging(log_file_dir=log_file_dir, log_level=log_level)

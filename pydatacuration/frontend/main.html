@@ -1,0 +1,410 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Data Curation Tool - Main</title>
+    <link href="https://fonts.googleapis.com/css2?family=Poppins:wght@400;600;700&display=swap" rel="stylesheet">
+    <style>
+        body {
+            font-family: Arial, sans-serif;
+            margin: 0;
+            padding: 0;
+            background: #1E3765;
+            min-height: 100vh;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+        }
+        .container {
+            max-width: 600px;
+            margin: 0 auto;
+            background-color: white;
+            padding: 20px;
+            border-radius: 12px;
+            box-shadow: 0 10px 30px rgba(0,0,0,0.2);
+            text-align: center;
+        }
+        h1 {
+            color: #1E3765;
+            font-size: 2.6rem;
+            margin-bottom: 10px;
+            font-weight: 500; /* make title bolder */
+            font-family: 'Poppins', 'Arial', sans-serif; /* use Poppins with fallbacks */
+            letter-spacing: -0.5px;
+        }
+        .subtitle {
+            color: #7f8c8d;
+            font-size: 1.1rem;
+            margin-bottom: 40px;
+        }
+        .option-card {
+            background-color: #f8f9fa;
+            border: 2px solid #e9ecef;
+            border-radius: 8px;
+            padding: 25px;
+            margin: 20px 0;
+            cursor: pointer;
+            transition: all 0.3s ease;
+        }
+        .option-card:hover {
+            border-color: #3498db;
+            background-color: #ebf3fd;
+            transform: translateY(-2px);
+            box-shadow: 0 5px 15px rgba(52, 152, 219, 0.2);
+        }
+        .option-title {
+            font-size: 1.3rem;
+            font-weight: 600;
+            color: #2c3e50;
+            margin-bottom: 10px;
+        }
+        .option-description {
+            color: #6c757d;
+            font-size: 0.95rem;
+        }
+        .resume-section {
+            margin-top: 30px;
+        }
+        .dropdown-container {
+            margin: 20px 0;
+        }
+        select {
+            width: 100%;
+            padding: 12px;
+            border: 2px solid #e9ecef;
+            border-radius: 6px;
+            font-size: 16px;
+            background-color: white;
+            color: #495057;
+            margin-bottom: 15px;
+        }
+        select:focus {
+            outline: none;
+            border-color: #3498db;
+            box-shadow: 0 0 0 3px rgba(52, 152, 219, 0.1);
+        }
+        .btn {
+            padding: 12px 30px;
+            border: none;
+            border-radius: 6px;
+            cursor: pointer;
+            font-size: 16px;
+            font-weight: 500;
+            text-decoration: none;
+            display: inline-block;
+            transition: all 0.3s ease;
+        }
+        .btn-primary {
+            background-color: #3498db;
+            color: white;
+        }
+        .btn-primary:hover {
+            background-color: #2980b9;
+            transform: translateY(-1px);
+        }
+        .btn-secondary {
+            background-color: #95a5a6;
+            color: white;
+        }
+        .btn-secondary:hover {
+            background-color: #7f8c8d;
+            transform: translateY(-1px);
+        }
+        .loading {
+            display: none;
+            text-align: center;
+            margin: 20px 0;
+        }
+        .loading-spinner {
+            display: inline-block;
+            width: 20px;
+            height: 20px;
+            border: 3px solid #f3f3f3;
+            border-top: 3px solid #3498db;
+            border-radius: 50%;
+            animation: spin 1s linear infinite;
+        }
+        @keyframes spin {
+            0% { transform: rotate(0deg); }
+            100% { transform: rotate(360deg); }
+        }
+        .error {
+            background-color: #e74c3c;
+            color: white;
+            padding: 12px;
+            border-radius: 6px;
+            margin: 15px 0;
+            display: none;
+        }
+        .icon {
+            font-size: 2rem;
+            margin-bottom: 15px;
+        }
+        .new-icon { color: #27ae60; }
+        .resume-icon { color: #f39c12; }
+        .delete-icon { color: #e74c3c; }
+        .options-grid {
+            display: grid;
+            grid-template-columns: 1fr 1fr;
+            gap: 20px;
+            margin-bottom: 20px;
+        }
+        @media (max-width: 768px) {
+            .options-grid {
+                grid-template-columns: 1fr;
+            }
+        }
+        .delete-header {
+            cursor: pointer;
+        }
+        .delete-section {
+            margin-top: 20px;
+        }
+        .logo {
+        height: 60px;
+        display: block;
+        margin: 0 auto 8px; /* top 0, centered, bottom 8px */
+        }
+    </style>
+</head>
+<body>
+    <div class="container">
+        <img src="/static/UTL.png" alt="University of Toronto Libraries Logo" class="logo">
+        <h1><b>Data Curation Tool</b></h1>
+        <!-- <p class="subtitle">Choose how you want to proceed with your curation work</p> -->
+        
+        <div id="error-message" class="error"></div>
+        
+        <!-- Top row options in horizontal layout -->
+        <div class="options-grid">
+            <!-- New Dataset Option -->
+            <div class="option-card" onclick="startNewDataset()">
+                <div class="icon new-icon">📁</div>
+                <div class="option-title">New Project</div>
+                <div class="option-description">Start a new curation process for a new project</div>
+            </div>
+            
+            <!-- Delete Project Option -->
+            <div class="option-card">
+                <div class="delete-header" onclick="toggleDeleteSection()">
+                    <div class="icon delete-icon">🗑️</div>
+                    <div class="option-title">Delete Project</div>
+                    <div class="option-description">Delete a project from the database</div>
+                </div>
+                
+                <div class="delete-section" id="delete-section" style="display: none;">
+                    <div class="loading" id="loading-delete-schemas" style="display: none;">
+                        <div class="loading-spinner"></div>
+                        <p>Loading projects...</p>
+                    </div>
+                    
+                    <div class="dropdown-container" id="delete-dropdown-container" style="display: none;">
+                        <select id="delete-schema-select" onclick="event.stopPropagation();">
+                            <option value="">Select a project to delete...</option>
+                        </select>
+                        <button class="btn btn-secondary" onclick="deleteDataset(); event.stopPropagation();" style="background-color: #e74c3c;">Delete Project</button>
+                    </div>
+                </div>
+            </div>
+        </div>
+        
+        <!-- Resume Work Option (full width) -->
+        <div class="option-card">
+            <div class="icon resume-icon">✏️</div>
+            <div class="option-title">Resume Work</div>
+            <div class="option-description">Continue working on an existing project</div>
+            
+            <div class="resume-section">
+                <div class="loading" id="loading-schemas">
+                    <div class="loading-spinner"></div>
+                    <p>Loading existing projects...</p>
+                </div>
+                
+                <div class="dropdown-container" id="schema-dropdown-container" style="display: none;">
+                    <select id="schema-select">
+                        <option value="">Select a project to resume...</option>
+                    </select>
+                    <button class="btn btn-primary" onclick="resumeWork()">Continue Work</button>
+                </div>
+            </div>
+        </div>
+    </div>
+    </div>
+
+    <script>
+        // Load existing schemas on page load
+        document.addEventListener('DOMContentLoaded', function() {
+            loadSchemas();
+        });
+
+        function startNewDataset() {
+            window.location.href = '/new-dataset';
+            sessionStorage.clear()
+        }
+
+        function toggleDeleteSection() {
+            const deleteSection = document.getElementById('delete-section');
+            if (deleteSection.style.display === 'none') {
+                deleteSection.style.display = 'block';
+                loadSchemasForDelete();
+            } else {
+                deleteSection.style.display = 'none';
+            }
+        }
+
+        async function loadSchemasForDelete() {
+            const loadingElement = document.getElementById('loading-delete-schemas');
+            const dropdownContainer = document.getElementById('delete-dropdown-container');
+            const errorElement = document.getElementById('error-message');
+            
+            loadingElement.style.display = 'block';
+            dropdownContainer.style.display = 'none';
+            errorElement.style.display = 'none';
+            
+            try {
+                const response = await fetch('/api/schemas');
+                const data = await response.json();
+                
+                if (response.ok && data.schemas && data.schemas.length > 0) {
+                    const select = document.getElementById('delete-schema-select');
+                    
+                    // Clear existing options except the first one
+                    select.innerHTML = '<option value="">Select a project to delete...</option>';
+                    
+                    // Add schema options
+                    data.schemas.forEach(schema => {
+                        const option = document.createElement('option');
+                        option.value = schema.name;
+                        option.textContent = `${schema.display_name} (Last Modified: ${schema.last_modified})`;
+                        select.appendChild(option);
+                    });
+                    
+                    dropdownContainer.style.display = 'block';
+                } else {
+                    // No schemas found
+                    dropdownContainer.innerHTML = '<p style="color: #7f8c8d; font-style: italic;">No existing projects found.</p>';
+                    dropdownContainer.style.display = 'block';
+                }
+            } catch (error) {
+                errorElement.textContent = 'Failed to load existing projects: ' + error.message;
+                errorElement.style.display = 'block';
+                dropdownContainer.style.display = 'none';
+            } finally {
+                loadingElement.style.display = 'none';
+            }
+        }
+
+        async function deleteDataset() {
+            const select = document.getElementById('delete-schema-select');
+            const selectedSchema = select.value;
+            const errorElement = document.getElementById('error-message');
+            
+            if (!selectedSchema) {
+                errorElement.textContent = 'Please select a project to delete.';
+                errorElement.style.display = 'block';
+                return;
+            }
+            
+            // Show confirmation dialog
+            const schemaDisplayName = selectedSchema.replace('duckdb.', '').replace(/"/g, '');
+            const confirmDelete = confirm(`Are you sure you want to permanently delete the project "${schemaDisplayName}"? This action cannot be undone.`);
+            
+            if (!confirmDelete) {
+                return;
+            }
+            
+            try {
+                console.log('Deleting schema:', selectedSchema);
+                console.log('Encoded schema:', encodeURIComponent(selectedSchema));
+                
+                const response = await fetch(`/api/schemas/${encodeURIComponent(selectedSchema)}`, {
+                    method: 'DELETE'
+                });
+                
+                const result = await response.json();
+                
+                if (response.ok && result.success) {
+                    alert(`Project "${schemaDisplayName}" deleted successfully.`);
+                    // Reload the schemas to update both dropdowns
+                    loadSchemas();
+                    loadSchemasForDelete();
+                } else {
+                    errorElement.textContent = result.error || 'Failed to delete project.';
+                    errorElement.style.display = 'block';
+                }
+            } catch (error) {
+                errorElement.textContent = 'Error deleting project: ' + error.message;
+                errorElement.style.display = 'block';
+            }
+        }
+
+        async function loadSchemas() {
+            const loadingElement = document.getElementById('loading-schemas');
+            const dropdownContainer = document.getElementById('schema-dropdown-container');
+            const errorElement = document.getElementById('error-message');
+            
+            loadingElement.style.display = 'block';
+            errorElement.style.display = 'none';
+            
+            try {
+                const response = await fetch('/api/schemas');
+                const data = await response.json();
+                
+                if (response.ok && data.schemas && data.schemas.length > 0) {
+                    const select = document.getElementById('schema-select');
+                    
+                    // Clear existing options except the first one
+                    select.innerHTML = '<option value="">Select a project to resume...</option>';
+                    
+                    // Add schema options
+                    data.schemas.forEach(schema => {
+                        const option = document.createElement('option');
+                        option.value = schema.name;
+                        option.textContent = `${schema.display_name} (Last Modified: ${schema.last_modified})`;
+                        select.appendChild(option);
+                    });
+                    
+                    dropdownContainer.style.display = 'block';
+                } else {
+                    // No schemas found
+                    dropdownContainer.innerHTML = '<p style="color: #7f8c8d; font-style: italic;">No existing projects found. Start with a new dataset.</p>';
+                    dropdownContainer.style.display = 'block';
+                }
+            } catch (error) {
+                errorElement.textContent = 'Failed to load existing projects: ' + error.message;
+                errorElement.style.display = 'block';
+                dropdownContainer.style.display = 'none';
+            } finally {
+                loadingElement.style.display = 'none';
+            }
+        }
+
+        function resumeWork() {
+            const select = document.getElementById('schema-select');
+            const selectedSchema = select.value;
+            
+            if (!selectedSchema) {
+                const errorElement = document.getElementById('error-message');
+                errorElement.textContent = 'Please select a project to resume.';
+                errorElement.style.display = 'block';
+                return;
+            }
+            
+            // Clear sessionStorage to force fresh data load for the selected dataset
+            console.log('Clearing sessionStorage before resuming work');
+            sessionStorage.clear();
+            
+            // Remove the duckdb in selectedSchema
+            const duckdbPattern = /duckdb/g;
+            const cleanedSchema = selectedSchema.replace(duckdbPattern, '');
+            // Also Remove the double quotes and the .
+            const doubleQuotePattern = /"/g;
+            const dotPattern = /\./g;
+            const finalSchema = cleanedSchema.replace(doubleQuotePattern, '').replace(dotPattern, '');
+            // Redirect to checklist with the selected schema
+            window.location.href = `/checklist?ticket_number=${encodeURIComponent(finalSchema)}`;
+        }
+    </script>
+</body>
+</html>

@@ -6,7 +6,7 @@
 | `--pid`                         | `-p`           | TEXT  | None          | Yes      | Enter the Persistent Identifier of the dataset.                                                                          |
 | `--base-url`                    | `-b`           | TEXT  | None          | No       | The base URL of the Dataverse installation (current value: `https://demo.borealisdata.ca/`). [Env var: BASE_URL]             |
 | `--api-token`                   | `-a`           | TEXT  | None          | No       | The API token for the Dataverse installation (current: Set). [Env var: API_TOKEN]                                           |
-| `--parent-dir`                  | `-dir`         | TEXT  | workdir       | No       | The working directory. If not specified, a directory named "workdir" will be created in the current directory.              |
+| `--main-dir`                  | `-dir`         | TEXT  | workdir       | No       | The working directory. If not specified, a directory named "workdir" will be created in the current directory.              |
 | `--ticket-number`               | `-t`           | TEXT  | None          | Yes      | The ticket number for the curation report; also the directory name created under the working directory.                    |
 | `--force-del` / `--no-force-del` | `-f` / `-nf`   | FLAG  | no-force-del  | No       | Force replace (delete) an existing working directory, if any.                                                             |
 | `--help`                        |                | FLAG  | N/A           | No       | Show this message and exit.                                                                                               |

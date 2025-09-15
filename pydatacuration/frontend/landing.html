@@ -3,7 +3,7 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Data Curation Setup</title>
+    <title>Data Curation Tool - Landing</title>
     <style>
         body {
             font-family: Arial, sans-serif;
@@ -140,10 +140,16 @@
             margin-bottom: 20px;
             display: none;
         }
+        .logo {
+            height: 60px;
+            display: block;
+            margin: 8px; /* top 0, centered, bottom 8px */
+        }
     </style>
 </head>
 <body>
     <div class="container">
+        <img src="/static/UTL.png" alt="University of Toronto Libraries Logo" class="logo">
         <h1>Data Curation Tool</h1>
         
         <div id="error-message" class="error"></div>
@@ -197,23 +203,23 @@
             </div>
 
             <div class="section">
-                <h3>Working Directory Settings</h3>
+                <h3>Directory Settings</h3>
                 <div class="form-group">
-                    <label for="parent_dir">Parent Directory</label>
-                    <input type="text" id="parent_dir" name="parent_dir" 
-                           placeholder="workdir" value="workdir">
-                    <small>Working directory (default: workdir)</small>
-                </div>
-                <div class="checkbox-group">
-                    <div class="checkbox-item">
-                        <input type="checkbox" id="force_del" name="force_del" value="False">
-                        <label for="force_del">Force delete existing directory</label>
-                    </div>
+                    <label for="main_dir">Main Directory Path</label>
+                    <input type="text" id="main_dir" name="main_dir" 
+                           placeholder="workdir" value="{{ env_data.main_dir }}">
+                    <small>The main (base) directory that contains the database sub-directory and project directories (default: workdir)</small>
                 </div>
             </div>
 
             <div class="section">
                 <h3>Processing Options</h3>
+                <div class="checkbox-group">
+                    <div class="checkbox-item">
+                        <input type="checkbox" id="force_del" name="force_del" value="False">
+                        <label for="force_del">Force delete existing project (Database record, directory and files)</label>
+                    </div>
+                </div>
                 <div class="checkbox-group">
                     <div class="checkbox-item">
                         <input type="checkbox" id="check_zip" name="check_zip" value="true" checked>
@@ -281,7 +287,7 @@
                     
                     // Redirect to checklist page after 2 seconds
                     setTimeout(() => {
-                        window.location.href = '/checklist';
+                        window.location.href = result.redirect_url || '/checklist';
                     }, 2000);
                 } else {
                     document.getElementById('error-message').textContent = result.detail || 'An error occurred';
@@ -295,7 +301,7 @@
             }
         });
     </script>
-    <script defer src="/static/js/sessionstorage.js"></script>
-    <script defer src="/static/js/restformbutton.js"></script>
+    <script defer src="/static/js/utilities.js"></script>
+    <script defer src="/static/js/session-manager.js"></script>
 </body>
 </html>

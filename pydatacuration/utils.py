@@ -1,11 +1,12 @@
-"""This module contains utility functions for data curation tasks."""
+"""Utility functions."""
 
 import os
 import re
-import shutil
 import sys
 from pathlib import Path
 from pathlib import PurePosixPath
+from urllib.parse import urlencode
+from urllib.parse import urljoin
 
 import deepdiff
 import orjson
@@ -137,7 +138,7 @@ def compare_files_and_metadata(dl_files_checksums: list, metadata_file_checksums
     diff = deepdiff.DeepDiff(dl_files_checksums, metadata_file_checksums, ignore_order=True)
     if diff:
         logger.warning('The downloaded files and the file list metadata are different.')
-        diff_log_path = Path(work_dir, 'log_files', 'diff.txt').resolve()
+        diff_log_path = Path(work_dir, 'logs', 'diff.txt').resolve()
         with diff_log_path.open('w', encoding='utf-8') as f:
             f.write(str(diff))
         logger.warning(f'See the {str(diff_log_path)} file for the differences.')
@@ -278,3 +279,26 @@ def orjson_export(file_path: Path | str, obj: dict) -> None:
     except Exception as e:
         logger.error(f'Error exporting JSON: {e}')
         raise e
+
+
+def parse_dataset_url(base_url: str | None, pid: str | None) -> str:
+    """Construct a Dataverse dataset URL from a base URL and persistent ID.
+
+    Args:
+        base_url (str): The base URL of the Dataverse installation (with or without trailing slash).
+        pid (str): The persistent identifier (PID) of the dataset.
+
+    Returns:
+        str: A properly constructed and encoded dataset URL.
+    """
+    # Ensure correct path joining
+    if base_url and pid:
+        api_path = 'dataset.xhtml'
+        base = base_url.rstrip('/') + '/'  # guarantee single trailing slash
+
+        # Encode query params safely
+        query = urlencode({'persistentId': pid})
+
+        return urljoin(base, api_path) + '?' + query
+
+    return 'No URL'
