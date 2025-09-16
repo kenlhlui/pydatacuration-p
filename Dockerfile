@@ -18,5 +18,8 @@ RUN uv sync --locked --no-cache
 ENV VIRTUAL_ENV="/app/.venv"
 ENV PATH="/app/.venv/bin:$PATH"
 
+# The .env file
+ENV DOTENV_PATH="/app/.env" 
+
 # Run the application
 CMD ["fastapi", "run", "app.py", "--port", "80", "--host", "0.0.0.0"]
