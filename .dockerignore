@@ -1,3 +1,4 @@
+.env
 __pycache__/
 *.pyc
 *.pyo
@@ -8,7 +9,6 @@ docs/
 *.log
 *.db
 *.ipynb
-res/
 README*
 *.md
 .vscode/
