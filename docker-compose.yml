@@ -2,13 +2,11 @@ services:
   data-curation-tool:
     build: .
     image: data-curation-tool:latest
+    container_name: data-curation-tool
     ports:
       - "9005:80"
     env_file:
-      - .env
-    environment:
-      - DOTENV_PATH=/app/.env
-      - MAIN_DIR=/data/workdir  # Override to point to mounted directory
+      - ./.env   # Your .env file
     volumes:
-      - ./workdir:/data/workdir  # Mount local workdir to /data/workdir in container
+      - ./new_dir:/workdir
     restart: unless-stopped
