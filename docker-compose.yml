@@ -8,4 +8,7 @@ services:
       - .env
     environment:
       - DOTENV_PATH=/app/.env
+      - MAIN_DIR=/data/workdir  # Override to point to mounted directory
+    volumes:
+      - ./workdir:/data/workdir  # Mount local workdir to /data/workdir in container
     restart: unless-stopped
