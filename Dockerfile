@@ -40,5 +40,7 @@ RUN uv sync --frozen --no-install-project --no-dev --no-editable
 # Copy the rest of your app
 COPY --chown=app:app . /app
 
+RUN mkdir -p /app/workdir && chown -R 1000:1000 /app/workdir
+
 # Use port 8000 instead of 80 (non-root users can't bind to ports < 1024)
 CMD ["uv", "run", "fastapi", "run", "app.py", "--port", "8000", "--host", "0.0.0.0"]
