@@ -3,19 +3,12 @@ services:
     build: .
     image: data-curation-tool:latest
     container_name: data-curation-tool
+    userns_mode: keep-id
     user: 1000:1000  # Run as non-root user (UID:GID)
     ports:
       - "9005:8000"
     env_file:
-      - ./.env   # Your .env file
+      - ./.env   # Your .env file path
     volumes:
-      - workdir-data:/app/workdir
+      - ./new_dir:/app/workdir:Z,U  # Change ./new_dir (the path before the colon) to your desired directory on your host machine; ensure it exists before running the container
     restart: unless-stopped
-
-volumes:
-  workdir-data:
-    driver: local
-    driver_opts:
-      type: none
-      o: bind
-      device: ./new_dir  # Change to your desired host directory (folder)
