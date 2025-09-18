@@ -1,13 +1,44 @@
-FROM python:3.12-slim
+# Use uv + Debian bookworm (glibc), not Alpine
+FROM ghcr.io/astral-sh/uv:python3.12-bookworm
 
-RUN apt-get update && apt-get install -y ffmpeg && rm -rf /var/lib/apt/lists/*
+# Install ffmpeg
+RUN apt-get update && apt-get install -y --no-install-recommends \
+    ffmpeg \
+  && rm -rf /var/lib/apt/lists/*
 
-COPY --from=ghcr.io/astral-sh/uv:latest /uv /bin/uv
+# Create a non-root user and group to run the app
+ARG UID=1000
+ARG GID=1000
+RUN groupadd -g "$GID" app && \
+    useradd -m -u "$UID" -g "$GID" -s /bin/bash app
 
+# Create /app directory and set proper ownership
+RUN mkdir -p /app && chown -R app:app /app
+
+# Switch to non-root user
+USER app
+
+# Set working directory
 WORKDIR /app
-COPY . /app
 
-# Install any needed using uv sync
-RUN uv sync --locked --no-cache
+# Set environment variables - REMOVE or change UV_PYTHON_INSTALL_DIR
+ENV UV_COMPILE_BYTECODE=1 
+ENV UV_LINK_MODE=copy
+ENV UV_PYTHON_PREFERENCE=only-managed
+ENV UV_PROJECT_ENVIRONMENT=/app/.venv
+ENV VIRTUAL_ENV=/app/.venv
+ENV PATH="/app/.venv/bin:$PATH"
 
-CMD ["uv", "run", "fastapi", "run", "app.py", "--port", "80", "--host", "0.0.0.0"]
+# Copy the uv.lock and pyproject.toml first for better caching
+COPY --chown=app:app uv.lock uv.lock
+COPY --chown=app:app pyproject.toml pyproject.toml
+
+# Create virtual environment and install dependencies as the app user
+RUN uv venv --relocatable
+RUN uv sync --frozen --no-install-project --no-dev --no-editable
+
+# Copy the rest of your app
+COPY --chown=app:app . /app
+
+# Use port 8000 instead of 80 (non-root users can't bind to ports < 1024)
+CMD ["uv", "run", "fastapi", "run", "app.py", "--port", "8000", "--host", "0.0.0.0"]
