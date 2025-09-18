@@ -111,7 +111,7 @@ services:
 5.  Start the containers:
 
     ``` bash
-    podman compose up -d
+    podman compose -f podman-compose.yml up -d
     ```
 
 6.  To stop the containers:
