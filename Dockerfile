@@ -21,7 +21,7 @@ USER app
 # Set working directory
 WORKDIR /app
 
-# Set environment variables - REMOVE or change UV_PYTHON_INSTALL_DIR
+# Set environment variables
 ENV UV_COMPILE_BYTECODE=1 
 ENV UV_LINK_MODE=copy
 ENV UV_PYTHON_PREFERENCE=only-managed
@@ -34,13 +34,15 @@ COPY --chown=app:app uv.lock uv.lock
 COPY --chown=app:app pyproject.toml pyproject.toml
 
 # Create virtual environment and install dependencies as the app user
-RUN uv venv --relocatable
-RUN uv sync --frozen --no-install-project --no-dev --no-editable
+RUN uv venv --relocatable && \
+    uv sync --frozen --no-install-project --no-dev --no-editable
 
 # Copy the rest of your app
 COPY --chown=app:app . /app
 
-RUN mkdir -p /app/workdir && chown -R 1000:1000 /app/workdir
-
 # Use port 8000 instead of 80 (non-root users can't bind to ports < 1024)
 CMD ["uv", "run", "fastapi", "run", "app.py", "--port", "8000", "--host", "0.0.0.0"]
+
+# Health check
+HEALTHCHECK --interval=30s --timeout=5s --start-period=5s --retries=3 \
+  CMD wget --no-verbose --tries=1 --spider http://localhost:8000/health || exit 1
