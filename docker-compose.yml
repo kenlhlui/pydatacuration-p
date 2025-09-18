@@ -3,11 +3,19 @@ services:
     build: .
     image: data-curation-tool:latest
     container_name: data-curation-tool
-    user: "${USER_ID:-1000}:${GROUP_ID:-1000}"
+    user: 1000:1000  # Run as non-root user (UID:GID)
     ports:
       - "9005:8000"
     env_file:
       - ./.env   # Your .env file
     volumes:
-      - ./new_dir:/workdir
+      - workdir-data:/app/workdir
     restart: unless-stopped
+
+volumes:
+  workdir-data:
+    driver: local
+    driver_opts:
+      type: none
+      o: bind
+      device: ./new_dir
