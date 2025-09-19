@@ -343,7 +343,7 @@ sqlalchemy==2.0.43
     #   sqlmodel
 sqlmodel==0.0.24
     # via pydatacuration (pyproject.toml)
-starlette==0.46.2
+starlette==0.47.2
     # via fastapi
 tenacity==9.1.2
     # via
