@@ -32,7 +32,6 @@ ENV PATH="/app/.venv/bin:$PATH"
 # Copy the uv.lock and pyproject.toml first for better caching
 COPY --chown=app:app uv.lock uv.lock
 COPY --chown=app:app pyproject.toml pyproject.toml
-COPY --chown=app:app .python-version .python-version
 
 # Create virtual environment and install dependencies as the app user
 RUN uv venv --relocatable && \

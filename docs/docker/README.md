@@ -38,28 +38,19 @@ instructions](https://github.com/containers/podman-compose)
 3.  Make sure the environment variables match your setup before
     proceeding.
 
-### `docker-compose.yml` File
+### `docker-compose.yml`/`podman-compose.yml` File
 
-1. You might change the `docker-compose.yml` file to adjust volume
+1. You might change the `docker-compose.yml` or the `podman-compose.yml` file to adjust volume
    mappings and the location of the `.env` file if necessary.
 
 ```yaml
-services:
-  data-curation-tool:
-    build: .
-    image: data-curation-tool:latest
-    container_name: data-curation-tool
-    userns_mode: keep-id
-    user: 1000:1000  # Run as non-root user (UID:GID)
-    ports:
-      - "9005:8000"
+    ...
     env_file:
-      - ./.env   # Your .env file path
+      - ./.env  # Configure the path to your .env file if it's located elsewhere
     volumes:
-      - ./new_dir:/app/workdir:Z,U  # Change ./new_dir (the path before the colon) to your desired directory on your host machine; ensure it exists before running the container
-    restart: unless-stopped
+      - ./new_dir:/app/workdir:Z,U  # Configure the path on the left side of colon to your desired host directory
+    ...
 ```
-
 ------------------------------------------------------------------------
 
 ## Running with Docker Compose
@@ -90,31 +81,33 @@ services:
 
 ## Running with Podman Compose
 
-1.  Ensure `podman-compose` is installed and configured.
+1. Open a terminal and navigate to the root directory of your project (where the `podman-compose.yml` file is located).
 
-2.  Enable the user-level Podman socket (if not already enabled):
+2.  Ensure `podman-compose` is installed and configured.
+
+3.  Enable the user-level Podman socket (if not already enabled):
 
     ``` bash
     systemctl --user enable --now podman.socket
     ```
 
-3.  Create the host directory specified in your `docker-compose.yml`
+4.  Create the host directory specified in your `docker-compose.yml`
     under the `volumes` section. For example:
 
     ``` bash
     mkdir -p ./new_dir
     ```
 
-4.  Navigate to the root directory of your project (where the
+5.  Navigate to the root directory of your project (where the
     `docker-compose.yml` file is located).
 
-5.  Start the containers:
+6.  Start the containers:
 
     ``` bash
     podman compose -f podman-compose.yml up -d
     ```
 
-6.  To stop the containers:
+7.  To stop the containers:
 
     ``` bash
     podman compose down
