@@ -77,6 +77,13 @@ instructions](https://github.com/containers/podman-compose)
     docker compose down
     ```
 
+For development purposes, you can also use the following command to build and run the container in one step:
+``` bash
+docker compose down && \
+docker compose build && \
+docker compose up
+```
+
 ------------------------------------------------------------------------
 
 ## Running with Podman Compose
@@ -112,6 +119,14 @@ instructions](https://github.com/containers/podman-compose)
     ``` bash
     podman compose down
     ```
+
+For development purposes, you can also use the following command to
+build and run the containers in one step:
+``` bash
+podman compose -f podman-compose.yml down && \
+podman compose -f podman-compose.yml build && \
+podman compose -f podman-compose.yml up
+```
 
 ------------------------------------------------------------------------
 
