@@ -9,5 +9,5 @@ services:
     env_file:
       - ./.env  # Configure the path to your .env file if it's located elsewhere
     volumes:
-      - ./new_dir:/app/workdir:Z,U  # Configure the path on the left side of colon to your desired host directory
+      - ./new_dir:/app/workdir  # Configure the path on the left side of colon to your desired host directory
     restart: unless-stopped
