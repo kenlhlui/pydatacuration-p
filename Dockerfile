@@ -14,6 +14,8 @@ RUN groupadd -g "$GID" app && \
 
 # Create /app directory and set proper ownership
 RUN mkdir -p /app && chown -R app:app /app
+# Create a workdir for user files
+RUN mkdir -p /app/workdir && chown -R app:app /app/workdir
 
 # Switch to non-root user
 USER app

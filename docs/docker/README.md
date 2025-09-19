@@ -43,14 +43,24 @@ instructions](https://github.com/containers/podman-compose)
 1. You might change the `docker-compose.yml` or the `podman-compose.yml` file to adjust volume
    mappings and the location of the `.env` file if necessary.
 
-```yaml
-    ...
-    env_file:
-      - ./.env  # Configure the path to your .env file if it's located elsewhere
-    volumes:
-      - ./new_dir:/app/workdir:Z,U  # Configure the path on the left side of colon to your desired host directory
-    ...
-```
+    docker-compose.yml:
+    ```yaml
+        ...
+        env_file:
+        - ./.env  # Configure the path to your .env file if it's located elsewhere
+        volumes:
+        - ./new_dir:/app/workdir  # Configure the path on the left side of colon to your desired host directory
+        ...
+    ```
+    podman-compose.yml:
+    ```yaml
+        ...
+        env_file:
+        - ./.env  # Configure the path to your .env file if it's located elsewhere
+        volumes:
+        - ./new_dir:/app/workdir:Z,U  # Configure the path on the left side of colon to your desired host directory
+        ...
+    ```
 ------------------------------------------------------------------------
 
 ## Running with Docker Compose
