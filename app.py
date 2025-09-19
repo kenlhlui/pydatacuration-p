@@ -97,6 +97,15 @@ app.mount('/static', StaticFiles(directory='pydatacuration/frontend'), name='sta
 load_dotenv()
 
 
+@app.get('/health')
+async def health_check() -> JSONResponse:
+    """Health check endpoint to verify the server is running.
+
+    Returns:
+        JSONResponse: Health status
+    """
+    return JSONResponse(content={'status': 'ok', 'message': 'Server is running'})
+
 def get_checklist_items(ticket_number: str) -> list[ChecklistItem]:
     """Get all checklist items from the check-list_template_high.yaml file.
 
