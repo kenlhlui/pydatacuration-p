@@ -1,15 +1,21 @@
-.env
-__pycache__/
+# VCS & tooling
+.git
+.github
+.claude
+.ruff_cache
+.vscode
+.idea
+
+# Local envs & caches
+.venv
+__pycache__
 *.pyc
-*.pyo
-.git/
-.gitignore
-workdir/
-docs/
-*.log
-*.db
-*.ipynb
-README*
+.env
+
+# OS junk
+.DS_Store
+
+# Compose & other non-runtime files
+docker-compose.yml
 *.md
-.vscode/
-.dockerignore
+*.log
