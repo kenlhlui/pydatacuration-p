@@ -2,6 +2,8 @@
 
 A containerized data curation tool for Dataverse repositories with web interface support.
 
+<img src="docs/full-tool-demo.gif" alt="The full curation tool demo" width="70%" height="70%">
+
 ## 🔐Configure Git authentication by GitHub CLI in WSL Ubuntu
 <details>
 
@@ -83,7 +85,7 @@ When the terminal prompts to `Press Enter to open https://github.com/login/devic
 
 3. **Create working directory**
    ```bash
-   mkdir -p ./workdir
+   mkdir -p ./workdir  # Ensure this matches the volume path in docker-compose.yml, or else it will cause errors
    ```
 
 4. **Start the application**
