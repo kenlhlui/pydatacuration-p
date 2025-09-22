@@ -241,7 +241,7 @@ pygments==2.19.1
     # via
     #   -c (workspace)
     #   rich
-pypdf==5.4.0
+pypdf==6.1.0
     # via
     #   -c (workspace)
     #   pydatacuration (pyproject.toml)
