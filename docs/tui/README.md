@@ -7,12 +7,12 @@
     ```
     <img src="01_enter_tui.gif" width="70%" height="70%">
 
-2. Click the `gen-curation-report` button on the left-hand side panel. Input the information accordingly.
+2. Click the `all` button on the left-hand side panel. Input the information accordingly.
 
-    Input all the required fields. 
-    
-    You may level the optional fields/checkboxes as-is. Only change them if it is applicable. 
-   
+    Input all the required fields.
+
+    You may leave the optional fields/checkboxes as-is. Only change them if it is applicable.
+
    **Required fields**:
     | Field         | Input                                                                                               | Example                               | Notes                                                                        |
     | ------------- | --------------------------------------------------------------------------------------------------- | ------------------------------------- | ---------------------------------------------------------------------------- |
