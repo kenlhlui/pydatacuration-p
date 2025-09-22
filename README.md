@@ -242,14 +242,11 @@ When the terminal prompts to `Press Enter to open https://github.com/login/devic
 
 7. Run the following command to start the tool in either
    - Command-Line Interface (CLI) mode
-   - Text-based User Interface (TUI) mode:
-
-   CLI:
    
    ```sh
    python3 -m pydatacuration.main --help
    ```
-   TUI:
+   - Text-based User Interface (TUI) mode
 
    ```sh
    python3 -m pydatacuration.main tui
