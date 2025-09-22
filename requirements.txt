@@ -72,7 +72,7 @@ et-xmlfile==2.0.0
     # via
     #   -c (workspace)
     #   openpyxl
-fastapi==0.115.14
+fastapi==0.117.1
     # via pydatacuration (pyproject.toml)
 fastapi-cli==0.0.7
     # via fastapi
