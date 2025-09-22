@@ -84,7 +84,7 @@ class TyperOptions:
     open_dir_option: bool = typer.Option(
         True,
         '--open-dir/--no-open-dir',
-        help='Open working directory in Explorer (WSL compatible only)',
+        help='Open working directory in Windows Explorer after the run is finished (WSL compatible only)',
     )
 
     check_zip_option: bool = typer.Option(
