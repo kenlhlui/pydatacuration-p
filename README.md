@@ -1,70 +1,6 @@
-# Data curation script
+# Data Curation Tool
 
-
-## ⚙️Prerequisite
-<details>
-
-1. [Linux on Windows with WSL (Ubuntu)](https://learn.microsoft.com/en-us/windows/wsl/setup/environment)
-   1. Run the following command in a Windows Powershell Terminal (with administrative access). You might need to restart your computer once the execution is finished.
-      ```powershell
-      Enable-WindowsOptionalFeature -Online -FeatureName Microsoft-Windows-Subsystem-Linux
-      ```
-      You should see a prompt output like this:
-      ```powershell
-      Path          :
-      Online        : True
-      RestartNeeded : False
-      ```
-   2. Run the following command Windows Powershell Terminal (with administrative access) to upgrade the WSL environment:
-      ```powershell
-      wsl --update --web-download
-      ```
-   3. Run the following command in a Windows Powershell Terminal (with administrative access). This will install the latest WSL Ubuntu version (24.04 LTS)
-      ```powershell
-      wsl --install -d Ubuntu
-      ```
-   4. Run the following command once the `Distribution successfully installed. It can be launched via 'wsl.exe -d Ubuntu` prompt appears
-      ```powershell
-      wsl.exe -d Ubuntu
-      ```
-   5. You should be directed to configure the default user name and password. It does not have to be the same with your windows one.
-   
-      You should see the following prompt configure the name of the default user account. Enter the user name you like.
-      ```sh
-      Create a default Unix user account:  # Input your user name here
-      ```
-      You will then see a prompt configuring the password for the account:
-      ```sh
-      New password:
-      Retype new password:
-      ```
-      Once you have finished the initial configuration process, you should see the following prompt in the terminal:
-      ```sh
-      Welcome to Ubuntu 24.04.2 LTS (GNU/Linux 5.15.167.4-microsoft-standard-WSL2 x86_64)
-
-      * Documentation:  https://help.ubuntu.com
-      * Management:     https://landscape.canonical.com
-      * Support:        https://ubuntu.com/pro
-      ...
-      ```
-
-   6. To re-enter the WSL Ubuntu environment, simply open a Terminal and type `wsl.exe -d Ubuntu`. You may also consider installing the [Windows Terminal app](https://learn.microsoft.com/en-us/windows/terminal/) for better user experience.
-2. [Git](https://git-scm.com/)
-> [!NOTE]
-> WSL Ubuntu should by default comes with Git. 
-> Type `git --version` to check.
-> Or run `sudo apt update && sudo apt install git` to install.
-   
-1. [Python3.10^](https://www.python.org/downloads/release/python-3100/)
-> [!NOTE]
-> WSL Ubuntu should by default comes with Python3.12.
-> Type `python3 --version` to check.
-1. [FFmpeg](https://trac.ffmpeg.org/wiki/CompilationGuide/Ubuntu)
-   1. Run the following command to install FFmpeg. You will be prompted to ask for your password and confirmation.
-   ```sh
-   sudo apt update && sudo apt-get install ffmpeg
-   ```
-</details>
+A containerized data curation tool for Dataverse repositories with web interface support.
 
 ## 🔐Configure Git authentication by GitHub CLI in WSL Ubuntu
 <details>
@@ -119,32 +55,93 @@ When the terminal prompts to `Press Enter to open https://github.com/login/devic
    ```
 </details>
 
-## 🪛Install
+## 🚀 Quick Start with Docker🐋/Podman🦭 (Recommended)
+
+### Prerequisites
+- **Docker** and **Docker Compose** installed
+  - 👉 [Get Docker](https://www.docker.com/get-started)
+  - Note: Docker Desktop includes Docker Compose by default
+- **Alternative**: **Podman** and **podman-compose**
+  - 👉 [Installation instructions](https://github.com/containers/podman-compose)
+
+### Setup & Run
+
+1. **Clone the repository**
+   ```bash
+   git clone https://github.com/kenlhlui/pydatacuration-p
+   cd pydatacuration-p
+   ```
+
+2. **Configure environment**
+   Create a `.env` file with your settings:
+   ```bash
+   API_TOKEN=your_api_token_here
+   BASE_URL=https://demo.borealisdata.ca/
+   CURATOR_NAME=Your Name
+   CURATOR_EMAIL=your_email@example.com
+   ```
+
+3. **Create working directory**
+   ```bash
+   mkdir -p ./workdir
+   ```
+
+4. **Start the application**
+   ```bash
+   docker compose up -d
+   ```
+
+5. **Access the tool**
+   Open http://localhost:9005 in your browser
+
+6. **Stop the application**
+   ```bash
+   docker compose down
+   ```
+
+### Development Mode
+For development with live rebuilding:
+```bash
+docker compose down && docker compose build && docker compose up
+```
+
+## 💻Install for the CLI/TUI version
 <details>
 1. Clone the repository
+   
    ```sh
    git clone https://github.com/kenlhlui/pydatacuration-p
    ```
 
 2. Change to the project directory
+   
    ```sh
    cd ./pydatacuration-p
    ```
 
 3. Create an environment file (`.env`) and enter the `nano` editor
+   
    ```sh
    touch .env && nano .env
    ```
 
 4. Configure the environment (`.env`) file.
+   
    ```sh
-   BASE_URL = "TARGET_REPO_URL"  # Base URL of the repository; e.g., "https://demo.borealisdata.ca/"
-   API_TOKEN = "YOUR_API_TOKEN"      # Found in your Dataverse account settings.
+   BASE_URL=TARGET_REPO_URL  # Base URL of the repository; e.g., "https://demo.borealisdata.ca/"
+   API_TOKEN=YOUR_API_TOKEN  # Found in your Dataverse account settings.
+   CURATOR_NAME=YOUR_NAME    # Your name for logging purposes.
+   CURATOR_EMAIL=YOUR_EMAIL  # Your email for logging purposes.
+   WORKDIR=./workdir  # Directory for temporary files; ensure it exists or will be created.
    ```
    Your `.env` file should look like this:
+   
    ```sh
-   BASE_URL = "https://demo.borealisdata.ca/"
-   API_TOKEN = "XXXXXXXX-XXXX-XXXX-XXXX-XXXXXXXX"
+   BASE_URL=https://demo.borealisdata.ca/
+   API_TOKEN=XXXXXXXX-XXXX-XXXX-XXXX-XXXXXXXX
+   CURATOR_NAME=Your Name
+   CURATOR_EMAIL=your_email@example.com
+   WORKDIR=./workdir  # Directory for temporary files; ensure it exists or will be created.
    ```
    Press control (CTRL) + S to save the file. 
    
@@ -153,6 +150,7 @@ When the terminal prompts to `Press Enter to open https://github.com/login/devic
    Press CTRL + X to leave the editor.
 
 5. Set up virtual environment (recommended)
+   
    ```sh
    sudo apt install python3.12-venv
    python3 -m venv .venv
@@ -160,24 +158,32 @@ When the terminal prompts to `Press Enter to open https://github.com/login/devic
    ```
 
 6. Install dependencies
+   
    ```sh
    pip install -r requirements.txt
    ```
 
-7. You should set the curator info (Curator Name & Curator email) before running the email.  Follow the [configuration guide](docs/set_curator_info/README.md) to set up.
+7. Run the following command to start the tool in either
+   - Command-Line Interface (CLI) mode
+   - Text-based User Interface (TUI) mode:
 
-   You only need to configure this once. The settings will persist after restarting or updating the tool.
+   CLI:
+   
+   ```sh
+   python3 -m pydatacuration.main --help
+   ```
+   TUI:
+
+   ```sh
+   python3 -m pydatacuration.main tui
+   ```
+
+   See the [CLI documentation](docs/cli/README.md)/[TUI documentation](docs/tui/README.md) for usage instructions.
 </details>
 
-## 🏃Run the tool
-You have finished the configuration. Now is time to run the tool.
+## 📋 Detailed Setup
 
->[!TIP]
-> After a restart, refer to the [step-by-step guide](docs/after_restart/README.md) for detailed instructions.
-### Command Line Interface (CLI)
-   1. Follow the [CLI guide](docs/cli/README.md) for running the tool via the command line interface.
-### Terminal User Interface (TUI) 
-   2. Follow the [TUI guide](docs/tui/README.md) for running the tool with a terminal user interface, which provides a mouse-clickable interface.
+For complete Docker setup instructions including Podman alternatives and volume configuration, see the [Docker Setup Guide](docs/docker/README.md).
 
 ## Troubleshooting
 If the tool does not work with a specific dataset, refer to [troubleshooting guide](docs/troubleshooting/README.md). 

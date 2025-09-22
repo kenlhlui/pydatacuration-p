@@ -6,12 +6,12 @@ To assist with debugging, you need to retrieve the `debug.log` file and send it 
     
     Usage:
     ```sh
-    find -path "*/$ticket_number/*" -name "debug.log" 2>/dev/null
+    find -path "*/projects/$ticket_number/*" -name "debug.log" 2>/dev/null
     ```
     Assume you specified the `ticket-number` as `CUR-881`. Replace the $ticket_number with `CUR-881` above. The code should look like as follows:
     
     ```sh
-    find -path "*/CUR-881/*" -name "debug.log" 2>/dev/null
+    find -path "*/projects/CUR-881/*" -name "debug.log" 2>/dev/null
     ```
     <img src="01_find_debuglog.gif" width="70%" height="70%">
     
