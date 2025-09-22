@@ -4,7 +4,132 @@ A containerized data curation tool for Dataverse repositories with web interface
 
 <img src="docs/full-tool-demo.gif" alt="The full curation tool demo" width="70%" height="70%">
 
-## 🔐Configure Git authentication by GitHub CLI in WSL Ubuntu
+## 🚀 Quick Start with Docker🐋/Podman🦭 (Recommended)
+
+### Prerequisites
+- **Docker** and **Docker Compose** installed
+  - 👉 [Get Docker](https://www.docker.com/get-started)
+  - Note: Docker Desktop includes Docker Compose by default
+- **Alternative**: **Podman** and **podman-compose**
+  - 👉 [Installation instructions](https://github.com/containers/podman-compose)
+
+### Setup & Run
+
+1. **Clone the repository**
+   ```bash
+   git clone https://github.com/kenlhlui/pydatacuration-p
+   cd pydatacuration-p
+   ```
+
+2. **Configure environment**
+   Create a `.env` file with your settings:
+   ```bash
+   API_TOKEN=your_api_token_here
+   BASE_URL=https://demo.borealisdata.ca/
+   CURATOR_NAME=Your Name
+   CURATOR_EMAIL=your_email@example.com
+   ```
+
+3. **Create working directory**
+   ```bash
+   mkdir -p ./workdir  # Ensure this matches the volume path in docker-compose.yml, or else it will cause errors
+   ```
+
+4. **Start the application**
+   ```bash
+   docker compose up -d
+   ```
+
+5. **Access the tool**
+   Open http://localhost:9005 in your browser
+
+6. **Stop the application**
+   ```sh
+   docker compose down
+   ```
+
+### 🏗️ Development Mode
+For development with rebuild and reloading the container, run:
+```sh
+docker compose down && docker compose build && docker compose up
+```
+
+### 📋 Detailed Setup
+
+For complete Docker setup instructions including Podman alternatives and volume configuration, see the [Docker Setup Guide](docs/docker/README.md).
+
+## 💻 CLI/TUI version
+### ⚙️ Prerequisite
+
+> [!NOTE]  
+> The CLI/TUI version outlined below has no web interface. It is more suitable for mass curation tasks, such as downloading files and creating folder structures for multiple datasets.
+
+<details>
+
+1. [Linux on Windows with WSL (Ubuntu)](https://learn.microsoft.com/en-us/windows/wsl/setup/environment)
+   1. Run the following command in a Windows Powershell Terminal (with administrative access). You might need to restart your computer once the execution is finished.
+      ```powershell
+      Enable-WindowsOptionalFeature -Online -FeatureName Microsoft-Windows-Subsystem-Linux
+      ```
+      You should see a prompt output like this:
+      ```powershell
+      Path          :
+      Online        : True
+      RestartNeeded : False
+      ```
+   2. Run the following command Windows Powershell Terminal (with administrative access) to upgrade the WSL environment:
+      ```powershell
+      wsl --update --web-download
+      ```
+   3. Run the following command in a Windows Powershell Terminal (with administrative access). This will install the latest WSL Ubuntu version (24.04 LTS)
+      ```powershell
+      wsl --install -d Ubuntu
+      ```
+   4. Run the following command once the `Distribution successfully installed. It can be launched via 'wsl.exe -d Ubuntu` prompt appears
+      ```powershell
+      wsl.exe -d Ubuntu
+      ```
+   5. You should be directed to configure the default user name and password. It does not have to be the same with your windows one.
+   
+      You should see the following prompt configure the name of the default user account. Enter the user name you like.
+      ```sh
+      Create a default Unix user account:  # Input your user name here
+      ```
+      You will then see a prompt configuring the password for the account:
+      ```sh
+      New password:
+      Retype new password:
+      ```
+      Once you have finished the initial configuration process, you should see the following prompt in the terminal:
+      ```sh
+      Welcome to Ubuntu 24.04.2 LTS (GNU/Linux 5.15.167.4-microsoft-standard-WSL2 x86_64)
+
+      * Documentation:  https://help.ubuntu.com
+      * Management:     https://landscape.canonical.com
+      * Support:        https://ubuntu.com/pro
+      ...
+      ```
+
+   6. To re-enter the WSL Ubuntu environment, simply open a Terminal and type `wsl.exe -d Ubuntu`. You may also consider installing the [Windows Terminal app](https://learn.microsoft.com/en-us/windows/terminal/) for better user experience.
+2. [Git](https://git-scm.com/)
+> [!NOTE]
+> WSL Ubuntu should by default comes with Git. 
+> Type `git --version` to check.
+> Or run `sudo apt update && sudo apt install git` to install.
+   
+1. [Python3.10^](https://www.python.org/downloads/release/python-3100/)
+> [!NOTE]
+> WSL Ubuntu should by default comes with Python3.12.
+> Type `python3 --version` to check.
+1. [FFmpeg](https://trac.ffmpeg.org/wiki/CompilationGuide/Ubuntu)
+   1. Run the following command to install FFmpeg. You will be prompted to ask for your password and confirmation.
+   ```sh
+   sudo apt update && sudo apt-get install ffmpeg
+   ```
+</details>
+
+### 🔐 Configure Git authentication by GitHub CLI in WSL Ubuntu
+
 <details>
 
 To clone (download) a private repository, authentication is required. You must first create a GitHub account.
@@ -57,57 +182,7 @@ When the terminal prompts to `Press Enter to open https://github.com/login/devic
    ```
 </details>
 
-## 🚀 Quick Start with Docker🐋/Podman🦭 (Recommended)
-
-### Prerequisites
-- **Docker** and **Docker Compose** installed
-  - 👉 [Get Docker](https://www.docker.com/get-started)
-  - Note: Docker Desktop includes Docker Compose by default
-- **Alternative**: **Podman** and **podman-compose**
-  - 👉 [Installation instructions](https://github.com/containers/podman-compose)
-
-### Setup & Run
-
-1. **Clone the repository**
-   ```bash
-   git clone https://github.com/kenlhlui/pydatacuration-p
-   cd pydatacuration-p
-   ```
-
-2. **Configure environment**
-   Create a `.env` file with your settings:
-   ```bash
-   API_TOKEN=your_api_token_here
-   BASE_URL=https://demo.borealisdata.ca/
-   CURATOR_NAME=Your Name
-   CURATOR_EMAIL=your_email@example.com
-   ```
-
-3. **Create working directory**
-   ```bash
-   mkdir -p ./workdir  # Ensure this matches the volume path in docker-compose.yml, or else it will cause errors
-   ```
-
-4. **Start the application**
-   ```bash
-   docker compose up -d
-   ```
-
-5. **Access the tool**
-   Open http://localhost:9005 in your browser
-
-6. **Stop the application**
-   ```bash
-   docker compose down
-   ```
-
-### Development Mode
-For development with live rebuilding:
-```bash
-docker compose down && docker compose build && docker compose up
-```
-
-## 💻Install for the CLI/TUI version
+### 🛠️ Installation & Setup
 <details>
 1. Clone the repository
    
@@ -182,10 +257,6 @@ docker compose down && docker compose build && docker compose up
 
    See the [CLI documentation](docs/cli/README.md)/[TUI documentation](docs/tui/README.md) for usage instructions.
 </details>
-
-## 📋 Detailed Setup
-
-For complete Docker setup instructions including Podman alternatives and volume configuration, see the [Docker Setup Guide](docs/docker/README.md).
 
 ## Troubleshooting
 If the tool does not work with a specific dataset, refer to [troubleshooting guide](docs/troubleshooting/README.md). 
