@@ -59,11 +59,10 @@ docker compose down && docker compose build && docker compose up
 For complete Docker setup instructions including Podman alternatives and volume configuration, see the [Docker Setup Guide](docs/docker/README.md).
 
 ## 💻 CLI/TUI version
-### ⚙️ Prerequisite
-
 > [!NOTE]  
 > The CLI/TUI version outlined below has no web interface. It is more suitable for mass curation tasks, such as downloading files and creating folder structures for multiple datasets.
 
+### ⚙️ Prerequisites
 <details>
 
 1. [Linux on Windows with WSL (Ubuntu)](https://learn.microsoft.com/en-us/windows/wsl/setup/environment)
