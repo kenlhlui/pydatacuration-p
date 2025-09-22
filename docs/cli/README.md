@@ -1,31 +1,70 @@
 # To use the Command Line Interface (CLI)
 
 ## Options
-| Option                          | Alias(s)       | Type  | Default       | Required | Details                                                                                                                    |
-|---------------------------------|----------------|-------|---------------|----------|----------------------------------------------------------------------------------------------------------------------------|
-| `--pid`                         | `-p`           | TEXT  | None          | Yes      | Enter the Persistent Identifier of the dataset.                                                                          |
-| `--base-url`                    | `-b`           | TEXT  | None          | No       | The base URL of the Dataverse installation (current value: `https://demo.borealisdata.ca/`). [Env var: BASE_URL]             |
-| `--api-token`                   | `-a`           | TEXT  | None          | No       | The API token for the Dataverse installation (current: Set). [Env var: API_TOKEN]                                           |
-| `--main-dir`                  | `-dir`         | TEXT  | workdir       | No       | The working directory. If not specified, a directory named "workdir" will be created in the current directory.              |
-| `--ticket-number`               | `-t`           | TEXT  | None          | Yes      | The ticket number for the curation report; also the directory name created under the working directory.                    |
-| `--force-del` / `--no-force-del` | `-f` / `-nf`   | FLAG  | no-force-del  | No       | Force replace (delete) an existing working directory, if any.                                                             |
-| `--help`                        |                | FLAG  | N/A           | No       | Show this message and exit.                                                                                               |
+| Option                 | Argument | Description                                                                      |
+| ---------------------- | -------- | -------------------------------------------------------------------------------- |
+| `--main-dir`           | PATH     | Top-level working directory for all runs                                         |
+| `--install-completion` | –        | Install completion for the current shell.                                        |
+| `--show-completion`    | –        | Show completion for the current shell, to copy it or customize the installation. |
+| `--help`               | –        | Show this message and exit.                                                      |
+
+
+
+
+## Commands
+| Command  | Description                                                                          |
+| -------- | ------------------------------------------------------------------------------------ |
+| `all`    | Run the full pipeline: init ➜ fetch ➜ check ➜ report.                                |
+| `check`  | Run curation checks on downloaded files/metadata.                                    |
+| `fetch`  | Download dataset files and metadata.                                                 |
+| `init`   | Prepare working directory and DuckDB schema.                                         |
+| `report` | Generate artifacts (tree diagram, spreadsheets/docs) and optionally open the folder. |
+| `tui`    | Open Textual TUI.                                                                    |
+
 
 ## Usage
 ```sh
-python -m pydatacuration.main cli [OPTIONS]
+python -m pydatacuration.main [command] [OPTIONS]
 ```
 
 ## Step by step tutorial
-1. After activating the Python environment (you’ll see (.venv) at the start of your prompt), run the following command with the relevant information. 
+1. After activating the Python environment (you’ll see (.venv) at the start of your prompt) in the terminal, run the following command with the relevant information. 
 
-    The required options are `--pid` (`-p`) and `--ticket-number` (`-t`).
-    ```sh
-    python -m pydatacuration.main cli -p $pid -t $ticket-number
-    ```
+    The command `all` is used to run the full pipeline: init ➜ fetch ➜ check ➜ report, as shown below:
 
-    For example if the dataset persistent identifier is `doi:10.80240/FK2/W4P2FH`, and the ticket/project number (this will also be the project folder name) is `CUR-001`, then your command will be
 
     ```sh
-    python -m pydatacuration.main cli -p doi:10.80240/FK2/W4P2FH -t CUR-001
+    python -m pydatacuration.main all [OPTIONS]
     ```
+    ### Options
+
+    | Option(s)                                    | Argument | Description                                                                                                   |
+    | -------------------------------------------- | -------- | ------------------------------------------------------------------------------------------------------------- |
+    | `--pid`, `-p`                                | TEXT     | Dataset Persistent Identifier. **Required**.                                                                  |
+    | `--base-url`, `-b`                           | TEXT     | The base URL of the Dataverse installation.<br/>Env var: `BASE_URL`. Default: `https://demo.borealisdata.ca/` |
+    | `--api-token`, `-a`                          | TEXT     | The API token for the Dataverse installation.<br/>Env var: `ba4d1dd5-904f-49fe-9a7c-e24e2f27cf45`.            |
+    | `--ticket-number`, `-t`                      | TEXT     | Ticket number (also used as schema and folder name). **Required**.                                            |
+    | `--force-del`, `-f`, `--no-force-del`, `-nf` | –        | Delete existing working directory and DB schema if present. Default: `no-force-del`.                          |
+    | `--check-zip`, `-z`, `--no-check-zip`, `-nz` | –        | Unzip archives and inspect their contents. Default: `check-zip`.                                              |
+    | `--collection-alias`, `-c`                   | TEXT     | Alias of Dataverse collection to search for the datasets' author history.                                     |
+    | `--curator-name`, `-cn`                      | TEXT     | Curator name. Default: `Ken Lui`.                                                                             |
+    | `--curator-email`, `-ce`                     | TEXT     | Curator email. Default: `kenlh.lui@utoronto.ca`.                                                              |
+    | `--open-dir`, `--no-open-dir`                | –        | Open working directory in Windows Explorer after the run is finished (WSL compatible only). Default: `open-dir`.                                |
+    | `--help`                                     | –        | Show this message and exit.                                                                                   |
+
+    Example with specific values:
+    
+    ```sh
+    python -m pydatacuration.main all \
+    -p doi:10.80240/FK2/W4P2FH \
+    -t CUR-001 \
+    -c toronto
+    ```
+
+    In this example:
+
+    `doi:10.80240/FK2/W4P2FH` → Dataset Persistent Identifier
+
+    `CUR-001` → Ticket/Project number (folder will also be named CUR-001)
+
+    `toronto` → Collection alias (`toronto` as [U of T Dataverse](https://borealisdata.ca/dataverse/toronto)) to narrow the author search
