@@ -177,6 +177,7 @@ cython_debug/
 temp_data/
 workdir/
 temp.ipynb
+new_dir/
 
 # res/config.yaml
 res/config.yaml

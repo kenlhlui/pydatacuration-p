@@ -56,7 +56,7 @@ docker compose down && docker compose build && docker compose up
 
 ### 📋 Detailed Setup
 
-For complete Docker setup instructions including Podman alternatives and volume configuration, see the [Docker Setup Guide](docs/docker/README.md).
+For complete container setup instructions including Podman alternatives and volume configuration, see the [Container Guide](docs/docker/README.md).
 
 ## 💻 CLI/TUI version
 > [!NOTE]  
