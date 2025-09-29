@@ -1,4 +1,4 @@
-# Docker Setup for Data Curation Tool
+# Container Setup for Data Curation Tool
 
 This guide explains how to set up and run the **Data Curation Tool**
 using either **Docker Compose** or **Podman Compose**. Running the tool
