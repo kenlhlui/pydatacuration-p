@@ -33,13 +33,48 @@
             margin-bottom: 5px;
             color: #34495e;
         }
-        input[type="text"], input[type="url"], input[type="email"], input[type="password"], textarea {
+        input[type="text"], input[type="url"], input[type="email"], input[type="password"], textarea, select {
             width: 100%;
             padding: 10px;
             border: 1px solid #ddd;
             border-radius: 4px;
             font-size: 14px;
             box-sizing: border-box;
+        }
+        select {
+            background-color: white;
+            cursor: pointer;
+            appearance: none;
+            background-image: url("data:image/svg+xml;charset=UTF-8,%3csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 24 24' fill='none' stroke='currentColor' stroke-width='2' stroke-linecap='round' stroke-linejoin='round'%3e%3cpolyline points='6 9 12 15 18 9'%3e%3c/polyline%3e%3c/svg%3e");
+            background-repeat: no-repeat;
+            background-position: right 10px center;
+            background-size: 20px;
+            padding-right: 40px;
+        }
+        select:focus {
+            outline: none;
+            border-color: #3498db;
+            box-shadow: 0 0 0 3px rgba(52, 152, 219, 0.1);
+        }
+        select:hover {
+            border-color: #3498db;
+        }
+        /* Checklist level specific colors */
+        select#checklist.checklist-medium {
+            border-color: #27ae60;
+            background-color: #e8f8f0;
+        }
+        select#checklist.checklist-high {
+            border-color: #3498db;
+            background-color: #ebf5fb;
+        }
+        select#checklist.checklist-medium:focus {
+            border-color: #27ae60;
+            box-shadow: 0 0 0 3px rgba(39, 174, 96, 0.1);
+        }
+        select#checklist.checklist-high:focus {
+            border-color: #3498db;
+            box-shadow: 0 0 0 3px rgba(52, 152, 219, 0.1);
         }
         small {
             color: #666;
@@ -257,6 +292,28 @@
     </div>
 
     <script>
+        // Add color coding for checklist selection
+        document.addEventListener('DOMContentLoaded', function() {
+            const checklistSelect = document.getElementById('checklist');
+
+            // Function to update the color based on selection
+            function updateChecklistColor() {
+                const selectedValue = checklistSelect.value;
+                // Remove existing classes
+                checklistSelect.classList.remove('checklist-medium', 'checklist-high');
+                // Add the appropriate class
+                if (selectedValue) {
+                    checklistSelect.classList.add('checklist-' + selectedValue);
+                }
+            }
+
+            // Update on change
+            checklistSelect.addEventListener('change', updateChecklistColor);
+
+            // Set initial color
+            updateChecklistColor();
+        });
+
         document.getElementById('setup-form').addEventListener('submit', async function(e) {
             e.preventDefault();
             
