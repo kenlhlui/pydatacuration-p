@@ -538,6 +538,7 @@ async def get_schemas() -> JSONResponse:
                         'display_name': schema_name_display,
                         'name': schema_name,
                         'last_modified': last_modified,
+                        'checklist_type': metadata.get('checklist_type', 'unknown'),
                         'has_metadata': bool(metadata and metadata.get('dataset_pid')),
                     }
                 )
