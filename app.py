@@ -71,6 +71,7 @@ class SetupRequest(BaseModel):
         main_dir (str): Working directory path
         force_del (bool): Force delete existing directory
         check_zip (bool): Unzip and check contents of zip files
+        checklist (str): Checklist type to use (high or medium)
 
     Returns:
         None: data container
@@ -85,6 +86,7 @@ class SetupRequest(BaseModel):
     main_dir: str = str(MAIN_DIR.resolve())
     force_del: bool = False
     check_zip: bool = True
+    checklist: str = 'high'
 
 
 app = FastAPI()
@@ -107,7 +109,12 @@ async def health_check() -> JSONResponse:
     return JSONResponse(content={'status': 'ok', 'message': 'Server is running'})
 
 def get_checklist_items(ticket_number: str) -> list[ChecklistItem]:
-    """Get all checklist items from the check-list_template_high.yaml file.
+    """Get all checklist items from the DuckDB database for the specified ticket.
+
+    The checklist type is determined by what was stored in the database during setup.
+
+    Args:
+        ticket_number (str): Ticket number to get checklist items for.
 
     Returns:
         list[ChecklistItem]: List of checklist items with their details.
@@ -344,6 +351,10 @@ async def setup(request: SetupRequest) -> JSONResponse:
             cmd_parts.append('-z')
         else:
             cmd_parts.append('-nz')
+
+        # Add checklist type
+        if request.checklist:
+            cmd_parts.extend(['--checklist', request.checklist])
 
         # Join command parts
         cmd = ' '.join(cmd_parts)

@@ -41,6 +41,7 @@ class Checker:
         collection_alias: str | None = None,
         curator_name: str | None = None,
         curator_email: str | None = None,
+        checklist_type: str = 'high',
     ) -> None:
         """Initialize the Checker class.
 
@@ -55,6 +56,7 @@ class Checker:
             collection_alias (str | None): The collection alias for the author name to be searched.
             curator_name (str | None): The name of the data curator.
             curator_email (str | None): The email of the data curator.
+            checklist_type (str): The type of checklist to use ('high' or 'medium').
         """
         self.base_url = base_url
         self.api_token = api_token
@@ -67,6 +69,7 @@ class Checker:
         self.sqlmodels = DuckDBmodels(self.duckdb_instance.schema_name)
         self.curator_name = curator_name
         self.curator_email = curator_email
+        self.checklist_type = checklist_type
 
         self.logger = logger
         self.checksums = Checksum()
@@ -722,18 +725,27 @@ class Checker:
                     datasetid=datasetid,
                     dataset_url=dataset_url,
                     dataset_path=dataset_path,
+                    checklist_type=self.checklist_type,
                 )
             )
         except Exception as e:
             self.logger.error(f'Failed to write to DuckDB: {e}')
 
     # Note: maybe to migrate this to main.py
-    def write_checklist_to_duckdb(self):
+    def write_checklist_to_duckdb(self, checklist_type: str = 'high'):
+        """Write the checklist items to DuckDB.
+
+        Args:
+            checklist_type (str): Type of checklist to use ('medium' or 'high'). Defaults to 'high'.
+        """
         try:
-            self.logger.debug('Writing the checklist to DuckDB...')
+            self.logger.debug(f'Writing the {checklist_type} checklist to DuckDB...')
             checklist_schema = self.sqlmodels.checklist()
-            # FIXME: hardcoded checklist that only support one type of checklist
-            checklist_file: Path = RES_DIR.joinpath('check-list_template_high.yaml')
+            checklist_file: Path = RES_DIR.joinpath(f'check-list_template_{checklist_type}.yaml')
+
+            if not checklist_file.exists():
+                self.logger.error(f'Checklist file not found: {checklist_file}')
+                raise FileNotFoundError(f'Checklist file not found: {checklist_file}')
 
             with Path.open(checklist_file, 'r') as f:
                 checklist_data = yaml.safe_load(f)
@@ -772,5 +784,5 @@ class Checker:
         self.check_keywords()
         self.check_license()
         self.write_project_metadata_to_duckdb()
-        # DEBUG: Write the checklist to DuckDB
-        self.write_checklist_to_duckdb()
+        # Write the checklist to DuckDB using the configured checklist type
+        self.write_checklist_to_duckdb(self.checklist_type)

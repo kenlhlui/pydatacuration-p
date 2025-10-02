@@ -68,6 +68,11 @@ class DuckDBmodels:
                 sa_column=Column(String, nullable=False),
                 description='Path of the dataset in the repository',
             )
+            checklist_type: str = Field(
+                default='high',
+                sa_column=Column(String, nullable=False),
+                description='Type of checklist used (medium or high)',
+            )
             log_init_date: date = Field(
                 sa_column=Column(DATE, nullable=False, server_default=text('CURRENT_DATE')),
                 description='Date when the log was initialized',
