@@ -193,9 +193,10 @@ async def checklist(request: Request) -> HTMLResponse:
 
     resume_schema = request.query_params.get('resume')
 
-    # Get curator information from project metadata
+    # Get curator information and checklist type from project metadata
     curator_name = ''
     curator_email = ''
+    checklist_type = 'high'  # Default value
 
     if ticket_number:
         try:
@@ -205,8 +206,10 @@ async def checklist(request: Request) -> HTMLResponse:
 
             curator_name = metadata.get('curator_name', '')
             curator_email = metadata.get('curator_email', '')
+            checklist_type = metadata.get('checklist_type', 'high')
 
             logger.debug(f'Loaded curator info for {ticket_number}: {curator_name}, {curator_email}')
+            logger.debug(f'Loaded checklist type for {ticket_number}: {checklist_type}')
 
         except Exception as e:
             logger.warning(f'Could not load curator info for {ticket_number}: {e}')
@@ -222,6 +225,7 @@ async def checklist(request: Request) -> HTMLResponse:
             'ticket_number': ticket_number or '',
             'check_results': [],  # Empty, will be populated by frontend JavaScript
             'resume_schema': resume_schema,  # Pass to frontend for handling
+            'checklist_type': checklist_type,  # Pass checklist type for heading
         },
     )
 
