@@ -101,6 +101,13 @@ class TyperOptions:
         help="Alias of Dataverse collection to search for the datasets' author history",
     )
 
+    checklist_option: str = typer.Option(
+        'high',
+        '--checklist',
+        help='Type of checklist to use (medium or high)',
+        show_default=True,
+    )
+
     main_dir_option: Path = typer.Option(
         Path(os.getenv('MAIN_DIR', 'workdir')).resolve(),
         '--main-dir',
@@ -246,6 +253,7 @@ def check(
     collection_alias: str | None = typer.Option(None, '--collection-alias', '-c', help='Collection alias to search'),
     curator_name: str | None = TyperOptions.curator_name_option,
     curator_email: str | None = TyperOptions.curator_email_option,
+    checklist: str = TyperOptions.checklist_option,
 ) -> None:
     """Run curation checks on downloaded files/metadata.
 
@@ -256,6 +264,7 @@ def check(
         api_token (str | None): API token (optional if not needed at this stage).
         check_zip (bool): Whether to unzip and inspect archives.
         collection_alias (str | None): Collection alias filter.
+        checklist (str): Type of checklist to use (high or medium).
 
     Returns:
         None: Writes check results to DuckDB and logs.
@@ -286,6 +295,7 @@ def check(
         collection_alias,
         curator_name,
         curator_email,
+        checklist,
     )
     checker.run_checks()
     logger.info('Checks completed')
@@ -337,6 +347,7 @@ def run_all(
     curator_name: str = TyperOptions.curator_name_option,
     curator_email: str = TyperOptions.curator_email_option,
     open_dir: bool = TyperOptions.open_dir_option,
+    checklist: str = TyperOptions.checklist_option,
 ) -> None:
     """Run the full pipeline: init ➜ fetch ➜ check ➜ report.
 
@@ -352,6 +363,7 @@ def run_all(
         curator_name (str | None): Curator name.
         curator_email (str | None): Curator email.
         open_dir (bool): Open output folder.
+        checklist (str): Type of checklist to use (high or medium).
 
     Returns:
         None: Executes all stages.
@@ -368,6 +380,7 @@ def run_all(
         collection_alias=collection_alias,
         curator_name=curator_name,
         curator_email=curator_email,
+        checklist=checklist,
     )
     report(ctx, ticket_number=ticket_number, curator_name=curator_name, curator_email=curator_email, open_dir=open_dir)
 
