@@ -276,7 +276,7 @@
                     data.schemas.forEach(schema => {
                         const option = document.createElement('option');
                         option.value = schema.name;
-                        option.textContent = `${schema.display_name} (Last Modified: ${schema.last_modified})`;
+                        option.textContent = `${schema.display_name} (Last Modified: ${schema.last_modified}, ${schema.checklist_type}-level)`;
                         select.appendChild(option);
                     });
                     
@@ -361,7 +361,7 @@
                     data.schemas.forEach(schema => {
                         const option = document.createElement('option');
                         option.value = schema.name;
-                        option.textContent = `${schema.display_name} (Last Modified: ${schema.last_modified})`;
+                        option.textContent = `${schema.display_name} (Last Modified: ${schema.last_modified}, ${schema.checklist_type}-level)`;
                         select.appendChild(option);
                     });
                     
