@@ -233,7 +233,7 @@ pydantic==2.10.6
     #   -c (workspace)
     #   fastapi
     #   sqlmodel
-pydantic-core==2.27.2
+pydantic-core==2.41.2
     # via
     #   -c (workspace)
     #   pydantic
