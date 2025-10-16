@@ -140,7 +140,8 @@ body {
 .status-select {
     width: 100%;
     min-width: 140px;
-    padding: 5px;
+    padding: 3px;
+    min-height: 1px;
     border: 1px solid #ddd;
     border-radius: 4px;
     font-size: 12px;
@@ -363,9 +364,10 @@ tr.row-status-NA {
 
 .pdc-time-input {
     width: 70px;
-    padding: 8px;
+    padding: 8px 8px;
+    min-height: 1px;
     border: 1px solid #ddd;
-    border-radius: 4px;
+    border-radius: 1px;
     font-family: monospace;
 }
 
@@ -692,6 +694,89 @@ select.checklist-medium {
 .q-field--focused .q-field__control {
     border-color: #3498db !important;
     box-shadow: 0 0 0 2px rgba(52, 152, 219, 0.2) !important;
+}
+
+/* ========================================================================
+   Checklist Table Input Overrides - Compact Heights
+   ======================================================================== */
+/* Status select in table - force compact height */
+.pdc-checklist-table .status-select.q-select .q-field__control {
+    min-height: 28px !important;
+    height: 28px !important;
+    padding: 2px 8px !important;
+    border: 1px solid #ddd !important;
+    border-radius: 4px !important;
+    box-shadow: none !important;
+    box-sizing: border-box !important;
+}
+
+/* Remove Quasar's default border lines */
+.pdc-checklist-table .status-select.q-select .q-field__control:before,
+.pdc-checklist-table .status-select.q-select .q-field__control:after {
+    display: none !important;
+    border: none !important;
+}
+
+.pdc-checklist-table .status-select.q-select .q-field__native {
+    padding: 0 !important;
+    min-height: 24px !important;
+    line-height: 24px !important;
+    font-size: 12px !important;
+}
+
+.pdc-checklist-table .status-select.q-select .q-field__marginal {
+    height: 28px !important;
+}
+
+.pdc-checklist-table .status-select.q-select .q-field__control-container {
+    padding: 0 !important;
+    min-height: 28px !important;
+}
+
+/* Time input in table - force compact height */
+.pdc-checklist-table .pdc-time-input .q-field__control {
+    min-height: 28px !important;
+    height: 28px !important;
+    padding: 0 !important;
+    border: none !important;
+    box-shadow: none !important;
+}
+
+/* Remove Quasar's default border lines */
+.pdc-checklist-table .pdc-time-input .q-field__control:before,
+.pdc-checklist-table .pdc-time-input .q-field__control:after {
+    display: none !important;
+    border: none !important;
+}
+
+.pdc-checklist-table .pdc-time-input .q-field__native,
+.pdc-checklist-table .pdc-time-input input {
+    padding: 2px 4px !important;
+    min-height: 28px !important;
+    height: 28px !important;
+    line-height: 24px !important;
+    font-size: 12px !important;
+    border: 1px solid #ddd !important;
+    border-radius: 4px !important;
+    box-sizing: border-box !important;
+}
+
+.pdc-checklist-table .pdc-time-input .q-field__marginal {
+    height: 28px !important;
+}
+
+.pdc-checklist-table .pdc-time-input .q-field__control-container {
+    min-height: 28px !important;
+    padding: 0 !important;
+}
+
+/* Remove extra padding from Quasar field wrapper */
+.pdc-checklist-table .q-field__inner {
+    padding: 0 !important;
+}
+
+.pdc-checklist-table .q-field__control-container {
+    padding: 0 !important;
 }
 </style>
 """
