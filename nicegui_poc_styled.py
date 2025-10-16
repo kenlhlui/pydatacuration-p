@@ -9,6 +9,7 @@ from pathlib import Path
 from typing import Optional
 
 from nicegui import app
+from nicegui import app as nicegui_app
 from nicegui import ui
 from pydantic import BaseModel
 
@@ -70,7 +71,12 @@ async def landing_page():
 
     with ui.column().classes('pdc-container').style('width: 100%; max-width: 800px;'):
         # Logo
-        ui.image('/static/UTL.png').classes('pdc-logo')
+        ui.html(
+            '<img src="/static/UTL.png" '
+            'alt="University of Toronto Libraries Logo" '
+            'class="pdc-logo" '
+            'style="height: 60px; width: auto; margin: 8px;">'
+        )
 
         # Header
         ui.label('Data Curation Tool').classes('pdc-header')
@@ -279,7 +285,12 @@ async def checklist_page(ticket_number: Optional[str] = None):
 
     with ui.column().classes('pdc-container'):
         # Logo
-        ui.image('/static/UTL.png').classes('pdc-logo')
+        ui.html(
+            '<img src="/static/UTL.png" '
+            'alt="University of Toronto Libraries Logo" '
+            'class="pdc-logo" '
+            'style="height: 60px; width: auto; margin: 8px;">'
+        )
 
         # Header
         ui.label(f'{checklist_type.title()}-Level Curation Checklist').classes('pdc-header')
@@ -533,10 +544,29 @@ def confirm_new_dataset():
 
 
 # ============================================================================
+# Static Files Setup - Must be BEFORE ui.run()
+# ============================================================================
+
+# Mount static files from your existing frontend directory
+# Determine the correct path to static files
+static_path = Path('pydatacuration/frontend')
+if not static_path.exists():
+    static_path = Path(__file__).parent / 'pydatacuration' / 'frontend'
+
+if static_path.exists():
+    # Add static files route
+    nicegui_app.add_static_files('/static', str(static_path))
+    print('✓ Static files mounted:', static_path.absolute())
+else:
+    print('⚠ WARNING: Static directory not found!')
+    print('  Looked for:', static_path.absolute())
+
+
+# ============================================================================
 # Run the application
 # ============================================================================
 
-if __name__ in {"__main__", "__mp_main__"}:
+if __name__ in {'__main__', '__mp_main__'}:
     ui.run(
         title='PyDataCuration - Styled POC',
         favicon='🔬',
