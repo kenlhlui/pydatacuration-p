@@ -56,12 +56,146 @@ class ChecklistItem(BaseModel):
 
 
 # ============================================================================
-# Landing Page
+# Main Entrance Page
 # ============================================================================
 
 @ui.page('/')
-async def landing_page() -> None:
-    """Landing page with exact CSS matching your current design."""
+async def main_page() -> None:
+    """Main entrance page to start new project, resume work, or delete project."""
+    apply_pdc_styles()
+
+    # Add custom CSS for main page
+    ui.add_head_html("""
+    <style>
+        .main-container {
+            max-width: 900px;
+            width: 90%;
+            margin: 0 auto;
+            background-color: white;
+            padding: 30px;
+            border-radius: 12px;
+            box-shadow: 0 10px 30px rgba(0,0,0,0.2);
+            text-align: center;
+            align-items: center;
+        }
+        .main-container > * {
+            width: 100%;
+        }
+        body {
+            background: #1E3765 !important;
+            min-height: 100vh;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+        }
+        .option-card {
+            background-color: #f8f9fa;
+            border: 2px solid #e9ecef;
+            border-radius: 8px;
+            padding: 25px;
+            margin: 20px 0;
+            cursor: pointer;
+            transition: all 0.3s ease;
+        }
+        .option-card:hover {
+            border-color: #3498db;
+            background-color: #ebf3fd;
+            transform: translateY(-2px);
+            box-shadow: 0 5px 15px rgba(52, 152, 219, 0.2);
+        }
+        .option-title {
+            font-size: 1.3rem;
+            font-weight: 600;
+            color: #2c3e50;
+            margin-bottom: 10px;
+        }
+        .option-description {
+            color: #6c757d;
+            font-size: 0.95rem;
+        }
+        .icon {
+            font-size: 2rem;
+            margin-bottom: 15px;
+        }
+        .options-grid {
+            display: grid;
+            grid-template-columns: 1fr 1fr;
+            gap: 20px;
+            margin-bottom: 20px;
+        }
+        .resume-container {
+            display: flex;
+            justify-content: center;
+            width: 100%;
+        }
+        .resume-card {
+            width: 60%;
+            max-width: 500px;
+        }
+        @media (max-width: 768px) {
+            .options-grid {
+                grid-template-columns: 1fr;
+            }
+            .resume-card {
+                width: 100%;
+            }
+        }
+    </style>
+    """)
+
+    with ui.column().classes('main-container'):
+        # Logo and Header container (centered)
+        with ui.element('div').style('text-align: center; width: 100%;'):
+            ui.html(
+                '<img src="/static/UTL.png" '
+                'alt="University of Toronto Libraries Logo" '
+                'style="height: 60px; width: auto; margin: 8px auto; display: block;">'
+            )
+            ui.html(
+                '<h1 style="color: #1E3765; font-size: 2.6rem; margin-bottom: 10px; margin-top: 10px;">'
+                '<b>Data Curation Tool</b></h1>'
+            )
+
+        # Top row options
+        with ui.element('div').classes('options-grid'):
+            # New Project Option
+            with ui.element('div').classes('option-card').on('click', lambda: ui.navigate.to('/new-dataset')):
+                ui.html('<div class="icon">📁</div>')
+                ui.html('<div class="option-title">New Project</div>')
+                ui.html('<div class="option-description">Start a new curation process for a new project</div>')
+
+            # Delete Project Option - Simple placeholder for now
+            with ui.element('div').classes('option-card').on(
+                'click',
+                lambda: ui.notify('Delete feature coming soon', type='info')
+            ):
+                ui.html('<div class="icon">🗑️</div>')
+                ui.html('<div class="option-title">Delete Project</div>')
+                ui.html('<div class="option-description">Delete a project from the database</div>')
+
+        # Resume Work Option (centered) - Simple placeholder for now
+        with (
+            ui.element('div').classes('resume-container'),
+            ui.element('div').classes('option-card resume-card').on(
+                'click',
+                lambda: ui.notify('Resume feature coming soon - use /checklist directly', type='info')
+            ),
+        ):
+            ui.html('<div class="icon">✏️</div>')
+            ui.html('<div class="option-title">Resume Work</div>')
+            ui.html('<div class="option-description">Continue working on an existing project</div>')
+            ui.label('Note: For POC, navigate directly to /checklist?ticket_number=YOUR_TICKET').style(
+                'color: #7f8c8d; font-size: 0.8rem; margin-top: 10px;'
+            )
+
+
+# ============================================================================
+# New Dataset Setup Page (formerly Landing Page)
+# ============================================================================
+
+@ui.page('/new-dataset')
+async def new_dataset_page() -> None:
+    """New dataset setup page with exact CSS matching your current design."""
     # Apply our custom CSS
     apply_pdc_styles()
 
