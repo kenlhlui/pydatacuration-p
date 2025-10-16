@@ -1,5 +1,4 @@
-"""
-NiceGUI Proof of Concept - With Production-Ready Styling
+"""NiceGUI Proof of Concept - With Production-Ready Styling
 This version uses the nicegui_styles module for exact CSS matching
 """
 
@@ -355,7 +354,8 @@ async def render_checklist_table(items: list[ChecklistItem], ticket_number: str)
         with ui.element('thead'):
             with ui.element('tr'):
                 for header in ['ID', 'Action Item', 'Information Location', 'Status', 'Curator\'s Comments', 'Priority', 'Time Spent']:
-                    ui.element('th').set_text(header)
+                    with ui.element('th'):
+                        ui.html(header)
 
         # Table Body
         with ui.element('tbody'):
@@ -366,18 +366,22 @@ async def render_checklist_table(items: list[ChecklistItem], ticket_number: str)
                 if item.section != current_section:
                     current_section = item.section
                     with ui.element('tr'):
-                        ui.element('td').set_text(item.section).props('colspan=7').classes('pdc-section-header')
+                        with ui.element('td').props('colspan=7').classes('pdc-section-header'):
+                            ui.html(item.section)
 
                 # Item row
                 with ui.element('tr').props(f'data-item-id="{item.id}"'):
                     # ID
-                    ui.element('td').set_text(item.id).classes('pdc-item-id')
+                    with ui.element('td').classes('pdc-item-id'):
+                        ui.html(item.id)
 
                     # Action & Instructions
                     with ui.element('td').classes('details-cell'):
-                        ui.element('div').set_text(item.action).classes('pdc-action-item')
+                        with ui.element('div').classes('pdc-action-item'):
+                            ui.html(item.action)
                         if item.instructions:
-                            ui.element('div').set_text('Guidance:').classes('pdc-instructions-header')
+                            with ui.element('div').classes('pdc-instructions-header'):
+                                ui.html('Guidance:')
                             ui.html(item.instructions).classes('pdc-instructions')
 
                     # Information Location
