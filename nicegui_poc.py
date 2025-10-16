@@ -217,8 +217,7 @@ async def landing_page() -> None:
 
 
 async def handle_setup_submit(form_data: dict, error_msg, success_msg, loading_spinner):
-    """
-    Handle form submission
+    """Handle form submission.
 
     Replaces: 80 lines of JavaScript (lines 317-397 in landing.html)
     """
@@ -286,8 +285,7 @@ def reset_form(form_data: dict):
 
 @ui.page('/checklist')
 async def checklist_page(ticket_number: Optional[str] = None):
-    """
-    Checklist page with dynamic table and auto-save
+    """Checklist page with dynamic table and auto-save.
 
     Replaces:
     - main.html (295 lines)
@@ -302,7 +300,6 @@ async def checklist_page(ticket_number: Optional[str] = None):
 
     Total: ~2,108 lines → ~300 lines of Python
     """
-
     ui.add_head_html(CUSTOM_CSS)
 
     # Get metadata from storage (replaces sessionStorage + readdsmetadata.js)
