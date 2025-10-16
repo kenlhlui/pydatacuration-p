@@ -1,18 +1,17 @@
-"""NiceGUI Proof of Concept - With Production-Ready Styling
-This version uses the nicegui_styles module for exact CSS matching
-"""
+"""NiceGUI Proof of Concept - With Production-Ready Styling.
 
+This version uses the nicegui_styles module for exact CSS matching.
+"""
+# ruff: noqa: PLR1702
 import asyncio
 import re
 from pathlib import Path
-from typing import Optional
 
+import yaml
 from nicegui import app
 from nicegui import app as nicegui_app
 from nicegui import ui
 from pydantic import BaseModel
-
-from nicegui_styles import PDCStyles
 
 # Import our custom styling
 from nicegui_styles import apply_pdc_styles
@@ -27,10 +26,10 @@ from nicegui_styles import create_status_select
 # ============================================================================
 
 class SetupRequest(BaseModel):
-    """Setup form data model"""
+    """Setup form data model."""
     pid: str
-    base_url: Optional[str] = None
-    api_token: Optional[str] = None
+    base_url: str | None = None
+    api_token: str | None = None
     ticket_number: str
     curator_name: str
     curator_email: str
@@ -38,22 +37,22 @@ class SetupRequest(BaseModel):
     force_del: bool = False
     check_zip: bool = True
     checklist: str = 'high'
-    collection_alias: Optional[str] = None
+    collection_alias: str | None = None
 
 
 class ChecklistItem(BaseModel):
-    """Checklist item model"""
+    """Checklist item model."""
     id: str
     action: str
     instructions: str
     priority: str
     section: str = ''
-    automated_check_ids: Optional[list[str]] = []
+    automated_check_ids: list[str] | None = []
     information_location: str = ''
     check_type: str = ''
-    status: Optional[str] = None
-    comments: Optional[str] = None
-    time_spent: Optional[str] = None
+    status: str | None = None
+    comments: str | None = None
+    time_spent: str | None = None
 
 
 # ============================================================================
@@ -61,10 +60,8 @@ class ChecklistItem(BaseModel):
 # ============================================================================
 
 @ui.page('/')
-async def landing_page():
-    """
-    Landing page with exact CSS matching your current design
-    """
+async def landing_page() -> None:
+    """Landing page with exact CSS matching your current design."""
     # Apply our custom CSS
     apply_pdc_styles()
 
@@ -205,8 +202,8 @@ async def landing_page():
             ui.label('Running curation process...')
 
 
-async def handle_setup_submit(form_data: dict, error_msg, success_msg, loading_spinner):
-    """Handle form submission"""
+async def handle_setup_submit(form_data: dict, error_msg, success_msg, loading_spinner) -> None:
+    """Handle form submission."""
     # Validation
     required_fields = ['pid', 'base_url', 'api_token', 'ticket_number', 'curator_name', 'curator_email']
     missing = [f for f in required_fields if not form_data.get(f)]
@@ -251,8 +248,8 @@ async def handle_setup_submit(form_data: dict, error_msg, success_msg, loading_s
         loading_spinner.classes(add='hidden')
 
 
-def reset_form(form_data: dict):
-    """Reset form to defaults"""
+def reset_form(form_data: dict) -> None:
+    """Reset form to defaults."""
     form_data.clear()
     form_data.update({
         'base_url': 'https://demo.borealisdata.ca/',
@@ -269,10 +266,8 @@ def reset_form(form_data: dict):
 # ============================================================================
 
 @ui.page('/checklist')
-async def checklist_page(ticket_number: Optional[str] = None):
-    """
-    Checklist page with exact styling match
-    """
+async def checklist_page(ticket_number: str | None = None) -> None:
+    """Checklist page with exact styling match."""
     apply_pdc_styles()
 
     # Get metadata from storage
@@ -346,16 +341,15 @@ async def checklist_page(ticket_number: Optional[str] = None):
             ).classes('pdc-btn pdc-btn-danger')
 
 
-async def render_checklist_table(items: list[ChecklistItem], ticket_number: str):
-    """Render checklist table with exact styling"""
-
+async def render_checklist_table(items: list[ChecklistItem], ticket_number: str) -> None:  # noqa: PLR1702
+    """Render checklist table with exact styling."""
     with ui.element('table').classes('pdc-checklist-table'):
         # Table Header
-        with ui.element('thead'):
-            with ui.element('tr'):
-                for header in ['ID', 'Action Item', 'Information Location', 'Status', 'Curator\'s Comments', 'Priority', 'Time Spent']:
-                    with ui.element('th'):
-                        ui.html(header)
+        with ui.element('thead'), ui.element('tr'):
+            for header in ['ID', 'Action Item',
+                           'Information Location', 'Status', "Curator's Comments", 'Priority', 'Time Spent']:
+                with ui.element('th'):
+                    ui.html(header)
 
         # Table Body
         with ui.element('tbody'):
@@ -365,9 +359,8 @@ async def render_checklist_table(items: list[ChecklistItem], ticket_number: str)
                 # Section header row
                 if item.section != current_section:
                     current_section = item.section
-                    with ui.element('tr'):
-                        with ui.element('td').props('colspan=7').classes('pdc-section-header'):
-                            ui.html(item.section)
+                    with ui.element('tr'), ui.element('td').props('colspan=7').classes('pdc-section-header'):
+                        ui.html(item.section)
 
                 # Item row
                 with ui.element('tr').props(f'data-item-id="{item.id}"'):
@@ -385,10 +378,9 @@ async def render_checklist_table(items: list[ChecklistItem], ticket_number: str)
                             ui.html(item.instructions).classes('pdc-instructions')
 
                     # Information Location
-                    with ui.element('td').classes('information-location-column'):
-                        with ui.element('div').classes('pdc-automated-check-cell'):
-                            if item.information_location:
-                                ui.html(item.information_location).classes('pdc-static-info-location')
+                    with ui.element('td').classes('information-location-column'), ui.element('div').classes('pdc-info-location-container'):  # noqa: E501
+                        if item.information_location:
+                            ui.html(item.information_location).classes('pdc-static-info-location')
 
                     # Status
                     with ui.element('td'):
@@ -409,9 +401,8 @@ async def render_checklist_table(items: list[ChecklistItem], ticket_number: str)
                         )
 
                     # Priority
-                    with ui.element('td'):
-                        with ui.element('div').classes('pdc-priority-badge-container'):
-                            create_priority_badge(item.priority)
+                    with ui.element('td'), ui.element('div').classes('pdc-priority-badge-container'):
+                        create_priority_badge(item.priority)
 
                     # Time Spent
                     with ui.element('td'):
@@ -429,7 +420,7 @@ async def render_checklist_table(items: list[ChecklistItem], ticket_number: str)
 # ============================================================================
 
 async def load_checklist_from_duckdb(ticket_number: str) -> list[ChecklistItem]:
-    """Load checklist data from DuckDB"""
+    """Load checklist data from DuckDB."""
     # Sample data for POC
     return [
         ChecklistItem(
@@ -468,19 +459,19 @@ async def load_checklist_from_duckdb(ticket_number: str) -> list[ChecklistItem]:
     ]
 
 
-async def handle_status_change(item_id: str, new_status: str, ticket_number: str):
-    """Handle status change with auto-save"""
+async def handle_status_change(item_id: str, new_status: str, ticket_number: str) -> None:
+    """Handle status change with auto-save."""
     await save_to_duckdb(ticket_number, item_id, {'status': new_status})
     ui.notify(f'Status updated for {item_id}', type='positive', position='top-right', close_button=True)
 
 
-async def handle_comments_change(item_id: str, new_comments: str, ticket_number: str):
-    """Handle comments change"""
+async def handle_comments_change(item_id: str, new_comments: str, ticket_number: str) -> None:
+    """Handle comments change."""
     await save_to_duckdb(ticket_number, item_id, {'comments': new_comments})
 
 
-async def handle_time_change(item_id: str, new_time: str, ticket_number: str):
-    """Handle time change with validation"""
+async def handle_time_change(item_id: str, new_time: str, ticket_number: str) -> None:
+    """Handle time change with validation."""
     if validate_time_format(new_time):
         await save_to_duckdb(ticket_number, item_id, {'time_spent': new_time})
     else:
@@ -488,18 +479,18 @@ async def handle_time_change(item_id: str, new_time: str, ticket_number: str):
 
 
 def validate_time_format(time_str: str) -> bool:
-    """Validate MM:SS format"""
+    """Validate MM:SS format."""
     return bool(re.match(r'^[0-9]{1,2}:[0-5][0-9]$', time_str)) if time_str else True
 
 
-async def save_to_duckdb(ticket_number: str, item_id: str, data: dict):
-    """Save item to DuckDB"""
+async def save_to_duckdb(ticket_number: str, item_id: str, data: dict) -> None:
+    """Save item to DuckDB."""
     # In production, call your /update-checklist-item endpoint
-    print(f"Saving to DuckDB: ticket={ticket_number}, item={item_id}, data={data}")
+    print(f'Saving to DuckDB: ticket={ticket_number}, item={item_id}, data={data}')
 
 
-def calculate_total_time(items: list[ChecklistItem]):
-    """Calculate total time spent"""
+def calculate_total_time(items: list[ChecklistItem]) -> None:
+    """Calculate total time spent."""
     total_minutes = 0
     for item in items:
         if item.time_spent:
@@ -514,36 +505,34 @@ def calculate_total_time(items: list[ChecklistItem]):
     ui.notify(f'Total Time Spent: {hours}:{minutes:02d}', type='info', position='top')
 
 
-async def save_curation_report(items: list[ChecklistItem]):
-    """Save curation report to Word"""
+async def save_curation_report(items: list[ChecklistItem]) -> None:
+    """Save curation report to Word."""
     ui.notify('Curation report saved successfully!', type='positive')
 
 
-async def export_yaml(items: list[ChecklistItem]):
-    """Export to YAML"""
-    import yaml
+async def export_yaml(items: list[ChecklistItem]) -> None:
+    """Export to YAML."""
     data = {
         'metadata': app.storage.user.get('ds_metadata', {}),
         'checklist_items': [item.model_dump() for item in items]
     }
     yaml_str = yaml.dump(data)
-    print("YAML Export:")
+    print('YAML Export:')
     print(yaml_str)
     ui.notify('YAML exported successfully!', type='positive')
 
 
-def confirm_new_dataset():
-    """Confirm and navigate to new dataset"""
-    async def handle_confirm():
+def confirm_new_dataset() -> None:
+    """Confirm and navigate to new dataset."""
+    async def handle_confirm() -> None:
         app.storage.user.clear()
         ui.navigate.to('/')
 
-    with ui.dialog() as dialog:
-        with ui.card():
-            ui.label('This will erase all current input. Continue?')
-            with ui.row():
-                ui.button('Yes', on_click=lambda: [dialog.close(), handle_confirm()])
-                ui.button('No', on_click=dialog.close)
+    with ui.dialog() as dialog, ui.card():
+        ui.label('This will erase all current input. Continue?')
+        with ui.row():
+            ui.button('Yes', on_click=lambda: [dialog.close(), handle_confirm()])
+            ui.button('No', on_click=dialog.close)
     dialog.open()
 
 
