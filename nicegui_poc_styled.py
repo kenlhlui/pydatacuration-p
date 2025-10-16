@@ -4,10 +4,12 @@ This version uses the nicegui_styles module for exact CSS matching.
 """
 # ruff: noqa: PLR1702
 import asyncio
+import os
 import re
 from pathlib import Path
 
 import yaml
+from dotenv import load_dotenv
 from nicegui import app
 from nicegui import app as nicegui_app
 from nicegui import ui
@@ -19,6 +21,14 @@ from nicegui_styles import create_checklist_select
 from nicegui_styles import create_info_grid
 from nicegui_styles import create_priority_badge
 from nicegui_styles import create_status_select
+
+# Import pydatacuration modules
+from pydatacuration.directory_manager import DirectoryManager
+from pydatacuration.duck_db import DuckDB
+
+# Load environment variables
+load_dotenv(override=True)
+MAIN_DIR: Path = Path(os.getenv('MAIN_DIR', 'workdir'))
 
 
 # ============================================================================
@@ -173,29 +183,26 @@ async def main_page() -> None:
                 ui.html('<div class="option-title">New Project</div>')
                 ui.html('<div class="option-description">Start a new curation process for a new project</div>')
 
-            # Delete Project Option - Simple placeholder for now
+            # Delete Project Option
             with ui.element('div').classes('option-card').on(
                 'click',
-                lambda: ui.notify('Delete feature coming soon', type='info')
+                lambda: ui.navigate.to('/delete-project')
             ):
                 ui.html('<div class="icon">🗑️</div>')
                 ui.html('<div class="option-title">Delete Project</div>')
                 ui.html('<div class="option-description">Delete a project from the database</div>')
 
-        # Resume Work Option (centered) - Simple placeholder for now
+        # Resume Work Option (centered)
         with (
             ui.element('div').classes('resume-container'),
             ui.element('div').classes('option-card resume-card').on(
                 'click',
-                lambda: ui.notify('Resume feature coming soon - use /checklist directly', type='info')
+                lambda: ui.navigate.to('/resume-work')
             ),
         ):
             ui.html('<div class="icon">✏️</div>')
             ui.html('<div class="option-title">Resume Work</div>')
             ui.html('<div class="option-description">Continue working on an existing project</div>')
-            ui.label('Note: For POC, navigate directly to /checklist?ticket_number=YOUR_TICKET').style(
-                'color: #7f8c8d; font-size: 0.8rem; margin-top: 10px;'
-            )
 
 
 # ============================================================================
@@ -405,6 +412,251 @@ def reset_form(form_data: dict) -> None:
 
 
 # ============================================================================
+# Resume Work Page
+# ============================================================================
+
+@ui.page('/resume-work')
+async def resume_work_page() -> None:
+    """Resume work page - shows list of existing projects."""
+    apply_pdc_styles()
+
+    # Add custom CSS for project list
+    ui.add_head_html("""
+    <style>
+        .project-list-container {
+            max-width: 1000px;
+            margin: 0 auto;
+            padding: 20px;
+        }
+        .project-card {
+            background-color: white;
+            border: 1px solid #e0e0e0;
+            border-radius: 8px;
+            padding: 20px;
+            margin-bottom: 15px;
+            cursor: pointer;
+            transition: all 0.3s ease;
+        }
+        .project-card:hover {
+            border-color: #3498db;
+            box-shadow: 0 4px 12px rgba(52, 152, 219, 0.15);
+            transform: translateY(-2px);
+        }
+        .project-header {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            margin-bottom: 10px;
+        }
+        .project-ticket {
+            font-size: 1.2rem;
+            font-weight: 600;
+            color: #2c3e50;
+        }
+        .project-date {
+            color: #7f8c8d;
+            font-size: 0.9rem;
+        }
+        .project-info {
+            color: #34495e;
+            margin: 5px 0;
+        }
+        .project-badge {
+            display: inline-block;
+            padding: 4px 8px;
+            border-radius: 4px;
+            font-size: 0.85rem;
+            margin-right: 8px;
+        }
+        .badge-high {
+            background-color: #e74c3c;
+            color: white;
+        }
+        .badge-medium {
+            background-color: #f39c12;
+            color: white;
+        }
+        .no-projects {
+            text-align: center;
+            padding: 40px;
+            color: #7f8c8d;
+        }
+    </style>
+    """)
+
+    with ui.column().classes('project-list-container'):
+        # Logo and Header
+        ui.html(
+            '<img src="/static/UTL.png" '
+            'alt="University of Toronto Libraries Logo" '
+            'class="pdc-logo" '
+            'style="height: 60px; width: auto; margin: 8px;">'
+        )
+        ui.label('Resume Work - Select a Project').classes('pdc-header')
+
+        # Back button
+        ui.button('← Back to Main Menu', on_click=lambda: ui.navigate.to('/')).classes('pdc-btn pdc-btn-secondary')
+
+        ui.separator()
+
+        # Get all schemas/projects
+        schemas = get_all_schemas()
+
+        if not schemas:
+            with ui.element('div').classes('no-projects'):
+                ui.label('No existing projects found').classes('text-xl')
+                ui.label('Start a new project from the main menu').classes('text-sm')
+        else:
+            ui.label(f'Found {len(schemas)} project(s)').classes('text-lg font-semibold').style('margin: 20px 0;')
+
+            # Display project cards
+            for schema in schemas:
+                with ui.element('div').classes('project-card').on(
+                    'click',
+                    lambda s=schema: ui.navigate.to(f'/checklist?ticket_number={s["display_name"]}')
+                ):
+                    with ui.element('div').classes('project-header'):
+                        ui.html(f'<span class="project-ticket">📋 {schema["display_name"]}</span>')
+                        ui.html(f'<span class="project-date">{schema["last_modified"]}</span>')
+
+                    # Checklist type badge
+                    badge_class = 'badge-high' if schema.get('checklist_type') == 'high' else 'badge-medium'
+                    ui.html(
+                        f'<span class="project-badge {badge_class}">'
+                        f'{schema.get("checklist_type", "unknown").upper()}-LEVEL</span>'
+                    )
+
+                    # Project info
+                    if schema.get('curator_name'):
+                        ui.html(f'<div class="project-info">👤 Curator: {schema["curator_name"]}</div>')
+                    if schema.get('dataset_title') and schema['dataset_title'] != 'N/A':
+                        ui.html(f'<div class="project-info">📄 Dataset: {schema["dataset_title"]}</div>')
+
+
+# ============================================================================
+# Delete Project Page
+# ============================================================================
+
+@ui.page('/delete-project')
+async def delete_project_page() -> None:
+    """Delete project page - shows list of projects with delete buttons."""
+    apply_pdc_styles()
+
+    # Add custom CSS for delete page
+    ui.add_head_html("""
+    <style>
+        .delete-list-container {
+            max-width: 1000px;
+            margin: 0 auto;
+            padding: 20px;
+        }
+        .delete-card {
+            background-color: white;
+            border: 1px solid #e0e0e0;
+            border-radius: 8px;
+            padding: 20px;
+            margin-bottom: 15px;
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+        }
+        .delete-card-info {
+            flex-grow: 1;
+        }
+        .warning-banner {
+            background-color: #fff3cd;
+            border: 1px solid #ffc107;
+            border-radius: 8px;
+            padding: 15px;
+            margin-bottom: 20px;
+        }
+    </style>
+    """)
+
+    # Container to hold the project list (for refreshing after delete)
+    container = ui.column().classes('delete-list-container')
+
+    with container:
+        # Logo and Header
+        ui.html(
+            '<img src="/static/UTL.png" '
+            'alt="University of Toronto Libraries Logo" '
+            'class="pdc-logo" '
+            'style="height: 60px; width: auto; margin: 8px;">'
+        )
+        ui.label('Delete Project').classes('pdc-header')
+
+        # Back button
+        ui.button('← Back to Main Menu', on_click=lambda: ui.navigate.to('/')).classes('pdc-btn pdc-btn-secondary')
+
+        # Warning banner
+        with ui.element('div').classes('warning-banner'):
+            ui.label('⚠️ Warning: Deleting a project is permanent and cannot be undone!').classes(
+                'text-lg font-semibold'
+            )
+
+        ui.separator()
+
+        # Project list container (for dynamic updates)
+        project_list_container = ui.column()
+
+    async def refresh_project_list():
+        """Refresh the project list."""
+        project_list_container.clear()
+        with project_list_container:
+            schemas = get_all_schemas()
+
+            if not schemas:
+                with ui.element('div').classes('no-projects'):
+                    ui.label('No projects found').classes('text-xl')
+            else:
+                ui.label(f'Found {len(schemas)} project(s)').classes('text-lg font-semibold').style(
+                    'margin: 20px 0;'
+                )
+
+                for schema in schemas:
+                    with ui.element('div').classes('delete-card'):
+                        with ui.element('div').classes('delete-card-info'):
+                            ui.html(f'<span class="project-ticket">📋 {schema["display_name"]}</span>')
+                            ui.html(f'<span class="project-date">Last modified: {schema["last_modified"]}</span>')
+
+                            if schema.get('curator_name'):
+                                ui.html(f'<div class="project-info">👤 Curator: {schema["curator_name"]}</div>')
+
+                        # Delete button
+                        ui.button(
+                            '🗑️ Delete',
+                            on_click=lambda s=schema: confirm_delete_project(s, refresh_project_list)
+                        ).classes('pdc-btn pdc-btn-danger').style('margin-left: 15px;')
+
+    # Initial load
+    await refresh_project_list()
+
+
+def confirm_delete_project(schema: dict, refresh_callback) -> None:
+    """Show confirmation dialog before deleting a project."""
+    async def handle_delete():
+        success, message = delete_schema(schema['name'])
+        if success:
+            ui.notify(message, type='positive')
+            await refresh_callback()
+            dialog.close()
+        else:
+            ui.notify(message, type='negative')
+            dialog.close()
+
+    with ui.dialog() as dialog, ui.card().style('min-width: 400px;'):
+        ui.label(f'Delete project "{schema["display_name"]}"?').classes('text-xl font-semibold')
+        ui.label('This action cannot be undone. All data will be permanently deleted.').classes('text-red-600')
+
+        with ui.row().classes('w-full justify-end gap-2').style('margin-top: 20px;'):
+            ui.button('Cancel', on_click=dialog.close).classes('pdc-btn pdc-btn-secondary')
+            ui.button('Delete', on_click=handle_delete).classes('pdc-btn pdc-btn-danger')
+
+    dialog.open()
+
+
+# ============================================================================
 # Checklist Page
 # ============================================================================
 
@@ -556,6 +808,122 @@ async def render_checklist_table(items: list[ChecklistItem], ticket_number: str)
                             'change',
                             lambda e, iid=item.id: handle_time_change(iid, e.sender.value, ticket_number)
                         ).props('maxlength=5')
+
+
+# ============================================================================
+# Database Helper Functions (from app.py)
+# ============================================================================
+
+def get_all_schemas() -> list[dict]:
+    """Get all available schemas (projects) from DuckDB.
+
+    Returns:
+        list[dict]: List of schemas with metadata
+    """
+    try:
+        db_dir = Path(MAIN_DIR) / 'db'
+        db_file = db_dir / 'duckdb.db'
+
+        if not db_file.exists():
+            return []
+
+        # Create a DuckDB instance to get schemas
+        duck_db = DuckDB(schema_name='temp', db_file=db_file)
+        schema_names = duck_db.get_all_schema_names()
+
+        # Get additional metadata for each schema
+        schemas_with_metadata = []
+        for schema_name in schema_names:
+            try:
+                # Try to get project metadata for last modified date
+                schema_duck_db = DuckDB(schema_name=schema_name, db_file=db_file)
+                metadata = schema_duck_db.read_project_metadata_record()
+
+                last_modified = 'Unknown'
+                if metadata and 'log_last_update_date' in metadata:
+                    last_modified = metadata['log_last_update_date']
+                elif metadata and 'log_init_date' in metadata:
+                    last_modified = metadata['log_init_date']
+
+                # Prune the schema, removing the prefixes
+                schema_name_display = schema_name.replace('duckdb.', '').replace('"', '')
+
+                schemas_with_metadata.append({
+                    'display_name': schema_name_display,
+                    'name': schema_name,
+                    'last_modified': last_modified,
+                    'checklist_type': metadata.get('checklist_type', 'unknown'),
+                    'has_metadata': bool(metadata and metadata.get('dataset_pid')),
+                    'curator_name': metadata.get('curator_name', ''),
+                    'dataset_title': metadata.get('dataset_title', 'N/A')
+                })
+            except Exception as e:
+                print(f'Could not get metadata for schema {schema_name}: {e}')
+                schema_name_display = schema_name.replace('duckdb.', '').replace('"', '')
+                schemas_with_metadata.append({
+                    'display_name': schema_name_display,
+                    'name': schema_name,
+                    'last_modified': 'Unknown',
+                    'has_metadata': False
+                })
+
+        # Sort by last modified (most recent first)
+        schemas_with_metadata.sort(key=lambda x: x['last_modified'], reverse=True)
+
+        return schemas_with_metadata
+
+    except Exception as e:
+        print(f'Error fetching schemas: {e}')
+        return []
+
+
+def delete_schema(schema_name: str) -> tuple[bool, str]:
+    """Delete a specific schema from DuckDB.
+
+    Args:
+        schema_name (str): Name of the schema to delete
+
+    Returns:
+        tuple[bool, str]: Success status and message
+    """
+    try:
+        db_dir = Path(MAIN_DIR) / 'db'
+        db_file = db_dir / 'duckdb.db'
+
+        if not db_file.exists():
+            return False, 'Database file not found'
+
+        # Create a DuckDB instance to delete the schema
+        duck_db = DuckDB(schema_name='temp', db_file=db_file)
+
+        # Prune the schema name
+        schema_name_pruned = schema_name.replace('duckdb.', '').replace('"', '')
+
+        # Delete the schema
+        duck_db.sql_drop_schema(schema_name_pruned)
+
+        return True, f'Schema {schema_name_pruned} deleted successfully'
+
+    except Exception as e:
+        return False, f'Error deleting schema: {str(e)}'
+
+
+def get_checklist_from_duckdb(ticket_number: str) -> dict:
+    """Get the checklist from DuckDB for a specific ticket.
+
+    Args:
+        ticket_number (str): Ticket number
+
+    Returns:
+        dict: Checklist data
+    """
+    try:
+        dir_manager = DirectoryManager(ticket_number, MAIN_DIR)
+        duck_db = DuckDB(schema_name=ticket_number, db_file=dir_manager.db_path)
+        return duck_db.read_checklist()
+    except Exception as e:
+        print(f'Error fetching checklist from DuckDB for ticket {ticket_number}: {e}')
+        return {'error': str(e)}
 
 
 # ============================================================================
