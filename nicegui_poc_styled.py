@@ -67,12 +67,19 @@ async def main_page() -> None:
     # Add custom CSS for main page
     ui.add_head_html("""
     <style>
+        /* Center everything on the page */
+        .nicegui-content {
+            display: flex !important;
+            align-items: center !important;
+            justify-content: center !important;
+            min-height: 100vh !important;
+            padding: 20px !important;
+        }
         .main-container {
-            max-width: 900px;
+            max-width: 1000px;
             width: 90%;
-            margin: 0 auto;
             background-color: white;
-            padding: 30px;
+            padding: 40px;
             border-radius: 12px;
             box-shadow: 0 10px 30px rgba(0,0,0,0.2);
             text-align: center;
@@ -84,18 +91,19 @@ async def main_page() -> None:
         body {
             background: #1E3765 !important;
             min-height: 100vh;
-            display: flex;
-            align-items: center;
-            justify-content: center;
         }
         .option-card {
             background-color: #f8f9fa;
             border: 2px solid #e9ecef;
             border-radius: 8px;
-            padding: 25px;
-            margin: 20px 0;
+            padding: 35px;
+            margin: 0;
             cursor: pointer;
             transition: all 0.3s ease;
+            height: 100%;
+            display: flex;
+            flex-direction: column;
+            justify-content: center;
         }
         .option-card:hover {
             border-color: #3498db;
@@ -104,33 +112,34 @@ async def main_page() -> None:
             box-shadow: 0 5px 15px rgba(52, 152, 219, 0.2);
         }
         .option-title {
-            font-size: 1.3rem;
+            font-size: 1.4rem;
             font-weight: 600;
             color: #2c3e50;
-            margin-bottom: 10px;
+            margin-bottom: 12px;
         }
         .option-description {
             color: #6c757d;
-            font-size: 0.95rem;
+            font-size: 1rem;
         }
         .icon {
-            font-size: 2rem;
+            font-size: 2.5rem;
             margin-bottom: 15px;
         }
         .options-grid {
             display: grid;
             grid-template-columns: 1fr 1fr;
-            gap: 20px;
-            margin-bottom: 20px;
+            gap: 25px;
+            margin-bottom: 25px;
         }
         .resume-container {
             display: flex;
             justify-content: center;
             width: 100%;
+            margin-top: 0;
         }
         .resume-card {
-            width: 60%;
-            max-width: 500px;
+            width: 70%;
+            max-width: 600px;
         }
         @media (max-width: 768px) {
             .options-grid {
