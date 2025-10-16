@@ -478,20 +478,22 @@ select.checklist-medium {
    ======================================================================== */
 .pdc-form-section {
     background-color: #ecf0f1;
-    padding: 20px;
+    padding: 15px;  /* Reduced from 20px */
     border-radius: 5px;
-    margin-bottom: 20px;
+    margin-bottom: 15px;  /* Reduced from 20px */
     width: 100%;
     box-sizing: border-box;
 }
 
 .pdc-form-section h3 {
     margin-top: 0;
+    margin-bottom: 12px;  /* Reduced from default */
     color: #2c3e50;
+    font-size: 1.1rem;  /* Slightly smaller */
 }
 
 .pdc-form-group {
-    margin-bottom: 20px;
+    margin-bottom: 12px;  /* Reduced from 20px */
     width: 100%;
     box-sizing: border-box;
 }
@@ -499,25 +501,27 @@ select.checklist-medium {
 .pdc-form-label {
     display: block;
     font-weight: bold;
-    margin-bottom: 5px;
+    margin-bottom: 3px;  /* Reduced from 5px */
     color: #34495e;
 }
 
 .pdc-form-input {
     width: 100% !important;
     min-width: 100% !important;
-    padding: 10px;
+    padding: 8px;  /* Reduced from 10px */
     border: 1px solid #ddd;
     border-radius: 4px;
     font-size: 14px;
     box-sizing: border-box;
+    background-color: white !important;  /* Force white background */
 }
 
 .pdc-form-helper {
     color: #666;
     font-size: 12px;
-    margin-top: 5px;
+    margin-top: 2px;  /* Reduced from 5px */
     display: block;
+    line-height: 1.3;  /* Tighter line height */
 }
 
 /* ========================================================================
@@ -602,11 +606,57 @@ select.checklist-medium {
 .pdc-form-input .q-field__control,
 .pdc-form-input.q-field .q-field__control {
     width: 100% !important;
+    background-color: white !important;  /* Force white background */
 }
 
 .pdc-form-group .q-field,
 .pdc-form-group .q-input {
     width: 100% !important;
+}
+
+/* Force white background on all input controls in form groups */
+.pdc-form-group .q-field__control,
+.pdc-form-group input,
+.pdc-form-group textarea,
+.pdc-form-group select {
+    background-color: white !important;
+    border: 1px solid #ddd !important;
+    border-radius: 4px !important;
+    box-shadow: none !important;  /* Remove inner shadow/border */
+}
+
+/* Reduce padding on Quasar fields */
+.pdc-form-group .q-field__control {
+    padding: 0 !important;
+    min-height: 40px !important;  /* Slightly taller for better UX */
+}
+
+/* For text inputs only - not select dropdowns */
+.pdc-form-group .q-input .q-field__control {
+    height: 40px !important;  /* Fixed height only for text inputs */
+}
+
+.pdc-form-group .q-field__native {
+    padding: 8px !important;
+}
+
+/* Remove bottom border line from Quasar inputs */
+.pdc-form-group .q-field__control:before,
+.pdc-form-group .q-field__control:after {
+    display: none !important;  /* Remove the weird bottom line */
+}
+
+.pdc-form-group .q-field__bottom {
+    display: none !important;  /* Hide hint/error area */
+}
+
+/* Remove inner border/shadow from Quasar components */
+.pdc-form-group .q-field__control-container {
+    border: none !important;
+}
+
+.pdc-form-group .q-field__marginal {
+    height: auto !important;
 }
 
 /* Override NiceGUI's default card styling */
@@ -787,10 +837,13 @@ def create_checklist_select(current_value: str = 'high', on_change=None):
     Returns:
         NiceGUI select element
     """
+    # Create label outside the select
+    ui.label('Select Checklist Level').classes('pdc-form-label')
+
+    # Create select without internal label
     select = ui.select(
         options=['high', 'medium'],
-        value=current_value,
-        label='Select Checklist Level'
+        value=current_value
     ).classes('w-full').style('width: 100%')
 
     # Apply checklist-specific styling

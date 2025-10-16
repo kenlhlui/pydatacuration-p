@@ -96,7 +96,7 @@ async def landing_page():
 
         # Dataset Information Section
         with ui.element('div').classes('pdc-form-section').style('width: 100%;'):
-            ui.label('Dataset Information').classes('text-xl font-semibold text-gray-700 mb-4')
+            ui.label('Dataset Information').classes('text-lg font-semibold text-gray-700').style('margin-bottom: 12px;')
 
             with ui.element('div').classes('pdc-form-group'):
                 ui.label('Dataset Persistent Identifier (PID) *').classes('pdc-form-label')
@@ -130,7 +130,7 @@ async def landing_page():
 
         # Curator Information Section
         with ui.element('div').classes('pdc-form-section').style('width: 100%;'):
-            ui.label('Curator Information').classes('text-xl font-semibold text-gray-700 mb-4')
+            ui.label('Curator Information').classes('text-lg font-semibold text-gray-700').style('margin-bottom: 12px;')
 
             with ui.element('div').classes('pdc-form-group'):
                 ui.label('Curator Name *').classes('pdc-form-label')
@@ -146,7 +146,7 @@ async def landing_page():
 
         # Directory Settings Section
         with ui.element('div').classes('pdc-form-section').style('width: 100%;'):
-            ui.label('Directory Settings').classes('text-xl font-semibold text-gray-700 mb-4')
+            ui.label('Directory Settings').classes('text-lg font-semibold text-gray-700').style('margin-bottom: 12px;')
 
             with ui.element('div').classes('pdc-form-group'):
                 ui.label('Main Directory Path').classes('pdc-form-label')
@@ -157,7 +157,7 @@ async def landing_page():
 
         # Checklist Selection Section
         with ui.element('div').classes('pdc-form-section').style('width: 100%;'):
-            ui.label('Checklist Selection').classes('text-xl font-semibold text-gray-700 mb-4')
+            ui.label('Checklist Selection').classes('text-lg font-semibold text-gray-700').style('margin-bottom: 12px;')
 
             with ui.element('div').classes('pdc-form-group'):
                 # Use our custom checklist select with styling
@@ -169,7 +169,7 @@ async def landing_page():
 
         # Processing Options Section
         with ui.element('div').classes('pdc-form-section').style('width: 100%;'):
-            ui.label('Processing Options').classes('text-xl font-semibold text-gray-700 mb-4')
+            ui.label('Processing Options').classes('text-lg font-semibold text-gray-700').style('margin-bottom: 12px;')
 
             with ui.row().classes('gap-4'):
                 ui.checkbox(
