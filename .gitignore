@@ -182,3 +182,6 @@ new_dir/
 # res/config.yaml
 res/config.yaml
 test/ 
+
+# .nicegui/
+.nicegui/
