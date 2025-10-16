@@ -466,9 +466,11 @@ select.checklist-medium {
    Logo
    ======================================================================== */
 .pdc-logo {
-    height: 60px;
+    height: 60px !important;
+    width: auto !important;
     display: block;
     margin: 8px;
+    object-fit: contain;
 }
 
 /* ========================================================================
