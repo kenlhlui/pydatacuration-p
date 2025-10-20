@@ -144,7 +144,7 @@ markdown-it-py==3.0.0
     #   textual
 markdown2==2.5.4
     # via pydatacuration (pyproject.toml)
-markupsafe==3.0.2
+markupsafe==3.0.3
     # via
     #   -c (workspace)
     #   jinja2
