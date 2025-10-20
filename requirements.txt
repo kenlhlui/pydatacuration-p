@@ -72,7 +72,7 @@ et-xmlfile==2.0.0
     # via
     #   -c (workspace)
     #   openpyxl
-fastapi==0.119.0
+fastapi==0.115.14
     # via pydatacuration (pyproject.toml)
 fastapi-cli==0.0.7
     # via fastapi
@@ -233,7 +233,7 @@ pydantic==2.10.6
     #   -c (workspace)
     #   fastapi
     #   sqlmodel
-pydantic-core==2.41.2
+pydantic-core==2.27.2
     # via
     #   -c (workspace)
     #   pydantic
@@ -241,7 +241,7 @@ pygments==2.19.1
     # via
     #   -c (workspace)
     #   rich
-pypdf==6.1.1
+pypdf==5.4.0
     # via
     #   -c (workspace)
     #   pydatacuration (pyproject.toml)
