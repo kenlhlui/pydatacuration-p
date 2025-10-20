@@ -164,7 +164,7 @@ natsort==8.4.0
     # via
     #   -c (workspace)
     #   seedir
-netcdf4==1.7.2
+netcdf4==1.7.3
     # via
     #   -c (workspace)
     #   pydatacuration (pyproject.toml)
