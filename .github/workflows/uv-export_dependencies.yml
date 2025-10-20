@@ -1,13 +1,6 @@
 name: uv export requirements.txt
 on:
-  push:
-    branches:
-      - 'main'  # Trigger only on pull requests made to the main branch
-    paths:
-      - 'pyproject.toml'
-      - 'uv.lock'
-
-  # Allows you to run this workflow manually from the Actions tab
+  # Triggers the workflow only on manual dispatch
   workflow_dispatch:
  
 jobs:
