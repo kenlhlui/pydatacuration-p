@@ -136,7 +136,7 @@ lxml==5.3.1
     #   docxcompose
     #   docxtpl
     #   python-docx
-markdown-it-py==3.0.0
+markdown-it-py==4.0.0
     # via
     #   -c (workspace)
     #   mdit-py-plugins
