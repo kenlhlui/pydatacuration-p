@@ -229,15 +229,15 @@ When the terminal prompts to `Press Enter to open https://github.com/login/devic
 5. Set up virtual environment (recommended)
    
    ```sh
-   sudo apt install python3.12-venv
-   python3 -m venv .venv
-   source .venv/bin/activate
+   sudo apt install python3.12-venv  # Install the venv package if not already installed
+   python3 -m venv .venv  # To create the virtual environment
+   source .venv/bin/activate  # To activate the virtual environment
    ```
 
 6. Install dependencies
    
    ```sh
-   pip install -r requirements.txt
+   pip install .
    ```
 
 7. Run the following command to start the tool in either
