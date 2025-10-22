@@ -253,7 +253,10 @@ async def new_dataset_page() -> None:
 
         # Form state - automatically persisted
         # Initialize with environment variable defaults
-        form_data_dict = {
+        default_form_data = {
+                'pid': '',
+                'ticket_number': '',
+                'collection_alias': '',
                 'base_url': os.getenv('BASE_URL', ''),
                 'api_token': os.getenv('API_TOKEN', ''),
                 'curator_name': os.getenv('CURATOR_NAME', ''),
@@ -268,7 +271,7 @@ async def new_dataset_page() -> None:
         form_data = app.storage.user.setdefault('setup_form', {})
 
         # Update empty fields with environment variable defaults
-        for key, default_value in form_data_dict.items():
+        for key, default_value in default_form_data.items():
             if key not in form_data or not form_data.get(key):
                 form_data[key] = default_value
 
@@ -369,7 +372,7 @@ async def new_dataset_page() -> None:
                 on_click=lambda: handle_setup_submit(form_data, error_msg, success_msg, loading_spinner),
             ).classes('pdc-btn pdc-btn-primary')
 
-            ui.button('Reset Form', on_click=lambda: reset_form(form_data)).classes('pdc-btn pdc-btn-secondary')
+            ui.button('Reset Form', on_click=lambda: reset_form(form_data, default_form_data)).classes('pdc-btn pdc-btn-secondary')
 
             ui.button('Back', on_click=lambda: ui.navigate.to('/'), color='red').classes('pdc-btn pdc-btn-secondary')
 
@@ -425,20 +428,10 @@ async def handle_setup_submit(form_data: dict, error_msg, success_msg, loading_s
         loading_spinner.classes(add='hidden')
 
 
-def reset_form(form_data: dict) -> None:
+def reset_form(form_data: dict, default_form_data: dict) -> None:
     """Reset form to defaults."""
-    form_data.clear()
-    form_data.update(
-        {
-            'base_url': 'https://demo.borealisdata.ca/',
-            'main_dir': 'workdir',
-            'force_del': False,
-            'check_zip': True,
-            'checklist': 'high',
-        }
-    )
+    form_data.update(default_form_data)
     ui.notify('Form reset to defaults', type='info')
-
 
 # ============================================================================
 # Resume Work Page
