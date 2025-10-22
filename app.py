@@ -108,6 +108,7 @@ async def health_check() -> JSONResponse:
     """
     return JSONResponse(content={'status': 'ok', 'message': 'Server is running'})
 
+
 def get_checklist_items(ticket_number: str) -> list[ChecklistItem]:
     """Get all checklist items from the DuckDB database for the specified ticket.
 
@@ -382,11 +383,7 @@ async def setup(request: SetupRequest) -> JSONResponse:
             stdout_lines = result['stdout'].strip().split('\n')
             for line in reversed(stdout_lines):
                 clean_line = line.strip()
-                if (
-                    'error' in clean_line.lower()
-                    or 'aborting' in clean_line.lower()
-                    or 'failed' in clean_line.lower()
-                ):
+                if 'error' in clean_line.lower() or 'aborting' in clean_line.lower() or 'failed' in clean_line.lower():
                     error_details.append(f'CLI Message: {clean_line}')
                     break
 
@@ -590,6 +587,7 @@ class CurationLogRequest(BaseModel):
 
 class ChecklistUpdateRequest(BaseModel):
     """Model for updating checklist items in DuckDB."""
+
     ticket_number: str
     item_id: str
     status: str | None = None
@@ -753,8 +751,7 @@ async def get_checklist_data(request: Request) -> JSONResponse:
         ticket_number = request.query_params.get('ticket_number')
         if not ticket_number:
             return JSONResponse(
-                status_code=400,
-                content={'success': False, 'message': 'ticket_number parameter is required'}
+                status_code=400, content={'success': False, 'message': 'ticket_number parameter is required'}
             )
 
         # Get checklist data from DuckDB
@@ -785,8 +782,7 @@ async def get_checklist_data(request: Request) -> JSONResponse:
         ticket_number = request.query_params.get('ticket_number', 'unknown')
         logger.error(f'Error fetching checklist data for ticket {ticket_number}: {e}')
         return JSONResponse(
-            status_code=500,
-            content={'success': False, 'message': f'Error fetching checklist data: {str(e)}'}
+            status_code=500, content={'success': False, 'message': f'Error fetching checklist data: {str(e)}'}
         )
 
 
@@ -815,35 +811,25 @@ async def update_checklist_item(request: ChecklistUpdateRequest) -> JSONResponse
             logger.warning(f'Schema {request.ticket_number} does not exist')
             return JSONResponse(
                 status_code=404,
-                content={'success': False, 'message': f'Ticket schema {request.ticket_number} not found'}
+                content={'success': False, 'message': f'Ticket schema {request.ticket_number} not found'},
             )
 
         # Update the checklist item
         success = duck_db.sql_update_checklist_item(
-            item_id=request.item_id,
-            status=request.status,
-            comments=request.comments,
-            time_spent=request.time_spent
+            item_id=request.item_id, status=request.status, comments=request.comments, time_spent=request.time_spent
         )
 
         if success:
             logger.info(f'Successfully updated checklist item {request.item_id}')
             return JSONResponse(
-                content={
-                    'success': True,
-                    'message': f'Checklist item {request.item_id} updated successfully'
-                }
+                content={'success': True, 'message': f'Checklist item {request.item_id} updated successfully'}
             )
 
         logger.error(f'Failed to update checklist item {request.item_id}')
         return JSONResponse(
-            status_code=400,
-            content={'success': False, 'message': f'Failed to update checklist item {request.item_id}'}
+            status_code=400, content={'success': False, 'message': f'Failed to update checklist item {request.item_id}'}
         )
 
     except Exception as e:
         logger.error(f'Error updating checklist item {request.item_id}: {e}')
-        return JSONResponse(
-            status_code=500,
-            content={'success': False, 'message': f'Internal server error: {str(e)}'}
-        )
+        return JSONResponse(status_code=500, content={'success': False, 'message': f'Internal server error: {str(e)}'})
