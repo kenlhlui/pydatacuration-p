@@ -22,6 +22,8 @@ from nicegui_styles import create_checklist_select
 from nicegui_styles import create_info_grid
 from nicegui_styles import create_priority_badge
 from nicegui_styles import create_status_select
+from pydatacuration.custom_logging import logger
+from pydatacuration.custom_logging import setup_logging
 
 # Import pydatacuration modules
 from pydatacuration.directory_manager import DirectoryManager
@@ -31,6 +33,9 @@ from pydatacuration.duck_db import DuckDB
 # Load environment variables
 load_dotenv(override=True)
 MAIN_DIR: Path = Path(os.getenv('MAIN_DIR', 'workdir'))
+
+# Setup logging with your custom style
+setup_logging(log_file_dir=MAIN_DIR / 'logs', log_level='DEBUG')
 
 
 # ============================================================================
@@ -55,7 +60,21 @@ class SetupRequest(BaseModel):
 
 
 class ChecklistItem(BaseModel):
-    """Checklist item model."""
+    """Checklist item model.
+
+    Args:
+    id (str): item identifier
+    action (str): description of the action
+    instructions (str): detailed instructions
+    priority (str): priority level
+    section (str): section this item belongs to (optional)
+    automated_check_ids (list[str]): list of automated check IDs that map to this item
+    information_location (str): location where information can be found
+    check_type (str): type of check (manual/automated)
+    status (str): current status of the item
+    comments (str): curator comments
+    time_spent (str): time spent on this item
+    """
 
     id: str
     action: str
@@ -233,16 +252,27 @@ async def new_dataset_page() -> None:
         success_msg = ui.label().classes('hidden')
 
         # Form state - automatically persisted
-        form_data = app.storage.user.setdefault(
-            'setup_form',
-            {
-                'base_url': 'https://demo.borealisdata.ca/',
-                'main_dir': 'workdir',
+        # Initialize with environment variable defaults
+        form_data_dict = {
+                'base_url': os.getenv('BASE_URL', ''),
+                'api_token': os.getenv('API_TOKEN', ''),
+                'curator_name': os.getenv('CURATOR_NAME', ''),
+                'curator_email': os.getenv('CURATOR_EMAIL', ''),
+                'main_dir': str(MAIN_DIR.resolve()),
                 'force_del': False,
                 'check_zip': True,
                 'checklist': 'high',
-            },
-        )
+                }
+
+        # Get existing form data or create new
+        form_data = app.storage.user.setdefault('setup_form', {})
+
+        # Update empty fields with environment variable defaults
+        for key, default_value in form_data_dict.items():
+            if key not in form_data or not form_data.get(key):
+                form_data[key] = default_value
+
+        logger.debug(f'Loaded setup form data: {form_data}')
 
         # Dataset Information Section
         with ui.element('div').classes('pdc-form-section').style('width: 100%;'):
