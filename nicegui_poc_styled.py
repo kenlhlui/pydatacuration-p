@@ -272,8 +272,6 @@ async def new_dataset_page() -> None:
             if key not in form_data or not form_data.get(key):
                 form_data[key] = default_value
 
-        logger.debug(f'Loaded setup form data: {form_data}')
-
         # Dataset Information Section
         with ui.element('div').classes('pdc-form-section').style('width: 100%;'):
             ui.label('Dataset Information').classes('text-lg font-semibold text-gray-700').style('margin-bottom: 12px;')
@@ -372,6 +370,8 @@ async def new_dataset_page() -> None:
             ).classes('pdc-btn pdc-btn-primary')
 
             ui.button('Reset Form', on_click=lambda: reset_form(form_data)).classes('pdc-btn pdc-btn-secondary')
+
+            ui.button('Back', on_click=lambda: ui.navigate.to('/'), color='red').classes('pdc-btn pdc-btn-secondary')
 
         # Loading indicator
         with ui.element('div').classes('pdc-loading hidden') as loading_spinner:
