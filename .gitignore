@@ -185,3 +185,9 @@ test/
 
 # .nicegui/
 .nicegui/
+
+# Debug/dev files
+dev.py
+dev.ipynb
+temp.py
+temp.ipynb
