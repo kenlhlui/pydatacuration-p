@@ -2,6 +2,7 @@
 
 This version uses the nicegui_styles module for exact CSS matching.
 """
+
 # ruff: noqa: PLR1702
 import asyncio
 import os
@@ -26,6 +27,7 @@ from nicegui_styles import create_status_select
 from pydatacuration.directory_manager import DirectoryManager
 from pydatacuration.duck_db import DuckDB
 
+
 # Load environment variables
 load_dotenv(override=True)
 MAIN_DIR: Path = Path(os.getenv('MAIN_DIR', 'workdir'))
@@ -35,8 +37,10 @@ MAIN_DIR: Path = Path(os.getenv('MAIN_DIR', 'workdir'))
 # Data Models
 # ============================================================================
 
+
 class SetupRequest(BaseModel):
     """Setup form data model."""
+
     pid: str
     base_url: str | None = None
     api_token: str | None = None
@@ -52,6 +56,7 @@ class SetupRequest(BaseModel):
 
 class ChecklistItem(BaseModel):
     """Checklist item model."""
+
     id: str
     action: str
     instructions: str
@@ -68,6 +73,7 @@ class ChecklistItem(BaseModel):
 # ============================================================================
 # Main Entrance Page
 # ============================================================================
+
 
 @ui.page('/')
 async def main_page() -> None:
@@ -184,10 +190,7 @@ async def main_page() -> None:
                 ui.html('<div class="option-description">Start a new curation process for a new project</div>')
 
             # Delete Project Option
-            with ui.element('div').classes('option-card').on(
-                'click',
-                lambda: ui.navigate.to('/delete-project')
-            ):
+            with ui.element('div').classes('option-card').on('click', lambda: ui.navigate.to('/delete-project')):
                 ui.html('<div class="icon">🗑️</div>')
                 ui.html('<div class="option-title">Delete Project</div>')
                 ui.html('<div class="option-description">Delete a project from the database</div>')
@@ -195,10 +198,7 @@ async def main_page() -> None:
         # Resume Work Option (centered)
         with (
             ui.element('div').classes('resume-container'),
-            ui.element('div').classes('option-card resume-card').on(
-                'click',
-                lambda: ui.navigate.to('/resume-work')
-            ),
+            ui.element('div').classes('option-card resume-card').on('click', lambda: ui.navigate.to('/resume-work')),
         ):
             ui.html('<div class="icon">✏️</div>')
             ui.html('<div class="option-title">Resume Work</div>')
@@ -208,6 +208,7 @@ async def main_page() -> None:
 # ============================================================================
 # New Dataset Setup Page (formerly Landing Page)
 # ============================================================================
+
 
 @ui.page('/new-dataset')
 async def new_dataset_page() -> None:
@@ -232,13 +233,16 @@ async def new_dataset_page() -> None:
         success_msg = ui.label().classes('hidden')
 
         # Form state - automatically persisted
-        form_data = app.storage.user.setdefault('setup_form', {
-            'base_url': 'https://demo.borealisdata.ca/',
-            'main_dir': 'workdir',
-            'force_del': False,
-            'check_zip': True,
-            'checklist': 'high'
-        })
+        form_data = app.storage.user.setdefault(
+            'setup_form',
+            {
+                'base_url': 'https://demo.borealisdata.ca/',
+                'main_dir': 'workdir',
+                'force_del': False,
+                'check_zip': True,
+                'checklist': 'high',
+            },
+        )
 
         # Dataset Information Section
         with ui.element('div').classes('pdc-form-section').style('width: 100%;'):
@@ -246,32 +250,30 @@ async def new_dataset_page() -> None:
 
             with ui.element('div').classes('pdc-form-group'):
                 ui.label('Dataset Persistent Identifier (PID) *').classes('pdc-form-label')
-                ui.input(
-                    placeholder='doi:10.5683/SP2/... or hdl:1902.1/...'
-                ).classes('pdc-form-input w-full').bind_value(form_data, 'pid').style('width: 100%')
+                ui.input(placeholder='doi:10.5683/SP2/... or hdl:1902.1/...').classes(
+                    'pdc-form-input w-full'
+                ).bind_value(form_data, 'pid').style('width: 100%')
                 ui.label('Enter the DOI or Handle of the dataset').classes('pdc-form-helper')
 
             with ui.element('div').classes('pdc-form-group'):
                 ui.label('Dataverse Base URL *').classes('pdc-form-label')
-                ui.input(
-                    placeholder='https://demo.borealisdata.ca/'
-                ).classes('pdc-form-input w-full').bind_value(form_data, 'base_url').style('width: 100%')
+                ui.input(placeholder='https://demo.borealisdata.ca/').classes('pdc-form-input w-full').bind_value(
+                    form_data, 'base_url'
+                ).style('width: 100%')
                 ui.label('Base URL of the Dataverse installation').classes('pdc-form-helper')
 
             with ui.element('div').classes('pdc-form-group'):
                 ui.label('API Token *').classes('pdc-form-label')
                 ui.input(
-                    placeholder='Enter your Dataverse API token',
-                    password=True,
-                    password_toggle_button=True
+                    placeholder='Enter your Dataverse API token', password=True, password_toggle_button=True
                 ).classes('pdc-form-input w-full').bind_value(form_data, 'api_token').style('width: 100%')
                 ui.label('Your Dataverse API token (will be hidden)').classes('pdc-form-helper')
 
             with ui.element('div').classes('pdc-form-group'):
                 ui.label('Ticket Number *').classes('pdc-form-label')
-                ui.input(
-                    placeholder='TICKET-123'
-                ).classes('pdc-form-input w-full').bind_value(form_data, 'ticket_number').style('width: 100%')
+                ui.input(placeholder='TICKET-123').classes('pdc-form-input w-full').bind_value(
+                    form_data, 'ticket_number'
+                ).style('width: 100%')
                 ui.label('Ticket number for the curation report').classes('pdc-form-helper')
 
         # Curator Information Section
@@ -280,15 +282,15 @@ async def new_dataset_page() -> None:
 
             with ui.element('div').classes('pdc-form-group'):
                 ui.label('Curator Name *').classes('pdc-form-label')
-                ui.input(
-                    placeholder='Enter your name'
-                ).classes('pdc-form-input w-full').bind_value(form_data, 'curator_name').style('width: 100%')
+                ui.input(placeholder='Enter your name').classes('pdc-form-input w-full').bind_value(
+                    form_data, 'curator_name'
+                ).style('width: 100%')
 
             with ui.element('div').classes('pdc-form-group'):
                 ui.label('Curator Email *').classes('pdc-form-label')
-                ui.input(
-                    placeholder='Enter your email'
-                ).classes('pdc-form-input w-full').bind_value(form_data, 'curator_email').style('width: 100%')
+                ui.input(placeholder='Enter your email').classes('pdc-form-input w-full').bind_value(
+                    form_data, 'curator_email'
+                ).style('width: 100%')
 
         # Directory Settings Section
         with ui.element('div').classes('pdc-form-section').style('width: 100%;'):
@@ -296,9 +298,9 @@ async def new_dataset_page() -> None:
 
             with ui.element('div').classes('pdc-form-group'):
                 ui.label('Main Directory Path').classes('pdc-form-label')
-                ui.input(
-                    placeholder='workdir'
-                ).classes('pdc-form-input w-full').bind_value(form_data, 'main_dir').style('width: 100%')
+                ui.input(placeholder='workdir').classes('pdc-form-input w-full').bind_value(
+                    form_data, 'main_dir'
+                ).style('width: 100%')
                 ui.label('The main (base) directory for project files').classes('pdc-form-helper')
 
         # Checklist Selection Section
@@ -309,7 +311,7 @@ async def new_dataset_page() -> None:
                 # Use our custom checklist select with styling
                 create_checklist_select(
                     current_value=form_data.get('checklist', 'high'),
-                    on_change=lambda e: form_data.update({'checklist': e.value})
+                    on_change=lambda e: form_data.update({'checklist': e.value}),
                 ).style('width: 100%')
                 ui.label('Select the checklist level for this curation task').classes('pdc-form-helper')
 
@@ -318,33 +320,28 @@ async def new_dataset_page() -> None:
             ui.label('Processing Options').classes('text-lg font-semibold text-gray-700').style('margin-bottom: 12px;')
 
             with ui.row().classes('gap-4'):
-                ui.checkbox(
-                    'Force delete existing project',
-                    value=form_data.get('force_del', False)
-                ).bind_value(form_data, 'force_del')
+                ui.checkbox('Force delete existing project', value=form_data.get('force_del', False)).bind_value(
+                    form_data, 'force_del'
+                )
 
-                ui.checkbox(
-                    'Unzip and check contents of zip files',
-                    value=form_data.get('check_zip', True)
-                ).bind_value(form_data, 'check_zip')
+                ui.checkbox('Unzip and check contents of zip files', value=form_data.get('check_zip', True)).bind_value(
+                    form_data, 'check_zip'
+                )
 
             with ui.element('div').classes('pdc-form-group'):
                 ui.label('Dataverse Collection Alias').classes('pdc-form-label')
-                ui.input(
-                    placeholder='Enter dataverse collection alias'
-                ).classes('pdc-form-input w-full').bind_value(form_data, 'collection_alias').style('width: 100%')
+                ui.input(placeholder='Enter dataverse collection alias').classes('pdc-form-input w-full').bind_value(
+                    form_data, 'collection_alias'
+                ).style('width: 100%')
 
         # Action buttons
         with ui.element('div').classes('pdc-actions'):
             ui.button(
                 'Start Curation Process',
-                on_click=lambda: handle_setup_submit(form_data, error_msg, success_msg, loading_spinner)
+                on_click=lambda: handle_setup_submit(form_data, error_msg, success_msg, loading_spinner),
             ).classes('pdc-btn pdc-btn-primary')
 
-            ui.button(
-                'Reset Form',
-                on_click=lambda: reset_form(form_data)
-            ).classes('pdc-btn pdc-btn-secondary')
+            ui.button('Reset Form', on_click=lambda: reset_form(form_data)).classes('pdc-btn pdc-btn-secondary')
 
         # Loading indicator
         with ui.element('div').classes('pdc-loading hidden') as loading_spinner:
@@ -380,7 +377,7 @@ async def handle_setup_submit(form_data: dict, error_msg, success_msg, loading_s
             'dataset_pid': form_data['pid'],
             'curator_name': form_data['curator_name'],
             'curator_email': form_data['curator_email'],
-            'ticket_number': form_data['ticket_number']
+            'ticket_number': form_data['ticket_number'],
         }
 
         # Show success
@@ -401,19 +398,22 @@ async def handle_setup_submit(form_data: dict, error_msg, success_msg, loading_s
 def reset_form(form_data: dict) -> None:
     """Reset form to defaults."""
     form_data.clear()
-    form_data.update({
-        'base_url': 'https://demo.borealisdata.ca/',
-        'main_dir': 'workdir',
-        'force_del': False,
-        'check_zip': True,
-        'checklist': 'high'
-    })
+    form_data.update(
+        {
+            'base_url': 'https://demo.borealisdata.ca/',
+            'main_dir': 'workdir',
+            'force_del': False,
+            'check_zip': True,
+            'checklist': 'high',
+        }
+    )
     ui.notify('Form reset to defaults', type='info')
 
 
 # ============================================================================
 # Resume Work Page
 # ============================================================================
+
 
 @ui.page('/resume-work')
 async def resume_work_page() -> None:
@@ -511,9 +511,10 @@ async def resume_work_page() -> None:
 
             # Display project cards
             for schema in schemas:
-                with ui.element('div').classes('project-card').on(
-                    'click',
-                    lambda s=schema: ui.navigate.to(f'/checklist?ticket_number={s["display_name"]}')
+                with (
+                    ui.element('div')
+                    .classes('project-card')
+                    .on('click', lambda s=schema: ui.navigate.to(f'/checklist?ticket_number={s["display_name"]}'))
                 ):
                     with ui.element('div').classes('project-header'):
                         ui.html(f'<span class="project-ticket">📋 {schema["display_name"]}</span>')
@@ -536,6 +537,7 @@ async def resume_work_page() -> None:
 # ============================================================================
 # Delete Project Page
 # ============================================================================
+
 
 @ui.page('/delete-project')
 async def delete_project_page() -> None:
@@ -610,9 +612,7 @@ async def delete_project_page() -> None:
                 with ui.element('div').classes('no-projects'):
                     ui.label('No projects found').classes('text-xl')
             else:
-                ui.label(f'Found {len(schemas)} project(s)').classes('text-lg font-semibold').style(
-                    'margin: 20px 0;'
-                )
+                ui.label(f'Found {len(schemas)} project(s)').classes('text-lg font-semibold').style('margin: 20px 0;')
 
                 for schema in schemas:
                     with ui.element('div').classes('delete-card'):
@@ -625,8 +625,7 @@ async def delete_project_page() -> None:
 
                         # Delete button
                         ui.button(
-                            '🗑️ Delete',
-                            on_click=lambda s=schema: confirm_delete_project(s, refresh_project_list)
+                            '🗑️ Delete', on_click=lambda s=schema: confirm_delete_project(s, refresh_project_list)
                         ).classes('pdc-btn pdc-btn-danger').style('margin-left: 15px;')
 
     # Initial load
@@ -635,6 +634,7 @@ async def delete_project_page() -> None:
 
 def confirm_delete_project(schema: dict, refresh_callback) -> None:
     """Show confirmation dialog before deleting a project."""
+
     async def handle_delete():
         success, message = delete_schema(schema['name'])
         if success:
@@ -659,6 +659,7 @@ def confirm_delete_project(schema: dict, refresh_callback) -> None:
 # ============================================================================
 # Checklist Page
 # ============================================================================
+
 
 @ui.page('/checklist')
 async def checklist_page(ticket_number: str | None = None) -> None:
@@ -685,16 +686,19 @@ async def checklist_page(ticket_number: str | None = None) -> None:
         ui.label(f'{checklist_type.title()}-Level Curation Checklist').classes('pdc-header')
 
         # Metadata Display using our helper function
-        create_info_grid(metadata, [
-            ('ticket_number', 'Ticket number'),
-            ('curator_name', 'Curator name'),
-            ('curator_email', 'Curator email'),
-            ('dataset_title', 'Dataset title'),
-            ('dataset_pid', 'Dataset persistent identifier'),
-            ('dataset_id', 'Dataset ID (versioned)'),
-            ('dataset_url', 'Dataset access URL'),
-            ('dataset_path', 'Dataset Path'),
-        ])
+        create_info_grid(
+            metadata,
+            [
+                ('ticket_number', 'Ticket number'),
+                ('curator_name', 'Curator name'),
+                ('curator_email', 'Curator email'),
+                ('dataset_title', 'Dataset title'),
+                ('dataset_pid', 'Dataset persistent identifier'),
+                ('dataset_id', 'Dataset ID (versioned)'),
+                ('dataset_url', 'Dataset access URL'),
+                ('dataset_path', 'Dataset Path'),
+            ],
+        )
 
         # Status Legend
         with ui.element('div').classes('pdc-status-legend'):
@@ -704,7 +708,7 @@ async def checklist_page(ticket_number: str | None = None) -> None:
                     ('P', 'Passed'),
                     ('F', 'Follow-up'),
                     ('TBD', 'To Be Determined'),
-                    ('NA', 'Not Applicable')
+                    ('NA', 'Not Applicable'),
                 ]:
                     with ui.element('div').classes('pdc-status-item'):
                         ui.label(f'{code}:').classes('pdc-status-code')
@@ -715,25 +719,17 @@ async def checklist_page(ticket_number: str | None = None) -> None:
 
         # Action Buttons
         with ui.element('div').classes('pdc-actions'):
-            ui.button(
-                'Save Curation Log (Word)',
-                on_click=lambda: save_curation_report(checklist_items)
-            ).classes('pdc-btn pdc-btn-primary')
+            ui.button('Save Curation Log (Word)', on_click=lambda: save_curation_report(checklist_items)).classes(
+                'pdc-btn pdc-btn-primary'
+            )
 
-            ui.button(
-                'Calculate Time Spent',
-                on_click=lambda: calculate_total_time(checklist_items)
-            ).classes('pdc-btn pdc-btn-calculate')
+            ui.button('Calculate Time Spent', on_click=lambda: calculate_total_time(checklist_items)).classes(
+                'pdc-btn pdc-btn-calculate'
+            )
 
-            ui.button(
-                'Export YAML',
-                on_click=lambda: export_yaml(checklist_items)
-            ).classes('pdc-btn pdc-btn-secondary')
+            ui.button('Export YAML', on_click=lambda: export_yaml(checklist_items)).classes('pdc-btn pdc-btn-secondary')
 
-            ui.button(
-                'New Dataset',
-                on_click=confirm_new_dataset
-            ).classes('pdc-btn pdc-btn-danger')
+            ui.button('New Dataset', on_click=confirm_new_dataset).classes('pdc-btn pdc-btn-danger')
 
 
 async def render_checklist_table(items: list[ChecklistItem], ticket_number: str) -> None:  # noqa: PLR1702
@@ -741,8 +737,15 @@ async def render_checklist_table(items: list[ChecklistItem], ticket_number: str)
     with ui.element('table').classes('pdc-checklist-table'):
         # Table Header
         with ui.element('thead'), ui.element('tr'):
-            for header in ['ID', 'Action Item',
-                           'Information Location', 'Status', "Curator's Comments", 'Priority', 'Time Spent']:
+            for header in [
+                'ID',
+                'Action Item',
+                'Information Location',
+                'Status',
+                "Curator's Comments",
+                'Priority',
+                'Time Spent',
+            ]:
                 with ui.element('th'):
                     ui.html(header)
 
@@ -773,7 +776,10 @@ async def render_checklist_table(items: list[ChecklistItem], ticket_number: str)
                             ui.html(item.instructions).classes('pdc-instructions')
 
                     # Information Location
-                    with ui.element('td').classes('information-location-column'), ui.element('div').classes('pdc-info-location-container'):  # noqa: E501
+                    with (
+                        ui.element('td').classes('information-location-column'),
+                        ui.element('div').classes('pdc-info-location-container'),
+                    ):  # noqa: E501
                         if item.information_location:
                             ui.html(item.information_location).classes('pdc-static-info-location')
 
@@ -782,17 +788,15 @@ async def render_checklist_table(items: list[ChecklistItem], ticket_number: str)
                         create_status_select(
                             item.id,
                             item.status or '',
-                            on_change=lambda e, iid=item.id: handle_status_change(iid, e.value, ticket_number)
+                            on_change=lambda e, iid=item.id: handle_status_change(iid, e.value, ticket_number),
                         )
 
                     # Comments
                     with ui.element('td'):
-                        ui.textarea(
-                            value=item.comments or '',
-                            placeholder="Curator's comments..."
-                        ).classes('pdc-comments-input').on(
-                            'change',
-                            lambda e, iid=item.id: handle_comments_change(iid, e.sender.value, ticket_number)
+                        ui.textarea(value=item.comments or '', placeholder="Curator's comments...").classes(
+                            'pdc-comments-input'
+                        ).on(
+                            'change', lambda e, iid=item.id: handle_comments_change(iid, e.sender.value, ticket_number)
                         )
 
                     # Priority
@@ -801,18 +805,15 @@ async def render_checklist_table(items: list[ChecklistItem], ticket_number: str)
 
                     # Time Spent
                     with ui.element('td'):
-                        ui.input(
-                            value=item.time_spent or '',
-                            placeholder='MM:SS'
-                        ).classes('pdc-time-input').on(
-                            'change',
-                            lambda e, iid=item.id: handle_time_change(iid, e.sender.value, ticket_number)
+                        ui.input(value=item.time_spent or '', placeholder='MM:SS').classes('pdc-time-input').on(
+                            'change', lambda e, iid=item.id: handle_time_change(iid, e.sender.value, ticket_number)
                         ).props('maxlength=5')
 
 
 # ============================================================================
 # Database Helper Functions (from app.py)
 # ============================================================================
+
 
 def get_all_schemas() -> list[dict]:
     """Get all available schemas (projects) from DuckDB.
@@ -848,24 +849,28 @@ def get_all_schemas() -> list[dict]:
                 # Prune the schema, removing the prefixes
                 schema_name_display = schema_name.replace('duckdb.', '').replace('"', '')
 
-                schemas_with_metadata.append({
-                    'display_name': schema_name_display,
-                    'name': schema_name,
-                    'last_modified': last_modified,
-                    'checklist_type': metadata.get('checklist_type', 'unknown'),
-                    'has_metadata': bool(metadata and metadata.get('dataset_pid')),
-                    'curator_name': metadata.get('curator_name', ''),
-                    'dataset_title': metadata.get('dataset_title', 'N/A')
-                })
+                schemas_with_metadata.append(
+                    {
+                        'display_name': schema_name_display,
+                        'name': schema_name,
+                        'last_modified': last_modified,
+                        'checklist_type': metadata.get('checklist_type', 'unknown'),
+                        'has_metadata': bool(metadata and metadata.get('dataset_pid')),
+                        'curator_name': metadata.get('curator_name', ''),
+                        'dataset_title': metadata.get('dataset_title', 'N/A'),
+                    }
+                )
             except Exception as e:
                 print(f'Could not get metadata for schema {schema_name}: {e}')
                 schema_name_display = schema_name.replace('duckdb.', '').replace('"', '')
-                schemas_with_metadata.append({
-                    'display_name': schema_name_display,
-                    'name': schema_name,
-                    'last_modified': 'Unknown',
-                    'has_metadata': False
-                })
+                schemas_with_metadata.append(
+                    {
+                        'display_name': schema_name_display,
+                        'name': schema_name,
+                        'last_modified': 'Unknown',
+                        'has_metadata': False,
+                    }
+                )
 
         # Sort by last modified (most recent first)
         schemas_with_metadata.sort(key=lambda x: x['last_modified'], reverse=True)
@@ -930,6 +935,7 @@ def get_checklist_from_duckdb(ticket_number: str) -> dict:
 # Helper Functions
 # ============================================================================
 
+
 async def load_checklist_from_duckdb(ticket_number: str) -> list[ChecklistItem]:
     """Load checklist data from DuckDB."""
     # Sample data for POC
@@ -943,7 +949,7 @@ async def load_checklist_from_duckdb(ticket_number: str) -> list[ChecklistItem]:
             status='P',
             comments='All fields are complete',
             time_spent='05:30',
-            information_location='<p>Check the <strong>Metadata</strong> tab in Dataverse</p>'
+            information_location='<p>Check the <strong>Metadata</strong> tab in Dataverse</p>',
         ),
         ChecklistItem(
             id='ABC-002',
@@ -954,7 +960,7 @@ async def load_checklist_from_duckdb(ticket_number: str) -> list[ChecklistItem]:
             status='TBD',
             comments='',
             time_spent='02:15',
-            information_location='<p>See <em>Files</em> section for list of formats</p>'
+            information_location='<p>See <em>Files</em> section for list of formats</p>',
         ),
         ChecklistItem(
             id='ABC-003',
@@ -965,7 +971,7 @@ async def load_checklist_from_duckdb(ticket_number: str) -> list[ChecklistItem]:
             status='F',
             comments='Missing codebook for variable X',
             time_spent='10:45',
-            information_location=''
+            information_location='',
         ),
     ]
 
@@ -1025,7 +1031,7 @@ async def export_yaml(items: list[ChecklistItem]) -> None:
     """Export to YAML."""
     data = {
         'metadata': app.storage.user.get('ds_metadata', {}),
-        'checklist_items': [item.model_dump() for item in items]
+        'checklist_items': [item.model_dump() for item in items],
     }
     yaml_str = yaml.dump(data)
     print('YAML Export:')
@@ -1035,6 +1041,7 @@ async def export_yaml(items: list[ChecklistItem]) -> None:
 
 def confirm_new_dataset() -> None:
     """Confirm and navigate to new dataset."""
+
     async def handle_confirm() -> None:
         app.storage.user.clear()
         ui.navigate.to('/')
@@ -1071,9 +1078,4 @@ else:
 # ============================================================================
 
 if __name__ in {'__main__', '__mp_main__'}:
-    ui.run(
-        title='PyDataCuration - Styled POC',
-        favicon='🔬',
-        port=8080,
-        storage_secret='your-secret-key-here'
-    )
+    ui.run(title='PyDataCuration - Styled POC', favicon='🔬', port=8080, storage_secret='your-secret-key-here')

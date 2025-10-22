@@ -786,57 +786,59 @@ select.checklist-medium {
 # Tailwind Class Mappings (for inline usage)
 # ============================================================================
 
+
 class PDCStyles:
     """Predefined style classes for PyDataCuration components"""
 
     # Container
-    CONTAINER = "w-full max-w-7xl mx-auto bg-white p-8 rounded-lg shadow-lg"
+    CONTAINER = 'w-full max-w-7xl mx-auto bg-white p-8 rounded-lg shadow-lg'
 
     # Header
-    HEADER = "text-3xl font-bold text-gray-800 border-b-2 border-blue-500 pb-4 mb-8"
+    HEADER = 'text-3xl font-bold text-gray-800 border-b-2 border-blue-500 pb-4 mb-8'
 
     # Cards
-    CARD_INFO = "w-full bg-gray-100 p-6 rounded-lg mb-8"
-    CARD_FORM = "w-full bg-gray-100 p-5 rounded-md mb-5"
-    CARD_LEGEND = "w-full bg-yellow-50 p-5 rounded-lg mb-8 border-l-4 border-yellow-400"
+    CARD_INFO = 'w-full bg-gray-100 p-6 rounded-lg mb-8'
+    CARD_FORM = 'w-full bg-gray-100 p-5 rounded-md mb-5'
+    CARD_LEGEND = 'w-full bg-yellow-50 p-5 rounded-lg mb-8 border-l-4 border-yellow-400'
 
     # Info Grid
-    INFO_GRID = "grid grid-cols-2 gap-3 gap-x-10"
-    INFO_ITEM = "flex flex-col mb-4"
-    INFO_LABEL = "font-bold mb-2 text-gray-700 text-base"
-    INFO_VALUE = "p-3 border border-gray-300 rounded bg-white text-sm min-h-5"
+    INFO_GRID = 'grid grid-cols-2 gap-3 gap-x-10'
+    INFO_ITEM = 'flex flex-col mb-4'
+    INFO_LABEL = 'font-bold mb-2 text-gray-700 text-base'
+    INFO_VALUE = 'p-3 border border-gray-300 rounded bg-white text-sm min-h-5'
 
     # Form Elements
-    FORM_GROUP = "mb-5"
-    FORM_LABEL = "block font-bold mb-1 text-gray-700"
-    FORM_INPUT = "w-full p-2.5 border border-gray-300 rounded text-sm"
-    FORM_HELPER = "text-gray-600 text-xs mt-1"
+    FORM_GROUP = 'mb-5'
+    FORM_LABEL = 'block font-bold mb-1 text-gray-700'
+    FORM_INPUT = 'w-full p-2.5 border border-gray-300 rounded text-sm'
+    FORM_HELPER = 'text-gray-600 text-xs mt-1'
 
     # Buttons
-    BTN_PRIMARY = "px-6 py-3 mx-2 bg-blue-500 text-white rounded cursor-pointer text-sm transition-all hover:opacity-80 hover:-translate-y-0.5"
-    BTN_SECONDARY = "px-6 py-3 mx-2 bg-gray-400 text-white rounded cursor-pointer text-sm transition-all hover:opacity-80 hover:-translate-y-0.5"
-    BTN_CALCULATE = "px-6 py-3 mx-2 bg-purple-700 text-white rounded cursor-pointer text-sm transition-all hover:opacity-80 hover:-translate-y-0.5"
-    BTN_DANGER = "px-6 py-3 mx-2 bg-red-600 text-white rounded cursor-pointer text-sm transition-all hover:opacity-80 hover:-translate-y-0.5"
+    BTN_PRIMARY = 'px-6 py-3 mx-2 bg-blue-500 text-white rounded cursor-pointer text-sm transition-all hover:opacity-80 hover:-translate-y-0.5'
+    BTN_SECONDARY = 'px-6 py-3 mx-2 bg-gray-400 text-white rounded cursor-pointer text-sm transition-all hover:opacity-80 hover:-translate-y-0.5'
+    BTN_CALCULATE = 'px-6 py-3 mx-2 bg-purple-700 text-white rounded cursor-pointer text-sm transition-all hover:opacity-80 hover:-translate-y-0.5'
+    BTN_DANGER = 'px-6 py-3 mx-2 bg-red-600 text-white rounded cursor-pointer text-sm transition-all hover:opacity-80 hover:-translate-y-0.5'
 
     # Priority Badges
-    PRIORITY_REQUIRED = "inline-block px-2 py-1 rounded-xl text-xs font-bold text-white bg-red-600"
-    PRIORITY_RECOMMENDED = "inline-block px-2 py-1 rounded-xl text-xs font-bold text-white bg-yellow-500"
-    PRIORITY_INFO = "inline-block px-2 py-1 rounded-xl text-xs font-bold text-white bg-blue-400"
+    PRIORITY_REQUIRED = 'inline-block px-2 py-1 rounded-xl text-xs font-bold text-white bg-red-600'
+    PRIORITY_RECOMMENDED = 'inline-block px-2 py-1 rounded-xl text-xs font-bold text-white bg-yellow-500'
+    PRIORITY_INFO = 'inline-block px-2 py-1 rounded-xl text-xs font-bold text-white bg-blue-400'
 
     # Status Classes (for programmatic application)
-    STATUS_P = "status-P"
-    STATUS_F = "status-F"
-    STATUS_TBD = "status-TBD"
-    STATUS_NA = "status-NA"
+    STATUS_P = 'status-P'
+    STATUS_F = 'status-F'
+    STATUS_TBD = 'status-TBD'
+    STATUS_NA = 'status-NA'
 
     # Checklist Selection
-    CHECKLIST_HIGH = "checklist-high"
-    CHECKLIST_MEDIUM = "checklist-medium"
+    CHECKLIST_HIGH = 'checklist-high'
+    CHECKLIST_MEDIUM = 'checklist-medium'
 
 
 # ============================================================================
 # Helper Functions
 # ============================================================================
+
 
 def apply_pdc_styles():
     """Apply PyDataCuration CSS to the current page"""
@@ -886,11 +888,9 @@ def create_status_select(item_id: str, current_value: str = '', on_change=None):
     Returns:
         NiceGUI select element
     """
-    select = ui.select(
-        options=['', 'P', 'F', 'TBD', 'NA'],
-        value=current_value,
-        with_input=False
-    ).classes('status-select')
+    select = ui.select(options=['', 'P', 'F', 'TBD', 'NA'], value=current_value, with_input=False).classes(
+        'status-select'
+    )
 
     # Apply status-specific styling
     def update_status_style(value):
@@ -926,10 +926,7 @@ def create_checklist_select(current_value: str = 'high', on_change=None):
     ui.label('Select Checklist Level').classes('pdc-form-label')
 
     # Create select without internal label
-    select = ui.select(
-        options=['high', 'medium'],
-        value=current_value
-    ).classes('w-full').style('width: 100%')
+    select = ui.select(options=['high', 'medium'], value=current_value).classes('w-full').style('width: 100%')
 
     # Apply checklist-specific styling
     def update_checklist_style(value):
@@ -952,7 +949,7 @@ def create_checklist_select(current_value: str = 'high', on_change=None):
 # Usage Example
 # ============================================================================
 
-if __name__ == "__main__":
+if __name__ == '__main__':
     """Example usage of the styling module"""
 
     # Apply styles
@@ -962,17 +959,12 @@ if __name__ == "__main__":
         ui.label('PyDataCuration Tool').classes(PDCStyles.HEADER)
 
         # Example info grid
-        metadata = {
-            'ticket_number': 'TICKET-123',
-            'curator_name': 'John Doe',
-            'dataset_title': 'Sample Dataset'
-        }
+        metadata = {'ticket_number': 'TICKET-123', 'curator_name': 'John Doe', 'dataset_title': 'Sample Dataset'}
 
-        create_info_grid(metadata, [
-            ('ticket_number', 'Ticket Number'),
-            ('curator_name', 'Curator Name'),
-            ('dataset_title', 'Dataset Title')
-        ])
+        create_info_grid(
+            metadata,
+            [('ticket_number', 'Ticket Number'), ('curator_name', 'Curator Name'), ('dataset_title', 'Dataset Title')],
+        )
 
         # Example status select
         with ui.row():
