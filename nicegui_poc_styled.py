@@ -859,18 +859,17 @@ def confirm_delete_project(schema: dict, refresh_callback) -> None:
 
 
 @ui.page('/checklist')
-async def checklist_page(ticket_number: str | None = None) -> None:
+async def checklist_page(ticket_number: str) -> None:
     """Checklist page with exact styling match."""
     apply_pdc_styles()
 
     # Initialize the duckdb connection for this ticket number
-    if ticket_number:
-        dir_manager = DirectoryManager(ticket_number, MAIN_DIR)
-        duck_db = DuckDB(schema_name=ticket_number, db_file=dir_manager.db_path)
+    dir_manager = DirectoryManager(ticket_number, MAIN_DIR)
+    duck_db = DuckDB(schema_name=ticket_number, db_file=dir_manager.db_path)
 
-        # Load metadata from database
-        metadata = duck_db.read_project_metadata_record()
-        checklist_type = metadata.get('checklist', 'high')
+    # Load metadata from database
+    project_metadata = duck_db.read_project_metadata_record()
+    checklist_type = project_metadata.get('checklist', 'high')
 
     # Load checklist data
     checklist_items = await load_checklist_from_duckdb(ticket_number)
@@ -889,7 +888,7 @@ async def checklist_page(ticket_number: str | None = None) -> None:
 
         # Metadata Display using our helper function
         create_info_grid(
-            metadata,
+            project_metadata,
             [
                 ('ticket_number', 'Ticket number'),
                 ('curator_name', 'Curator name'),
