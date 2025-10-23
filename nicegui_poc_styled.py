@@ -1219,12 +1219,12 @@ async def export_yaml(items: list[ChecklistItem]) -> None:
 def confirm_new_dataset() -> None:
     """Confirm and navigate to new dataset."""
 
-    async def handle_confirm() -> None:
+    def handle_confirm() -> None:
         app.storage.user.clear()
         ui.navigate.to('/')
 
     with ui.dialog() as dialog, ui.card():
-        ui.label('This will erase all current input. Continue?')
+        ui.label('This will clear the current session and start a new dataset. Continue?').classes('text-lg')
         with ui.row():
             ui.button('Yes', on_click=lambda: [dialog.close(), handle_confirm()])
             ui.button('No', on_click=dialog.close)
