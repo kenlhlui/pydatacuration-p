@@ -778,6 +778,90 @@ select.checklist-medium {
 .pdc-checklist-table .q-field__control-container {
     padding: 0 !important;
 }
+
+/* ========================================================================
+   Project List Cards (Resume Work & Delete Project Pages)
+   ======================================================================== */
+.project-card {
+    background-color: white;
+    border: 1px solid #e0e0e0;
+    border-radius: 8px;
+    padding: 20px;
+    margin-bottom: 15px;
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    transition: all 0.3s ease;
+}
+
+.project-card:hover {
+    border-color: #3498db;
+    box-shadow: 0 4px 12px rgba(52, 152, 219, 0.15);
+    transform: translateY(-2px);
+}
+
+.project-card.clickable {
+    cursor: pointer;
+}
+
+.project-card-info {
+    flex-grow: 1;
+}
+
+.project-header {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    margin-bottom: 10px;
+}
+
+.project-ticket {
+    font-size: 1.2rem;
+    font-weight: 600;
+    color: #2c3e50;
+}
+
+.project-date {
+    color: #7f8c8d;
+    font-size: 0.9rem;
+}
+
+.project-info {
+    color: #34495e;
+    margin: 5px 0;
+}
+
+.project-badge {
+    display: inline-block;
+    padding: 4px 8px;
+    border-radius: 4px;
+    font-size: 0.85rem;
+    margin-right: 8px;
+}
+
+.badge-high {
+    background-color: #e74c3c;
+    color: white;
+}
+
+.badge-medium {
+    background-color: #f39c12;
+    color: white;
+}
+
+.no-projects {
+    text-align: center;
+    padding: 40px;
+    color: #7f8c8d;
+}
+
+.warning-banner {
+    background-color: #fff3cd;
+    border: 1px solid #ffc107;
+    border-radius: 8px;
+    padding: 15px;
+    margin-bottom: 20px;
+}
 </style>
 """
 
