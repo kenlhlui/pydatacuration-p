@@ -916,7 +916,7 @@ async def checklist_page(ticket_number: str) -> None:
                         ui.label(f' {meaning}')
 
         # Checklist Table
-        await render_checklist_table(checklist_items, ticket_number)
+        await render_checklist_table(duck_db, checklist_items, ticket_number)
 
         # Action Buttons
         with ui.element('div').classes('pdc-actions'):
@@ -933,7 +933,7 @@ async def checklist_page(ticket_number: str) -> None:
             ui.button('New Dataset', on_click=confirm_new_dataset).classes('pdc-btn pdc-btn-danger')
 
 
-async def render_checklist_table(items: list[ChecklistItem], ticket_number: str) -> None:  # noqa: PLR1702
+async def render_checklist_table(duckdb_instance: DuckDB, items: list[ChecklistItem], ticket_number: str) -> None:  # noqa: PLR1702
     """Render checklist table with exact styling."""
     with ui.element('table').classes('pdc-checklist-table'):
         # Table Header
@@ -989,7 +989,7 @@ async def render_checklist_table(items: list[ChecklistItem], ticket_number: str)
                         create_status_select(
                             item.id,
                             item.status or '',
-                            on_change=lambda e, iid=item.id: handle_status_change(iid, e.value, ticket_number),
+                            on_change=lambda e, iid=item.id: handle_status_change(duckdb_instance, iid, e.value, ticket_number),
                         )
 
                     # Comments
@@ -997,7 +997,7 @@ async def render_checklist_table(items: list[ChecklistItem], ticket_number: str)
                         ui.textarea(value=item.comments or '', placeholder="Curator's comments...").classes(
                             'pdc-comments-input'
                         ).on(
-                            'change', lambda e, iid=item.id: handle_comments_change(iid, e.sender.value, ticket_number)
+                            'change', lambda e, iid=item.id: handle_comments_change(duckdb_instance, iid, e.sender.value)
                         )
 
                     # Priority
@@ -1007,7 +1007,7 @@ async def render_checklist_table(items: list[ChecklistItem], ticket_number: str)
                     # Time Spent
                     with ui.element('td'):
                         ui.input(value=item.time_spent or '', placeholder='MM:SS').classes('pdc-time-input').on(
-                            'change', lambda e, iid=item.id: handle_time_change(iid, e.sender.value, ticket_number)
+                            'change', lambda e, iid=item.id: handle_time_change(duckdb_instance, iid, e.sender.value)
                         ).props('maxlength=5')
 
 
@@ -1152,21 +1152,23 @@ def get_checklist_items(ticket_number: str) -> list[ChecklistItem]:
         items.append(checklist_item)
     return items
 
-async def handle_status_change(item_id: str, new_status: str, ticket_number: str) -> None:
+
+def handle_status_change(duckdb_instance: DuckDB, item_id: str, new_status: str) -> None:
     """Handle status change with auto-save."""
-    await save_to_duckdb(ticket_number, item_id, {'status': new_status})
+    duckdb_instance.sql_update_checklist_item(item_id=item_id, status=new_status)
     ui.notify(f'Status updated for {item_id}', type='positive', position='top-right', close_button=True)
 
 
-async def handle_comments_change(item_id: str, new_comments: str, ticket_number: str) -> None:
+def handle_comments_change(duckdb_instance: DuckDB, item_id: str, new_comments: str) -> None:
     """Handle comments change."""
-    await save_to_duckdb(ticket_number, item_id, {'comments': new_comments})
+    duckdb_instance.sql_update_checklist_item(item_id=item_id, comments=new_comments)
 
 
-async def handle_time_change(item_id: str, new_time: str, ticket_number: str) -> None:
+def handle_time_change(duckdb_instance: DuckDB, item_id: str, new_time: str) -> None:
     """Handle time change with validation."""
     if validate_time_format(new_time):
-        await save_to_duckdb(ticket_number, item_id, {'time_spent': new_time})
+        duckdb_instance.sql_update_checklist_item(item_id=item_id, time_spent=new_time)
+        ui.notify(f'Time updated for {item_id}', type='positive', position='top-right', close_button=True)
     else:
         ui.notify('Please enter time in MM:SS format', type='negative')
 
@@ -1174,12 +1176,6 @@ async def handle_time_change(item_id: str, new_time: str, ticket_number: str) ->
 def validate_time_format(time_str: str) -> bool:
     """Validate MM:SS format."""
     return bool(re.match(r'^[0-9]{1,2}:[0-5][0-9]$', time_str)) if time_str else True
-
-
-async def save_to_duckdb(ticket_number: str, item_id: str, data: dict) -> None:
-    """Save item to DuckDB."""
-    # In production, call your /update-checklist-item endpoint
-    print(f'Saving to DuckDB: ticket={ticket_number}, item={item_id}, data={data}')
 
 
 def calculate_total_time(items: list[ChecklistItem]) -> None:
