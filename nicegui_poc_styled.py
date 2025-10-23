@@ -872,8 +872,6 @@ async def checklist_page(ticket_number: str) -> None:
     checklist_type = project_metadata.get('checklist', 'high')
 
     # Load checklist data
-    checklist_items_ = duck_db.read_check_results('checklist_items')
-    logger.debug(f'checklist_itesm: {checklist_items_}')
     checklist_items = get_checklist_items(ticket_number=ticket_number)
 
     with ui.column().classes('pdc-container'):
