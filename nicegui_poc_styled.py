@@ -617,71 +617,7 @@ async def resume_work_page() -> None:
     """Resume work page - shows list of existing projects."""
     apply_pdc_styles()
 
-    # Add custom CSS for project list
-    ui.add_head_html("""
-    <style>
-        .project-list-container {
-            max-width: 1000px;
-            margin: 0 auto;
-            padding: 20px;
-        }
-        .project-card {
-            background-color: white;
-            border: 1px solid #e0e0e0;
-            border-radius: 8px;
-            padding: 20px;
-            margin-bottom: 15px;
-            cursor: pointer;
-            transition: all 0.3s ease;
-        }
-        .project-card:hover {
-            border-color: #3498db;
-            box-shadow: 0 4px 12px rgba(52, 152, 219, 0.15);
-            transform: translateY(-2px);
-        }
-        .project-header {
-            display: flex;
-            justify-content: space-between;
-            align-items: center;
-            margin-bottom: 10px;
-        }
-        .project-ticket {
-            font-size: 1.2rem;
-            font-weight: 600;
-            color: #2c3e50;
-        }
-        .project-date {
-            color: #7f8c8d;
-            font-size: 0.9rem;
-        }
-        .project-info {
-            color: #34495e;
-            margin: 5px 0;
-        }
-        .project-badge {
-            display: inline-block;
-            padding: 4px 8px;
-            border-radius: 4px;
-            font-size: 0.85rem;
-            margin-right: 8px;
-        }
-        .badge-high {
-            background-color: #e74c3c;
-            color: white;
-        }
-        .badge-medium {
-            background-color: #f39c12;
-            color: white;
-        }
-        .no-projects {
-            text-align: center;
-            padding: 40px;
-            color: #7f8c8d;
-        }
-    </style>
-    """)
-
-    with ui.column().classes('project-list-container'):
+    with ui.column().classes('pdc-container'):
         # Logo and Header
         ui.html(
             '<img src="/static/UTL.png" '
@@ -710,25 +646,24 @@ async def resume_work_page() -> None:
             for schema in schemas:
                 with (
                     ui.element('div')
-                    .classes('project-card')
+                    .classes('project-card clickable')
                     .on('click', lambda s=schema: ui.navigate.to(f'/checklist?ticket_number={s["display_name"]}'))
                 ):
-                    with ui.element('div').classes('project-header'):
-                        ui.html(f'<span class="project-ticket">📋 {schema["display_name"]}</span>', sanitize=False)
-                        ui.html(f'<span class="project-date">{schema["last_modified"]}</span>', sanitize=False)
+                    with ui.element('div').classes('project-card-info'):
+                        # Use single ui.html to keep ticket and date on same line
+                        ui.html(
+                            f'<div class="project-header">'
+                            f'<span class="project-ticket">📋 {schema["display_name"]}</span>'
+                            f'<span class="project-date">Last modified: {schema["last_modified"]}</span>'
+                            f'</div>',
+                            sanitize=False,
+                        )
 
-                    # Checklist type badge
-                    badge_class = 'badge-high' if schema.get('checklist_type') == 'high' else 'badge-medium'
-                    ui.html(
-                        f'<span class="project-badge {badge_class}">'
-                        f'{schema.get("checklist_type", "unknown").upper()}-LEVEL</span>', sanitize=False
-                    )
-
-                    # Project info
-                    if schema.get('curator_name'):
-                        ui.html(f'<div class="project-info">👤 Curator: {schema["curator_name"]}</div>', sanitize=False)
-                    if schema.get('dataset_title') and schema['dataset_title'] != 'N/A':
-                        ui.html(f'<div class="project-info">📄 Dataset: {schema["dataset_title"]}</div>', sanitize=False)
+                        if schema.get('curator_name'):
+                            ui.html(
+                                f'<div class="project-info">👤 Curator: {schema["curator_name"]}</div>',
+                                sanitize=False,
+                            )
 
 
 # ============================================================================
@@ -741,39 +676,8 @@ async def delete_project_page() -> None:
     """Delete project page - shows list of projects with delete buttons."""
     apply_pdc_styles()
 
-    # Add custom CSS for delete page
-    ui.add_head_html("""
-    <style>
-        .delete-list-container {
-            max-width: 1000px;
-            margin: 0 auto;
-            padding: 20px;
-        }
-        .delete-card {
-            background-color: white;
-            border: 1px solid #e0e0e0;
-            border-radius: 8px;
-            padding: 20px;
-            margin-bottom: 15px;
-            display: flex;
-            justify-content: space-between;
-            align-items: center;
-        }
-        .delete-card-info {
-            flex-grow: 1;
-        }
-        .warning-banner {
-            background-color: #fff3cd;
-            border: 1px solid #ffc107;
-            border-radius: 8px;
-            padding: 15px;
-            margin-bottom: 20px;
-        }
-    </style>
-    """)
-
     # Container to hold the project list (for refreshing after delete)
-    container = ui.column().classes('delete-list-container')
+    container = ui.column().classes('pdc-container')
 
     with container:
         # Logo and Header
@@ -812,13 +716,22 @@ async def delete_project_page() -> None:
                 ui.label(f'Found {len(schemas)} project(s)').classes('text-lg font-semibold').style('margin: 20px 0;')
 
                 for schema in schemas:
-                    with ui.element('div').classes('delete-card'):
-                        with ui.element('div').classes('delete-card-info'):
-                            ui.html(f'<span class="project-ticket">📋 {schema["display_name"]}</span>', sanitize=False)
-                            ui.html(f'<span class="project-date">Last modified: {schema["last_modified"]}</span>', sanitize=False)
+                    with ui.element('div').classes('project-card'):
+                        with ui.element('div').classes('project-card-info'):
+                            # Use single ui.html to keep ticket and date on same line
+                            ui.html(
+                                f'<div class="project-header">'
+                                f'<span class="project-ticket">📋 {schema["display_name"]}</span>'
+                                f'<span class="project-date">Last modified: {schema["last_modified"]}</span>'
+                                f'</div>',
+                                sanitize=False,
+                            )
 
                             if schema.get('curator_name'):
-                                ui.html(f'<div class="project-info">👤 Curator: {schema["curator_name"]}</div>', sanitize=False)
+                                ui.html(
+                                    f'<div class="project-info">👤 Curator: {schema["curator_name"]}</div>',
+                                    sanitize=False,
+                                )
 
                         # Delete button
                         ui.button(
