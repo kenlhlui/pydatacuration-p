@@ -9,12 +9,16 @@ import os
 import re
 from pathlib import Path
 
+from fastapi import HTTPException
+from fastapi.responses import JSONResponse
+import markdown2
+import orjson
 import yaml
 from dotenv import load_dotenv
 from nicegui import app
 from nicegui import app as nicegui_app
 from nicegui import ui
-from pydantic import BaseModel
+from pydantic import BaseModel, ValidationError
 
 # Import our custom styling
 from nicegui_styles import apply_pdc_styles
@@ -193,39 +197,39 @@ async def main_page() -> None:
             ui.html(
                 '<img src="/static/UTL.png" '
                 'alt="University of Toronto Libraries Logo" '
-                'style="height: 60px; width: auto; margin: 8px auto; display: block;">'
+                'style="height: 60px; width: auto; margin: 8px auto; display: block;">', sanitize=False
             )
             ui.html(
                 '<h1 style="color: #1E3765; font-size: 2.6rem; margin-bottom: 10px; margin-top: 10px;">'
-                '<b>Data Curation Tool</b></h1>'
+                '<b>Data Curation Tool</b></h1>', sanitize=False
             )
 
         # Top row options
         with ui.element('div').classes('options-grid'):
             # New Project Option
             with ui.element('div').classes('option-card').on('click', lambda: ui.navigate.to('/new-dataset')):
-                ui.html('<div class="icon">📁</div>')
-                ui.html('<div class="option-title">New Project</div>')
-                ui.html('<div class="option-description">Start a new curation process for a new project</div>')
+                ui.html('<div class="icon">📁</div>', sanitize=False)
+                ui.html('<div class="option-title">New Project</div>', sanitize=False)
+                ui.html('<div class="option-description">Start a new curation process for a new project</div>', sanitize=False)
 
             # Delete Project Option
             with ui.element('div').classes('option-card').on('click', lambda: ui.navigate.to('/delete-project')):
-                ui.html('<div class="icon">🗑️</div>')
-                ui.html('<div class="option-title">Delete Project</div>')
-                ui.html('<div class="option-description">Delete a project from the database</div>')
+                ui.html('<div class="icon">🗑️</div>', sanitize=False)
+                ui.html('<div class="option-title">Delete Project</div>', sanitize=False)
+                ui.html('<div class="option-description">Delete a project from the database</div>', sanitize=False)
 
         # Resume Work Option (centered)
         with (
             ui.element('div').classes('resume-container'),
             ui.element('div').classes('option-card resume-card').on('click', lambda: ui.navigate.to('/resume-work')),
         ):
-            ui.html('<div class="icon">✏️</div>')
-            ui.html('<div class="option-title">Resume Work</div>')
-            ui.html('<div class="option-description">Continue working on an existing project</div>')
+            ui.html('<div class="icon">✏️</div>', sanitize=False)
+            ui.html('<div class="option-title">Resume Work</div>', sanitize=False)
+            ui.html('<div class="option-description">Continue working on an existing project</div>', sanitize=False)
 
 
 # ============================================================================
-# New Dataset Setup Page (formerly Landing Page)
+# New Dataset Setup Page
 # ============================================================================
 
 
@@ -241,7 +245,7 @@ async def new_dataset_page() -> None:
             '<img src="/static/UTL.png" '
             'alt="University of Toronto Libraries Logo" '
             'class="pdc-logo" '
-            'style="height: 60px; width: auto; margin: 8px;">'
+            'style="height: 60px; width: auto; margin: 8px;">', sanitize=False
         )
 
         # Header
@@ -381,6 +385,174 @@ async def new_dataset_page() -> None:
             ui.element('div').classes('pdc-loading-spinner')
             ui.label('Running curation process...')
 
+async def run_command(command: str) -> dict:
+    """Run a command and return the result with real-time output streaming to logger.
+
+    Args:
+        command (str): Command to run
+
+    Returns:
+        dict: Command result with stdout, stderr, and return code
+    """
+    try:
+        logger.info('🚀 Starting the CLI application')
+
+        process = await asyncio.create_subprocess_shell(
+            command,
+            stdout=asyncio.subprocess.PIPE,
+            stderr=asyncio.subprocess.PIPE,
+        )
+
+        stdout_lines = []
+        stderr_lines = []
+
+        def strip_ansi_codes(text: str) -> str:
+            """Remove ANSI escape codes from text."""
+            ansi_escape = re.compile(r'\x1b\[[0-9;]*m')
+            return ansi_escape.sub('', text)
+
+        async def read_stream(stream, lines_list, log_func):
+            """Read stream line by line and log in real-time."""
+            while True:
+                line = await stream.readline()
+                if not line:
+                    break
+                decoded_line = line.decode().rstrip()
+                if decoded_line:  # Only log non-empty lines
+                    lines_list.append(decoded_line)
+                    # Strip ANSI codes before logging to prevent double formatting
+                    clean_line = strip_ansi_codes(decoded_line)
+                    if clean_line.strip():  # Only log if there's content after stripping
+                        log_func(f'[CLI] {clean_line}')
+
+        # Create tasks to read both streams concurrently
+        stdout_task = asyncio.create_task(read_stream(process.stdout, stdout_lines, logger.info))
+        stderr_task = asyncio.create_task(read_stream(process.stderr, stderr_lines, logger.error))
+
+        # Wait for both streams to complete
+        await asyncio.gather(stdout_task, stderr_task)
+
+        # Wait for process to finish
+        return_code = await process.wait()
+
+        result = {
+            'stdout': '\n'.join(stdout_lines),
+            'stderr': '\n'.join(stderr_lines),
+            'return_code': return_code,
+            'success': return_code == 0,
+        }
+
+        logger.info(f'✅ Command completed with return code: {return_code}')
+        return result
+
+    except Exception as e:
+        error_msg = f'❌ Command execution failed: {str(e)}'
+        logger.error(error_msg)
+        return {'stdout': '', 'stderr': error_msg, 'return_code': -1, 'success': False}
+
+@app.post('/setup')
+async def setup(request: SetupRequest) -> JSONResponse:
+    """Process the setup form and run pydatacuration CLI command.
+
+    Args:
+        request (SetupRequest): Setup form data matching CLI parameters
+
+    Returns:
+        JSONResponse: Result of the curation process
+    """
+    try:
+        # Validate required fields
+        if not request.pid or not request.pid.strip():
+            logger.error(f'Validation failed: PID is missing or empty. Received: "{request.pid}"')
+            raise HTTPException(status_code=400, detail='PID is required')
+        if not request.ticket_number or not request.ticket_number.strip():
+            logger.error(f'Validation failed: Ticket number is missing or empty. Received: "{request.ticket_number}"')
+            raise HTTPException(status_code=400, detail='Ticket number is required')
+        if not request.curator_name or not request.curator_name.strip():
+            logger.error(f'Validation failed: Curator name is missing or empty. Received: "{request.curator_name}"')
+            raise HTTPException(status_code=400, detail='Curator name is required')
+        if not request.curator_email or not request.curator_email.strip():
+            logger.error(f'Validation failed: Curator email is missing or empty. Received: "{request.curator_email}"')
+            raise HTTPException(status_code=400, detail='Curator email is required')
+
+        # Build the command to run pydatacuration CLI
+        cmd_parts = [
+            'python',
+            '-m',
+            'pydatacuration.main',
+            'all',
+            '--pid',
+            f'"{request.pid}"',
+            '--ticket-number',
+            f'"{request.ticket_number}"',
+            '--curator-name',
+            f'"{request.curator_name}"',
+            '--curator-email',
+            f'"{request.curator_email}"',
+        ]
+
+        # Add base URL if provided
+        if request.base_url and request.base_url.strip():
+            cmd_parts.extend(['--base-url', f'"{request.base_url}"'])
+
+        # Add API token if provided
+        if request.api_token and request.api_token.strip():
+            cmd_parts.extend(['--api-token', f'"{request.api_token}"'])
+
+        # Add optional flags
+        if request.force_del:
+            cmd_parts.append('--force-del')
+        else:
+            cmd_parts.append('--no-force-del')
+
+        if request.check_zip:
+            cmd_parts.append('-z')
+        else:
+            cmd_parts.append('-nz')
+
+        # Add checklist type
+        if request.checklist:
+            cmd_parts.extend(['--checklist', request.checklist])
+
+        # Join command parts
+        cmd = ' '.join(cmd_parts)
+
+        # Store state variables using DirectoryManager
+        dir_manager = DirectoryManager(request.ticket_number, request.main_dir)
+        app.state.work_dir = dir_manager.project_dir
+        app.state.base_url = request.base_url
+        # Run the command
+        result = await run_command(cmd)
+
+        if result['success']:
+            url = f'/checklist?ticket_number={request.ticket_number}'
+            return JSONResponse(content={'success': True, 'redirect_url': url})
+        # Extract the last meaningful error message from CLI output
+        error_details = []
+        if result['stderr']:
+            error_details.append(f'CLI Error: {result["stderr"].strip()}')
+        if result['stdout']:
+            # Look for error patterns in stdout (CLI logs errors there too)
+            stdout_lines = result['stdout'].strip().split('\n')
+            for line in reversed(stdout_lines):
+                clean_line = line.strip()
+                if 'error' in clean_line.lower() or 'aborting' in clean_line.lower() or 'failed' in clean_line.lower():
+                    error_details.append(f'CLI Message: {clean_line}')
+                    break
+
+        error_message = '. '.join(error_details) if error_details else 'Curation command failed'
+        logger.error(f'Command failed with return code {result["return_code"]}: {error_message}')
+        raise HTTPException(status_code=400, detail=error_message)
+    except ValidationError as e:
+        logger.error(f'Pydantic validation error: {e}')
+        logger.error(f'Validation errors details: {e.errors()}')
+    except HTTPException as e:
+        logger.error(f'HTTP exception: status={e.status_code}, detail={e.detail}')
+        raise e
+    except Exception as e:
+        logger.error(f'Unexpected error in setup endpoint: {e}', exc_info=True)
+    return JSONResponse(content={'success': False, 'message': 'Unexpected error occurred'})
+
 
 async def handle_setup_submit(form_data: dict, error_msg, success_msg, loading_spinner) -> None:
     """Handle form submission."""
@@ -400,10 +572,9 @@ async def handle_setup_submit(form_data: dict, error_msg, success_msg, loading_s
 
     try:
         # In production, call your FastAPI /setup endpoint
-        setup_request = SetupRequest(**form_data)
-
-        # Simulate API call
-        await asyncio.sleep(1)
+        response = await setup(SetupRequest(**form_data))
+        response_data = orjson.loads(response.body)
+        ui.notify(f'Setup returned: {response_data}', type='info')
 
         # Store metadata (replaces sessionStorage)
         app.storage.user['ds_metadata'] = {
@@ -417,9 +588,11 @@ async def handle_setup_submit(form_data: dict, error_msg, success_msg, loading_s
         success_msg.set_text('Curation process completed successfully!')
         success_msg.classes(remove='hidden', add='pdc-success')
 
-        # Redirect
-        await asyncio.sleep(2)
-        ui.navigate.to(f'/checklist?ticket_number={form_data["ticket_number"]}')
+        # Redirect using the redirect_url from response
+        if response_data.get('redirect_url'):
+            ui.navigate.to(response_data['redirect_url'])
+        else:
+            ui.navigate.to(f'/checklist?ticket_number={form_data["ticket_number"]}')
 
     except Exception as e:
         error_msg.set_text(f'Error: {str(e)}')
@@ -513,7 +686,7 @@ async def resume_work_page() -> None:
             '<img src="/static/UTL.png" '
             'alt="University of Toronto Libraries Logo" '
             'class="pdc-logo" '
-            'style="height: 60px; width: auto; margin: 8px;">'
+            'style="height: 60px; width: auto; margin: 8px;">', sanitize=False
         )
         ui.label('Resume Work - Select a Project').classes('pdc-header')
 
@@ -540,21 +713,21 @@ async def resume_work_page() -> None:
                     .on('click', lambda s=schema: ui.navigate.to(f'/checklist?ticket_number={s["display_name"]}'))
                 ):
                     with ui.element('div').classes('project-header'):
-                        ui.html(f'<span class="project-ticket">📋 {schema["display_name"]}</span>')
-                        ui.html(f'<span class="project-date">{schema["last_modified"]}</span>')
+                        ui.html(f'<span class="project-ticket">📋 {schema["display_name"]}</span>', sanitize=False)
+                        ui.html(f'<span class="project-date">{schema["last_modified"]}</span>', sanitize=False)
 
                     # Checklist type badge
                     badge_class = 'badge-high' if schema.get('checklist_type') == 'high' else 'badge-medium'
                     ui.html(
                         f'<span class="project-badge {badge_class}">'
-                        f'{schema.get("checklist_type", "unknown").upper()}-LEVEL</span>'
+                        f'{schema.get("checklist_type", "unknown").upper()}-LEVEL</span>', sanitize=False
                     )
 
                     # Project info
                     if schema.get('curator_name'):
-                        ui.html(f'<div class="project-info">👤 Curator: {schema["curator_name"]}</div>')
+                        ui.html(f'<div class="project-info">👤 Curator: {schema["curator_name"]}</div>', sanitize=False)
                     if schema.get('dataset_title') and schema['dataset_title'] != 'N/A':
-                        ui.html(f'<div class="project-info">📄 Dataset: {schema["dataset_title"]}</div>')
+                        ui.html(f'<div class="project-info">📄 Dataset: {schema["dataset_title"]}</div>', sanitize=False)
 
 
 # ============================================================================
@@ -607,7 +780,7 @@ async def delete_project_page() -> None:
             '<img src="/static/UTL.png" '
             'alt="University of Toronto Libraries Logo" '
             'class="pdc-logo" '
-            'style="height: 60px; width: auto; margin: 8px;">'
+            'style="height: 60px; width: auto; margin: 8px;">', sanitize=False
         )
         ui.label('Delete Project').classes('pdc-header')
 
@@ -640,11 +813,11 @@ async def delete_project_page() -> None:
                 for schema in schemas:
                     with ui.element('div').classes('delete-card'):
                         with ui.element('div').classes('delete-card-info'):
-                            ui.html(f'<span class="project-ticket">📋 {schema["display_name"]}</span>')
-                            ui.html(f'<span class="project-date">Last modified: {schema["last_modified"]}</span>')
+                            ui.html(f'<span class="project-ticket">📋 {schema["display_name"]}</span>', sanitize=False)
+                            ui.html(f'<span class="project-date">Last modified: {schema["last_modified"]}</span>', sanitize=False)
 
                             if schema.get('curator_name'):
-                                ui.html(f'<div class="project-info">👤 Curator: {schema["curator_name"]}</div>')
+                                ui.html(f'<div class="project-info">👤 Curator: {schema["curator_name"]}</div>', sanitize=False)
 
                         # Delete button
                         ui.button(
@@ -702,7 +875,7 @@ async def checklist_page(ticket_number: str | None = None) -> None:
             '<img src="/static/UTL.png" '
             'alt="University of Toronto Libraries Logo" '
             'class="pdc-logo" '
-            'style="height: 60px; width: auto; margin: 8px;">'
+            'style="height: 60px; width: auto; margin: 8px;">', sanitize=False
         )
 
         # Header
@@ -770,7 +943,7 @@ async def render_checklist_table(items: list[ChecklistItem], ticket_number: str)
                 'Time Spent',
             ]:
                 with ui.element('th'):
-                    ui.html(header)
+                    ui.html(header, sanitize=False)
 
         # Table Body
         with ui.element('tbody'):
@@ -781,22 +954,22 @@ async def render_checklist_table(items: list[ChecklistItem], ticket_number: str)
                 if item.section != current_section:
                     current_section = item.section
                     with ui.element('tr'), ui.element('td').props('colspan=7').classes('pdc-section-header'):
-                        ui.html(item.section)
+                        ui.html(item.section, sanitize=False)
 
                 # Item row
                 with ui.element('tr').props(f'data-item-id="{item.id}"'):
                     # ID
                     with ui.element('td').classes('pdc-item-id'):
-                        ui.html(item.id)
+                        ui.html(item.id, sanitize=False)
 
                     # Action & Instructions
                     with ui.element('td').classes('details-cell'):
                         with ui.element('div').classes('pdc-action-item'):
-                            ui.html(item.action)
+                            ui.html(item.action, sanitize=False)
                         if item.instructions:
                             with ui.element('div').classes('pdc-instructions-header'):
-                                ui.html('Guidance:')
-                            ui.html(item.instructions).classes('pdc-instructions')
+                                ui.html('Guidance:', sanitize=False)
+                            ui.html(item.instructions, sanitize=False).classes('pdc-instructions')
 
                     # Information Location
                     with (
@@ -804,7 +977,7 @@ async def render_checklist_table(items: list[ChecklistItem], ticket_number: str)
                         ui.element('div').classes('pdc-info-location-container'),
                     ):  # noqa: E501
                         if item.information_location:
-                            ui.html(item.information_location).classes('pdc-static-info-location')
+                            ui.html(item.information_location, sanitize=False).classes('pdc-static-info-location')
 
                     # Status
                     with ui.element('td'):
@@ -957,6 +1130,40 @@ def get_checklist_from_duckdb(ticket_number: str) -> dict:
 # ============================================================================
 # Helper Functions
 # ============================================================================
+
+def get_checklist_items(ticket_number: str) -> list[ChecklistItem]:
+    """Get all checklist items from the DuckDB database for the specified ticket.
+
+    The checklist type is determined by what was stored in the database during setup.
+
+    Args:
+        ticket_number (str): Ticket number to get checklist items for.
+
+    Returns:
+        list[ChecklistItem]: List of checklist items with their details.
+
+    """
+    dir_manager = DirectoryManager(ticket_number, MAIN_DIR)
+    duck_db = DuckDB(schema_name=ticket_number, db_file=dir_manager.db_path)
+    duck_db_data = duck_db.read_checklist()
+    items = []
+    for item in duck_db_data.get('checklist', []):
+        checklist_item = ChecklistItem(
+            id=item['id'],
+            action=item['action'],
+            instructions=markdown2.markdown(item['instructions']) if item['instructions'] else '',
+            priority=item['priority'],
+            section=item.get('section', ''),
+            automated_check_ids=item.get('automated_check_ids', []),
+            information_location=markdown2.markdown(  # Convert Markdown to HTML
+                item.get('information_location', '')
+            )
+            if item.get('information_location')
+            else '',  # Handle missing information_location
+            check_type=item.get('check_type', 'Manual'),  # Optional field for check type
+        )
+        items.append(checklist_item)
+    return items
 
 
 async def load_checklist_from_duckdb(ticket_number: str) -> list[ChecklistItem]:
