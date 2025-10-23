@@ -832,8 +832,9 @@ async def delete_project_page() -> None:
 def confirm_delete_project(schema: dict, refresh_callback) -> None:
     """Show confirmation dialog before deleting a project."""
 
-    async def handle_delete():
-        success, message = delete_schema(schema['name'])
+    async def handle_delete() -> None:
+        # delete_project_directory(schema['name'])
+        success, message = delete_project(schema.get('name'))
         if success:
             ui.notify(message, type='positive')
             await refresh_callback()
@@ -1085,36 +1086,58 @@ def get_all_schemas() -> list[dict]:
         return []
 
 
-def delete_schema(schema_name: str) -> tuple[bool, str]:
-    """Delete a specific schema from DuckDB.
+def delete_project(schema_name: str) -> tuple[bool, str]:
+    """Delete a specific project by removing its schema and the project directory.
 
     Args:
-        schema_name (str): Name of the schema to delete
+        schema_name (str): Name of the schema to delete (includes duckdb. prefix)
 
-    Returns:
-        tuple[bool, str]: Success status and message
     """
-    try:
-        db_dir = Path(MAIN_DIR) / 'db'
-        db_file = db_dir / 'duckdb.db'
+    schema_name_pruned = schema_name.replace('duckdb.', '').replace('"', '')
 
-        if not db_file.exists():
-            return False, 'Database file not found'
+    def delete_schema(schema_name_pruned: str) -> tuple[bool, str]:
+        """Delete a specific schema from DuckDB.
 
-        # Create a DuckDB instance to delete the schema
-        duck_db = DuckDB(schema_name='temp', db_file=db_file)
+        Args:
+            schema_name_pruned (str): Name of the schema to delete (without duckdb. prefix)
 
-        # Prune the schema name
-        schema_name_pruned = schema_name.replace('duckdb.', '').replace('"', '')
+        Returns:
+            tuple[bool, str]: Success status and message
+        """
+        try:
+            db_dir = Path(MAIN_DIR) / 'db'
+            db_file = db_dir / 'duckdb.db'
 
-        # Delete the schema
-        duck_db.sql_drop_schema(schema_name_pruned)
+            if not db_file.exists():
+                return False, 'Database file not found'
 
-        return True, f'Schema {schema_name_pruned} deleted successfully'
+            # Create a DuckDB instance to delete the schema
+            duck_db = DuckDB(schema_name='temp', db_file=db_file)
 
-    except Exception as e:
-        return False, f'Error deleting schema: {str(e)}'
+            # Delete the schema
+            duck_db.sql_drop_schema(schema_name_pruned)
 
+            return True, f'Schema {schema_name_pruned} deleted successfully'
+
+        except Exception as e:
+            return False, f'Error deleting schema: {str(e)}'
+
+    def delete_project_directory(ticket_number: str) -> None:
+        """Delete the project directory for a specific ticket number.
+
+        Args:
+            ticket_number (str): Ticket number of the project to delete (is schema_name_pruned)
+
+        """
+        try:
+            dir_manager = DirectoryManager(ticket_number, MAIN_DIR)
+            dir_manager.delete_dir(MAIN_DIR / 'projects' / ticket_number)
+        except Exception as e:
+            logger.error(f'Error deleting project directory for {ticket_number}: {e}')
+
+    delete_project_directory(schema_name_pruned)
+    delete_schema(schema_name_pruned)
+    return True, f'Project {schema_name_pruned} deleted successfully'
 
 # ============================================================================
 # Helper Functions
