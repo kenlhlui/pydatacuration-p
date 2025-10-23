@@ -85,10 +85,10 @@ body {
 
 .pdc-info-value {
     padding: 10px 12px;
-    border: 1px solid #ddd;
+    border: 1.5px solid #ddd;
     border-radius: 4px;
     font-size: 14px;
-    background-color: white;
+    background-color: transparent;
     min-height: 20px;
 }
 

@@ -783,7 +783,7 @@ async def checklist_page(ticket_number: str) -> None:
 
     # Load metadata from database
     project_metadata = duck_db.read_project_metadata_record()
-    checklist_type = project_metadata.get('checklist', 'high')
+    checklist_type: str | None = project_metadata.get('checklist_type')
 
     # Load checklist items
     checklist_items = get_checklist_items(ticket_number=ticket_number)
@@ -800,8 +800,9 @@ async def checklist_page(ticket_number: str) -> None:
             'style="height: 60px; width: auto; margin: 8px;">', sanitize=False
         )
 
-        # Header
-        ui.label(f'{checklist_type.title()}-Level Curation Checklist').classes('pdc-header')
+        # Header, with dynamic checklist type
+        checklist_name = f'{checklist_type.title()}-Level ' if checklist_type else ''
+        ui.label(f'{checklist_name}Curation Checklist').classes('pdc-header')
 
         # Metadata Display using our helper function
         create_info_grid(
