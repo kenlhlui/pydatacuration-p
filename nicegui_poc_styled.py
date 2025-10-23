@@ -874,6 +874,9 @@ async def checklist_page(ticket_number: str) -> None:
     # Load checklist items
     checklist_items = get_checklist_items(ticket_number=ticket_number)
 
+    # Load checklist results from database
+    check_results = duck_db.read_check_results('check_results')
+
     with ui.column().classes('pdc-container'):
         # Logo
         ui.html(
@@ -916,7 +919,7 @@ async def checklist_page(ticket_number: str) -> None:
                         ui.label(f' {meaning}')
 
         # Checklist Table
-        await render_checklist_table(duck_db, checklist_items, ticket_number)
+        await render_checklist_table(duck_db, checklist_items, check_results, ticket_number)
 
         # Action Buttons
         with ui.element('div').classes('pdc-actions'):
@@ -933,7 +936,7 @@ async def checklist_page(ticket_number: str) -> None:
             ui.button('New Dataset', on_click=confirm_new_dataset).classes('pdc-btn pdc-btn-danger')
 
 
-async def render_checklist_table(duckdb_instance: DuckDB, items: list[ChecklistItem], ticket_number: str) -> None:  # noqa: PLR1702
+async def render_checklist_table(duckdb_instance: DuckDB, items: list[ChecklistItem], check_results: dict[str, str], ticket_number: str) -> None:  # noqa: PLR1702
     """Render checklist table with exact styling."""
     with ui.element('table').classes('pdc-checklist-table'):
         # Table Header
@@ -953,7 +956,6 @@ async def render_checklist_table(duckdb_instance: DuckDB, items: list[ChecklistI
         # Table Body
         with ui.element('tbody'):
             current_section = None
-
             for item in items:
                 # Section header row
                 if item.section != current_section:
@@ -1142,6 +1144,9 @@ def get_checklist_items(ticket_number: str) -> list[ChecklistItem]:
             priority=item['priority'],
             section=item.get('section', ''),
             automated_check_ids=item.get('automated_check_ids', []),
+            status=item.get('status', ''),
+            comments=item.get('comments', ''),
+            time_spent=item.get('time_spent', ''),
             information_location=markdown2.markdown(  # Convert Markdown to HTML
                 item.get('information_location', '')
             )
