@@ -9,16 +9,17 @@ import os
 import re
 from pathlib import Path
 
-from fastapi import HTTPException
-from fastapi.responses import JSONResponse
 import markdown2
 import orjson
 import yaml
 from dotenv import load_dotenv
+from fastapi import HTTPException
+from fastapi.responses import JSONResponse
 from nicegui import app
 from nicegui import app as nicegui_app
 from nicegui import ui
-from pydantic import BaseModel, ValidationError
+from pydantic import BaseModel
+from pydantic import ValidationError
 
 # Import our custom styling
 from nicegui_styles import apply_pdc_styles
@@ -862,9 +863,14 @@ async def checklist_page(ticket_number: str | None = None) -> None:
     """Checklist page with exact styling match."""
     apply_pdc_styles()
 
-    # Get metadata from storage
-    metadata = app.storage.user.get('ds_metadata', {})
-    checklist_type = app.storage.user.get('setup_form', {}).get('checklist', 'high')
+    # Initialize the duckdb connection for this ticket number
+    if ticket_number:
+        dir_manager = DirectoryManager(ticket_number, MAIN_DIR)
+        duck_db = DuckDB(schema_name=ticket_number, db_file=dir_manager.db_path)
+
+        # Load metadata from database
+        metadata = duck_db.read_project_metadata_record()
+        checklist_type = metadata.get('checklist', 'high')
 
     # Load checklist data
     checklist_items = await load_checklist_from_duckdb(ticket_number)
