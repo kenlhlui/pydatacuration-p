@@ -872,7 +872,9 @@ async def checklist_page(ticket_number: str) -> None:
     checklist_type = project_metadata.get('checklist', 'high')
 
     # Load checklist data
-    checklist_items = await load_checklist_from_duckdb(ticket_number)
+    checklist_items_ = duck_db.read_check_results('checklist_items')
+    logger.debug(f'checklist_itesm: {checklist_items_}')
+    checklist_items = get_checklist_items(ticket_number=ticket_number)
 
     with ui.column().classes('pdc-container'):
         # Logo
@@ -1114,24 +1116,6 @@ def delete_schema(schema_name: str) -> tuple[bool, str]:
         return False, f'Error deleting schema: {str(e)}'
 
 
-def get_checklist_from_duckdb(ticket_number: str) -> dict:
-    """Get the checklist from DuckDB for a specific ticket.
-
-    Args:
-        ticket_number (str): Ticket number
-
-    Returns:
-        dict: Checklist data
-    """
-    try:
-        dir_manager = DirectoryManager(ticket_number, MAIN_DIR)
-        duck_db = DuckDB(schema_name=ticket_number, db_file=dir_manager.db_path)
-        return duck_db.read_checklist()
-    except Exception as e:
-        print(f'Error fetching checklist from DuckDB for ticket {ticket_number}: {e}')
-        return {'error': str(e)}
-
-
 # ============================================================================
 # Helper Functions
 # ============================================================================
@@ -1169,47 +1153,6 @@ def get_checklist_items(ticket_number: str) -> list[ChecklistItem]:
         )
         items.append(checklist_item)
     return items
-
-
-async def load_checklist_from_duckdb(ticket_number: str) -> list[ChecklistItem]:
-    """Load checklist data from DuckDB."""
-    # Sample data for POC
-    return [
-        ChecklistItem(
-            id='ABC-001',
-            action='Check metadata completeness',
-            instructions='Review all required fields for completeness and accuracy.',
-            priority='required',
-            section='Metadata Review',
-            status='P',
-            comments='All fields are complete',
-            time_spent='05:30',
-            information_location='<p>Check the <strong>Metadata</strong> tab in Dataverse</p>',
-        ),
-        ChecklistItem(
-            id='ABC-002',
-            action='Verify file formats',
-            instructions='Ensure all files are in supported and appropriate formats.',
-            priority='recommended',
-            section='File Review',
-            status='TBD',
-            comments='',
-            time_spent='02:15',
-            information_location='<p>See <em>Files</em> section for list of formats</p>',
-        ),
-        ChecklistItem(
-            id='ABC-003',
-            action='Check documentation completeness',
-            instructions='Verify README and codebook are present and complete.',
-            priority='required',
-            section='Documentation',
-            status='F',
-            comments='Missing codebook for variable X',
-            time_spent='10:45',
-            information_location='',
-        ),
-    ]
-
 
 async def handle_status_change(item_id: str, new_status: str, ticket_number: str) -> None:
     """Handle status change with auto-save."""
