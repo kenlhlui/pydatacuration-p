@@ -18,8 +18,8 @@ from fastapi.responses import JSONResponse
 from nicegui import app
 from nicegui import app as nicegui_app
 from nicegui import ui
-from pydantic import BaseModel
 from pydantic import ValidationError
+from sqlmodel import SQLModel
 
 # Import our custom styling
 from nicegui_styles import apply_pdc_styles
@@ -33,6 +33,7 @@ from pydatacuration.custom_logging import setup_logging
 # Import pydatacuration modules
 from pydatacuration.directory_manager import DirectoryManager
 from pydatacuration.duck_db import DuckDB
+from pydatacuration.sqlmodels import DuckDBmodels
 
 
 # Load environment variables
@@ -48,7 +49,7 @@ setup_logging(log_file_dir=MAIN_DIR / 'logs', log_level='DEBUG')
 # ============================================================================
 
 
-class SetupRequest(BaseModel):
+class SetupRequest(SQLModel):
     """Setup form data model."""
 
     pid: str
@@ -64,35 +65,9 @@ class SetupRequest(BaseModel):
     collection_alias: str | None = None
 
 
-class ChecklistItem(BaseModel):
-    """Checklist item model.
-
-    Args:
-    id (str): item identifier
-    action (str): description of the action
-    instructions (str): detailed instructions
-    priority (str): priority level
-    section (str): section this item belongs to (optional)
-    automated_check_ids (list[str]): list of automated check IDs that map to this item
-    information_location (str): location where information can be found
-    check_type (str): type of check (manual/automated)
-    status (str): current status of the item
-    comments (str): curator comments
-    time_spent (str): time spent on this item
-    """
-
-    id: str
-    action: str
-    instructions: str
-    priority: str
-    section: str = ''
-    automated_check_ids: list[str] | None = []
-    information_location: str = ''
-    check_type: str = ''
-    status: str | None = None
-    comments: str | None = None
-    time_spent: str | None = None
-
+# Create a type alias for the Checklist model (used for type hints)
+# The actual model instances are created dynamically with schema names via DuckDBmodels
+Checklist: type[SQLModel] = DuckDBmodels('temp').checklist()
 
 # ============================================================================
 # Main Entrance Page
@@ -198,11 +173,13 @@ async def main_page() -> None:
             ui.html(
                 '<img src="/static/UTL.png" '
                 'alt="University of Toronto Libraries Logo" '
-                'style="height: 60px; width: auto; margin: 8px auto; display: block;">', sanitize=False
+                'style="height: 60px; width: auto; margin: 8px auto; display: block;">',
+                sanitize=False,
             )
             ui.html(
                 '<h1 style="color: #1E3765; font-size: 2.6rem; margin-bottom: 10px; margin-top: 10px;">'
-                '<b>Data Curation Tool</b></h1>', sanitize=False
+                '<b>Data Curation Tool</b></h1>',
+                sanitize=False,
             )
 
         # Top row options
@@ -211,7 +188,10 @@ async def main_page() -> None:
             with ui.element('div').classes('option-card').on('click', lambda: ui.navigate.to('/new-dataset')):
                 ui.html('<div class="icon">📁</div>', sanitize=False)
                 ui.html('<div class="option-title">New Project</div>', sanitize=False)
-                ui.html('<div class="option-description">Start a new curation process for a new project</div>', sanitize=False)
+                ui.html(
+                    '<div class="option-description">Start a new curation process for a new project</div>',
+                    sanitize=False,
+                )
 
             # Delete Project Option
             with ui.element('div').classes('option-card').on('click', lambda: ui.navigate.to('/delete-project')):
@@ -246,7 +226,8 @@ async def new_dataset_page() -> None:
             '<img src="/static/UTL.png" '
             'alt="University of Toronto Libraries Logo" '
             'class="pdc-logo" '
-            'style="height: 60px; width: auto; margin: 8px;">', sanitize=False
+            'style="height: 60px; width: auto; margin: 8px;">',
+            sanitize=False,
         )
 
         # Header
@@ -259,18 +240,18 @@ async def new_dataset_page() -> None:
         # Form state - automatically persisted
         # Initialize with environment variable defaults
         default_form_data = {
-                'pid': '',
-                'ticket_number': '',
-                'collection_alias': '',
-                'base_url': os.getenv('BASE_URL', ''),
-                'api_token': os.getenv('API_TOKEN', ''),
-                'curator_name': os.getenv('CURATOR_NAME', ''),
-                'curator_email': os.getenv('CURATOR_EMAIL', ''),
-                'main_dir': str(MAIN_DIR.resolve()),
-                'force_del': False,
-                'check_zip': True,
-                'checklist': 'high',
-                }
+            'pid': '',
+            'ticket_number': '',
+            'collection_alias': '',
+            'base_url': os.getenv('BASE_URL', ''),
+            'api_token': os.getenv('API_TOKEN', ''),
+            'curator_name': os.getenv('CURATOR_NAME', ''),
+            'curator_email': os.getenv('CURATOR_EMAIL', ''),
+            'main_dir': str(MAIN_DIR.resolve()),
+            'force_del': False,
+            'check_zip': True,
+            'checklist': 'high',
+        }
 
         # Get existing form data or create new
         form_data = app.storage.user.setdefault('setup_form', {})
@@ -377,7 +358,9 @@ async def new_dataset_page() -> None:
                 on_click=lambda: handle_setup_submit(form_data, error_msg, success_msg, loading_spinner),
             ).classes('pdc-btn pdc-btn-primary')
 
-            ui.button('Reset Form', on_click=lambda: reset_form(form_data, default_form_data)).classes('pdc-btn pdc-btn-secondary')
+            ui.button('Reset Form', on_click=lambda: reset_form(form_data, default_form_data)).classes(
+                'pdc-btn pdc-btn-secondary'
+            )
 
             ui.button('Back', on_click=lambda: ui.navigate.to('/'), color='red').classes('pdc-btn pdc-btn-secondary')
 
@@ -385,6 +368,7 @@ async def new_dataset_page() -> None:
         with ui.element('div').classes('pdc-loading hidden') as loading_spinner:
             ui.element('div').classes('pdc-loading-spinner')
             ui.label('Running curation process...')
+
 
 async def run_command(command: str) -> dict:
     """Run a command and return the result with real-time output streaming to logger.
@@ -450,6 +434,7 @@ async def run_command(command: str) -> dict:
         error_msg = f'❌ Command execution failed: {str(e)}'
         logger.error(error_msg)
         return {'stdout': '', 'stderr': error_msg, 'return_code': -1, 'success': False}
+
 
 @app.post('/setup')
 async def setup(request: SetupRequest) -> JSONResponse:
@@ -607,6 +592,7 @@ def reset_form(form_data: dict, default_form_data: dict) -> None:
     form_data.update(default_form_data)
     ui.notify('Form reset to defaults', type='info')
 
+
 # ============================================================================
 # Resume Work Page
 # ============================================================================
@@ -623,7 +609,8 @@ async def resume_work_page() -> None:
             '<img src="/static/UTL.png" '
             'alt="University of Toronto Libraries Logo" '
             'class="pdc-logo" '
-            'style="height: 60px; width: auto; margin: 8px;">', sanitize=False
+            'style="height: 60px; width: auto; margin: 8px;">',
+            sanitize=False,
         )
         ui.label('Resume Work - Select a Project').classes('pdc-header')
 
@@ -685,7 +672,8 @@ async def delete_project_page() -> None:
             '<img src="/static/UTL.png" '
             'alt="University of Toronto Libraries Logo" '
             'class="pdc-logo" '
-            'style="height: 60px; width: auto; margin: 8px;">', sanitize=False
+            'style="height: 60px; width: auto; margin: 8px;">',
+            sanitize=False,
         )
         ui.label('Delete Project').classes('pdc-header')
 
@@ -797,7 +785,8 @@ async def checklist_page(ticket_number: str) -> None:
             '<img src="/static/UTL.png" '
             'alt="University of Toronto Libraries Logo" '
             'class="pdc-logo" '
-            'style="height: 60px; width: auto; margin: 8px;">', sanitize=False
+            'style="height: 60px; width: auto; margin: 8px;">',
+            sanitize=False,
         )
 
         # Header, with dynamic checklist type
@@ -851,7 +840,9 @@ async def checklist_page(ticket_number: str) -> None:
             ui.button('New Dataset', on_click=confirm_new_dataset).classes('pdc-btn pdc-btn-danger')
 
 
-async def render_checklist_table(duckdb_instance: DuckDB, items: list[ChecklistItem], check_results: dict[str, str], ticket_number: str) -> None:  # noqa: PLR1702
+async def render_checklist_table(
+    duckdb_instance: DuckDB, items: list, check_results: dict[str, str], ticket_number: str
+) -> None:  # noqa: PLR1702
     """Render checklist table with exact styling."""
     with ui.element('table').classes('pdc-checklist-table'):
         # Table Header
@@ -914,7 +905,8 @@ async def render_checklist_table(duckdb_instance: DuckDB, items: list[ChecklistI
                         ui.textarea(value=item.comments or '', placeholder="Curator's comments...").classes(
                             'pdc-comments-input'
                         ).on(
-                            'change', lambda e, iid=item.id: handle_comments_change(duckdb_instance, iid, e.sender.value)
+                            'change',
+                            lambda e, iid=item.id: handle_comments_change(duckdb_instance, iid, e.sender.value),
                         )
 
                     # Priority
@@ -1053,11 +1045,13 @@ def delete_project(schema_name: str) -> tuple[bool, str]:
     delete_schema(schema_name_pruned)
     return True, f'Project {schema_name_pruned} deleted successfully'
 
+
 # ============================================================================
 # Helper Functions
 # ============================================================================
 
-def get_checklist_items(ticket_number: str) -> list[ChecklistItem]:
+
+def get_checklist_items(ticket_number: str) -> list:
     """Get all checklist items from the DuckDB database for the specified ticket.
 
     The checklist type is determined by what was stored in the database during setup.
@@ -1066,7 +1060,7 @@ def get_checklist_items(ticket_number: str) -> list[ChecklistItem]:
         ticket_number (str): Ticket number to get checklist items for.
 
     Returns:
-        list[ChecklistItem]: List of checklist items with their details.
+        list: List of checklist items with their details.
 
     """
     dir_manager = DirectoryManager(ticket_number, MAIN_DIR)
@@ -1074,7 +1068,7 @@ def get_checklist_items(ticket_number: str) -> list[ChecklistItem]:
     duck_db_data = duck_db.read_checklist()
     items = []
     for item in duck_db_data.get('checklist', []):
-        checklist_item = ChecklistItem(
+        checklist_item = Checklist(
             id=item['id'],
             action=item['action'],
             instructions=markdown2.markdown(item['instructions']) if item['instructions'] else '',
@@ -1120,7 +1114,7 @@ def validate_time_format(time_str: str) -> bool:
     return bool(re.match(r'^[0-9]{1,2}:[0-5][0-9]$', time_str)) if time_str else True
 
 
-def calculate_total_time(items: list[ChecklistItem]) -> None:
+def calculate_total_time(items: list) -> None:
     """Calculate total time spent."""
     total_minutes = 0
     for item in items:
@@ -1136,12 +1130,12 @@ def calculate_total_time(items: list[ChecklistItem]) -> None:
     ui.notify(f'Total Time Spent: {hours}:{minutes:02d}', type='info', position='top')
 
 
-async def save_curation_report(items: list[ChecklistItem]) -> None:
+async def save_curation_report(items: list) -> None:
     """Save curation report to Word."""
     ui.notify('Curation report saved successfully!', type='positive')
 
 
-async def export_yaml(items: list[ChecklistItem]) -> None:
+async def export_yaml(items: list) -> None:
     """Export to YAML."""
     data = {
         'metadata': app.storage.user.get('ds_metadata', {}),
