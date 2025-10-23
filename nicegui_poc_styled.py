@@ -9,7 +9,6 @@ import os
 import re
 from pathlib import Path
 
-import markdown2
 import orjson
 import yaml
 from dotenv import load_dotenv
@@ -20,6 +19,8 @@ from nicegui import app as nicegui_app
 from nicegui import ui
 from pydantic import ValidationError
 from sqlmodel import SQLModel
+
+from nicegui_helpers import NiceGUIHelper
 
 # Import our custom styling
 from nicegui_styles import apply_pdc_styles
@@ -620,7 +621,7 @@ async def resume_work_page() -> None:
         ui.separator()
 
         # Get all schemas/projects
-        schemas = get_all_schemas()
+        schemas = NiceGUIHelper.get_all_schemas(MAIN_DIR)
 
         if not schemas:
             with ui.element('div').classes('no-projects'):
@@ -691,11 +692,11 @@ async def delete_project_page() -> None:
         # Project list container (for dynamic updates)
         project_list_container = ui.column()
 
-    async def refresh_project_list():
+    async def refresh_project_list(main_dir: Path):
         """Refresh the project list."""
         project_list_container.clear()
         with project_list_container:
-            schemas = get_all_schemas()
+            schemas = get_all_schemas(main_dir)
 
             if not schemas:
                 with ui.element('div').classes('no-projects'):
@@ -727,15 +728,14 @@ async def delete_project_page() -> None:
                         ).classes('pdc-btn pdc-btn-danger').style('margin-left: 15px;')
 
     # Initial load
-    await refresh_project_list()
+    await refresh_project_list(MAIN_DIR)
 
 
 def confirm_delete_project(schema: dict, refresh_callback) -> None:
     """Show confirmation dialog before deleting a project."""
 
     async def handle_delete() -> None:
-        # delete_project_directory(schema['name'])
-        success, message = delete_project(schema.get('name'))
+        success, message = NiceGUIHelper.delete_project(schema.get('name'), MAIN_DIR)
         if success:
             ui.notify(message, type='positive')
             await refresh_callback()
@@ -768,13 +768,14 @@ async def checklist_page(ticket_number: str) -> None:
     # Initialize the duckdb connection for this ticket number
     dir_manager = DirectoryManager(ticket_number, MAIN_DIR)
     duck_db = DuckDB(schema_name=ticket_number, db_file=dir_manager.db_path)
+    helpers = NiceGUIHelper(duck_db, ticket_number)
 
     # Load metadata from database
     project_metadata = duck_db.read_project_metadata_record()
     checklist_type: str | None = project_metadata.get('checklist_type')
 
     # Load checklist items
-    checklist_items = get_checklist_items(ticket_number=ticket_number)
+    checklist_items = helpers.get_checklist_items()
 
     # Load checklist results from database
     check_results = duck_db.read_check_results('check_results')
@@ -827,23 +828,28 @@ async def checklist_page(ticket_number: str) -> None:
 
         # Action Buttons
         with ui.element('div').classes('pdc-actions'):
-            ui.button('Save Curation Log (Word)', on_click=lambda: save_curation_report(checklist_items)).classes(
-                'pdc-btn pdc-btn-primary'
-            )
+            ui.button(
+                'Save Curation Log (Word)', on_click=lambda: NiceGUIHelper.save_curation_report(checklist_items)
+            ).classes('pdc-btn pdc-btn-primary')
 
-            ui.button('Calculate Time Spent', on_click=lambda: calculate_total_time(checklist_items)).classes(
+            ui.button('Calculate Time Spent', on_click=lambda: helpers.calculate_total_time(checklist_items)).classes(
                 'pdc-btn pdc-btn-calculate'
             )
 
-            ui.button('Export YAML', on_click=lambda: export_yaml(checklist_items)).classes('pdc-btn pdc-btn-secondary')
+            ui.button('Export YAML', on_click=lambda: NiceGUIHelper.export_yaml(checklist_items)).classes(
+                'pdc-btn pdc-btn-secondary'
+            )
 
-            ui.button('New Dataset', on_click=confirm_new_dataset).classes('pdc-btn pdc-btn-danger')
+            ui.button('New Dataset', on_click=helpers.confirm_new_dataset).classes('pdc-btn pdc-btn-danger')
 
 
 async def render_checklist_table(
     duckdb_instance: DuckDB, items: list, check_results: dict[str, str], ticket_number: str
 ) -> None:  # noqa: PLR1702
     """Render checklist table with exact styling."""
+    # Internal helper functions for creating UI components
+    helpers = NiceGUIHelper(duckdb_instance, ticket_number)
+
     with ui.element('table').classes('pdc-checklist-table'):
         # Table Header
         with ui.element('thead'), ui.element('tr'):
@@ -897,7 +903,7 @@ async def render_checklist_table(
                         create_status_select(
                             item.id,
                             item.status or '',
-                            on_change=lambda e, iid=item.id: handle_status_change(duckdb_instance, iid, e.value),
+                            on_change=lambda e, iid=item.id: helpers.handle_status_change(iid, e.value),
                         )
 
                     # Comments
@@ -906,7 +912,7 @@ async def render_checklist_table(
                             'pdc-comments-input'
                         ).on(
                             'change',
-                            lambda e, iid=item.id: handle_comments_change(duckdb_instance, iid, e.sender.value),
+                            lambda e, iid=item.id: helpers.handle_comments_change(iid, e.sender.value),
                         )
 
                     # Priority
@@ -916,250 +922,8 @@ async def render_checklist_table(
                     # Time Spent
                     with ui.element('td'):
                         ui.input(value=item.time_spent or '', placeholder='MM:SS').classes('pdc-time-input').on(
-                            'change', lambda e, iid=item.id: handle_time_change(duckdb_instance, iid, e.sender.value)
+                            'change', lambda e, iid=item.id: helpers.handle_time_change(iid, e.sender.value)
                         ).props('maxlength=5')
-
-
-# ============================================================================
-# Database Helper Functions (from app.py)
-# ============================================================================
-
-
-def get_all_schemas() -> list[dict]:
-    """Get all available schemas (projects) from DuckDB.
-
-    Returns:
-        list[dict]: List of schemas with metadata
-    """
-    try:
-        db_dir = Path(MAIN_DIR) / 'db'
-        db_file = db_dir / 'duckdb.db'
-
-        if not db_file.exists():
-            return []
-
-        # Create a DuckDB instance to get schemas
-        duck_db = DuckDB(schema_name='temp', db_file=db_file)
-        schema_names = duck_db.get_all_schema_names()
-
-        # Get additional metadata for each schema
-        schemas_with_metadata = []
-        for schema_name in schema_names:
-            try:
-                # Try to get project metadata for last modified date
-                schema_duck_db = DuckDB(schema_name=schema_name, db_file=db_file)
-                metadata = schema_duck_db.read_project_metadata_record()
-
-                last_modified = 'Unknown'
-                if metadata and 'log_last_update_date' in metadata:
-                    last_modified = metadata['log_last_update_date']
-                elif metadata and 'log_init_date' in metadata:
-                    last_modified = metadata['log_init_date']
-
-                # Prune the schema, removing the prefixes
-                schema_name_display = schema_name.replace('duckdb.', '').replace('"', '')
-
-                schemas_with_metadata.append(
-                    {
-                        'display_name': schema_name_display,
-                        'name': schema_name,
-                        'last_modified': last_modified,
-                        'checklist_type': metadata.get('checklist_type', 'unknown'),
-                        'has_metadata': bool(metadata and metadata.get('dataset_pid')),
-                        'curator_name': metadata.get('curator_name', ''),
-                        'dataset_title': metadata.get('dataset_title', 'N/A'),
-                    }
-                )
-            except Exception as e:
-                print(f'Could not get metadata for schema {schema_name}: {e}')
-                schema_name_display = schema_name.replace('duckdb.', '').replace('"', '')
-                schemas_with_metadata.append(
-                    {
-                        'display_name': schema_name_display,
-                        'name': schema_name,
-                        'last_modified': 'Unknown',
-                        'has_metadata': False,
-                    }
-                )
-
-        # Sort by last modified (most recent first)
-        schemas_with_metadata.sort(key=lambda x: x['last_modified'], reverse=True)
-
-        return schemas_with_metadata
-
-    except Exception as e:
-        print(f'Error fetching schemas: {e}')
-        return []
-
-
-def delete_project(schema_name: str) -> tuple[bool, str]:
-    """Delete a specific project by removing its schema and the project directory.
-
-    Args:
-        schema_name (str): Name of the schema to delete (includes duckdb. prefix)
-
-    """
-    schema_name_pruned = schema_name.replace('duckdb.', '').replace('"', '')
-
-    def delete_schema(schema_name_pruned: str) -> tuple[bool, str]:
-        """Delete a specific schema from DuckDB.
-
-        Args:
-            schema_name_pruned (str): Name of the schema to delete (without duckdb. prefix)
-
-        Returns:
-            tuple[bool, str]: Success status and message
-        """
-        try:
-            db_dir = Path(MAIN_DIR) / 'db'
-            db_file = db_dir / 'duckdb.db'
-
-            if not db_file.exists():
-                return False, 'Database file not found'
-
-            # Create a DuckDB instance to delete the schema
-            duck_db = DuckDB(schema_name='temp', db_file=db_file)
-
-            # Delete the schema
-            duck_db.sql_drop_schema(schema_name_pruned)
-
-            return True, f'Schema {schema_name_pruned} deleted successfully'
-
-        except Exception as e:
-            return False, f'Error deleting schema: {str(e)}'
-
-    def delete_project_directory(ticket_number: str) -> None:
-        """Delete the project directory for a specific ticket number.
-
-        Args:
-            ticket_number (str): Ticket number of the project to delete (is schema_name_pruned)
-
-        """
-        try:
-            dir_manager = DirectoryManager(ticket_number, MAIN_DIR)
-            dir_manager.delete_dir(MAIN_DIR / 'projects' / ticket_number)
-        except Exception as e:
-            logger.error(f'Error deleting project directory for {ticket_number}: {e}')
-
-    delete_project_directory(schema_name_pruned)
-    delete_schema(schema_name_pruned)
-    return True, f'Project {schema_name_pruned} deleted successfully'
-
-
-# ============================================================================
-# Helper Functions
-# ============================================================================
-
-
-def get_checklist_items(ticket_number: str) -> list:
-    """Get all checklist items from the DuckDB database for the specified ticket.
-
-    The checklist type is determined by what was stored in the database during setup.
-
-    Args:
-        ticket_number (str): Ticket number to get checklist items for.
-
-    Returns:
-        list: List of checklist items with their details.
-
-    """
-    dir_manager = DirectoryManager(ticket_number, MAIN_DIR)
-    duck_db = DuckDB(schema_name=ticket_number, db_file=dir_manager.db_path)
-    duck_db_data = duck_db.read_checklist()
-    items = []
-    for item in duck_db_data.get('checklist', []):
-        checklist_item = Checklist(
-            id=item['id'],
-            action=item['action'],
-            instructions=markdown2.markdown(item['instructions']) if item['instructions'] else '',
-            priority=item['priority'],
-            section=item.get('section', ''),
-            automated_check_ids=item.get('automated_check_ids', []),
-            status=item.get('status', ''),
-            comments=item.get('comments', ''),
-            time_spent=item.get('time_spent', ''),
-            information_location=markdown2.markdown(  # Convert Markdown to HTML
-                item.get('information_location', '')
-            )
-            if item.get('information_location')
-            else '',  # Handle missing information_location
-            check_type=item.get('check_type', 'Manual'),  # Optional field for check type
-        )
-        items.append(checklist_item)
-    return items
-
-
-def handle_status_change(duckdb_instance: DuckDB, item_id: str, new_status: str) -> None:
-    """Handle status change with auto-save."""
-    duckdb_instance.sql_update_checklist_item(item_id=item_id, status=new_status)
-    ui.notify(f'Status updated for {item_id}', type='positive', position='top-right', close_button=True)
-
-
-def handle_comments_change(duckdb_instance: DuckDB, item_id: str, new_comments: str) -> None:
-    """Handle comments change."""
-    duckdb_instance.sql_update_checklist_item(item_id=item_id, comments=new_comments)
-
-
-def handle_time_change(duckdb_instance: DuckDB, item_id: str, new_time: str) -> None:
-    """Handle time change with validation."""
-    if validate_time_format(new_time):
-        duckdb_instance.sql_update_checklist_item(item_id=item_id, time_spent=new_time)
-        ui.notify(f'Time updated for {item_id}', type='positive', position='top-right', close_button=True)
-    else:
-        ui.notify('Please enter time in MM:SS format', type='negative')
-
-
-def validate_time_format(time_str: str) -> bool:
-    """Validate MM:SS format."""
-    return bool(re.match(r'^[0-9]{1,2}:[0-5][0-9]$', time_str)) if time_str else True
-
-
-def calculate_total_time(items: list) -> None:
-    """Calculate total time spent."""
-    total_minutes = 0
-    for item in items:
-        if item.time_spent:
-            try:
-                parts = item.time_spent.split(':')
-                total_minutes += int(parts[0]) * 60 + int(parts[1])
-            except (ValueError, IndexError):
-                continue
-
-    hours = total_minutes // 60
-    minutes = total_minutes % 60
-    ui.notify(f'Total Time Spent: {hours}:{minutes:02d}', type='info', position='top')
-
-
-async def save_curation_report(items: list) -> None:
-    """Save curation report to Word."""
-    ui.notify('Curation report saved successfully!', type='positive')
-
-
-async def export_yaml(items: list) -> None:
-    """Export to YAML."""
-    data = {
-        'metadata': app.storage.user.get('ds_metadata', {}),
-        'checklist_items': [item.model_dump() for item in items],
-    }
-    yaml_str = yaml.dump(data)
-    print('YAML Export:')
-    print(yaml_str)
-    ui.notify('YAML exported successfully!', type='positive')
-
-
-def confirm_new_dataset() -> None:
-    """Confirm and navigate to new dataset."""
-
-    def handle_confirm() -> None:
-        app.storage.user.clear()
-        ui.navigate.to('/')
-
-    with ui.dialog() as dialog, ui.card():
-        ui.label('This will clear the current session and start a new dataset. Continue?').classes('text-lg')
-        with ui.row():
-            ui.button('Yes', on_click=lambda: [dialog.close(), handle_confirm()])
-            ui.button('No', on_click=dialog.close)
-    dialog.open()
 
 
 # ============================================================================
