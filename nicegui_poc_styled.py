@@ -871,7 +871,7 @@ async def checklist_page(ticket_number: str) -> None:
     project_metadata = duck_db.read_project_metadata_record()
     checklist_type = project_metadata.get('checklist', 'high')
 
-    # Load checklist data
+    # Load checklist items
     checklist_items = get_checklist_items(ticket_number=ticket_number)
 
     with ui.column().classes('pdc-container'):
@@ -989,7 +989,7 @@ async def render_checklist_table(duckdb_instance: DuckDB, items: list[ChecklistI
                         create_status_select(
                             item.id,
                             item.status or '',
-                            on_change=lambda e, iid=item.id: handle_status_change(duckdb_instance, iid, e.value, ticket_number),
+                            on_change=lambda e, iid=item.id: handle_status_change(duckdb_instance, iid, e.value),
                         )
 
                     # Comments
