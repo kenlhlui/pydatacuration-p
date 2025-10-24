@@ -907,7 +907,7 @@ async def render_checklist_table(
                                         )
                                         # Render the 'results' item, if it exists
                                         if result and result.get('results'):
-                                            render_check_results(result['results'], ac_id)
+                                            render_check_results(result['results'], result['unit'], ac_id)
 
                     # Status
                     with ui.element('td'):
@@ -937,11 +937,12 @@ async def render_checklist_table(
                         ).props('maxlength=5')
 
 
-def render_check_results(results, check_id: str) -> None:
+def render_check_results(results, result_name: str, check_id: str) -> None:
     """Render check results based on their type (list, dict, or other).
 
     Args:
         results (Any): The results data to render (can be list, dict, or other types).
+        result_name (str): The name of the result to display as a sub-label.
         check_id (str): The check identifier to display as a label.
 
     """
@@ -959,7 +960,7 @@ def render_check_results(results, check_id: str) -> None:
 
         if isinstance(results, list):
             # Show count
-            ui.label(f'{len(results)} items found').style(
+            ui.label(f'{len(results)} {result_name} found').style(
                 'font-size: 12px; color: #666; font-style: italic; margin-bottom: 12px; display: block;'
             )
 
@@ -986,7 +987,7 @@ def render_check_results(results, check_id: str) -> None:
 
         elif isinstance(results, dict):
             # Show count
-            ui.label(f'{len(results)} items found').style(
+            ui.label(f'{len(results)} {result_name} found').style(
                 'font-size: 12px; color: #666; font-style: italic; margin-bottom: 12px; display: block;'
             )
 
