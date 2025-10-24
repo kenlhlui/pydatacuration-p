@@ -204,7 +204,7 @@ class Checker:
                     check_id='filename_special_chars',
                     check_name='Files with Special Characters',
                     description='Files containing special characters in filename',
-                    result_name='file',
+                    unit='file',
                     results=special_char_files,
                 )
             )
@@ -218,7 +218,7 @@ class Checker:
                     check_id='missing_file_extensions',
                     check_name='Files Missing Extensions',
                     description='Files without proper file extensions',
-                    result_name='file',
+                    unit='file',
                     results=missing_ext_files,
                 )
             )
@@ -232,7 +232,7 @@ class Checker:
                     check_id='readme_files',
                     check_name='README Files Found',
                     description='README files detected in the dataset',
-                    result_name='file',
+                    unit='file',
                     results=readme_files,
                 )
             )
@@ -294,7 +294,7 @@ class Checker:
                     check_id='file_accessibility',
                     check_name='Inaccessible Files',
                     description='Files that cannot be opened or read by the validation tool',
-                    result_name='file',
+                    unit='file',
                     results=inaccessible_files,
                 )
             )
@@ -308,7 +308,7 @@ class Checker:
                     check_id='unsupported_files',
                     check_name='Files with Unsupported Formats',
                     description='Files in formats not supported by the validation tool',
-                    result_name='file',
+                    unit='file',
                     results=unsupported_files,
                 )
             )
@@ -338,7 +338,7 @@ class Checker:
                     check_id='uncommon_file_formats',
                     check_name='Files with Uncommon Formats',
                     description='Files using uncommon or proprietary file formats',
-                    result_name='file',
+                    unit='file',
                     results=uncommon_format_files,
                 )
             )
@@ -401,7 +401,7 @@ class Checker:
                     check_id='missing_required_fields',
                     check_name='Missing Required Metadata Fields',
                     description='Required metadata fields that are empty or missing',
-                    result_name='field',
+                    unit='field',
                     results=missing_required_fields,
                 )
             )
@@ -415,7 +415,7 @@ class Checker:
                     check_id='authors_missing_affiliation',
                     check_name='Authors Without Affiliation',
                     description='Authors missing institutional affiliation information',
-                    result_name='author',
+                    unit='author',
                     results=authors_missing_affiliation,
                 )
             )
@@ -429,7 +429,7 @@ class Checker:
                     check_id='authors_missing_identifier',
                     check_name='Authors Without Identifier',
                     description='Authors missing personal identifier (ORCID, etc.)',
-                    result_name='author',
+                    unit='author',
                     results=authors_missing_identifier,
                 )
             )
@@ -443,7 +443,7 @@ class Checker:
                     check_id='authors_missing_scheme',
                     check_name='Authors Without Identifier Scheme',
                     description='Authors missing identifier scheme information',
-                    result_name='author',
+                    unit='author',
                     results=authors_missing_scheme,
                 )
             )
@@ -484,7 +484,7 @@ class Checker:
                     check_name='Potential Spelling Errors',
                     check_id='potential_typos',
                     description='Check for potential spelling errors in metadata fields',
-                    result_name='typo',
+                    unit='typo',
                     results=potential_typos,
                 )
             )
@@ -543,7 +543,7 @@ class Checker:
                     check_id='author_dataverse_history',
                     check_name='Author Publication History',
                     description='Previous datasets published by authors in this Dataverse instance',
-                    result_name='author record',
+                    unit='author record',
                     results=author_publication_history,
                 )
             )
@@ -601,7 +601,7 @@ class Checker:
                     check_id='restricted_files',
                     check_name='Restricted Access Files',
                     description='Files with access restrictions in the dataset',
-                    result_name='file',
+                    unit='file',
                     results=restricted_files,
                 )
             )
@@ -619,7 +619,7 @@ class Checker:
                     check_id='termsOfUse',
                     check_name='Terms of Use of the Dataset',
                     description='Terms of Use information in the dataset',
-                    result_name='terms of use',
+                    unit='terms of use',
                     results=[
                         terms_of_use,
                     ],
@@ -639,7 +639,7 @@ class Checker:
                     check_id='termsOfAccess',
                     check_name='Terms of Access of the Dataset',
                     description='Terms of Access information in the dataset',
-                    result_name='term of access',
+                    unit='term of access',
                     results=[
                         terms_of_access,
                     ],
@@ -659,7 +659,7 @@ class Checker:
                     check_id='license',
                     check_name='License of the Dataset',
                     description='License information in the dataset',
-                    result_name='license',
+                    unit='license',
                     results=[
                         license_name,
                     ],
@@ -689,7 +689,7 @@ class Checker:
                     check_name='Keywords Existence',
                     check_id='keywords_existence',
                     description='Check if keywords are present in the dataset',
-                    result_name='keyword',
+                    unit='keyword',
                     results=keyword_list,
                 )
             )
