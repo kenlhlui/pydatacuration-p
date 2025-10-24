@@ -2,6 +2,7 @@
 
 import time
 from contextlib import contextmanager
+from datetime import datetime
 from pathlib import Path
 from typing import Any
 
@@ -19,7 +20,8 @@ from .custom_logging import logger
 from .sqlmodels import DuckDBmodels
 
 
-class DuckDB:
+class DuckDB:  # noqa: PLR0904
+    """Class for interacting with DuckDB databases."""
     def __init__(self, schema_name: str, db_file: Path) -> None:
         """Initialize the DuckDB connection.
 
@@ -352,15 +354,13 @@ class DuckDB:
                     existing_item.comments = comments
                     logger.debug(f'Updated comments for item {item_id}')
 
-                if time_spent is not None:
+                if time_spent is not None and hasattr(existing_item, 'time_spent'):
                     # Assuming there's a time_spent field in the model
-                    if hasattr(existing_item, 'time_spent'):
-                        existing_item.time_spent = time_spent
-                        logger.debug(f'Updated time_spent for item {item_id}: {time_spent}')
+                    existing_item.time_spent = time_spent
+                    logger.debug(f'Updated time_spent for item {item_id}: {time_spent}')
 
                 # Update the last modified timestamp if it exists
                 if hasattr(existing_item, 'last_modified_datetime'):
-                    from datetime import datetime
                     existing_item.last_modified_datetime = datetime.now()
 
                 session.add(existing_item)
@@ -372,3 +372,30 @@ class DuckDB:
         except Exception as e:
             logger.error(f'Error updating checklist item {item_id}: {e}')
             return False
+
+    def read_row(self, sqlmodel: type[SQLModel], table: str, column: str, value: str) -> dict[str, Any] | None:
+        """Get a single row from a table based on a column value.
+
+        Args:
+            sqlmodel (type[SQLModel]): The SQLModel class to query.
+            table (str): The name of the table to query.
+            column (str): The column to filter on.
+            value (str): The value to match in the specified column.
+
+        Returns:
+            dict[str, Any] | None: The row data as a dictionary, or None if not found.
+
+        """
+        try:
+            with self.sql_get_readonly_connection() as (session, _engine):
+                # Get the actual column attribute from the model
+                column_attr = getattr(sqlmodel, column)
+                query = select(sqlmodel).where(column_attr == value)
+                result = session.exec(query)
+                row = result.first()
+                if row:
+                    return row.model_dump(mode='json')
+                return None
+        except Exception as e:
+            logger.error(f'Error reading row from {table}: {e}')
+            return None
