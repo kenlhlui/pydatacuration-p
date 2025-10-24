@@ -971,15 +971,17 @@ def create_status_select(item_id: str, current_value: str = '', on_change=None):
     Returns:
         NiceGUI select element
     """
-    select = ui.select(options={
-        '': None,
-        'P': 'In Progress',
-        'F': 'Failed',
-        'TBD': 'To Be Determined',
-        'NA': 'Not Applicable',
-    }, value=current_value, with_input=False).classes(
-        'status-select'
-    )
+    select = ui.select(
+        options={
+            '': None,
+            'P': 'In Progress',
+            'F': 'Failed',
+            'TBD': 'To Be Determined',
+            'NA': 'Not Applicable',
+        },
+        value=current_value,
+        with_input=False,
+    ).classes('status-select')
 
     # Apply status-specific styling
     def update_status_style(value):
@@ -1015,10 +1017,11 @@ def create_checklist_select(current_value: str = 'high', on_change=None):
     ui.label('Select Checklist Level').classes('pdc-form-label')
 
     # Create select without internal label - display capitalized but use lowercase values
-    select = ui.select(
-        options={'high': 'High', 'medium': 'Medium'},
-        value=current_value
-    ).classes('w-full').style('width: 100%')
+    select = (
+        ui.select(options={'high': 'High', 'medium': 'Medium'}, value=current_value)
+        .classes('w-full')
+        .style('width: 100%')
+    )
 
     # Apply checklist-specific styling
     def update_checklist_style(value):

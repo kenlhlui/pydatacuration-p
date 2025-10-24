@@ -22,6 +22,7 @@ from .sqlmodels import DuckDBmodels
 
 class DuckDB:  # noqa: PLR0904
     """Class for interacting with DuckDB databases."""
+
     def __init__(self, schema_name: str, db_file: Path) -> None:
         """Initialize the DuckDB connection.
 
@@ -319,7 +320,9 @@ class DuckDB:  # noqa: PLR0904
         except Exception as e:
             logger.error(f'Error dropping schema {schema_name}: {e}')
 
-    def sql_update_checklist_item(self, item_id: str, status: str | None = None, comments: str | None = None, time_spent: str | None = None) -> bool:
+    def sql_update_checklist_item(
+        self, item_id: str, status: str | None = None, comments: str | None = None, time_spent: str | None = None
+    ) -> bool:
         """Update a checklist item in the DuckDB database.
 
         Args:
@@ -337,9 +340,7 @@ class DuckDB:  # noqa: PLR0904
             with self.sql_get_connection() as (session, engine):
                 # First check if the item exists
                 checklist_model = self.duckdb_models.checklist()
-                existing_item = session.exec(
-                    select(checklist_model).where(checklist_model.id == item_id)
-                ).first()
+                existing_item = session.exec(select(checklist_model).where(checklist_model.id == item_id)).first()
 
                 if not existing_item:
                     logger.warning(f'Checklist item {item_id} not found in schema {self.schema_name}')
