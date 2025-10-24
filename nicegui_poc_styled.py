@@ -899,7 +899,6 @@ async def render_checklist_table(
                             logger.debug(f'Item {item.id} automated_check_ids: {item.automated_check_ids}')
                             if item.automated_check_ids:
                                 with ui.element('div').classes('pdc-automated-checks'):
-                                    ui.label('Automated Checks:').classes('pdc-automated-checks-header')
                                     for ac_id in item.automated_check_ids:
                                         result: dict | None = duckdb_instance.sql_read_row(
                                             DuckDBmodels(ticket_number).check_results(),
@@ -955,45 +954,54 @@ def render_check_results(results, check_id: str) -> None:
     ):
         # Header with label and count
         ui.label(f'{check_id}').classes('pdc-check-label').style(
-            'font-weight: bold; font-size: 16px; margin-bottom: 4px; display: block; color: #333;'
+            'font-weight: bold; font-size: 12px; margin-bottom: 4px; display: block; color: #333;'
         )
 
         if isinstance(results, list):
             # Show count
             ui.label(f'{len(results)} items found').style(
-                'font-size: 13px; color: #666; font-style: italic; margin-bottom: 12px; display: block;'
+                'font-size: 12px; color: #666; font-style: italic; margin-bottom: 12px; display: block;'
             )
 
-            # Render as a numbered list
-            with ui.element('ol').style(
-                'margin: 0; padding-left: 24px; list-style-type: decimal; list-style-position: outside; color: #1976D2;'
-            ):
-                for item in results:
-                    with ui.element('li').style('margin: 8px 0; display: list-item; line-height: 1.5; color: #1976D2;'):
-                        if isinstance(item, dict):
-                            # If list contains dicts, render key-value pairs
-                            with ui.element('span').style('color: #333;'):
-                                ui.html(
-                                    '<br>'.join([f'<strong>{k}:</strong> {v}' for k, v in item.items()]), sanitize=False
-                                )
-                        else:
-                            with ui.element('span').style('color: #333;'):
-                                ui.label(str(item))
+            # Scrollable container
+            with ui.element('div').style('max-height: 300px; overflow-y: auto; overflow-x: hidden;'):
+                # Render as a numbered list
+                with ui.element('ol').style(
+                    'margin: 0; padding-left: 24px; list-style-type: decimal; list-style-position: outside; color: #1976D2;'
+                ):
+                    for item in results:
+                        with ui.element('li').style(
+                            'margin: 8px 0; display: list-item; line-height: 1.5; color: #1976D2;'
+                        ):
+                            if isinstance(item, dict):
+                                # If list contains dicts, render key-value pairs
+                                with ui.element('span').style('color: #333;'):
+                                    ui.html(
+                                        '<br>'.join([f'<strong>{k}:</strong> {v}' for k, v in item.items()]),
+                                        sanitize=False,
+                                    )
+                            else:
+                                with ui.element('span').style('color: #333;'):
+                                    ui.label(str(item))
 
         elif isinstance(results, dict):
             # Show count
             ui.label(f'{len(results)} items found').style(
-                'font-size: 13px; color: #666; font-style: italic; margin-bottom: 12px; display: block;'
+                'font-size: 12px; color: #666; font-style: italic; margin-bottom: 12px; display: block;'
             )
 
-            # Render as numbered key-value pairs
-            with ui.element('ol').style(
-                'margin: 0; padding-left: 24px; list-style-type: decimal; list-style-position: outside; color: #1976D2;'
-            ):
-                for key, value in results.items():
-                    with ui.element('li').style('margin: 8px 0; display: list-item; line-height: 1.5; color: #1976D2;'):
-                        with ui.element('span').style('color: #333;'):
-                            ui.html(f'<strong>{key}:</strong> {value}', sanitize=False)
+            # Scrollable container
+            with ui.element('div').style('max-height: 300px; overflow-y: auto; overflow-x: hidden;'):
+                # Render as numbered key-value pairs
+                with ui.element('ol').style(
+                    'margin: 0; padding-left: 24px; list-style-type: decimal; list-style-position: outside; color: #1976D2;'
+                ):
+                    for key, value in results.items():
+                        with ui.element('li').style(
+                            'margin: 8px 0; display: list-item; line-height: 1.5; color: #1976D2;'
+                        ):
+                            with ui.element('span').style('color: #333;'):
+                                ui.html(f'<strong>{key}:</strong> {value}', sanitize=False)
 
         else:
             # Render as plain text for other types
