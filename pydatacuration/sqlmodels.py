@@ -36,7 +36,7 @@ class DuckDBmodels:
         class ProjectMetadata(SQLModel, table=True):
             """Project metadata table model."""
 
-            __tablename__ = 'project_metadata'
+            __tablename__ = 'project_metadata'  # type: ignore[assignment]
             __table_args__ = {'schema': self.schema_name}
             ticket_number: str = Field(
                 default='', sa_column=Column(String, nullable=False, unique=True), description='Unique ticket number'
@@ -100,7 +100,7 @@ class DuckDBmodels:
         class Checklist(SQLModel, table=True):
             """Checklist table model."""
 
-            __tablename__ = 'checklist'
+            __tablename__ = 'checklist'  # type: ignore[assignment]
             __table_args__ = {'schema': self.schema_name, 'extend_existing': True}
 
             id: str = Field(
@@ -138,7 +138,7 @@ class DuckDBmodels:
         class CheckResult(SQLModel, table=True):
             """Check result list table model."""
 
-            __tablename__ = 'check_results'
+            __tablename__ = 'check_results'  # type: ignore[assignment]
             __table_args__ = {'schema': self.schema_name, 'extend_existing': True}
 
             check_name: str = Field(sa_column=Column(String, nullable=False), description='Name of the check')
