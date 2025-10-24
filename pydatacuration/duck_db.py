@@ -42,11 +42,9 @@ class DuckDB:  # noqa: PLR0904
         time.sleep(0.01)  # Small delay to avoid connection issues
         conn = duckdb.connect(self.db_file)
         try:
-            logger.debug(f'Opened connection to DuckDB at {self.db_file}')
             yield conn
         finally:
             conn.close()
-            logger.debug(f'Closed connection to DuckDB at {self.db_file}')
 
     @contextmanager
     def get_readonly_connection(self):
@@ -54,11 +52,9 @@ class DuckDB:  # noqa: PLR0904
         time.sleep(0.01)
         conn = duckdb.connect(self.db_file, read_only=True)
         try:
-            logger.debug(f'Opened read-only connection to DuckDB at {self.db_file}')
             yield conn
         finally:
             conn.close()
-            logger.debug(f'Closed read-only connection to DuckDB at {self.db_file}')
 
     @contextmanager
     def sql_get_connection(self):
@@ -66,13 +62,11 @@ class DuckDB:  # noqa: PLR0904
         engine = create_engine(f'duckdb:///{self.db_file}', echo=False, pool_timeout=10, pool_recycle=300)
         session = Session(engine)
         try:
-            logger.debug(f'Opened SQLModel engine connection to DuckDB at {self.db_file}')
             yield session, engine
         finally:
             # Explicitly close the engine to free up connections
             session.close()
             engine.dispose()
-            logger.debug(f'Closed SQLModel engine connection to DuckDB at {self.db_file}')
 
     @contextmanager
     def sql_get_readonly_connection(self):
@@ -82,13 +76,11 @@ class DuckDB:  # noqa: PLR0904
         )
         session = Session(engine)
         try:
-            logger.debug(f'Opened SQLModel engine (read-only) connection to DuckDB at {self.db_file}')
             yield session, engine
         finally:
             # Explicitly close the engine to free up connections
             session.close()
             engine.dispose()
-            logger.debug(f'Closed SQLModel engine (read-only) connection to DuckDB at {self.db_file}')
 
     def sql_check_schema_exists(self, schema_name: str) -> bool:
         """Check if a schema exists in the DuckDB database.
@@ -100,20 +92,19 @@ class DuckDB:  # noqa: PLR0904
             bool: True if the schema exists, False otherwise.
         """
         try:
-            logger.debug(f'Checking if schema exists (SQLModel): {schema_name}')
             with self.sql_get_readonly_connection() as (_session, _engine):
                 inspector: Inspector = inspect(_engine)
 
                 # Try the schema name as-is first
                 result = inspector.has_schema(schema_name)
-                logger.debug(f'Schema {schema_name} exists (direct): {result}')
+                logger.info(f'Schema {schema_name} exists (direct): {result}')
 
                 if not result:
                     # Try without quotes if it has them
                     clean_name = schema_name.strip('"')
                     if clean_name != schema_name:
                         result = inspector.has_schema(clean_name)
-                        logger.debug(f'Schema {clean_name} exists (unquoted): {result}')
+                        logger.info(f'Schema {clean_name} exists (unquoted): {result}')
 
                 return result
         except Exception as e:
@@ -153,9 +144,8 @@ class DuckDB:  # noqa: PLR0904
         """Check whether there is an existing record."""
         try:
             with self.get_readonly_connection() as conn:
-                logger.debug(f'Checking for existing records in table: {table_name} from {self.schema_name}')
                 result = conn.sql(f'SELECT COUNT(*) FROM "{self.schema_name}".{table_name};').fetchone()
-                logger.debug(f'Query result for existing records in table {table_name}: {result}')
+                logger.info(f'Query result for existing records in table {table_name}: {result}')
                 if result and result[0] > 0:
                     logger.info(f'Found existing record in "{self.schema_name}".{table_name}')
                     return True
