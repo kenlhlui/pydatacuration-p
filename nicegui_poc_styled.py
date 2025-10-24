@@ -10,7 +10,6 @@ import re
 from pathlib import Path
 
 import orjson
-import yaml
 from dotenv import load_dotenv
 from fastapi import HTTPException
 from fastapi.responses import JSONResponse
@@ -897,6 +896,19 @@ async def render_checklist_table(
                     ):  # noqa: E501
                         if item.information_location:
                             ui.html(item.information_location, sanitize=False).classes('pdc-static-info-location')
+                            logger.debug(f'Item {item.id} automated_check_ids: {item.automated_check_ids}')
+                            if item.automated_check_ids:
+                                with ui.element('div').classes('pdc-automated-checks'):
+                                    ui.label('Automated Checks:').classes('pdc-automated-checks-header')
+                                    for ac_id in item.automated_check_ids:
+                                        result: dict | None = duckdb_instance.sql_read_row(
+                                            DuckDBmodels(ticket_number).check_results(),
+                                            'check_id',
+                                            ac_id,
+                                        )
+                                        # Render the 'results' item, if it exists
+                                        if result and result.get('results'):
+                                            render_check_results(result['results'], ac_id)
 
                     # Status
                     with ui.element('td'):
@@ -924,6 +936,68 @@ async def render_checklist_table(
                         ui.input(value=item.time_spent or '', placeholder='MM:SS').classes('pdc-time-input').on(
                             'change', lambda e, iid=item.id: helpers.handle_time_change(iid, e.sender.value)
                         ).props('maxlength=5')
+
+
+def render_check_results(results, check_id: str) -> None:
+    """Render check results based on their type (list, dict, or other).
+
+    Args:
+        results (Any): The results data to render (can be list, dict, or other types).
+        check_id (str): The check identifier to display as a label.
+
+    """
+    with (
+        ui.element('div')
+        .classes('pdc-automated-check-item')
+        .style(
+            'border: 1px solid #ddd; padding: 16px; margin: 8px 0; background-color: #fafafa; border-radius: 4px; border-left: 4px solid #2196F3;'
+        )
+    ):
+        # Header with label and count
+        ui.label(f'{check_id}').classes('pdc-check-label').style(
+            'font-weight: bold; font-size: 16px; margin-bottom: 4px; display: block; color: #333;'
+        )
+
+        if isinstance(results, list):
+            # Show count
+            ui.label(f'{len(results)} items found').style(
+                'font-size: 13px; color: #666; font-style: italic; margin-bottom: 12px; display: block;'
+            )
+
+            # Render as a numbered list
+            with ui.element('ol').style(
+                'margin: 0; padding-left: 24px; list-style-type: decimal; list-style-position: outside; color: #1976D2;'
+            ):
+                for item in results:
+                    with ui.element('li').style('margin: 8px 0; display: list-item; line-height: 1.5; color: #1976D2;'):
+                        if isinstance(item, dict):
+                            # If list contains dicts, render key-value pairs
+                            with ui.element('span').style('color: #333;'):
+                                ui.html(
+                                    '<br>'.join([f'<strong>{k}:</strong> {v}' for k, v in item.items()]), sanitize=False
+                                )
+                        else:
+                            with ui.element('span').style('color: #333;'):
+                                ui.label(str(item))
+
+        elif isinstance(results, dict):
+            # Show count
+            ui.label(f'{len(results)} items found').style(
+                'font-size: 13px; color: #666; font-style: italic; margin-bottom: 12px; display: block;'
+            )
+
+            # Render as numbered key-value pairs
+            with ui.element('ol').style(
+                'margin: 0; padding-left: 24px; list-style-type: decimal; list-style-position: outside; color: #1976D2;'
+            ):
+                for key, value in results.items():
+                    with ui.element('li').style('margin: 8px 0; display: list-item; line-height: 1.5; color: #1976D2;'):
+                        with ui.element('span').style('color: #333;'):
+                            ui.html(f'<strong>{key}:</strong> {value}', sanitize=False)
+
+        else:
+            # Render as plain text for other types
+            ui.label(str(results)).style('margin: 8px 0; color: #333;')
 
 
 # ============================================================================
