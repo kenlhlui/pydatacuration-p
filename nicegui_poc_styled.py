@@ -896,7 +896,6 @@ async def render_checklist_table(
                     ):  # noqa: E501
                         if item.information_location:
                             ui.html(item.information_location, sanitize=False).classes('pdc-static-info-location')
-                            logger.debug(f'Item {item.id} automated_check_ids: {item.automated_check_ids}')
                             if item.automated_check_ids:
                                 # Use the scrollable container class from nicegui_styles.py
                                 with ui.element('div').classes('pdc-dynamic-check-results'):
