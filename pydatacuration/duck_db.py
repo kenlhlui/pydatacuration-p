@@ -373,12 +373,11 @@ class DuckDB:  # noqa: PLR0904
             logger.error(f'Error updating checklist item {item_id}: {e}')
             return False
 
-    def read_row(self, sqlmodel: type[SQLModel], table: str, column: str, value: str) -> dict[str, Any] | None:
+    def sql_read_row(self, sqlmodel: type[SQLModel], column: str, value: str) -> dict[str, Any] | None:
         """Get a single row from a table based on a column value.
 
         Args:
             sqlmodel (type[SQLModel]): The SQLModel class to query.
-            table (str): The name of the table to query.
             column (str): The column to filter on.
             value (str): The value to match in the specified column.
 
@@ -397,5 +396,5 @@ class DuckDB:  # noqa: PLR0904
                     return row.model_dump(mode='json')
                 return None
         except Exception as e:
-            logger.error(f'Error reading row from {table}: {e}')
+            logger.error(f'Error reading row from {sqlmodel.__tablename__}: {e}')
             return None
