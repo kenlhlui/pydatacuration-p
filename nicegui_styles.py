@@ -1,6 +1,6 @@
-"""
-NiceGUI Styling Module for PyDataCuration
-Replicates the exact look and feel from styles.css
+"""NiceGUI Styling Module for pydatacuration.
+
+Replicates the exact look and feel from styles.css.
 """
 
 from nicegui import ui
@@ -1002,9 +1002,8 @@ def create_status_select(item_id: str, current_value: str = '', on_change=None):
     return select
 
 
-def create_checklist_select(current_value: str = 'high', on_change=None):
-    """
-    Create a checklist level select with proper styling
+def create_checklist_select(current_value: str, on_change=None):
+    """Create a checklist level select with proper styling.
 
     Args:
         current_value: Current checklist level

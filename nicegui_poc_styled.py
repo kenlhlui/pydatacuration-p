@@ -695,7 +695,7 @@ async def delete_project_page() -> None:
         """Refresh the project list."""
         project_list_container.clear()
         with project_list_container:
-            schemas = get_all_schemas(main_dir)
+            schemas = NiceGUIHelper.get_all_schemas(main_dir)
 
             if not schemas:
                 with ui.element('div').classes('no-projects'):
@@ -898,7 +898,8 @@ async def render_checklist_table(
                             ui.html(item.information_location, sanitize=False).classes('pdc-static-info-location')
                             logger.debug(f'Item {item.id} automated_check_ids: {item.automated_check_ids}')
                             if item.automated_check_ids:
-                                with ui.element('div').classes('pdc-automated-checks'):
+                                # Use the scrollable container class from nicegui_styles.py
+                                with ui.element('div').classes('pdc-dynamic-check-results'):
                                     for ac_id in item.automated_check_ids:
                                         result: dict | None = duckdb_instance.sql_read_row(
                                             DuckDBmodels(ticket_number).check_results(),
@@ -946,67 +947,41 @@ def render_check_results(results, result_name: str, check_id: str) -> None:
         check_id (str): The check identifier to display as a label.
 
     """
-    with (
-        ui.element('div')
-        .classes('pdc-automated-check-item')
-        .style(
-            'border: 1px solid #ddd; padding: 16px; margin: 8px 0; background-color: #fafafa; border-radius: 4px; border-left: 4px solid #2196F3;'
-        )
-    ):
-        # Header with label and count
-        ui.label(f'{check_id}').classes('pdc-check-label').style(
-            'font-weight: bold; font-size: 12px; margin-bottom: 4px; display: block; color: #333;'
-        )
+    # Use the pdc-check-result class from nicegui_styles.py instead of inline styles
+    with ui.element('div').classes('pdc-check-result'):
+        # Header with check ID - using pdc-static-info-location class
+        ui.label(f'{check_id}').classes('pdc-static-info-location')
 
         if isinstance(results, list):
-            # Show count
-            ui.label(f'{len(results)} {result_name} found').style(
-                'font-size: 12px; color: #666; font-style: italic; margin-bottom: 12px; display: block;'
-            )
+            # Show count description
+            ui.label(f'{len(results)} {result_name} found').classes('pdc-check-description')
 
-            # Scrollable container
-            with ui.element('div').style('max-height: 300px; overflow-y: auto; overflow-x: hidden;'):
-                # Render as a numbered list
-                with ui.element('ol').style(
-                    'margin: 0; padding-left: 24px; list-style-type: decimal; list-style-position: outside; color: #1976D2;'
-                ):
-                    for item in results:
-                        with ui.element('li').style(
-                            'margin: 8px 0; display: list-item; line-height: 1.5; color: #1976D2;'
-                        ):
-                            if isinstance(item, dict):
-                                # If list contains dicts, render key-value pairs
-                                with ui.element('span').style('color: #333;'):
-                                    ui.html(
-                                        '<br>'.join([f'<strong>{k}:</strong> {v}' for k, v in item.items()]),
-                                        sanitize=False,
-                                    )
-                            else:
-                                with ui.element('span').style('color: #333;'):
-                                    ui.label(str(item))
+            # Use pdc-check-details-list class for the numbered list
+            with ui.element('ol').classes('pdc-check-details-list'):
+                for item in results:
+                    with ui.element('li').classes('result-item'):
+                        if isinstance(item, dict):
+                            # If list contains dicts, render key-value pairs
+                            ui.html(
+                                '<br>'.join([f'<strong>{k}:</strong> {v}' for k, v in item.items()]),
+                                sanitize=False,
+                            )
+                        else:
+                            ui.label(str(item))
 
         elif isinstance(results, dict):
-            # Show count
-            ui.label(f'{len(results)} {result_name} found').style(
-                'font-size: 12px; color: #666; font-style: italic; margin-bottom: 12px; display: block;'
-            )
+            # Show count description
+            ui.label(f'{len(results)} {result_name} found').classes('pdc-check-description')
 
-            # Scrollable container
-            with ui.element('div').style('max-height: 300px; overflow-y: auto; overflow-x: hidden;'):
-                # Render as numbered key-value pairs
-                with ui.element('ol').style(
-                    'margin: 0; padding-left: 24px; list-style-type: decimal; list-style-position: outside; color: #1976D2;'
-                ):
-                    for key, value in results.items():
-                        with ui.element('li').style(
-                            'margin: 8px 0; display: list-item; line-height: 1.5; color: #1976D2;'
-                        ):
-                            with ui.element('span').style('color: #333;'):
-                                ui.html(f'<strong>{key}:</strong> {value}', sanitize=False)
+            # Use pdc-check-details-list class for the numbered list
+            with ui.element('ol').classes('pdc-check-details-list'):
+                for key, value in results.items():
+                    with ui.element('li').classes('result-item'):
+                        ui.html(f'<strong>{key}:</strong> {value}', sanitize=False)
 
         else:
             # Render as plain text for other types
-            ui.label(str(results)).style('margin: 8px 0; color: #333;')
+            ui.label(str(results)).classes('pdc-check-description')
 
 
 # ============================================================================
