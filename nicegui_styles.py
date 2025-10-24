@@ -961,8 +961,7 @@ def create_priority_badge(priority: str):
 
 
 def create_status_select(item_id: str, current_value: str = '', on_change=None):
-    """
-    Create a status select dropdown with proper styling
+    """Create a status select dropdown with proper styling.
 
     Args:
         item_id: Checklist item ID
@@ -972,7 +971,13 @@ def create_status_select(item_id: str, current_value: str = '', on_change=None):
     Returns:
         NiceGUI select element
     """
-    select = ui.select(options=['', 'P', 'F', 'TBD', 'NA'], value=current_value, with_input=False).classes(
+    select = ui.select(options={
+        '': '',
+        'P': 'In Progress',
+        'F': 'Failed',
+        'TBD': 'To Be Determined',
+        'NA': 'Not Applicable',
+    }, value=current_value, with_input=False).classes(
         'status-select'
     )
 
@@ -1009,8 +1014,11 @@ def create_checklist_select(current_value: str = 'high', on_change=None):
     # Create label outside the select
     ui.label('Select Checklist Level').classes('pdc-form-label')
 
-    # Create select without internal label
-    select = ui.select(options=['high', 'medium'], value=current_value).classes('w-full').style('width: 100%')
+    # Create select without internal label - display capitalized but use lowercase values
+    select = ui.select(
+        options={'high': 'High', 'medium': 'Medium'},
+        value=current_value
+    ).classes('w-full').style('width: 100%')
 
     # Apply checklist-specific styling
     def update_checklist_style(value):
