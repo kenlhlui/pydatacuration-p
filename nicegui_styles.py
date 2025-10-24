@@ -972,7 +972,7 @@ def create_status_select(item_id: str, current_value: str = '', on_change=None):
         NiceGUI select element
     """
     select = ui.select(options={
-        '': '',
+        '': None,
         'P': 'In Progress',
         'F': 'Failed',
         'TBD': 'To Be Determined',
