@@ -978,7 +978,7 @@ def create_status_select(item_id: str, current_value: str = '', on_change=None):
     select = ui.select(
         options={
             '': None,
-            'P': 'In Progress',
+            'P': 'Passed',
             'F': 'Failed',
             'TBD': 'To Be Determined',
             'NA': 'Not Applicable',

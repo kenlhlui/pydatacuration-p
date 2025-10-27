@@ -808,19 +808,19 @@ async def checklist_page(ticket_number: str) -> None:
             ],
         )
 
-        # Status Legend
-        with ui.element('div').classes('pdc-status-legend'):
-            ui.label('Status Explanation').classes('text-xl font-semibold')
-            with ui.element('div').classes('pdc-status-list'):
-                for code, meaning in [
-                    ('P', 'Passed'),
-                    ('F', 'Follow-up'),
-                    ('TBD', 'To Be Determined'),
-                    ('NA', 'Not Applicable'),
-                ]:
-                    with ui.element('div').classes('pdc-status-item'):
-                        ui.label(f'{code}:').classes('pdc-status-code')
-                        ui.label(f' {meaning}')
+        # # Status Legend  # (commented out for cleaner UI); can be re-enabled for other content if needed
+        # with ui.element('div').classes('pdc-status-legend'):
+        #     ui.label('Status Explanation').classes('text-xl font-semibold')
+        #     with ui.element('div').classes('pdc-status-list'):
+        #         for code, meaning in [
+        #             ('P', 'Passed'),
+        #             ('F', 'Follow-up'),
+        #             ('TBD', 'To Be Determined'),
+        #             ('NA', 'Not Applicable'),
+        #         ]:
+        #             with ui.element('div').classes('pdc-status-item'):
+        #                 ui.label(f'{code}:').classes('pdc-status-code')
+        #                 ui.label(f' {meaning}')
 
         # Checklist Table
         await render_checklist_table(duck_db, checklist_items, check_results, ticket_number)
