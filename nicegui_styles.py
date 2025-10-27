@@ -274,6 +274,11 @@ tr.row-status-NA {
     min-height: 50px;
 }
 
+.pdc-check-result-header {
+    font-weight: bold;
+    font-size: 12px;
+}
+
 .pdc-check-result {
     min-height: 40px;
     margin-bottom: 8px;
@@ -286,7 +291,6 @@ tr.row-status-NA {
     margin-top: 0px;
     font-size: 12px;
     color: #000000;
-    font-weight: 500;
     display: block;
 }
 

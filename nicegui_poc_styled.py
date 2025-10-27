@@ -896,19 +896,19 @@ async def render_checklist_table(
                     ):  # noqa: E501
                         if item.information_location:
                             ui.markdown(item.information_location).classes('pdc-static-info-location')
-                            if item.automated_check_ids:
-                                for ac_id in item.automated_check_ids:
-                                    result: dict | None = duckdb_instance.sql_read_row(
-                                        DuckDBmodels(ticket_number).check_results(),
-                                        'check_id',
-                                        ac_id,
-                                    )
-                                    # Render the 'results' item, if it exists
-                                    if result and result.get('results') and len(result['results']) > 0:
-                                        # Use the scrollable container class from nicegui_styles.py
-                                        # Only render the grey scrollable box if there are results
-                                        with ui.element('div').classes('pdc-dynamic-check-results'):
-                                            render_check_results(result['results'], result['unit'], ac_id)
+                        if item.automated_check_ids:
+                            for ac_id in item.automated_check_ids:
+                                result: dict | None = duckdb_instance.sql_read_row(
+                                    DuckDBmodels(ticket_number).check_results(),
+                                    'check_id',
+                                    ac_id,
+                                )
+                                # Render the 'results' item, if it exists
+                                if result and result.get('results') and len(result['results']) > 0:
+                                    # Use the scrollable container class from nicegui_styles.py
+                                    # Only render the grey scrollable box if there are results
+                                    with ui.element('div').classes('pdc-dynamic-check-results'):
+                                        render_check_results(result['results'], result['unit'], ac_id)
 
                     # Status
                     with ui.element('td'):
@@ -950,7 +950,7 @@ def render_check_results(results, result_name: str, check_id: str) -> None:
     # Use the pdc-check-result class from nicegui_styles.py instead of inline styles
     with ui.element('div').classes('pdc-check-result'):
         # Header with check ID - using pdc-static-info-location class
-        ui.label(f'{check_id}').classes('pdc-static-info-location')
+        ui.label(f'{check_id}').classes('pdc-check-result-header')
 
         if isinstance(results, list):
             # Show count description
