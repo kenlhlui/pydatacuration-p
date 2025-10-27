@@ -777,7 +777,7 @@ async def checklist_page(ticket_number: str) -> None:
     checklist_items = helpers.get_checklist_items()
 
     # Load checklist results from database
-    check_results = duck_db.read_check_results('check_results')
+    check_results = duck_db.read_check_results()
 
     with ui.column().classes('pdc-container'):
         # Logo
