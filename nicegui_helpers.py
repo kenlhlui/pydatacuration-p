@@ -15,6 +15,7 @@ from pydatacuration.custom_logging import setup_logging
 from pydatacuration.directory_manager import DirectoryManager
 from pydatacuration.duck_db import DuckDB
 from pydatacuration.sqlmodels import DuckDBmodels
+from pydatacuration.exporter import Exporter
 
 
 setup_logging()
@@ -254,34 +255,8 @@ class NiceGUIHelper:
         ui.notify('Curation report saved successfully!', type='positive')
 
     @staticmethod
-    def generate_yaml(duckdb: DuckDB) -> dict[str, Any]:
-        """Export to YAML by reading the database."""
-        project_metadata = duckdb.read_project_metadata_record()
-        checklist: dict[str, Any] = duckdb.read_checklist()
-        check_results: dict[str, Any] = duckdb.read_check_results()
-
-        # Match the checklist items with their results
-        for check_result in check_results.get('check_results', []):
-            check_id = check_result.get('check_id')
-            results = check_result.get('results')
-            for item in checklist.get('checklist', []):
-                if item.get('automated_check_ids', []) and check_id in item.get('automated_check_ids', []):
-                    item['automated_check_result'] = results
-
-        # Include project metadata
-        yaml_data = {
-            'project_metadata': project_metadata,
-            'checklist': checklist.get('checklist', []),
-        }
-
-        return yaml_data
-
-    @staticmethod
-    def export_yaml(duckdb: DuckDB, dir_manager: DirectoryManager) -> None:
+    def export_yaml_ui(duckdb: DuckDB, dir_manager: DirectoryManager) -> None:
         """Export YAML file from the project directory."""
-        yaml_data = NiceGUIHelper.generate_yaml(duckdb)
-        with Path(dir_manager.outputs_dir, 'output.yaml').open('w', encoding='utf-8') as yaml_file:
-            # Write the checklist results to YAML
-            yaml.dump(yaml_data, yaml_file, sort_keys=False, allow_unicode=True)
-
+        exporter = Exporter(duckdb, dir_manager)
+        exporter.export_yaml()
         ui.notify('YAML exported successfully!', type='positive')

@@ -835,7 +835,7 @@ async def checklist_page(ticket_number: str) -> None:
                 'pdc-btn pdc-btn-calculate'
             )
 
-            ui.button('Export YAML', on_click=lambda: NiceGUIHelper.export_yaml(duck_db, dir_manager)).classes(
+            ui.button('Export YAML', on_click=lambda: NiceGUIHelper.export_yaml_ui(duck_db, dir_manager)).classes(
                 'pdc-btn pdc-btn-secondary'
             )
 
