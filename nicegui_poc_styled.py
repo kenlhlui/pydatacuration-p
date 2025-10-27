@@ -777,7 +777,7 @@ async def checklist_page(ticket_number: str) -> None:
     checklist_items = helpers.get_checklist_items()
 
     # Load checklist results from database
-    check_results = duck_db.read_check_results('check_results')
+    check_results = duck_db.read_check_results()
 
     with ui.column().classes('pdc-container'):
         # Logo
@@ -835,7 +835,7 @@ async def checklist_page(ticket_number: str) -> None:
                 'pdc-btn pdc-btn-calculate'
             )
 
-            ui.button('Export YAML', on_click=lambda: NiceGUIHelper.export_yaml(checklist_items)).classes(
+            ui.button('Export YAML', on_click=lambda: NiceGUIHelper.export_yaml(duck_db, dir_manager)).classes(
                 'pdc-btn pdc-btn-secondary'
             )
 

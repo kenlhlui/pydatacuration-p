@@ -2,6 +2,7 @@
 
 import re
 from pathlib import Path
+from typing import Any
 
 import markdown2
 import yaml
@@ -253,13 +254,21 @@ class NiceGUIHelper:
         ui.notify('Curation report saved successfully!', type='positive')
 
     @staticmethod
-    async def export_yaml(items: list) -> None:
-        """Export to YAML."""
-        data = {
-            'metadata': app.storage.user.get('ds_metadata', {}),
-            'checklist_items': [item.model_dump() for item in items],
-        }
-        yaml_str = yaml.dump(data)
-        print('YAML Export:')
-        print(yaml_str)
+    def export_yaml(duckdb: DuckDB, dir_manager: DirectoryManager) -> None:
+        """Export to YAML by reading the database."""
+        checklist: dict[str, Any] = duckdb.read_checklist()
+        check_results: dict[str, Any] = duckdb.read_check_results()
+
+        # Match the checklist items with their results
+        for check_result in check_results.get('check_results', []):
+            check_id = check_result.get('check_id')
+            results = check_result.get('results')
+            for item in checklist.get('checklist', []):
+                if item.get('automated_check_ids', []) and check_id in item.get('automated_check_ids', []):
+                    item['automated_check_result'] = results
+
+        with Path(dir_manager.outputs_dir, 'output.yaml').open('w', encoding='utf-8') as yaml_file:
+            # Write the checklist results to YAML
+            yaml.dump(checklist, yaml_file, sort_keys=False, allow_unicode=True)
+
         ui.notify('YAML exported successfully!', type='positive')

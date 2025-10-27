@@ -438,7 +438,7 @@ def _get_check_results_from_duckdb(main_dir: str, ticket_number: str, table_name
     try:
         dir_manager = DirectoryManager(ticket_number, main_dir)
         duck_db = DuckDB(schema_name=ticket_number, db_file=dir_manager.db_path)
-        return duck_db.read_check_results(table_name)
+        return duck_db.read_check_results()
     except Exception as e:
         logger.error(f'Error fetching check results from DuckDB for ticket {ticket_number}: {e}')
         return {'error': str(e)}

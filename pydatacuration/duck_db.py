@@ -227,11 +227,8 @@ class DuckDB:  # noqa: PLR0904
         """
         return self.sql_read_table_records(self.duckdb_models.project_metadata_record())[0]
 
-    def read_check_results(self, table_name: str) -> dict[str, Any]:
+    def read_check_results(self) -> dict[str, Any]:
         """Read check results for specific table (with check_id as table_name).
-
-        Args:
-            table_name (str): Name of the table
 
         Returns:
             dict[str, Any]: Check results dictionary
@@ -242,10 +239,7 @@ class DuckDB:  # noqa: PLR0904
         return check_results
 
     def read_checklist(self) -> dict[str, Any]:
-        """Read checklist checklist table.
-
-        Args:
-            table_name (str): Name of the table
+        """Read `checklist` table.
 
         Returns:
             dict[str, Any]: Checklist dictionary
