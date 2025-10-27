@@ -262,4 +262,5 @@ class NiceGUIHelper:
         """Export YAML file from the project directory."""
         exporter = Exporter(duckdb, dir_manager)
         exporter.export_yaml()
+
         ui.notify('YAML exported successfully!', type='positive')

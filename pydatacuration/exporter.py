@@ -4,6 +4,7 @@ from pathlib import Path
 from typing import Any
 
 import yaml
+from docxtpl import DocxTemplate
 
 from .custom_logging import logger
 from .directory_manager import DirectoryManager
@@ -43,6 +44,24 @@ class Exporter:
         yaml_data = self.generate_yaml()
 
         # Get the word template
-        template_path = self.res_dir / (word_template_name or 'word_template.docx')
+        template_path = self.res_dir / (word_template_name or 'curation_log_template.docx')
 
-        logger.info(f'Using word template at: {template_path}')
+        # Get the checklist items
+        checklist_items = yaml_data.get('checklist', [])
+
+        # Get the metadata
+        metadata = yaml_data.get('project_metadata', {})
+
+        doc = DocxTemplate(template_path)
+
+        context = {
+        'checklist': checklist_items,
+        'project_metadata': metadata,
+        }
+
+        # pass the list in under the name 'rows' to match the template
+        logger.debug('Rendering word document with checklist and metadata')
+        doc.render(context)
+        logger.debug(f'Exporting word to {self.dir_manager.outputs_dir / "curation_report.docx"}')
+        output_path = self.dir_manager.outputs_dir / 'curation_report.docx'
+        doc.save(output_path)
