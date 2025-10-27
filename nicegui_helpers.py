@@ -256,6 +256,7 @@ class NiceGUIHelper:
     @staticmethod
     def export_yaml(duckdb: DuckDB, dir_manager: DirectoryManager) -> None:
         """Export to YAML by reading the database."""
+        project_metadata = duckdb.read_project_metadata_record()
         checklist: dict[str, Any] = duckdb.read_checklist()
         check_results: dict[str, Any] = duckdb.read_check_results()
 
@@ -267,8 +268,14 @@ class NiceGUIHelper:
                 if item.get('automated_check_ids', []) and check_id in item.get('automated_check_ids', []):
                     item['automated_check_result'] = results
 
+        # Include project metadata
+        yaml_data = {
+            'project_metadata': project_metadata,
+            'checklist': checklist.get('checklist', []),
+        }
+
         with Path(dir_manager.outputs_dir, 'output.yaml').open('w', encoding='utf-8') as yaml_file:
             # Write the checklist results to YAML
-            yaml.dump(checklist, yaml_file, sort_keys=False, allow_unicode=True)
+            yaml.dump(yaml_data, yaml_file, sort_keys=False, allow_unicode=True)
 
         ui.notify('YAML exported successfully!', type='positive')
