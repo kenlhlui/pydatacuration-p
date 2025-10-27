@@ -887,7 +887,7 @@ async def render_checklist_table(
                         if item.instructions:
                             with ui.element('div').classes('pdc-instructions-header'):
                                 ui.html('Guidance:', sanitize=False)
-                            ui.html(item.instructions, sanitize=False).classes('pdc-instructions')
+                            ui.markdown(item.instructions).classes('pdc-instructions')
 
                     # Information Location
                     with (
@@ -895,7 +895,7 @@ async def render_checklist_table(
                         ui.element('div').classes('pdc-info-location-container'),
                     ):  # noqa: E501
                         if item.information_location:
-                            ui.html(item.information_location, sanitize=False).classes('pdc-static-info-location')
+                            ui.markdown(item.information_location).classes('pdc-static-info-location')
                             if item.automated_check_ids:
                                 for ac_id in item.automated_check_ids:
                                     result: dict | None = duckdb_instance.sql_read_row(
