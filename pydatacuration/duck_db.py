@@ -242,7 +242,7 @@ class DuckDB:  # noqa: PLR0904
         return check_results
 
     def read_checklist(self) -> dict[str, Any]:
-        """Read checklist checklist table.
+        """Read checklist table.
 
         Args:
             table_name (str): Name of the table
