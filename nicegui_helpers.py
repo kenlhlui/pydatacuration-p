@@ -254,7 +254,7 @@ class NiceGUIHelper:
         ui.notify('Curation report saved successfully!', type='positive')
 
     @staticmethod
-    def export_yaml(duckdb: DuckDB, dir_manager: DirectoryManager) -> None:
+    def generate_yaml(duckdb: DuckDB) -> dict[str, Any]:
         """Export to YAML by reading the database."""
         project_metadata = duckdb.read_project_metadata_record()
         checklist: dict[str, Any] = duckdb.read_checklist()
@@ -274,6 +274,12 @@ class NiceGUIHelper:
             'checklist': checklist.get('checklist', []),
         }
 
+        return yaml_data
+
+    @staticmethod
+    def export_yaml(duckdb: DuckDB, dir_manager: DirectoryManager) -> None:
+        """Export YAML file from the project directory."""
+        yaml_data = NiceGUIHelper.generate_yaml(duckdb)
         with Path(dir_manager.outputs_dir, 'output.yaml').open('w', encoding='utf-8') as yaml_file:
             # Write the checklist results to YAML
             yaml.dump(yaml_data, yaml_file, sort_keys=False, allow_unicode=True)
