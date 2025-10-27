@@ -2,10 +2,8 @@
 
 import re
 from pathlib import Path
-from typing import Any
 
 import markdown2
-import yaml
 from nicegui import app
 from nicegui import ui
 from sqlmodel import SQLModel
@@ -14,8 +12,8 @@ from pydatacuration.custom_logging import logger
 from pydatacuration.custom_logging import setup_logging
 from pydatacuration.directory_manager import DirectoryManager
 from pydatacuration.duck_db import DuckDB
-from pydatacuration.sqlmodels import DuckDBmodels
 from pydatacuration.exporter import Exporter
+from pydatacuration.sqlmodels import DuckDBmodels
 
 
 setup_logging()
@@ -250,12 +248,17 @@ class NiceGUIHelper:
         return True, f'Project {schema_name_pruned} deleted successfully'
 
     @staticmethod
-    async def save_curation_report(items: list) -> None:
+    def export_word_button(
+        duckdb: DuckDB, dir_manager: DirectoryManager, word_template_name: str | None = None
+    ) -> None:
         """Save curation report to Word."""
+        exporter = Exporter(duckdb, dir_manager)
+        exporter.export_word(word_template_name=word_template_name)
+
         ui.notify('Curation report saved successfully!', type='positive')
 
     @staticmethod
-    def export_yaml_ui(duckdb: DuckDB, dir_manager: DirectoryManager) -> None:
+    def export_yaml_button(duckdb: DuckDB, dir_manager: DirectoryManager) -> None:
         """Export YAML file from the project directory."""
         exporter = Exporter(duckdb, dir_manager)
         exporter.export_yaml()

@@ -43,6 +43,9 @@ MAIN_DIR: Path = Path(os.getenv('MAIN_DIR', 'workdir'))
 # Setup logging with your custom style
 setup_logging(log_file_dir=MAIN_DIR / 'logs', log_level='DEBUG')
 
+# temp: set up the RES_DIR constant
+RES_DIR = Path('res')
+
 
 # ============================================================================
 # Data Models
@@ -765,7 +768,7 @@ async def checklist_page(ticket_number: str) -> None:
     apply_pdc_styles()
 
     # Initialize the duckdb connection for this ticket number
-    dir_manager = DirectoryManager(ticket_number, MAIN_DIR)
+    dir_manager = DirectoryManager(ticket_number, MAIN_DIR, RES_DIR)
     duck_db = DuckDB(schema_name=ticket_number, db_file=dir_manager.db_path)
     helpers = NiceGUIHelper(duck_db, ticket_number)
 
@@ -828,14 +831,14 @@ async def checklist_page(ticket_number: str) -> None:
         # Action Buttons
         with ui.element('div').classes('pdc-actions'):
             ui.button(
-                'Save Curation Log (Word)', on_click=lambda: NiceGUIHelper.save_curation_report(checklist_items)
+                'Save Curation Log (Word)', on_click=lambda: NiceGUIHelper.export_word_button(duck_db, dir_manager)
             ).classes('pdc-btn pdc-btn-primary')
 
             ui.button('Calculate Time Spent', on_click=lambda: helpers.calculate_total_time(checklist_items)).classes(
                 'pdc-btn pdc-btn-calculate'
             )
 
-            ui.button('Export YAML', on_click=lambda: NiceGUIHelper.export_yaml_ui(duck_db, dir_manager)).classes(
+            ui.button('Export YAML', on_click=lambda: NiceGUIHelper.export_yaml_button(duck_db, dir_manager)).classes(
                 'pdc-btn pdc-btn-secondary'
             )
 

@@ -9,17 +9,19 @@ from .custom_logging import logger
 class DirectoryManager:
     """Generic directory manager for creating and managing project directories."""
 
-    def __init__(self, ticket_number: str, main_dir: str | Path) -> None:
+    def __init__(self, ticket_number: str, main_dir: str | Path, res_dir: str | Path | None = None) -> None:
         """Initialize the class.
 
         Args:
             ticket_number (str): The ticket number, also the name of the working directory.
             main_dir (str | Path): The main directory that contains /db and the /projects directories.
+            res_dir (str | Path | None): The resource directory path.
         """
         self.ticket_number = ticket_number
         self.main_dir = main_dir
         self.project_dir = self._define_project_dir()
         self.logger = logger
+        self.res_dir = res_dir
 
         # Pre-defined directory structure
         self._directory_structure = {
