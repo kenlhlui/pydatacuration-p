@@ -846,7 +846,7 @@ async def checklist_page(ticket_number: str) -> None:
 
 
 async def render_checklist_table(
-    duckdb_instance: DuckDB, items: list, check_results: dict[str, str], ticket_number: str
+    duckdb_instance: DuckDB, checklist_items: list, check_results: dict[str, str], ticket_number: str
 ) -> None:  # noqa: PLR1702
     """Render checklist table with exact styling."""
     # Internal helper functions for creating UI components
@@ -870,7 +870,7 @@ async def render_checklist_table(
         # Table Body
         with ui.element('tbody'):
             current_section = None
-            for item in items:
+            for item in checklist_items:
                 # Section header row
                 if item.section != current_section:
                     current_section = item.section
