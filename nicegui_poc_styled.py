@@ -897,16 +897,17 @@ async def render_checklist_table(
                         if item.information_location:
                             ui.html(item.information_location, sanitize=False).classes('pdc-static-info-location')
                             if item.automated_check_ids:
-                                # Use the scrollable container class from nicegui_styles.py
-                                with ui.element('div').classes('pdc-dynamic-check-results'):
-                                    for ac_id in item.automated_check_ids:
-                                        result: dict | None = duckdb_instance.sql_read_row(
-                                            DuckDBmodels(ticket_number).check_results(),
-                                            'check_id',
-                                            ac_id,
-                                        )
-                                        # Render the 'results' item, if it exists
-                                        if result and result.get('results'):
+                                for ac_id in item.automated_check_ids:
+                                    result: dict | None = duckdb_instance.sql_read_row(
+                                        DuckDBmodels(ticket_number).check_results(),
+                                        'check_id',
+                                        ac_id,
+                                    )
+                                    # Render the 'results' item, if it exists
+                                    if result and result.get('results') and len(result['results']) > 0:
+                                        # Use the scrollable container class from nicegui_styles.py
+                                        # Only render the grey scrollable box if there are results
+                                        with ui.element('div').classes('pdc-dynamic-check-results'):
                                             render_check_results(result['results'], result['unit'], ac_id)
 
                     # Status
