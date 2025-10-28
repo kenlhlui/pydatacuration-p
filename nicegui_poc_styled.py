@@ -220,6 +220,9 @@ async def main_page() -> None:
 @ui.page('/new-dataset')
 async def new_dataset_page() -> None:
     """New dataset setup page with exact CSS matching your current design."""
+    # Enable the session storage for form persistence
+    await ui.context.client.connected()
+
     # Apply our custom CSS
     apply_pdc_styles()
 
@@ -257,7 +260,7 @@ async def new_dataset_page() -> None:
         }
 
         # Get existing form data or create new
-        form_data = app.storage.user.setdefault('setup_form', {})
+        form_data = app.storage.tab.setdefault('setup_form', default_form_data)
 
         # Update empty fields with environment variable defaults
         for key, default_value in default_form_data.items():
@@ -564,14 +567,6 @@ async def handle_setup_submit(form_data: dict, error_msg, success_msg, loading_s
         response = await setup(SetupRequest(**form_data))
         response_data = orjson.loads(response.body)
         ui.notify(f'Setup returned: {response_data}', type='info')
-
-        # Store metadata (replaces sessionStorage)
-        app.storage.user['ds_metadata'] = {
-            'dataset_pid': form_data['pid'],
-            'curator_name': form_data['curator_name'],
-            'curator_email': form_data['curator_email'],
-            'ticket_number': form_data['ticket_number'],
-        }
 
         # Show success
         success_msg.set_text('Curation process completed successfully!')
