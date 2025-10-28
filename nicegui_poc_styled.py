@@ -359,16 +359,20 @@ async def new_dataset_page() -> None:
 
         # Action buttons
         with ui.element('div').classes('pdc-actions'):
-            ui.button(
+            start_button = ui.button(
                 'Start Curation Process',
-                on_click=lambda: handle_setup_submit(form_data, error_msg, success_msg, loading_spinner),
+                on_click=lambda: handle_setup_submit(
+                    form_data, error_msg, success_msg, loading_spinner, start_button, reset_button, back_button
+                ),
             ).classes('pdc-btn pdc-btn-primary')
 
-            ui.button('Reset Form', on_click=lambda: reset_form(form_data, default_form_data)).classes(
+            reset_button = ui.button(
+                'Reset Form', on_click=lambda: reset_form(form_data, default_form_data, reset_button)
+            ).classes('pdc-btn pdc-btn-secondary')
+
+            back_button = ui.button('Back', on_click=lambda: handle_back_navigation(back_button), color='red').classes(
                 'pdc-btn pdc-btn-secondary'
             )
-
-            ui.button('Back', on_click=lambda: ui.navigate.to('/'), color='red').classes('pdc-btn pdc-btn-secondary')
 
         # Loading indicator
         with ui.element('div').classes('pdc-loading hidden') as loading_spinner:
@@ -546,7 +550,15 @@ async def setup(request: SetupRequest) -> JSONResponse:
     return JSONResponse(content={'success': False, 'message': 'Unexpected error occurred'})
 
 
-async def handle_setup_submit(form_data: dict, error_msg, success_msg, loading_spinner) -> None:
+async def handle_setup_submit(
+    form_data: dict,
+    error_msg: ui.label,
+    success_msg: ui.label,
+    loading_spinner: ui.element,
+    start_button: ui.button,
+    reset_button: ui.button,
+    back_button: ui.button,
+) -> None:
     """Handle form submission."""
     # Validation
     required_fields = ['pid', 'base_url', 'api_token', 'ticket_number', 'curator_name', 'curator_email']
@@ -557,7 +569,10 @@ async def handle_setup_submit(form_data: dict, error_msg, success_msg, loading_s
         error_msg.classes(remove='hidden', add='pdc-error')
         return
 
-    # Show loading
+    # Disable all buttons and show loading
+    start_button.set_enabled(False)
+    reset_button.set_enabled(False)
+    back_button.set_enabled(False)
     loading_spinner.classes(remove='hidden')
     error_msg.classes(add='hidden')
     success_msg.classes(add='hidden')
@@ -582,13 +597,28 @@ async def handle_setup_submit(form_data: dict, error_msg, success_msg, loading_s
         error_msg.set_text(f'Error: {str(e)}')
         error_msg.classes(remove='hidden', add='pdc-error')
     finally:
+        # Re-enable all buttons and hide loading
+        start_button.set_enabled(True)
+        reset_button.set_enabled(True)
+        back_button.set_enabled(True)
         loading_spinner.classes(add='hidden')
 
 
-def reset_form(form_data: dict, default_form_data: dict) -> None:
+def reset_form(form_data: dict, default_form_data: dict, reset_button: ui.button) -> None:
     """Reset form to defaults."""
+    # Disable button during reset
+    reset_button.set_enabled(False)
     form_data.update(default_form_data)
     ui.notify('Form reset to defaults', type='info')
+    # Re-enable button
+    reset_button.set_enabled(True)
+
+
+def handle_back_navigation(back_button: ui.button) -> None:
+    """Handle back button navigation."""
+    # Disable button during navigation
+    back_button.set_enabled(False)
+    ui.navigate.to('/')
 
 
 # ============================================================================
