@@ -624,6 +624,133 @@ def handle_back_navigation(back_button: ui.button) -> None:
 
 
 # ============================================================================
+# Shared Project Table Component
+# ============================================================================
+
+
+async def render_project_table(
+    schemas: list[dict],
+    mode: str = 'resume',  # 'resume' or 'delete'
+    refresh_callback=None,
+) -> None:
+    """Render a filterable project table.
+
+    Args:
+        schemas: List of project schemas
+        mode: 'resume' for clickable rows, 'delete' for delete buttons
+        refresh_callback: Optional callback to refresh the list after deletion
+    """
+    if not schemas:
+        with ui.element('div').classes('no-projects'):
+            ui.label('No projects found').classes('text-xl')
+        return
+
+    # Filters
+    with ui.element('div').classes('pdc-form-section').style('width: 100%; margin-bottom: 20px;'):
+        ui.label('Filters').classes('text-lg font-semibold text-gray-700').style('margin-bottom: 12px;')
+
+        with ui.row().classes('gap-4').style('align-items: flex-end;'):
+            # Search filter
+            with ui.element('div').style('flex: 1; min-width: 200px;'):
+                ui.label('Search by Ticket Number').classes('pdc-form-label')
+                search_input = ui.input(placeholder='Enter ticket number...').classes('pdc-form-input').style(
+                    'width: 100%;'
+                )
+
+            # Curator filter
+            with ui.element('div').style('flex: 1; min-width: 200px;'):
+                ui.label('Filter by Curator').classes('pdc-form-label')
+                curators = [''] + sorted(list({s.get('curator_name', '') for s in schemas if s.get('curator_name')}))
+                curator_filter = ui.select(
+                    options=curators,
+                    value='',
+                    with_input=False,
+                ).classes('pdc-status-select').style('width: 100%;')
+
+            # Clear filters button
+            ui.button(
+                'Clear Filters', on_click=lambda: clear_filters(search_input, curator_filter)
+            ).classes('pdc-btn pdc-btn-secondary')
+
+    # Table container
+    table_container = ui.column().style('width: 100%;')
+
+    # Define render function that applies filters
+    def render_filtered_table() -> None:
+        # Apply filters
+        filtered_schemas = schemas
+        if search_input.value:
+            filtered_schemas = [
+                s for s in filtered_schemas if search_input.value.lower() in s['display_name'].lower()
+            ]
+        if curator_filter.value:
+            filtered_schemas = [s for s in filtered_schemas if s.get('curator_name') == curator_filter.value]
+
+        table_container.clear()
+        with table_container:
+            ui.label(f'Found {len(filtered_schemas)} project(s)').classes('text-lg font-semibold').style(
+                'margin: 20px 0;'
+            )
+
+            # Render table
+            with ui.element('table').classes('pdc-checklist-table'):
+                # Table Header
+                with ui.element('thead'), ui.element('tr'):
+                    headers = ['Ticket Number', 'Curator', 'Last Modified']
+                    if mode == 'delete':
+                        headers.append('Action')
+                    for header in headers:
+                        with ui.element('th'):
+                            ui.html(header, sanitize=False)
+
+                # Table Body
+                with ui.element('tbody'):
+                    for schema in filtered_schemas:
+                        row_classes = 'clickable-row' if mode == 'resume' else ''
+                        with ui.element('tr').classes(row_classes):
+                            # Ticket Number
+                            with ui.element('td'):
+                                if mode == 'resume':
+                                    ui.html(
+                                        f'<a href="/checklist?ticket_number={schema["display_name"]}" '
+                                        f'style="color: #3498db; text-decoration: none; font-weight: 600;">'
+                                        f'📋 {schema["display_name"]}</a>',
+                                        sanitize=False,
+                                    )
+                                else:
+                                    ui.label(f'📋 {schema["display_name"]}').style('font-weight: 600;')
+
+                            # Curator
+                            with ui.element('td'):
+                                ui.label(schema.get('curator_name', 'N/A'))
+
+                            # Last Modified
+                            with ui.element('td'):
+                                ui.label(schema['last_modified']).style('color: #7f8c8d;')
+
+                            # Action column (only for delete mode)
+                            if mode == 'delete':
+                                with ui.element('td'):
+                                    ui.button(
+                                        '🗑️ Delete',
+                                        on_click=lambda s=schema: confirm_delete_project(s, refresh_callback),
+                                    ).classes('pdc-btn pdc-btn-danger')
+
+    # Define clear filters function
+    def clear_filters(search_inp: ui.input, curator_sel: ui.select) -> None:
+        search_inp.value = ''
+        curator_sel.value = ''
+        render_filtered_table()
+
+    # Connect filters to table refresh - bind directly to the function
+    search_input.on_value_change(lambda e: render_filtered_table())
+    curator_filter.on_value_change(lambda e: render_filtered_table())
+
+    # Initial render
+    render_filtered_table()
+
+
+# ============================================================================
 # Resume Work Page
 # ============================================================================
 
@@ -652,35 +779,8 @@ async def resume_work_page() -> None:
         # Get all schemas/projects
         schemas = NiceGUIHelper.get_all_schemas(MAIN_DIR)
 
-        if not schemas:
-            with ui.element('div').classes('no-projects'):
-                ui.label('No existing projects found').classes('text-xl')
-                ui.label('Start a new project from the main menu').classes('text-sm')
-        else:
-            ui.label(f'Found {len(schemas)} project(s)').classes('text-lg font-semibold').style('margin: 20px 0;')
-
-            # Display project cards
-            for schema in schemas:
-                with (
-                    ui.element('div')
-                    .classes('project-card clickable')
-                    .on('click', lambda s=schema: ui.navigate.to(f'/checklist?ticket_number={s["display_name"]}'))
-                ):
-                    with ui.element('div').classes('project-card-info'):
-                        # Use single ui.html to keep ticket and date on same line
-                        ui.html(
-                            f'<div class="project-header">'
-                            f'<span class="project-ticket">📋 {schema["display_name"]}</span>'
-                            f'<span class="project-date">Last modified: {schema["last_modified"]}</span>'
-                            f'</div>',
-                            sanitize=False,
-                        )
-
-                        if schema.get('curator_name'):
-                            ui.html(
-                                f'<div class="project-info">👤 Curator: {schema["curator_name"]}</div>',
-                                sanitize=False,
-                            )
+        # Render project table
+        await render_project_table(schemas, mode='resume')
 
 
 # ============================================================================
@@ -721,40 +821,12 @@ async def delete_project_page() -> None:
         # Project list container (for dynamic updates)
         project_list_container = ui.column()
 
-    async def refresh_project_list(main_dir: Path):
-        """Refresh the project list."""
+    async def refresh_project_list(main_dir: Path = MAIN_DIR):
+        """Refresh the project list after deletion."""
         project_list_container.clear()
         with project_list_container:
             schemas = NiceGUIHelper.get_all_schemas(main_dir)
-
-            if not schemas:
-                with ui.element('div').classes('no-projects'):
-                    ui.label('No projects found').classes('text-xl')
-            else:
-                ui.label(f'Found {len(schemas)} project(s)').classes('text-lg font-semibold').style('margin: 20px 0;')
-
-                for schema in schemas:
-                    with ui.element('div').classes('project-card'):
-                        with ui.element('div').classes('project-card-info'):
-                            # Use single ui.html to keep ticket and date on same line
-                            ui.html(
-                                f'<div class="project-header">'
-                                f'<span class="project-ticket">📋 {schema["display_name"]}</span>'
-                                f'<span class="project-date">Last modified: {schema["last_modified"]}</span>'
-                                f'</div>',
-                                sanitize=False,
-                            )
-
-                            if schema.get('curator_name'):
-                                ui.html(
-                                    f'<div class="project-info">👤 Curator: {schema["curator_name"]}</div>',
-                                    sanitize=False,
-                                )
-
-                        # Delete button
-                        ui.button(
-                            '🗑️ Delete', on_click=lambda s=schema: confirm_delete_project(s, refresh_project_list)
-                        ).classes('pdc-btn pdc-btn-danger').style('margin-left: 15px;')
+            await render_project_table(schemas, mode='delete', refresh_callback=refresh_project_list)
 
     # Initial load
     await refresh_project_list(MAIN_DIR)

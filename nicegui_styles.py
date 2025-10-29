@@ -227,6 +227,16 @@ tr.row-status-NA {
     z-index: 10;
 }
 
+/* Clickable table rows (for resume work page) */
+.pdc-checklist-table tbody tr.clickable-row {
+    cursor: pointer;
+    transition: background-color 0.2s ease;
+}
+
+.pdc-checklist-table tbody tr.clickable-row:hover {
+    background-color: #ebf3fd;
+}
+
 .pdc-section-header {
     background-color: #1E3765;
     color: white;
