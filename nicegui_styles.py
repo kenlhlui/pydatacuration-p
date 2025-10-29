@@ -5,6 +5,9 @@ Replicates the exact look and feel from styles.css.
 
 from nicegui import ui
 
+from nicegui_helpers import checklist_options
+from nicegui_helpers import status_options
+
 
 # ============================================================================
 # Complete CSS - Direct port from your styles.css
@@ -976,13 +979,7 @@ def create_status_select(item_id: str, current_value: str = '', on_change=None):
         NiceGUI select element
     """
     select = ui.select(
-        options={
-            '': None,
-            'P': 'Passed',
-            'F': 'Follow-up',
-            'TBD': 'To Be Determined',
-            'NA': 'Not Applicable',
-        },
+        options=status_options(),
         value=current_value,
         with_input=False,
     ).classes('status-select')
@@ -1021,7 +1018,7 @@ def create_checklist_select(current_value: str, on_change=None):
 
     # Create select without internal label - display capitalized but use lowercase values
     select = (
-        ui.select(options={'high': 'High', 'medium': 'Medium'}, value=current_value)
+        ui.select(options=checklist_options(), value=current_value)
         .classes('w-full')
         .style('width: 100%')
     )

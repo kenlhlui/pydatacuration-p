@@ -397,3 +397,36 @@ class NiceGUIHelper:
         exporter.export_yaml()
 
         ui.notify('YAML exported successfully!', type='positive')
+
+# ============================================================================
+# Functions for returning dictionary for returning options
+# ============================================================================
+
+
+def status_options() -> dict[str, str]:
+    """Get status options for select input."""
+    return {
+        '': 'Select status',
+        'P': 'Passed',
+        'F': 'Follow-up',
+        'TBD': 'To Be Determined',
+        'NA': 'Not Applicable',
+    }
+
+
+def priority_options() -> dict[str, str]:
+    """Get priority options for select input."""
+    return {
+        '': 'Select priority',
+        'Info': 'Info',
+        'Required': 'Required',
+        'Recommended': 'Recommended',
+    }
+
+
+def checklist_options() -> dict[str, str]:
+    """Get checklist options for select input."""
+    return {
+        'high': 'High',
+        'medium': 'Medium',
+    }

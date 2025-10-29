@@ -20,6 +20,8 @@ from pydantic import ValidationError
 from sqlmodel import SQLModel
 
 from nicegui_helpers import NiceGUIHelper
+from nicegui_helpers import priority_options
+from nicegui_helpers import status_options
 
 # Import our custom styling
 from nicegui_styles import apply_pdc_styles
@@ -859,13 +861,7 @@ async def checklist_page(ticket_number: str) -> None:
                 with ui.element('div').style('flex: 1; min-width: 200px;'):
                     ui.label('Filter by Status').classes('pdc-form-label')
                     status_filter = ui.select(
-                        options={
-                            '': 'All',
-                            'P': 'Passed',
-                            'F': 'Follow-up',
-                            'TBD': 'To Be Determined',
-                            'NA': 'Not Applicable',
-                        },
+                        options=status_options(),
                         value='',
                         with_input=False,
                     ).classes('pdc-status-select').style('width: 100%;')
@@ -874,12 +870,7 @@ async def checklist_page(ticket_number: str) -> None:
                 with ui.element('div').style('flex: 1; min-width: 200px;'):
                     ui.label('Filter by Priority').classes('pdc-form-label')
                     priority_filter = ui.select(
-                        options={
-                            '': 'All',
-                            'required': 'Required',
-                            'recommended': 'Recommended',
-                            'info': 'Info',
-                        },
+                        options=priority_options(),
                         value='',
                         with_input=False,
                     ).classes('pdc-status-select').style('width: 100%;')
