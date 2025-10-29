@@ -111,6 +111,17 @@ class NiceGUIHelper:
         """Validate MM:SS format."""
         return bool(re.match(r'^[0-9]{1,2}:[0-5][0-9]$', time_str)) if time_str else True
 
+    def is_timer_running(self, item_id: str) -> bool:
+        """Check if a timer is currently running for an item.
+
+        Args:
+            item_id (str): The checklist item ID to check.
+
+        Returns:
+            bool: True if timer is running, False otherwise.
+        """
+        return item_id in self.timers
+
     def start_timer(self, item_id: str, time_input: ui.input | None = None) -> None:
         """Start a timer for a specific checklist item.
 
@@ -150,12 +161,12 @@ class NiceGUIHelper:
         if item_id in self.timers:
             ui.timer(1.0, lambda: self._update_timer_display(item_id), once=True)
 
-    def stop_timer(self, item_id: str, time_input: ui.input) -> None:
+    def stop_timer(self, item_id: str, time_input: ui.input | None = None) -> None:
         """Stop a timer and save the elapsed time.
 
         Args:
             item_id (str): The checklist item ID to stop timer for.
-            time_input (ui.input): The input field to update with the elapsed time.
+            time_input (ui.input | None): The input field to update with the elapsed time.
         """
         if item_id not in self.timers:
             ui.notify(f'No timer running for {item_id}', type='warning')
@@ -170,7 +181,8 @@ class NiceGUIHelper:
         time_str = f'{minutes}:{seconds:02d}'
 
         # Update the input field
-        time_input.value = time_str
+        if time_input:
+            time_input.value = time_str
 
         # Save to database
         self.duckdb.sql_update_checklist_item(item_id=item_id, time_spent=time_str)
@@ -179,6 +191,29 @@ class NiceGUIHelper:
         del self.timers[item_id]
 
         ui.notify(f'Timer stopped for {item_id}: {time_str}', type='positive', position='top-right', close_button=True)
+
+    def toggle_timer(self, item_id: str, time_input: ui.input, button: ui.button) -> None:
+        """Toggle timer start/stop for a checklist item.
+
+        Args:
+            item_id (str): The checklist item ID.
+            time_input (ui.input): The input field to update with elapsed time.
+            button (ui.button): The button to update icon/color.
+        """
+        if self.is_timer_running(item_id):
+            # Stop the timer
+            self.stop_timer(item_id, time_input)
+            # Update button to "Start" state
+            button.props('icon=play_arrow color=positive')
+            button._props['icon'] = 'play_arrow'
+            button.update()
+        else:
+            # Start the timer
+            self.start_timer(item_id, time_input)
+            # Update button to "Stop" state
+            button.props('icon=stop color=negative')
+            button._props['icon'] = 'stop'
+            button.update()
 
     @staticmethod
     def format_elapsed_time(elapsed_seconds: int) -> str:

@@ -974,16 +974,16 @@ async def render_checklist_table(
                             'flex: 1; min-width: 60px;'
                         )
 
-                        # Timer buttons
-                        ui.button(
-                            icon='play_arrow',
-                            on_click=lambda iid=item.id, ti=time_input: helpers.start_timer(iid, ti),
-                        ).props('flat dense round size=sm color=positive').tooltip('Start Timer')
+                        # Single toggle timer button
+                        # Create a closure-safe callback
+                        def create_timer_callback(item_id: str, time_inp: ui.input) -> ui.button:
+                            timer_btn = ui.button(icon='play_arrow').props(
+                                'flat dense round size=sm color=positive'
+                            ).tooltip('Start/Stop Timer')
+                            timer_btn.on('click', lambda: helpers.toggle_timer(item_id, time_inp, timer_btn))
+                            return timer_btn
 
-                        ui.button(
-                            icon='stop',
-                            on_click=lambda iid=item.id, ti=time_input: helpers.stop_timer(iid, ti),
-                        ).props('flat dense round size=sm color=negative').tooltip('Stop Timer')
+                        create_timer_callback(item.id, time_input)
 
 
 def render_check_results(results, result_name: str, check_id: str) -> None:
