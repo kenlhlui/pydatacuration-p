@@ -190,7 +190,7 @@ async def main_page() -> None:
         # Top row options
         with ui.element('div').classes('options-grid'):
             # New Project Option
-            with ui.element('div').classes('option-card').on('click', lambda: ui.navigate.to('/new-dataset')):
+            with ui.element('div').classes('option-card').on('click', lambda: ui.navigate.to('/new')):
                 ui.html('<div class="icon">📁</div>', sanitize=False)
                 ui.html('<div class="option-title">New Project</div>', sanitize=False)
                 ui.html(
@@ -199,7 +199,7 @@ async def main_page() -> None:
                 )
 
             # Delete Project Option
-            with ui.element('div').classes('option-card').on('click', lambda: ui.navigate.to('/delete-project')):
+            with ui.element('div').classes('option-card').on('click', lambda: ui.navigate.to('/delete')):
                 ui.html('<div class="icon">🗑️</div>', sanitize=False)
                 ui.html('<div class="option-title">Delete Project</div>', sanitize=False)
                 ui.html('<div class="option-description">Delete a project from the database</div>', sanitize=False)
@@ -207,10 +207,10 @@ async def main_page() -> None:
         # Resume Work Option (centered)
         with (
             ui.element('div').classes('resume-container'),
-            ui.element('div').classes('option-card resume-card').on('click', lambda: ui.navigate.to('/resume-work')),
+            ui.element('div').classes('option-card resume-card').on('click', lambda: ui.navigate.to('/resume')),
         ):
             ui.html('<div class="icon">✏️</div>', sanitize=False)
-            ui.html('<div class="option-title">Resume Work</div>', sanitize=False)
+            ui.html('<div class="option-title">Resume Project</div>', sanitize=False)
             ui.html('<div class="option-description">Continue working on an existing project</div>', sanitize=False)
 
 
@@ -219,7 +219,7 @@ async def main_page() -> None:
 # ============================================================================
 
 
-@ui.page('/new-dataset')
+@ui.page('/new')
 async def new_dataset_page() -> None:
     """New dataset setup page with exact CSS matching your current design."""
     # Enable the session storage for form persistence
@@ -755,7 +755,7 @@ async def render_project_table(
 # ============================================================================
 
 
-@ui.page('/resume-work')
+@ui.page('/resume')
 async def resume_work_page() -> None:
     """Resume work page - shows list of existing projects."""
     apply_pdc_styles()
@@ -769,7 +769,7 @@ async def resume_work_page() -> None:
             'style="height: 60px; width: auto; margin: 8px;">',
             sanitize=False,
         )
-        ui.label('Resume Work - Select a Project').classes('pdc-header')
+        ui.label('Resume Project').classes('pdc-header')
 
         # Back button
         ui.button('← Back to Main Menu', on_click=lambda: ui.navigate.to('/')).classes('pdc-btn pdc-btn-secondary')
@@ -788,7 +788,7 @@ async def resume_work_page() -> None:
 # ============================================================================
 
 
-@ui.page('/delete-project')
+@ui.page('/delete')
 async def delete_project_page() -> None:
     """Delete project page - shows list of projects with delete buttons."""
     apply_pdc_styles()
