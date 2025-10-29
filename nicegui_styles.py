@@ -979,7 +979,7 @@ def create_status_select(item_id: str, current_value: str = '', on_change=None):
         options={
             '': None,
             'P': 'Passed',
-            'F': 'Failed',
+            'F': 'Follow-up',
             'TBD': 'To Be Determined',
             'NA': 'Not Applicable',
         },

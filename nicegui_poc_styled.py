@@ -862,7 +862,7 @@ async def checklist_page(ticket_number: str) -> None:
                         options={
                             '': 'All',
                             'P': 'Passed',
-                            'F': 'Failed',
+                            'F': 'Follow-up',
                             'TBD': 'To Be Determined',
                             'NA': 'Not Applicable',
                         },
@@ -893,9 +893,11 @@ async def checklist_page(ticket_number: str) -> None:
         table_container = ui.column().style('width: 100%;')
 
         # Define clear filters function
-        def clear_filters(status_sel: ui.select, priority_sel: ui.select) -> None:
+        async def clear_filters(status_sel: ui.select, priority_sel: ui.select) -> None:
             status_sel.value = ''
             priority_sel.value = ''
+            # Explicitly trigger a refresh after clearing
+            await render_filtered_table()
 
         # Define render function that applies filters
         async def render_filtered_table() -> None:
