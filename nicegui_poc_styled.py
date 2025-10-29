@@ -850,8 +850,76 @@ async def checklist_page(ticket_number: str) -> None:
         #                 ui.label(f'{code}:').classes('pdc-status-code')
         #                 ui.label(f' {meaning}')
 
-        # Checklist Table
-        await render_checklist_table(duck_db, checklist_items, check_results, ticket_number)
+        # Filters Section
+        with ui.element('div').classes('pdc-form-section').style('width: 100%; margin-bottom: 20px;'):
+            ui.label('Filters').classes('text-lg font-semibold text-gray-700').style('margin-bottom: 12px;')
+
+            with ui.row().classes('gap-4').style('align-items: flex-end;'):
+                # Status filter
+                with ui.element('div').style('flex: 1; min-width: 200px;'):
+                    ui.label('Filter by Status').classes('pdc-form-label')
+                    status_filter = ui.select(
+                        options={
+                            '': 'All',
+                            'P': 'Passed',
+                            'F': 'Failed',
+                            'TBD': 'To Be Determined',
+                            'NA': 'Not Applicable',
+                        },
+                        value='',
+                        with_input=False,
+                    ).classes('pdc-status-select').style('width: 100%;')
+
+                # Priority filter
+                with ui.element('div').style('flex: 1; min-width: 200px;'):
+                    ui.label('Filter by Priority').classes('pdc-form-label')
+                    priority_filter = ui.select(
+                        options={
+                            '': 'All',
+                            'required': 'Required',
+                            'recommended': 'Recommended',
+                            'info': 'Info',
+                        },
+                        value='',
+                        with_input=False,
+                    ).classes('pdc-status-select').style('width: 100%;')
+
+                # Clear filters button
+                ui.button('Clear Filters', on_click=lambda: clear_filters(status_filter, priority_filter)).classes(
+                    'pdc-btn pdc-btn-secondary'
+                )
+
+        # Table container that will be refreshed when filters change
+        table_container = ui.column().style('width: 100%;')
+
+        # Define clear filters function
+        def clear_filters(status_sel: ui.select, priority_sel: ui.select) -> None:
+            status_sel.value = ''
+            priority_sel.value = ''
+
+        # Define render function that applies filters
+        async def render_filtered_table() -> None:
+            # Reload checklist items from database to get latest changes
+            fresh_items = helpers.get_checklist_items()
+
+            table_container.clear()
+            with table_container:
+                await render_checklist_table(
+                    duck_db,
+                    fresh_items,
+                    check_results,
+                    ticket_number,
+                    status_filter=status_filter.value,
+                    priority_filter=priority_filter.value,
+                    refresh_callback=render_filtered_table,
+                )
+
+        # Connect filters to table refresh
+        status_filter.on('update:model-value', render_filtered_table)
+        priority_filter.on('update:model-value', render_filtered_table)
+
+        # Initial render
+        await render_filtered_table()
 
         # Action Buttons
         with ui.element('div').classes('pdc-actions'):
@@ -870,12 +938,35 @@ async def checklist_page(ticket_number: str) -> None:
             ui.button('New Dataset', on_click=helpers.confirm_new_dataset).classes('pdc-btn pdc-btn-danger')
 
 
-async def render_checklist_table(
-    duckdb_instance: DuckDB, checklist_items: list, check_results: dict[str, str], ticket_number: str
-) -> None:  # noqa: PLR1702
-    """Render checklist table with exact styling."""
+async def render_checklist_table(  # noqa: PLR0913
+    duckdb_instance: DuckDB,
+    checklist_items: list,
+    check_results: dict[str, str],
+    ticket_number: str,
+    status_filter: str = '',
+    priority_filter: str = '',
+    refresh_callback: None = None,
+) -> None:
+    """Render checklist table with exact styling.
+
+    Args:
+        duckdb_instance: DuckDB instance
+        checklist_items: List of checklist items
+        check_results: Dictionary of check results
+        ticket_number: Ticket number
+        status_filter: Filter by status (empty string means no filter)
+        priority_filter: Filter by priority (empty string means no filter)
+        refresh_callback: Optional callback function to refresh the UI after updates
+    """
     # Internal helper functions for creating UI components
-    helpers = NiceGUIHelper(duckdb_instance, ticket_number)
+    helpers = NiceGUIHelper(duckdb_instance, ticket_number, refresh_callback)
+
+    # Apply filters to checklist items
+    filtered_items = checklist_items
+    if status_filter:
+        filtered_items = [item for item in filtered_items if item.status == status_filter]
+    if priority_filter:
+        filtered_items = [item for item in filtered_items if item.priority.lower() == priority_filter.lower()]
 
     with ui.element('table').classes('pdc-checklist-table'):
         # Table Header
@@ -895,7 +986,7 @@ async def render_checklist_table(
         # Table Body
         with ui.element('tbody'):
             current_section = None
-            for item in checklist_items:
+            for item in filtered_items:
                 # Section header row
                 if item.section != current_section:
                     current_section = item.section

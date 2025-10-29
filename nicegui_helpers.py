@@ -2,6 +2,7 @@
 
 import re
 import time
+from collections.abc import Callable
 from pathlib import Path
 
 import markdown2
@@ -25,15 +26,17 @@ Checklist: type[SQLModel] = DuckDBmodels('temp').checklist()
 class NiceGUIHelper:
     """Helper class for NiceGUI components."""
 
-    def __init__(self, duckdb: DuckDB, ticket_number: str) -> None:
+    def __init__(self, duckdb: DuckDB, ticket_number: str, refresh_callback: Callable | None = None) -> None:
         """Initialize NiceGUIHelper.
 
         Args:
             duckdb (DuckDB): Instance of DuckDB.
             ticket_number (str): Ticket number to work with.
+            refresh_callback: Optional callback function to refresh the UI after updates.
         """
         self.duckdb: DuckDB = duckdb
         self.ticket_number: str = ticket_number
+        self.refresh_callback = refresh_callback
         # Timer tracking: {item_id: {'start_time': timestamp, 'elapsed': seconds}}
         self.timers: dict[str, dict] = {}
 
@@ -76,17 +79,23 @@ class NiceGUIHelper:
         """Handle status change with auto-save."""
         self.duckdb.sql_update_checklist_item(item_id=item_id, status=new_status)
         ui.notify(f'Status updated for {item_id}', type='positive', position='top-right', close_button=True)
+        if self.refresh_callback:
+            self.refresh_callback()
 
     def handle_comments_change(self, item_id: str, new_comments: str) -> None:
         """Handle comments change."""
         self.duckdb.sql_update_checklist_item(item_id=item_id, comments=new_comments)
         ui.notify(f'Comments updated for {item_id}', type='positive', position='top-right', close_button=True)
+        if self.refresh_callback:
+            self.refresh_callback()
 
     def handle_time_change(self, item_id: str, new_time: str) -> None:
         """Handle time change with validation."""
         if self.validate_time_format(new_time):
             self.duckdb.sql_update_checklist_item(item_id=item_id, time_spent=new_time)
             ui.notify(f'Time updated for {item_id}', type='positive', position='top-right', close_button=True)
+            if self.refresh_callback:
+                self.refresh_callback()
         else:
             ui.notify('Please enter time in MM:SS format', type='negative')
 
@@ -191,6 +200,9 @@ class NiceGUIHelper:
         del self.timers[item_id]
 
         ui.notify(f'Timer stopped for {item_id}: {time_str}', type='positive', position='top-right', close_button=True)
+
+        if self.refresh_callback:
+            self.refresh_callback()
 
     def toggle_timer(self, item_id: str, time_input: ui.input, button: ui.button) -> None:
         """Toggle timer start/stop for a checklist item.
