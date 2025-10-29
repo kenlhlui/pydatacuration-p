@@ -959,11 +959,31 @@ async def render_checklist_table(
                     with ui.element('td'), ui.element('div').classes('pdc-priority-badge-container'):
                         create_priority_badge(item.priority)
 
-                    # Time Spent
-                    with ui.element('td'):
-                        ui.input(value=item.time_spent or '', placeholder='MM:SS').classes('pdc-time-input').on(
+                    # Time Spent with Timer
+                    with (
+                        ui.element('td'),
+                        ui.row().classes('gap-1').style('align-items: center;'),
+                    ):
+                        time_input = ui.input(value=item.time_spent or '', placeholder='MM:SS').classes(
+                            'pdc-time-input'
+                        ).on(
                             'change', lambda e, iid=item.id: helpers.handle_time_change(iid, e.sender.value)
-                        ).props('maxlength=5')
+                        ).props(
+                            'maxlength=5'
+                        ).style(
+                            'flex: 1; min-width: 60px;'
+                        )
+
+                        # Timer buttons
+                        ui.button(
+                            icon='play_arrow',
+                            on_click=lambda iid=item.id, ti=time_input: helpers.start_timer(iid, ti),
+                        ).props('flat dense round size=sm color=positive').tooltip('Start Timer')
+
+                        ui.button(
+                            icon='stop',
+                            on_click=lambda iid=item.id, ti=time_input: helpers.stop_timer(iid, ti),
+                        ).props('flat dense round size=sm color=negative').tooltip('Stop Timer')
 
 
 def render_check_results(results, result_name: str, check_id: str) -> None:

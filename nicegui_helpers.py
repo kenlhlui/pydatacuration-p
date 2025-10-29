@@ -1,6 +1,7 @@
 """Helper functions for NiceGUI components."""
 
 import re
+import time
 from pathlib import Path
 
 import markdown2
@@ -33,6 +34,8 @@ class NiceGUIHelper:
         """
         self.duckdb: DuckDB = duckdb
         self.ticket_number: str = ticket_number
+        # Timer tracking: {item_id: {'start_time': timestamp, 'elapsed': seconds}}
+        self.timers: dict[str, dict] = {}
 
     def get_checklist_items(self) -> list:
         """Get all checklist items from the DuckDB database for the specified ticket.
@@ -107,6 +110,89 @@ class NiceGUIHelper:
     def validate_time_format(time_str: str) -> bool:
         """Validate MM:SS format."""
         return bool(re.match(r'^[0-9]{1,2}:[0-5][0-9]$', time_str)) if time_str else True
+
+    def start_timer(self, item_id: str, time_input: ui.input | None = None) -> None:
+        """Start a timer for a specific checklist item.
+
+        Args:
+            item_id (str): The checklist item ID to start timer for.
+            time_input (ui.input | None): Optional input field to update in real-time.
+        """
+        if item_id in self.timers:
+            ui.notify(f'Timer already running for {item_id}', type='warning')
+            return
+
+        self.timers[item_id] = {'start_time': time.time(), 'elapsed': 0, 'input': time_input}
+        ui.notify(f'Timer started for {item_id}', type='positive', position='top-right', close_button=True)
+
+        # Start a background timer to update the display every second
+        if time_input:
+            self._update_timer_display(item_id)
+
+    def _update_timer_display(self, item_id: str) -> None:
+        """Update the timer display every second.
+
+        Args:
+            item_id (str): The checklist item ID to update display for.
+        """
+        if item_id not in self.timers:
+            return
+
+        timer_data = self.timers[item_id]
+        elapsed_seconds = int(time.time() - timer_data['start_time']) + timer_data['elapsed']
+        time_str = self.format_elapsed_time(elapsed_seconds)
+
+        # Update the input field if available
+        if timer_data.get('input'):
+            timer_data['input'].value = time_str
+
+        # Schedule next update if timer is still running
+        if item_id in self.timers:
+            ui.timer(1.0, lambda: self._update_timer_display(item_id), once=True)
+
+    def stop_timer(self, item_id: str, time_input: ui.input) -> None:
+        """Stop a timer and save the elapsed time.
+
+        Args:
+            item_id (str): The checklist item ID to stop timer for.
+            time_input (ui.input): The input field to update with the elapsed time.
+        """
+        if item_id not in self.timers:
+            ui.notify(f'No timer running for {item_id}', type='warning')
+            return
+
+        timer_data = self.timers[item_id]
+        elapsed_seconds = int(time.time() - timer_data['start_time']) + timer_data['elapsed']
+
+        # Convert to MM:SS format
+        minutes = elapsed_seconds // 60
+        seconds = elapsed_seconds % 60
+        time_str = f'{minutes}:{seconds:02d}'
+
+        # Update the input field
+        time_input.value = time_str
+
+        # Save to database
+        self.duckdb.sql_update_checklist_item(item_id=item_id, time_spent=time_str)
+
+        # Remove from active timers
+        del self.timers[item_id]
+
+        ui.notify(f'Timer stopped for {item_id}: {time_str}', type='positive', position='top-right', close_button=True)
+
+    @staticmethod
+    def format_elapsed_time(elapsed_seconds: int) -> str:
+        """Format elapsed seconds into MM:SS format.
+
+        Args:
+            elapsed_seconds (int): Number of elapsed seconds.
+
+        Returns:
+            str: Time formatted as MM:SS.
+        """
+        minutes = elapsed_seconds // 60
+        seconds = elapsed_seconds % 60
+        return f'{minutes}:{seconds:02d}'
 
     @staticmethod
     def confirm_new_dataset() -> None:
