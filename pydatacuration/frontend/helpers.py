@@ -291,7 +291,9 @@ class NiceGUIHelper:
 
                     # Turn the last_modified_datetime into a YYYY-MM-DD HH:MM:SS format
                     last_modified_dt = project_metadata_record.get('last_modified_datetime')
-                    last_modified_display = last_modified_dt.strftime('%Y-%m-%d %H:%M:%S') if last_modified_dt else 'Unknown'  # noqa: E501
+                    last_modified_display = (
+                        last_modified_dt.strftime('%Y-%m-%d %H:%M:%S') if last_modified_dt else 'Unknown'
+                    )  # noqa: E501
 
                     project_metadata_record['last_modified'] = last_modified_display
 

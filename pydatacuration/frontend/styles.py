@@ -1027,11 +1027,7 @@ def create_checklist_select(current_value: str, on_change=None):
     ui.label('Select Checklist Level').classes('pdc-form-label')
 
     # Create select without internal label - display capitalized but use lowercase values
-    select = (
-        ui.select(options=checklist_options(), value=current_value)
-        .classes('w-full')
-        .style('width: 100%')
-    )
+    select = ui.select(options=checklist_options(), value=current_value).classes('w-full').style('width: 100%')
 
     # Apply checklist-specific styling
     def update_checklist_style(value):

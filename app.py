@@ -555,24 +555,30 @@ async def render_project_table(
             # Search filter
             with ui.element('div').style('flex: 1; min-width: 200px;'):
                 ui.label('Search').classes('pdc-form-label')
-                search_input: Input = ui.input(placeholder='Search Title, DOI, ID (Versioned), URL').classes('pdc-form-input').style(
-                    'width: 100%;'
+                search_input: Input = (
+                    ui.input(placeholder='Search Title, DOI, ID (Versioned), URL')
+                    .classes('pdc-form-input')
+                    .style('width: 100%;')
                 )
 
             # Curator filter
             with ui.element('div').style('flex: 1; min-width: 200px;'):
                 ui.label('Filter by Curator').classes('pdc-form-label')
                 curators = [''] + sorted(list({s.get('curator_name', '') for s in schemas if s.get('curator_name')}))
-                curator_filter = ui.select(
-                    options=curators,
-                    value='',
-                    with_input=False,
-                ).classes('pdc-status-select').style('width: 100%;')
+                curator_filter = (
+                    ui.select(
+                        options=curators,
+                        value='',
+                        with_input=False,
+                    )
+                    .classes('pdc-status-select')
+                    .style('width: 100%;')
+                )
 
             # Clear filters button
-            ui.button(
-                'Clear Filters', on_click=lambda: clear_filters(search_input, curator_filter)
-            ).classes('pdc-btn pdc-btn-secondary')
+            ui.button('Clear Filters', on_click=lambda: clear_filters(search_input, curator_filter)).classes(
+                'pdc-btn pdc-btn-secondary'
+            )
 
     # Table container
     table_container = ui.column().style('width: 100%;')
@@ -584,7 +590,8 @@ async def render_project_table(
         if search_input.value:
             search_term = search_input.value.lower()
             filtered_schemas = [
-                s for s in filtered_schemas
+                s
+                for s in filtered_schemas
                 if search_term in str(s.get('ticket_number', '')).lower()
                 or search_term in str(s.get('dataset_title', '')).lower()
                 or search_term in str(s.get('dataset_pid', '')).lower()
@@ -631,8 +638,14 @@ async def render_project_table(
                             with ui.element('td'):
                                 ui.html(f'<strong>Title:</strong> {schema.get("dataset_title", "N/A")}', sanitize=False)  # noqa: E501
                                 ui.html(f'<strong>PID:</strong> {schema.get("dataset_pid", "N/A")}', sanitize=False)
-                                ui.html(f'<strong>ID (Versioned):</strong> {schema.get("dataset_id", "N/A")}', sanitize=False)  # noqa: E501
-                                ui.html(f'<strong>URL:</strong> <a href="{schema.get("dataset_url", "N/A")}" target="_blank">{schema.get("dataset_url", "N/A")}</a>', sanitize=False)  # noqa: E501
+                                ui.html(
+                                    f'<strong>ID (Versioned):</strong> {schema.get("dataset_id", "N/A")}',
+                                    sanitize=False,
+                                )  # noqa: E501
+                                ui.html(
+                                    f'<strong>URL:</strong> <a href="{schema.get("dataset_url", "N/A")}" target="_blank">{schema.get("dataset_url", "N/A")}</a>',
+                                    sanitize=False,
+                                )  # noqa: E501
                             # Curator
                             with ui.element('td'):
                                 ui.label(schema.get('curator_name', 'N/A'))
@@ -845,20 +858,28 @@ async def checklist_page(ticket_number: str) -> None:
                 # Status filter
                 with ui.element('div').style('flex: 1; min-width: 200px;'):
                     ui.label('Filter by Status').classes('pdc-form-label')
-                    status_filter = ui.select(
-                        options=status_options(),
-                        value='',
-                        with_input=False,
-                    ).classes('pdc-status-select').style('width: 100%;')
+                    status_filter = (
+                        ui.select(
+                            options=status_options(),
+                            value='',
+                            with_input=False,
+                        )
+                        .classes('pdc-status-select')
+                        .style('width: 100%;')
+                    )
 
                 # Priority filter
                 with ui.element('div').style('flex: 1; min-width: 200px;'):
                     ui.label('Filter by Priority').classes('pdc-form-label')
-                    priority_filter = ui.select(
-                        options=priority_options(),
-                        value='',
-                        with_input=False,
-                    ).classes('pdc-status-select').style('width: 100%;')
+                    priority_filter = (
+                        ui.select(
+                            options=priority_options(),
+                            value='',
+                            with_input=False,
+                        )
+                        .classes('pdc-status-select')
+                        .style('width: 100%;')
+                    )
 
                 # Clear filters button
                 ui.button('Clear Filters', on_click=lambda: clear_filters(status_filter, priority_filter)).classes(
@@ -1033,22 +1054,22 @@ async def render_checklist_table(  # noqa: PLR0913
                         ui.element('td'),
                         ui.row().classes('gap-1').style('align-items: center;'),
                     ):
-                        time_input = ui.input(value=item.time_spent or '', placeholder='MM:SS').classes(
-                            'pdc-time-input'
-                        ).on(
-                            'change', lambda e, iid=item.id: helpers.handle_time_change(iid, e.sender.value)
-                        ).props(
-                            'maxlength=5'
-                        ).style(
-                            'flex: 1; min-width: 60px;'
+                        time_input = (
+                            ui.input(value=item.time_spent or '', placeholder='MM:SS')
+                            .classes('pdc-time-input')
+                            .on('change', lambda e, iid=item.id: helpers.handle_time_change(iid, e.sender.value))
+                            .props('maxlength=5')
+                            .style('flex: 1; min-width: 60px;')
                         )
 
                         # Single toggle timer button
                         # Create a closure-safe callback
                         def create_timer_callback(item_id: str, time_inp: ui.input) -> ui.button:
-                            timer_btn = ui.button(icon='play_arrow').props(
-                                'flat dense round size=sm color=positive'
-                            ).tooltip('Start/Stop Timer')
+                            timer_btn = (
+                                ui.button(icon='play_arrow')
+                                .props('flat dense round size=sm color=positive')
+                                .tooltip('Start/Stop Timer')
+                            )
                             timer_btn.on('click', lambda: helpers.toggle_timer(item_id, time_inp, timer_btn))
                             return timer_btn
 
@@ -1100,14 +1121,17 @@ def render_check_results(results, result_name: str, check_id: str) -> None:
             # Render as plain text for other types
             ui.label(str(results)).classes('pdc-check-description')
 
+
 # ============================================================================
 # Health Check Endpoint
 # ============================================================================
+
 
 @ui.page('/health')
 def health_check() -> dict:
     """Health check endpoint."""
     return {'status': 'ok'}
+
 
 # ============================================================================
 # Static Files Setup - Must be BEFORE ui.run()
@@ -1133,5 +1157,4 @@ else:
 # ============================================================================
 
 if __name__ in {'__main__', '__mp_main__'}:
-    ui.run(title='PyDataCuration - Styled POC', favicon='🔬', port=8080,
-           storage_secret=str(os.urandom(16)))
+    ui.run(title='PyDataCuration - Styled POC', favicon='🔬', port=8080, storage_secret=str(os.urandom(16)))

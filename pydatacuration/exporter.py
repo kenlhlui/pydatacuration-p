@@ -31,7 +31,9 @@ class Exporter:
         for item in checklist.get('checklist', []):
             if item.get('automated_check_ids') and item.get('automated_check_ids') != []:
                 for check_id in item['automated_check_ids']:
-                    result = self.duckdb.sql_read_row(DuckDBmodels(self.duckdb.schema_name).check_results(), 'check_id', check_id)
+                    result = self.duckdb.sql_read_row(
+                        DuckDBmodels(self.duckdb.schema_name).check_results(), 'check_id', check_id
+                    )
                     if result:
                         check_name = result.get('check_name', '')
                         item.setdefault('automated_check_results', {})[check_name] = result.get('results')
@@ -66,8 +68,8 @@ class Exporter:
         doc = DocxTemplate(template_path)
 
         context = {
-        'checklist': checklist_items,
-        'project_metadata': metadata,
+            'checklist': checklist_items,
+            'project_metadata': metadata,
         }
 
         # pass the list in under the name 'rows' to match the template
