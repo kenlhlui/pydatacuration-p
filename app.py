@@ -660,6 +660,7 @@ async def render_project_table(
                                 with ui.element('td').style('text-align: center; vertical-align: middle;'):
                                     ui.button(
                                         '🗑️ Delete',
+                                        color='red',
                                         on_click=lambda s=schema: confirm_delete_project(s, refresh_callback),
                                     ).props('unelevated no-caps').classes('pdc-btn pdc-btn-danger')
 
@@ -774,7 +775,7 @@ def confirm_delete_project(schema: dict, refresh_callback) -> None:
 
         with ui.row().classes('w-full justify-end gap-2').style('margin-top: 20px;'):
             ui.button('Cancel', on_click=dialog.close).classes('pdc-btn pdc-btn-secondary')
-            ui.button('Delete', on_click=handle_delete).classes('pdc-btn pdc-btn-danger')
+            ui.button('Delete', color='red', on_click=handle_delete).classes('pdc-btn pdc-btn-danger')
 
     dialog.open()
 
