@@ -597,7 +597,7 @@ async def render_project_table(
             with ui.element('table').classes('pdc-checklist-table'):
                 # Table Header
                 with ui.element('thead'), ui.element('tr'):
-                    headers = ['Ticket Number', 'Curator', 'Last Modified']
+                    headers = ['Ticket Number', 'Dataset Information', 'Curator', 'Last Modified']
                     if mode == 'delete':
                         headers.append('Action')
                     for header in headers:
@@ -621,6 +621,12 @@ async def render_project_table(
                                 else:
                                     ui.label(f'📋 {schema["ticket_number"]}').style('font-weight: 600;')
 
+                            # Dataset Metadata
+                            with ui.element('td'):
+                                ui.html(f'<strong>Dataset Title:</strong> {schema.get("dataset_title", "N/A")}', sanitize=False)  # noqa: E501
+                                ui.html(f'<strong>DOI:</strong> {schema.get("dataset_pid", "N/A")}', sanitize=False)
+                                ui.html(f'<strong>Dataset ID (Versioned):</strong> {schema.get("dataset_id", "N/A")}', sanitize=False)  # noqa: E501
+                                ui.html(f'<strong>Dataverse URL:</strong> <a href="{schema.get("dataset_url", "N/A")}" target="_blank">{schema.get("dataset_url", "N/A")}</a>', sanitize=False)  # noqa: E501
                             # Curator
                             with ui.element('td'):
                                 ui.label(schema.get('curator_name', 'N/A'))
