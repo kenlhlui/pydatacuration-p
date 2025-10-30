@@ -6,7 +6,6 @@ This version uses the nicegui_styles module for exact CSS matching.
 # ruff: noqa: PLR1702
 import asyncio
 import os
-import re
 from pathlib import Path
 
 import orjson
@@ -1122,4 +1121,5 @@ else:
 # ============================================================================
 
 if __name__ in {'__main__', '__mp_main__'}:
-    ui.run(title='PyDataCuration - Styled POC', favicon='🔬', port=8080)
+    ui.run(title='PyDataCuration - Styled POC', favicon='🔬', port=8080,
+           storage_secret=str(os.urandom(16)))
