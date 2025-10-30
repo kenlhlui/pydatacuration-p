@@ -428,3 +428,9 @@ def checklist_options() -> dict[str, str]:
         'high': 'High',
         'medium': 'Medium',
     }
+
+
+def back_to_main_menu_button() -> None:
+    """Create a centered 'Back to Main Menu' button."""
+    with ui.row().classes('justify-left my-4'):
+        ui.button('← Back', on_click=lambda: ui.navigate.to('/')).classes('pdc-btn pdc-btn-secondary')

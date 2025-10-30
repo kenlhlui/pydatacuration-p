@@ -8,7 +8,6 @@ import asyncio
 import os
 from pathlib import Path
 
-from nicegui.elements.input import Input
 import orjson
 from dotenv import load_dotenv
 from fastapi import HTTPException
@@ -16,6 +15,7 @@ from fastapi.responses import JSONResponse
 from nicegui import app
 from nicegui import app as nicegui_app
 from nicegui import ui
+from nicegui.elements.input import Input
 from sqlmodel import SQLModel
 
 from pydatacuration.custom_logging import logger
@@ -25,6 +25,7 @@ from pydatacuration.custom_logging import setup_logging
 from pydatacuration.directory_manager import DirectoryManager
 from pydatacuration.duck_db import DuckDB
 from pydatacuration.frontend.helpers import NiceGUIHelper
+from pydatacuration.frontend.helpers import back_to_main_menu_button
 from pydatacuration.frontend.helpers import priority_options
 from pydatacuration.frontend.helpers import status_options
 
@@ -698,9 +699,7 @@ async def resume_work_page() -> None:
         ui.label('Resume Project').classes('pdc-header')
 
         # Back button
-        ui.button('← Back to Main Menu', on_click=lambda: ui.navigate.to('/')).classes('pdc-btn pdc-btn-secondary')
-
-        ui.separator()
+        back_to_main_menu_button()
 
         # Get all schemas/projects
         schemas = NiceGUIHelper.get_all_schemas(MAIN_DIR)
@@ -734,15 +733,13 @@ async def delete_project_page() -> None:
         ui.label('Delete Project').classes('pdc-header')
 
         # Back button
-        ui.button('← Back to Main Menu', on_click=lambda: ui.navigate.to('/')).classes('pdc-btn pdc-btn-secondary')
+        back_to_main_menu_button()
 
         # Warning banner
         with ui.element('div').classes('warning-banner'):
             ui.label('⚠️ Warning: Deleting a project is permanent and cannot be undone!').classes(
                 'text-lg font-semibold'
             )
-
-        ui.separator()
 
         # Project list container (for dynamic updates)
         project_list_container = ui.column()

@@ -47,8 +47,7 @@ body {
 .pdc-header {
     color: #2c3e50;
     border-bottom: 2px solid #3498db;
-    padding-bottom: 15px;
-    margin-bottom: 30px;
+    padding-bottom: 10px;
     font-size: 2rem;
     font-weight: bold;
 }
@@ -499,7 +498,6 @@ select.checklist-medium {
     background-color: #ecf0f1;
     padding: 15px;  /* Reduced from 20px */
     border-radius: 5px;
-    margin-bottom: 15px;  /* Reduced from 20px */
     width: 100%;
     box-sizing: border-box;
 }
@@ -947,8 +945,7 @@ def apply_pdc_styles():
 
 
 def create_info_grid(metadata: dict, columns: list[tuple[str, str]]):
-    """
-    Create a standardized info grid matching your current design
+    """Create a standardized info grid matching your current design
 
     Args:
         metadata: Dictionary of metadata values
@@ -957,12 +954,11 @@ def create_info_grid(metadata: dict, columns: list[tuple[str, str]]):
     Returns:
         NiceGUI grid element
     """
-    with ui.element('div').classes('pdc-info-section'):
-        with ui.grid(columns=2).classes('pdc-info-grid'):
-            for key, label in columns:
-                with ui.element('div').classes('pdc-info-item'):
-                    ui.label(label).classes('pdc-info-label')
-                    ui.label(metadata.get(key, 'N/A')).classes('pdc-info-value')
+    with ui.element('div').classes('pdc-info-section'), ui.grid(columns=2).classes('pdc-info-grid'):
+        for key, label in columns:
+            with ui.element('div').classes('pdc-info-item'):
+                ui.label(label).classes('pdc-info-label')
+                ui.label(metadata.get(key, 'N/A')).classes('pdc-info-value')
 
 
 def create_priority_badge(priority: str):
