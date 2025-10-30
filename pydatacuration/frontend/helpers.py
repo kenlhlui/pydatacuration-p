@@ -4,6 +4,7 @@ import re
 import time
 from collections.abc import Callable
 from pathlib import Path
+from typing import Any
 
 import markdown2
 from nicegui import app
@@ -276,45 +277,32 @@ class NiceGUIHelper:
             if not db_file.exists():
                 return []
 
-            # Create a DuckDB instance to get schemas
-            # Using a dummy schema name that won't conflict with DuckDB's reserved 'temp' catalog
+            # Create a DuckDB instance to get schemas names for further querying
             duck_db = DuckDB(schema_name='_system_query_', db_file=db_file)
             schema_names = duck_db.get_all_schema_names()
 
-            # Get additional metadata for each schema
-            schemas_with_metadata = []
+            # Get additional project metadata for each schema
+            project_metadata_schema = []
             for schema_name in schema_names:
                 try:
                     # Try to get project metadata for last modified date
                     schema_duck_db = DuckDB(schema_name=schema_name, db_file=db_file)
-                    metadata = schema_duck_db.read_project_metadata_record()
+                    project_metadata_record: dict[str, Any] = schema_duck_db.read_project_metadata_record(mode='python')
 
-                    last_modified = 'Unknown'
-                    if metadata and 'log_last_update_date' in metadata:
-                        last_modified = metadata['log_last_update_date']
-                    elif metadata and 'log_init_date' in metadata:
-                        last_modified = metadata['log_init_date']
+                    # Turn the last_modified_datetime into a YYYY-MM-DD HH:MM:SS format
+                    last_modified_dt = project_metadata_record.get('last_modified_datetime')
+                    last_modified_display = last_modified_dt.strftime('%Y-%m-%d %H:%M:%S') if last_modified_dt else 'Unknown'  # noqa: E501
 
-                    # Prune the schema, removing the prefixes
-                    schema_name_display = schema_name.replace('duckdb.', '').replace('"', '')
+                    project_metadata_record['last_modified'] = last_modified_display
 
-                    schemas_with_metadata.append(
-                        {
-                            'display_name': schema_name_display,
-                            'name': schema_name,
-                            'last_modified': last_modified,
-                            'checklist_type': metadata.get('checklist_type', 'unknown'),
-                            'has_metadata': bool(metadata and metadata.get('dataset_pid')),
-                            'curator_name': metadata.get('curator_name', ''),
-                            'dataset_title': metadata.get('dataset_title', 'N/A'),
-                        }
-                    )
+                    # Append to the list
+                    project_metadata_schema.append(project_metadata_record)
+
                 except Exception as e:
-                    print(f'Could not get metadata for schema {schema_name}: {e}')
-                    schema_name_display = schema_name.replace('duckdb.', '').replace('"', '')
-                    schemas_with_metadata.append(
+                    logger.error(f'Could not get metadata for schema {schema_name}: {e}')
+                    project_metadata_schema.append(
                         {
-                            'display_name': schema_name_display,
+                            'ticket_number': schema_name.replace('duckdb.', '').replace('"', ''),
                             'name': schema_name,
                             'last_modified': 'Unknown',
                             'has_metadata': False,
@@ -322,12 +310,12 @@ class NiceGUIHelper:
                     )
 
             # Sort by last modified (most recent first)
-            schemas_with_metadata.sort(key=lambda x: x['last_modified'], reverse=True)
+            project_metadata_schema.sort(key=lambda x: x['last_modified'], reverse=True)
 
-            return schemas_with_metadata
+            return project_metadata_schema
 
         except Exception as e:
-            print(f'Error fetching schemas: {e}')
+            logger.error(f'Error fetching schemas: {e}')
             return []
 
     @staticmethod
@@ -404,6 +392,7 @@ class NiceGUIHelper:
         exporter.export_yaml()
 
         ui.notify('YAML exported successfully!', type='positive')
+
 
 # ============================================================================
 # Functions for returning dictionary for returning options

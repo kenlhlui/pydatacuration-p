@@ -613,13 +613,13 @@ async def render_project_table(
                             with ui.element('td'):
                                 if mode == 'resume':
                                     ui.html(
-                                        f'<a href="/checklist?ticket_number={schema["display_name"]}" '
+                                        f'<a href="/checklist?ticket_number={schema["ticket_number"]}" '
                                         f'style="color: #3498db; text-decoration: none; font-weight: 600;">'
-                                        f'📋 {schema["display_name"]}</a>',
+                                        f'📋 {schema["ticket_number"]}</a>',
                                         sanitize=False,
                                     )
                                 else:
-                                    ui.label(f'📋 {schema["display_name"]}').style('font-weight: 600;')
+                                    ui.label(f'📋 {schema["ticket_number"]}').style('font-weight: 600;')
 
                             # Curator
                             with ui.element('td'):
@@ -747,7 +747,7 @@ def confirm_delete_project(schema: dict, refresh_callback) -> None:
             dialog.close()
 
     with ui.dialog() as dialog, ui.card().style('min-width: 400px;'):
-        ui.label(f'Delete project "{schema["display_name"]}"?').classes('text-xl font-semibold')
+        ui.label(f'Delete project "{schema["ticket_number"]}"?').classes('text-xl font-semibold')
         ui.label('This action cannot be undone. All data will be permanently deleted.').classes('text-red-600')
 
         with ui.row().classes('w-full justify-end gap-2').style('margin-top: 20px;'):

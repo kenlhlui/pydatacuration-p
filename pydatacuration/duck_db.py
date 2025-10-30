@@ -5,6 +5,8 @@ from contextlib import contextmanager
 from datetime import datetime
 from pathlib import Path
 from typing import Any
+from typing import Literal
+from typing import Union
 
 import duckdb
 from sqlalchemy import Inspector
@@ -196,11 +198,14 @@ class DuckDB:  # noqa: PLR0904
         except Exception as e:
             logger.error(f'Error writing records to table {sqlmodel.__tablename__}: {e}')
 
-    def sql_read_table_records(self, model: type[SQLModel]) -> list[dict[str, Any]]:
+    def sql_read_table_records(
+        self, model: type[SQLModel], mode: Literal['json', 'python'] | str = 'json'
+    ) -> list[dict[str, Any]]:
         """Read all records from a table in the DuckDB database.
 
         Args:
             model (type[SQLModel]): The SQLModel class to read records for.
+            mode (str): Optional mode for model_dump (default is 'json').
 
         Returns:
             dict[str, Any]: Dictionary of all records in the table.
@@ -211,7 +216,7 @@ class DuckDB:  # noqa: PLR0904
                 result: ScalarResult[SQLModel] = session.exec(select(model))
                 rows = result.all()
                 if rows:
-                    new_result = [row.model_dump(mode='json') for row in rows]
+                    new_result = [row.model_dump(mode=mode) for row in rows]
                     return new_result
         except Exception as e:
             logger.error(f'Error fetching metadata for table project_metadata: {e}')
@@ -220,16 +225,19 @@ class DuckDB:  # noqa: PLR0904
         empty_instance = model()
         return empty_instance.model_dump(mode='json')
 
-    def read_project_metadata_record(self) -> dict[str, Any]:
+    def read_project_metadata_record(self, mode: Literal['json', 'python'] | str = 'json') -> dict[str, Any]:
         """Read project metadata record.
+
+        Args:
+            mode (str): Optional mode for model_dump (default is 'json').
 
         Returns:
             dict[str, Any]: Project metadata dictionary
 
         """
-        return self.sql_read_table_records(self.duckdb_models.project_metadata_record())[0]
+        return self.sql_read_table_records(self.duckdb_models.project_metadata_record(), mode=mode)[0]
 
-    def read_check_results(self) -> dict[str, Any]:
+    def read_check_results(self, mode: Literal['json', 'python'] | str = 'json') -> dict[str, Any]:
         """Read check results for specific table (with check_id as table_name).
 
         Returns:
@@ -237,10 +245,10 @@ class DuckDB:  # noqa: PLR0904
 
         """
         model_class = self.duckdb_models.check_results()
-        check_results = {'check_results': self.sql_read_table_records(model_class)}
+        check_results = {'check_results': self.sql_read_table_records(model_class, mode=mode)}
         return check_results
 
-    def read_checklist(self) -> dict[str, Any]:
+    def read_checklist(self, mode: Literal['json', 'python'] | str = 'json') -> dict[str, Any]:
         """Read `checklist` table.
 
         Returns:
@@ -248,7 +256,7 @@ class DuckDB:  # noqa: PLR0904
 
         """
         model_class = self.duckdb_models.checklist()
-        checklist = {'checklist': self.sql_read_table_records(model_class)}
+        checklist = {'checklist': self.sql_read_table_records(model_class, mode=mode)}
         return checklist
 
     def read_schema_tables(self) -> list[str]:
