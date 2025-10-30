@@ -8,6 +8,7 @@ import asyncio
 import os
 from pathlib import Path
 
+from nicegui.elements.input import Input
 import orjson
 from dotenv import load_dotenv
 from fastapi import HTTPException
@@ -553,8 +554,8 @@ async def render_project_table(
         with ui.row().classes('gap-4').style('align-items: flex-end;'):
             # Search filter
             with ui.element('div').style('flex: 1; min-width: 200px;'):
-                ui.label('Search by Ticket Number').classes('pdc-form-label')
-                search_input = ui.input(placeholder='Enter ticket number...').classes('pdc-form-input').style(
+                ui.label('Search').classes('pdc-form-label')
+                search_input: Input = ui.input(placeholder='Search Title, DOI, ID (Versioned), URL').classes('pdc-form-input').style(
                     'width: 100%;'
                 )
 
@@ -581,8 +582,13 @@ async def render_project_table(
         # Apply filters
         filtered_schemas = schemas
         if search_input.value:
+            search_term = search_input.value.lower()
             filtered_schemas = [
-                s for s in filtered_schemas if search_input.value.lower() in s['ticket_number'].lower()
+                s for s in filtered_schemas
+                if search_term in str(s.get('ticket_number', '')).lower()
+                or search_term in str(s.get('dataset_title', '')).lower()
+                or search_term in str(s.get('dataset_pid', '')).lower()
+                or search_term in str(s.get('dataset_id', '')).lower()
             ]
         if curator_filter.value:
             filtered_schemas = [s for s in filtered_schemas if s.get('curator_name') == curator_filter.value]
@@ -597,7 +603,7 @@ async def render_project_table(
             with ui.element('table').classes('pdc-checklist-table'):
                 # Table Header
                 with ui.element('thead'), ui.element('tr'):
-                    headers = ['Ticket Number', 'Dataset Information', 'Curator', 'Last Modified']
+                    headers = ['Ticket Number', 'Dataset Information', 'Curator', 'Project Last Modified']
                     if mode == 'delete':
                         headers.append('Action')
                     for header in headers:
@@ -623,10 +629,10 @@ async def render_project_table(
 
                             # Dataset Metadata
                             with ui.element('td'):
-                                ui.html(f'<strong>Dataset Title:</strong> {schema.get("dataset_title", "N/A")}', sanitize=False)  # noqa: E501
-                                ui.html(f'<strong>DOI:</strong> {schema.get("dataset_pid", "N/A")}', sanitize=False)
-                                ui.html(f'<strong>Dataset ID (Versioned):</strong> {schema.get("dataset_id", "N/A")}', sanitize=False)  # noqa: E501
-                                ui.html(f'<strong>Dataverse URL:</strong> <a href="{schema.get("dataset_url", "N/A")}" target="_blank">{schema.get("dataset_url", "N/A")}</a>', sanitize=False)  # noqa: E501
+                                ui.html(f'<strong>Title:</strong> {schema.get("dataset_title", "N/A")}', sanitize=False)  # noqa: E501
+                                ui.html(f'<strong>PID:</strong> {schema.get("dataset_pid", "N/A")}', sanitize=False)
+                                ui.html(f'<strong>ID (Versioned):</strong> {schema.get("dataset_id", "N/A")}', sanitize=False)  # noqa: E501
+                                ui.html(f'<strong>URL:</strong> <a href="{schema.get("dataset_url", "N/A")}" target="_blank">{schema.get("dataset_url", "N/A")}</a>', sanitize=False)  # noqa: E501
                             # Curator
                             with ui.element('td'):
                                 ui.label(schema.get('curator_name', 'N/A'))
