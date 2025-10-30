@@ -16,7 +16,6 @@ from fastapi.responses import JSONResponse
 from nicegui import app
 from nicegui import app as nicegui_app
 from nicegui import ui
-from pydantic import ValidationError
 from sqlmodel import SQLModel
 
 from pydatacuration.custom_logging import logger
@@ -35,6 +34,10 @@ from pydatacuration.frontend.styles import create_checklist_select
 from pydatacuration.frontend.styles import create_info_grid
 from pydatacuration.frontend.styles import create_priority_badge
 from pydatacuration.frontend.styles import create_status_select
+from pydatacuration.main import CtxObj
+
+# Import the typer app for CLI command execution
+from pydatacuration.main import run_all
 from pydatacuration.sqlmodels import DuckDBmodels
 
 
@@ -69,10 +72,6 @@ class SetupRequest(SQLModel):
     checklist: str = 'high'
     collection_alias: str | None = None
 
-
-# Create a type alias for the Checklist model (used for type hints)
-# The actual model instances are created dynamically with schema names via DuckDBmodels
-Checklist: type[SQLModel] = DuckDBmodels('temp').checklist()
 
 # ============================================================================
 # Main Entrance Page
@@ -382,72 +381,6 @@ async def new_dataset_page() -> None:
             ui.label('Running curation process...')
 
 
-async def run_command(command: str) -> dict:
-    """Run a command and return the result with real-time output streaming to logger.
-
-    Args:
-        command (str): Command to run
-
-    Returns:
-        dict: Command result with stdout, stderr, and return code
-    """
-    try:
-        logger.info('🚀 Starting the CLI application')
-
-        process = await asyncio.create_subprocess_shell(
-            command,
-            stdout=asyncio.subprocess.PIPE,
-            stderr=asyncio.subprocess.PIPE,
-        )
-
-        stdout_lines = []
-        stderr_lines = []
-
-        def strip_ansi_codes(text: str) -> str:
-            """Remove ANSI escape codes from text."""
-            ansi_escape = re.compile(r'\x1b\[[0-9;]*m')
-            return ansi_escape.sub('', text)
-
-        async def read_stream(stream, lines_list, log_func):
-            """Read stream line by line and log in real-time."""
-            while True:
-                line = await stream.readline()
-                if not line:
-                    break
-                decoded_line = line.decode().rstrip()
-                if decoded_line:  # Only log non-empty lines
-                    lines_list.append(decoded_line)
-                    # Strip ANSI codes before logging to prevent double formatting
-                    clean_line = strip_ansi_codes(decoded_line)
-                    if clean_line.strip():  # Only log if there's content after stripping
-                        log_func(f'[CLI] {clean_line}')
-
-        # Create tasks to read both streams concurrently
-        stdout_task = asyncio.create_task(read_stream(process.stdout, stdout_lines, logger.info))
-        stderr_task = asyncio.create_task(read_stream(process.stderr, stderr_lines, logger.error))
-
-        # Wait for both streams to complete
-        await asyncio.gather(stdout_task, stderr_task)
-
-        # Wait for process to finish
-        return_code = await process.wait()
-
-        result = {
-            'stdout': '\n'.join(stdout_lines),
-            'stderr': '\n'.join(stderr_lines),
-            'return_code': return_code,
-            'success': return_code == 0,
-        }
-
-        logger.info(f'✅ Command completed with return code: {return_code}')
-        return result
-
-    except Exception as e:
-        error_msg = f'❌ Command execution failed: {str(e)}'
-        logger.error(error_msg)
-        return {'stdout': '', 'stderr': error_msg, 'return_code': -1, 'success': False}
-
-
 @app.post('/setup')
 async def setup(request: SetupRequest) -> JSONResponse:
     """Process the setup form and run pydatacuration CLI command.
@@ -473,83 +406,52 @@ async def setup(request: SetupRequest) -> JSONResponse:
             logger.error(f'Validation failed: Curator email is missing or empty. Received: "{request.curator_email}"')
             raise HTTPException(status_code=400, detail='Curator email is required')
 
-        # Build the command to run pydatacuration CLI
-        cmd_parts = [
-            'python',
-            '-m',
-            'pydatacuration.main',
-            'all',
-            '--pid',
-            f'"{request.pid}"',
-            '--ticket-number',
-            f'"{request.ticket_number}"',
-            '--curator-name',
-            f'"{request.curator_name}"',
-            '--curator-email',
-            f'"{request.curator_email}"',
-        ]
+        # Create context object
+        ctx_obj = CtxObj(main_dir=Path(request.main_dir))
 
-        # Add base URL if provided
-        if request.base_url and request.base_url.strip():
-            cmd_parts.extend(['--base-url', f'"{request.base_url}"'])
-
-        # Add API token if provided
-        if request.api_token and request.api_token.strip():
-            cmd_parts.extend(['--api-token', f'"{request.api_token}"'])
-
-        # Add optional flags
-        if request.force_del:
-            cmd_parts.append('--force-del')
-        else:
-            cmd_parts.append('--no-force-del')
-
-        if request.check_zip:
-            cmd_parts.append('-z')
-        else:
-            cmd_parts.append('-nz')
-
-        # Add checklist type
-        if request.checklist:
-            cmd_parts.extend(['--checklist', request.checklist])
-
-        # Join command parts
-        cmd = ' '.join(cmd_parts)
-
-        # Store state variables using DirectoryManager
+        # Store state variables
         dir_manager = DirectoryManager(request.ticket_number, request.main_dir)
         app.state.work_dir = dir_manager.project_dir
         app.state.base_url = request.base_url
-        # Run the command
-        result = await run_command(cmd)
 
-        if result['success']:
-            url = f'/checklist?ticket_number={request.ticket_number}'
-            return JSONResponse(content={'success': True, 'redirect_url': url})
-        # Extract the last meaningful error message from CLI output
-        error_details = []
-        if result['stderr']:
-            error_details.append(f'CLI Error: {result["stderr"].strip()}')
-        if result['stdout']:
-            # Look for error patterns in stdout (CLI logs errors there too)
-            stdout_lines = result['stdout'].strip().split('\n')
-            for line in reversed(stdout_lines):
-                clean_line = line.strip()
-                if 'error' in clean_line.lower() or 'aborting' in clean_line.lower() or 'failed' in clean_line.lower():
-                    error_details.append(f'CLI Message: {clean_line}')
-                    break
+        # Create a minimal mock context with the obj
+        # We create a simple object that has the required .obj attribute
+        class MockContext:
+            def __init__(self, obj: CtxObj) -> None:
+                self.obj: CtxObj = obj
 
-        error_message = '. '.join(error_details) if error_details else 'Curation command failed'
-        logger.error(f'Command failed with return code {result["return_code"]}: {error_message}')
-        raise HTTPException(status_code=400, detail=error_message)
-    except ValidationError as e:
-        logger.error(f'Pydantic validation error: {e}')
-        logger.error(f'Validation errors details: {e.errors()}')
-    except HTTPException as e:
-        logger.error(f'HTTP exception: status={e.status_code}, detail={e.detail}')
-        raise e
+        ctx = MockContext(ctx_obj)
+
+        # Run in a thread pool to avoid blocking the event loop
+        # This is necessary because run_all uses asyncio.run() internally
+        loop = asyncio.get_event_loop()
+
+        def run_curation() -> None:
+            """Run the curation in a separate thread."""
+            run_all(
+                ctx=ctx,
+                pid=request.pid,
+                base_url=request.base_url or '',
+                api_token=request.api_token or '',
+                ticket_number=request.ticket_number,
+                force_del=request.force_del,
+                check_zip=request.check_zip,
+                collection_alias=request.collection_alias,
+                curator_name=request.curator_name,
+                curator_email=request.curator_email,
+                open_dir=False,
+                checklist=request.checklist,
+            )
+
+        # Execute in thread pool to avoid event loop conflicts
+        await loop.run_in_executor(None, run_curation)
+
+        url = f'/checklist?ticket_number={request.ticket_number}'
+        return JSONResponse(content={'success': True, 'redirect_url': url})
+
     except Exception as e:
-        logger.error(f'Unexpected error in setup endpoint: {e}', exc_info=True)
-    return JSONResponse(content={'success': False, 'message': 'Unexpected error occurred'})
+        logger.error(f'Curation failed: {e}', exc_info=True)
+        raise HTTPException(status_code=400, detail=str(e))
 
 
 async def handle_setup_submit(
@@ -1209,10 +1111,10 @@ if not static_path.exists():
 if static_path.exists():
     # Add static files route
     nicegui_app.add_static_files('/static', str(static_path))
-    print('✓ Static files mounted:', static_path.absolute())
+    logger.info('✓ Static files mounted:', static_path.absolute())
 else:
-    print('⚠ WARNING: Static directory not found!')
-    print('  Looked for:', static_path.absolute())
+    logger.warning('⚠ WARNING: Static directory not found!')
+    logger.warning('Looked for:', static_path.absolute())
 
 
 # ============================================================================
@@ -1220,4 +1122,4 @@ else:
 # ============================================================================
 
 if __name__ in {'__main__', '__mp_main__'}:
-    ui.run(title='PyDataCuration - Styled POC', favicon='🔬', port=8080, storage_secret='your-secret-key-here')
+    ui.run(title='PyDataCuration - Styled POC', favicon='🔬', port=8080)

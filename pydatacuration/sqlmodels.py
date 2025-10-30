@@ -10,6 +10,7 @@ from sqlmodel import DATETIME
 from sqlmodel import JSON
 from sqlmodel import Field
 from sqlmodel import SQLModel
+from sqlmodel import SQLModel as BaseSQLModel
 from sqlmodel import String
 from sqlmodel import text
 
@@ -32,6 +33,11 @@ class DuckDBmodels:
         Returns:
             type[SQLModel]: The ProjectMetadata class with the specified schema.
         """
+
+        # Only clear if table already exists in metadata
+        table_key = f'{self.schema_name}.project_metadata'
+        if table_key in BaseSQLModel.metadata.tables:
+            BaseSQLModel.metadata.remove(BaseSQLModel.metadata.tables[table_key])
 
         class ProjectMetadata(SQLModel, table=True):
             """Project metadata table model."""
@@ -96,6 +102,11 @@ class DuckDBmodels:
         Returns:
             type[SQLModel]: The Checklist class with the specified schema.
         """
+        # Clear metadata to avoid "already defined" errors in long-running processes
+
+        table_key = f'{self.schema_name}.checklist'
+        if table_key in BaseSQLModel.metadata.tables:
+            BaseSQLModel.metadata.remove(BaseSQLModel.metadata.tables[table_key])
 
         class Checklist(SQLModel, table=True):
             """Checklist table model."""
@@ -134,6 +145,10 @@ class DuckDBmodels:
         Returns:
             type[SQLModel]: The CheckResult class with the specified schema.
         """
+        # Clear metadata to avoid "already defined" errors in long-running processes
+        table_key = f'{self.schema_name}.check_results'
+        if table_key in BaseSQLModel.metadata.tables:
+            BaseSQLModel.metadata.remove(BaseSQLModel.metadata.tables[table_key])
 
         class CheckResult(SQLModel, table=True):
             """Check result list table model."""
