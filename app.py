@@ -657,11 +657,11 @@ async def render_project_table(
 
                             # Action column (only for delete mode)
                             if mode == 'delete':
-                                with ui.element('td'):
+                                with ui.element('td').style('text-align: center; vertical-align: middle;'):
                                     ui.button(
                                         '🗑️ Delete',
                                         on_click=lambda s=schema: confirm_delete_project(s, refresh_callback),
-                                    ).classes('pdc-btn pdc-btn-danger')
+                                    ).props('unelevated no-caps').classes('pdc-btn pdc-btn-danger')
 
     # Define clear filters function
     def clear_filters(search_inp: ui.input, curator_sel: ui.select) -> None:
