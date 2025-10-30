@@ -20,7 +20,9 @@ from pydatacuration.sqlmodels import DuckDBmodels
 
 setup_logging()
 
-Checklist: type[SQLModel] = DuckDBmodels('temp').checklist()
+# Type alias for checklist items - uses dummy schema for type hints only
+# The actual schema name will be provided at runtime
+Checklist: type[SQLModel] = DuckDBmodels('_type_hints_').checklist()
 
 
 class NiceGUIHelper:
@@ -80,14 +82,16 @@ class NiceGUIHelper:
         self.duckdb.sql_update_checklist_item(item_id=item_id, status=new_status)
         ui.notify(f'Status updated for {item_id}', type='positive', position='top-right', close_button=True)
         if self.refresh_callback:
-            self.refresh_callback()
+            # Schedule the async callback to run
+            ui.timer(0.0, self.refresh_callback, once=True)
 
     def handle_comments_change(self, item_id: str, new_comments: str) -> None:
         """Handle comments change."""
         self.duckdb.sql_update_checklist_item(item_id=item_id, comments=new_comments)
         ui.notify(f'Comments updated for {item_id}', type='positive', position='top-right', close_button=True)
         if self.refresh_callback:
-            self.refresh_callback()
+            # Schedule the async callback to run
+            ui.timer(0.0, self.refresh_callback, once=True)
 
     def handle_time_change(self, item_id: str, new_time: str) -> None:
         """Handle time change with validation."""
@@ -95,7 +99,8 @@ class NiceGUIHelper:
             self.duckdb.sql_update_checklist_item(item_id=item_id, time_spent=new_time)
             ui.notify(f'Time updated for {item_id}', type='positive', position='top-right', close_button=True)
             if self.refresh_callback:
-                self.refresh_callback()
+                # Schedule the async callback to run
+                ui.timer(0.0, self.refresh_callback, once=True)
         else:
             ui.notify('Please enter time in MM:SS format', type='negative')
 
@@ -202,7 +207,8 @@ class NiceGUIHelper:
         ui.notify(f'Timer stopped for {item_id}: {time_str}', type='positive', position='top-right', close_button=True)
 
         if self.refresh_callback:
-            self.refresh_callback()
+            # Schedule the async callback to run
+            ui.timer(0.0, self.refresh_callback, once=True)
 
     def toggle_timer(self, item_id: str, time_input: ui.input, button: ui.button) -> None:
         """Toggle timer start/stop for a checklist item.
@@ -271,7 +277,8 @@ class NiceGUIHelper:
                 return []
 
             # Create a DuckDB instance to get schemas
-            duck_db = DuckDB(schema_name='temp', db_file=db_file)
+            # Using a dummy schema name that won't conflict with DuckDB's reserved 'temp' catalog
+            duck_db = DuckDB(schema_name='_system_query_', db_file=db_file)
             schema_names = duck_db.get_all_schema_names()
 
             # Get additional metadata for each schema
@@ -353,7 +360,7 @@ class NiceGUIHelper:
                     return False, 'Database file not found'
 
                 # Create a DuckDB instance to delete the schema
-                duck_db = DuckDB(schema_name='temp', db_file=db_file)
+                duck_db = DuckDB(schema_name='_system_query_', db_file=db_file)
 
                 # Delete the schema
                 duck_db.sql_drop_schema(schema_name_pruned)

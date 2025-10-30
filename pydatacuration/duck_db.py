@@ -154,7 +154,7 @@ class DuckDB:  # noqa: PLR0904
             logger.error(f'Error checking records in table {table_name}: {e}')
             return False
 
-    def sql_merge_records_to_table(self, sql_model: type[SQLModel]) -> None:
+    def sql_merge_records_to_table(self, sqlmodel: type[SQLModel]) -> None:
         """Merge records into a table in the DuckDB database using SQLmodel.
 
         * Note: This will replace existing records with the same primary key.
@@ -163,19 +163,20 @@ class DuckDB:  # noqa: PLR0904
             sql_model (type[SQLModel]): The SQLModel class to merge records for.
 
         """
-        logger.debug(f'Merging records into table: {sql_model.__tablename__}')
+        logger.debug(f'Merging records into table: {sqlmodel.__tablename__}')
         try:
             with self.sql_get_connection() as (session, engine):
-                SQLModel.metadata.create_all(engine)  # create the table under the schema
-                ds = sql_model
+                # Only create the specific table for this model, not all tables in metadata
+                sqlmodel.__table__.create(engine, checkfirst=True)
+                ds = sqlmodel
                 session.merge(ds)
                 session.commit()
         except Exception as e:
-            logger.error(f'Error merging records to table {sql_model.__tablename__}: {e}')
+            logger.error(f'Error merging records to table {sqlmodel.__tablename__}: {e}')
 
     def sql_write_records_to_table(
         self,
-        sql_model: type[SQLModel],
+        sqlmodel: type[SQLModel],
     ) -> None:
         """Write records into a table in the DuckDB database using SQLmodel.
 
@@ -183,16 +184,17 @@ class DuckDB:  # noqa: PLR0904
             sql_model (type[SQLModel]): The SQLModel class to write records for.
 
         """
-        logger.debug(f'Writing records into table: {sql_model.__tablename__}')
+        logger.debug(f'Writing records into table: {sqlmodel.__tablename__}')
         try:
             with self.sql_get_connection() as (session, engine):
-                SQLModel.metadata.create_all(engine)  # create the table under the schema
-                session.add(sql_model)
-                logger.info(f'Wrote sample data into table: {sql_model.__tablename__}')
+                # Only create the specific table for this model, not all tables in metadata
+                sqlmodel.__table__.create(engine, checkfirst=True)
+                session.add(sqlmodel)
+                logger.info(f'Wrote sample data into table: {sqlmodel.__tablename__}')
                 session.commit()
-                logger.info(f'Committed sample data to table: {sql_model.__tablename__}')
+                logger.info(f'Committed sample data to table: {sqlmodel.__tablename__}')
         except Exception as e:
-            logger.error(f'Error writing records to table {sql_model.__tablename__}: {e}')
+            logger.error(f'Error writing records to table {sqlmodel.__tablename__}: {e}')
 
     def sql_read_table_records(self, model: type[SQLModel]) -> list[dict[str, Any]]:
         """Read all records from a table in the DuckDB database.
