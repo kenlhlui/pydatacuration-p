@@ -582,7 +582,7 @@ async def render_project_table(
         filtered_schemas = schemas
         if search_input.value:
             filtered_schemas = [
-                s for s in filtered_schemas if search_input.value.lower() in s['display_name'].lower()
+                s for s in filtered_schemas if search_input.value.lower() in s['ticket_number'].lower()
             ]
         if curator_filter.value:
             filtered_schemas = [s for s in filtered_schemas if s.get('curator_name') == curator_filter.value]
