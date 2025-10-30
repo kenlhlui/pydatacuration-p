@@ -5,8 +5,8 @@ Replicates the exact look and feel from styles.css.
 
 from nicegui import ui
 
-from nicegui_helpers import checklist_options
-from nicegui_helpers import status_options
+from pydatacuration.frontend.helpers import checklist_options
+from pydatacuration.frontend.helpers import status_options
 
 
 # ============================================================================

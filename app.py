@@ -19,22 +19,22 @@ from nicegui import ui
 from pydantic import ValidationError
 from sqlmodel import SQLModel
 
-from nicegui_helpers import NiceGUIHelper
-from nicegui_helpers import priority_options
-from nicegui_helpers import status_options
-
-# Import our custom styling
-from nicegui_styles import apply_pdc_styles
-from nicegui_styles import create_checklist_select
-from nicegui_styles import create_info_grid
-from nicegui_styles import create_priority_badge
-from nicegui_styles import create_status_select
 from pydatacuration.custom_logging import logger
 from pydatacuration.custom_logging import setup_logging
 
 # Import pydatacuration modules
 from pydatacuration.directory_manager import DirectoryManager
 from pydatacuration.duck_db import DuckDB
+from pydatacuration.frontend.helpers import NiceGUIHelper
+from pydatacuration.frontend.helpers import priority_options
+from pydatacuration.frontend.helpers import status_options
+
+# Import styles and styled components
+from pydatacuration.frontend.styles import apply_pdc_styles
+from pydatacuration.frontend.styles import create_checklist_select
+from pydatacuration.frontend.styles import create_info_grid
+from pydatacuration.frontend.styles import create_priority_badge
+from pydatacuration.frontend.styles import create_status_select
 from pydatacuration.sqlmodels import DuckDBmodels
 
 
@@ -1187,6 +1187,14 @@ def render_check_results(results, result_name: str, check_id: str) -> None:
             # Render as plain text for other types
             ui.label(str(results)).classes('pdc-check-description')
 
+# ============================================================================
+# Health Check Endpoint
+# ============================================================================
+
+@ui.page('/health')
+def health_check() -> dict:
+    """Health check endpoint."""
+    return {'status': 'ok'}
 
 # ============================================================================
 # Static Files Setup - Must be BEFORE ui.run()
