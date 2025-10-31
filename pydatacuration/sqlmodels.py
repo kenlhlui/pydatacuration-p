@@ -2,9 +2,11 @@
 
 from datetime import date
 from datetime import datetime
+from datetime import timedelta
 
 from sqlalchemy import Column
 from sqlalchemy import Integer
+from sqlalchemy import Interval
 from sqlmodel import DATE
 from sqlmodel import DATETIME
 from sqlmodel import JSON
@@ -33,7 +35,6 @@ class DuckDBmodels:
         Returns:
             type[SQLModel]: The ProjectMetadata class with the specified schema.
         """
-
         # Only clear if table already exists in metadata
         table_key = f'{self.schema_name}.project_metadata'
         if table_key in BaseSQLModel.metadata.tables:
@@ -130,7 +131,9 @@ class DuckDBmodels:
             check_type: str = Field(sa_column=Column(String, nullable=True), description='Type of check')
             status: str = Field(sa_column=Column(String, nullable=True), description='Checklist status')
             comments: str = Field(sa_column=Column(String, nullable=True), description="Curator's Comments")
-            time_spent: str = Field(sa_column=Column(String, nullable=True), description='Time spent on this item')
+            time_spent: timedelta = Field(
+                sa_column=Column(Interval, nullable=True), description='Time spent on this item'
+            )
             last_modified_datetime: datetime = Field(
                 default=datetime.today(),
                 sa_column=Column(DATETIME, nullable=False),

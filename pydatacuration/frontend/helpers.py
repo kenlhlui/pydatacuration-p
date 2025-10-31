@@ -3,6 +3,7 @@
 import re
 import time
 from collections.abc import Callable
+from datetime import timedelta
 from pathlib import Path
 from typing import Any
 
@@ -55,9 +56,20 @@ class NiceGUIHelper:
             list: List of checklist items with their details.
 
         """
-        duck_db_data = self.duckdb.read_checklist()
+        duck_db_data = self.duckdb.read_checklist(mode='python')
         items = []
         for item in duck_db_data.get('checklist', []):
+            # Convert timedelta to MM:SS format for display
+            # ! Temp fix for time_spent being stored as string in older DBs
+            time_spent_value = item.get('time_spent', '')
+            if isinstance(time_spent_value, timedelta):
+                total_seconds = int(time_spent_value.total_seconds())
+                minutes = total_seconds // 60
+                seconds = total_seconds % 60
+                time_spent_display = f'{minutes:02d}:{seconds:02d}'
+            else:
+                time_spent_display = time_spent_value if time_spent_value else ''
+
             checklist_item = Checklist(
                 id=item['id'],
                 action=item['action'],
@@ -67,7 +79,7 @@ class NiceGUIHelper:
                 automated_check_ids=item.get('automated_check_ids', []),
                 status=item.get('status', ''),
                 comments=item.get('comments', ''),
-                time_spent=item.get('time_spent', ''),
+                time_spent=time_spent_display,
                 information_location=markdown2.markdown(  # Convert Markdown to HTML
                     item.get('information_location', '')
                 )
@@ -94,10 +106,16 @@ class NiceGUIHelper:
             # Schedule the async callback to run
             ui.timer(0.0, self.refresh_callback, once=True)
 
-    def handle_time_change(self, item_id: str, new_time: str) -> None:
+    def handle_time_change(self, item_id: str, time_spent_input: str) -> None:
         """Handle time change with validation."""
-        if self.validate_time_format(new_time):
-            self.duckdb.sql_update_checklist_item(item_id=item_id, time_spent=new_time)
+        if self.validate_time_format(time_spent_input):
+            # Turn the MM:SS string into a timedelta
+            # Parse MM:SS format directly (e.g., "06:30" = 6 minutes, 30 seconds)
+            parts = time_spent_input.split(':')
+            minutes = int(parts[0])
+            seconds = int(parts[1])
+            time_spent_delta: timedelta = timedelta(minutes=minutes, seconds=seconds)
+            self.duckdb.sql_update_checklist_item(item_id=item_id, time_spent=time_spent_delta)
             ui.notify(f'Time updated for {item_id}', type='positive', position='top-right', close_button=True)
             if self.refresh_callback:
                 # Schedule the async callback to run
@@ -190,7 +208,7 @@ class NiceGUIHelper:
         timer_data = self.timers[item_id]
         elapsed_seconds = int(time.time() - timer_data['start_time']) + timer_data['elapsed']
 
-        # Convert to MM:SS format
+        # Convert to MM:SS format for display
         minutes = elapsed_seconds // 60
         seconds = elapsed_seconds % 60
         time_str = f'{minutes}:{seconds:02d}'
@@ -199,8 +217,9 @@ class NiceGUIHelper:
         if time_input:
             time_input.value = time_str
 
-        # Save to database
-        self.duckdb.sql_update_checklist_item(item_id=item_id, time_spent=time_str)
+        # Save to database as timedelta
+        time_delta = timedelta(seconds=elapsed_seconds)
+        self.duckdb.sql_update_checklist_item(item_id=item_id, time_spent=time_delta)
 
         # Remove from active timers
         del self.timers[item_id]

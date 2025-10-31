@@ -3,10 +3,10 @@
 import time
 from contextlib import contextmanager
 from datetime import datetime
+from datetime import timedelta
 from pathlib import Path
 from typing import Any
 from typing import Literal
-from typing import Union
 
 import duckdb
 from sqlalchemy import Inspector
@@ -315,7 +315,7 @@ class DuckDB:  # noqa: PLR0904
             logger.error(f'Error dropping schema {schema_name}: {e}')
 
     def sql_update_checklist_item(
-        self, item_id: str, status: str | None = None, comments: str | None = None, time_spent: str | None = None
+        self, item_id: str, status: str | None = None, comments: str | None = None, time_spent: timedelta | None = None
     ) -> bool:
         """Update a checklist item in the DuckDB database.
 
