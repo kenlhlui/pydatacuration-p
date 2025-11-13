@@ -1,3 +1,4 @@
+---
 checklist:
   - id: "1.1"
     action: "Has the depositor (or their research group) previously created or submitted to a dataverse collection ?"
@@ -13,12 +14,12 @@ checklist:
     action: "If the dataset was deposited in a sub-dataverse collection, does it require its own dataverse collection?"
     instructions: |
       If the depositor created a dataverse with one dataset:
-      
+
       - Confirm whether the dataset is related to other datasets in the same sub-collection.
       - Is there another sub-dataverse collection it should be in?
       - Review collection name - is it the same name as the dataset? Is it a research group? 
       - Confirm with the depositor that they actually require a dataverse (e.g., will there be future deposits?)
-      
+
     priority: "info"
     section: "1. Structure of deposit"
     information_location: "Dataverse collection structure, dataset relationships"
@@ -26,7 +27,7 @@ checklist:
 
   - id: "2.1"
     action: "Do all the files open properly?"
-    instructions: |     
+    instructions: |
       - For files that cannot be opened programmatically – if we have the program, open a minimum of 5 of each type of file.
     priority: "required"
     section: "2. Files"
@@ -48,7 +49,7 @@ checklist:
 
   - id: "2.3"
     action: "Do all the files contain file extensions?"
-    instructions: |      
+    instructions: |
       - Not all the files require a file extension (e.g. a README file can either be 'README' or 'README.md'). Curator needs to check on a case-by-case basis.
     priority: "required"
     section: "2. Files"
@@ -67,7 +68,7 @@ checklist:
 
   - id: "3.1"
     action: "Does the dataset include a separate README file?"
-    instructions: |     
+    instructions: |
       - Read the `ds_tree.txt` file in the log_files folder to identify whether there is a README file, even if it is not named with 'README'.
     priority: "required"
     section: "3. Documentation"
@@ -77,7 +78,7 @@ checklist:
 
   - id: "3.2"
     action: "Does the README file contain correct and complete information about ‘Files and organization’?"
-    instructions: |      
+    instructions: |
       - Check whether the files listed in the README match the files listed in the deposit.
       - If the files are not listed in the README, we can generate a file tree structure & pass it to the depositors to include in their README, if applicable.
     priority: "required"
@@ -96,12 +97,12 @@ checklist:
 
   - id: "4.1"
     action: "Are there any typos in metadata fields?"
-    instructions: |    
+    instructions: |
       Note that the automated process might flag wrongly (such as acronyms/specialized terms. Delete the items from the list accordingly.
     priority: "required"
     section: "4. Metadata"
     automated_check_ids: ["potential_typos"]
-    information_location: |   
+    information_location: |
       Only checking the following fields:
 
       1. Title
@@ -122,7 +123,7 @@ checklist:
     section: "4. Metadata"
     information_location: |
       Review the following fields to ensure there is a valid entry and flag any issues:
-      
+
       1. Title
       2. Description
       3. Subject
@@ -131,7 +132,7 @@ checklist:
 
   - id: "4.3"
     action: "Does at least one author affiliated with University of Toronto?"
-    instructions: |      
+    instructions: |
       - This will check either ‘uoft’, ‘u of t’ or ‘university of toronto’ is filled for the author affiliation (non-case sensitive)
 
     priority: "required"
@@ -144,10 +145,11 @@ checklist:
     action: "Does the dataset include a Researcher ID for each author?"
     instructions: |
       If no Researcher ID (such as ORCID, or other identifier) is listed, let them know they may want to include it
-    
+
     priority: "recommended"
     section: "4. Metadata"
-    automated_check_ids: ['authors_missing_identifier', 'authors_missing_scheme']
+    automated_check_ids:
+      ["authors_missing_identifier", "authors_missing_scheme"]
     information_location: "Author metadata, researcher ID fields"
     check_type: "Fully-automated"
 
@@ -180,7 +182,7 @@ checklist:
       Still need to discover/formulate the best practices for writing dataset descriptions.
 
       Some elements to look for may include:
-      
+
       - Dates of collection
       - Geographical location
       - Type of data
@@ -200,7 +202,7 @@ checklist:
       - Can also provide information about controlled vocabulary (in that specific field) if none is filled out.
     priority: "recommended"
     section: "4. Metadata"
-    automated_check_ids: ['keywords_existence']
+    automated_check_ids: ["keywords_existence"]
     information_location: "Keywords field, controlled vocabulary references"
     check_type: "Fully-automated"
 
@@ -272,7 +274,7 @@ checklist:
     automated_check_ids: ["restricted_files", "termsOfAccess"]
     information_location: "Terms of Access field, restricted files status"
     check_type: "Semi-automated"
-  
+
   - id: "5.5"
     action: "Is the dataset free of any obvious licensing and IP issues?"
     instructions: |

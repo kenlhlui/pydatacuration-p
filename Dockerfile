@@ -45,8 +45,8 @@ COPY --chown=app:app pydatacuration /app/pydatacuration
 COPY --chown=app:app res /app/res
 
 # Start the app with uv
-CMD ["uv", "run", "fastapi", "run", "app.py", "--port", "8000", "--host", "0.0.0.0"]
+CMD ["uv", "run", "app.py"]
 
 # Health check
 HEALTHCHECK --interval=30s --timeout=5s --start-period=5s --retries=3 \
-  CMD wget -q -O /dev/null http://localhost:8000/health || exit 1
+  CMD wget -q -O /dev/null http://localhost:8080/health || exit 1

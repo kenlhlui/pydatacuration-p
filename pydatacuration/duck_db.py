@@ -2,8 +2,11 @@
 
 import time
 from contextlib import contextmanager
+from datetime import datetime
+from datetime import timedelta
 from pathlib import Path
 from typing import Any
+from typing import Literal
 
 import duckdb
 from sqlalchemy import Inspector
@@ -19,7 +22,9 @@ from .custom_logging import logger
 from .sqlmodels import DuckDBmodels
 
 
-class DuckDB:
+class DuckDB:  # noqa: PLR0904
+    """Class for interacting with DuckDB databases."""
+
     def __init__(self, schema_name: str, db_file: Path) -> None:
         """Initialize the DuckDB connection.
 
@@ -39,11 +44,9 @@ class DuckDB:
         time.sleep(0.01)  # Small delay to avoid connection issues
         conn = duckdb.connect(self.db_file)
         try:
-            logger.debug(f'Opened connection to DuckDB at {self.db_file}')
             yield conn
         finally:
             conn.close()
-            logger.debug(f'Closed connection to DuckDB at {self.db_file}')
 
     @contextmanager
     def get_readonly_connection(self):
@@ -51,11 +54,9 @@ class DuckDB:
         time.sleep(0.01)
         conn = duckdb.connect(self.db_file, read_only=True)
         try:
-            logger.debug(f'Opened read-only connection to DuckDB at {self.db_file}')
             yield conn
         finally:
             conn.close()
-            logger.debug(f'Closed read-only connection to DuckDB at {self.db_file}')
 
     @contextmanager
     def sql_get_connection(self):
@@ -63,13 +64,11 @@ class DuckDB:
         engine = create_engine(f'duckdb:///{self.db_file}', echo=False, pool_timeout=10, pool_recycle=300)
         session = Session(engine)
         try:
-            logger.debug(f'Opened SQLModel engine connection to DuckDB at {self.db_file}')
             yield session, engine
         finally:
             # Explicitly close the engine to free up connections
             session.close()
             engine.dispose()
-            logger.debug(f'Closed SQLModel engine connection to DuckDB at {self.db_file}')
 
     @contextmanager
     def sql_get_readonly_connection(self):
@@ -79,13 +78,11 @@ class DuckDB:
         )
         session = Session(engine)
         try:
-            logger.debug(f'Opened SQLModel engine (read-only) connection to DuckDB at {self.db_file}')
             yield session, engine
         finally:
             # Explicitly close the engine to free up connections
             session.close()
             engine.dispose()
-            logger.debug(f'Closed SQLModel engine (read-only) connection to DuckDB at {self.db_file}')
 
     def sql_check_schema_exists(self, schema_name: str) -> bool:
         """Check if a schema exists in the DuckDB database.
@@ -97,20 +94,19 @@ class DuckDB:
             bool: True if the schema exists, False otherwise.
         """
         try:
-            logger.debug(f'Checking if schema exists (SQLModel): {schema_name}')
             with self.sql_get_readonly_connection() as (_session, _engine):
                 inspector: Inspector = inspect(_engine)
 
                 # Try the schema name as-is first
                 result = inspector.has_schema(schema_name)
-                logger.debug(f'Schema {schema_name} exists (direct): {result}')
+                logger.info(f'Schema {schema_name} exists (direct): {result}')
 
                 if not result:
                     # Try without quotes if it has them
                     clean_name = schema_name.strip('"')
                     if clean_name != schema_name:
                         result = inspector.has_schema(clean_name)
-                        logger.debug(f'Schema {clean_name} exists (unquoted): {result}')
+                        logger.info(f'Schema {clean_name} exists (unquoted): {result}')
 
                 return result
         except Exception as e:
@@ -150,9 +146,8 @@ class DuckDB:
         """Check whether there is an existing record."""
         try:
             with self.get_readonly_connection() as conn:
-                logger.debug(f'Checking for existing records in table: {table_name} from {self.schema_name}')
                 result = conn.sql(f'SELECT COUNT(*) FROM "{self.schema_name}".{table_name};').fetchone()
-                logger.debug(f'Query result for existing records in table {table_name}: {result}')
+                logger.info(f'Query result for existing records in table {table_name}: {result}')
                 if result and result[0] > 0:
                     logger.info(f'Found existing record in "{self.schema_name}".{table_name}')
                     return True
@@ -161,7 +156,7 @@ class DuckDB:
             logger.error(f'Error checking records in table {table_name}: {e}')
             return False
 
-    def sql_merge_records_to_table(self, sql_model: type[SQLModel]) -> None:
+    def sql_merge_records_to_table(self, sqlmodel: type[SQLModel]) -> None:
         """Merge records into a table in the DuckDB database using SQLmodel.
 
         * Note: This will replace existing records with the same primary key.
@@ -170,19 +165,20 @@ class DuckDB:
             sql_model (type[SQLModel]): The SQLModel class to merge records for.
 
         """
-        logger.debug(f'Merging records into table: {sql_model.__tablename__}')
+        logger.debug(f'Merging records into table: {sqlmodel.__tablename__}')
         try:
             with self.sql_get_connection() as (session, engine):
-                SQLModel.metadata.create_all(engine)  # create the table under the schema
-                ds = sql_model
+                # Only create the specific table for this model, not all tables in metadata
+                sqlmodel.__table__.create(engine, checkfirst=True)
+                ds = sqlmodel
                 session.merge(ds)
                 session.commit()
         except Exception as e:
-            logger.error(f'Error merging records to table {sql_model.__tablename__}: {e}')
+            logger.error(f'Error merging records to table {sqlmodel.__tablename__}: {e}')
 
     def sql_write_records_to_table(
         self,
-        sql_model: type[SQLModel],
+        sqlmodel: type[SQLModel],
     ) -> None:
         """Write records into a table in the DuckDB database using SQLmodel.
 
@@ -190,22 +186,26 @@ class DuckDB:
             sql_model (type[SQLModel]): The SQLModel class to write records for.
 
         """
-        logger.debug(f'Writing records into table: {sql_model.__tablename__}')
+        logger.debug(f'Writing records into table: {sqlmodel.__tablename__}')
         try:
             with self.sql_get_connection() as (session, engine):
-                SQLModel.metadata.create_all(engine)  # create the table under the schema
-                session.add(sql_model)
-                logger.info(f'Wrote sample data into table: {sql_model.__tablename__}')
+                # Only create the specific table for this model, not all tables in metadata
+                sqlmodel.__table__.create(engine, checkfirst=True)
+                session.add(sqlmodel)
+                logger.info(f'Wrote sample data into table: {sqlmodel.__tablename__}')
                 session.commit()
-                logger.info(f'Committed sample data to table: {sql_model.__tablename__}')
+                logger.info(f'Committed sample data to table: {sqlmodel.__tablename__}')
         except Exception as e:
-            logger.error(f'Error writing records to table {sql_model.__tablename__}: {e}')
+            logger.error(f'Error writing records to table {sqlmodel.__tablename__}: {e}')
 
-    def sql_read_table_records(self, model: type[SQLModel]) -> list[dict[str, Any]]:
+    def sql_read_table_records(
+        self, model: type[SQLModel], mode: Literal['json', 'python'] | str = 'json'
+    ) -> list[dict[str, Any]]:
         """Read all records from a table in the DuckDB database.
 
         Args:
             model (type[SQLModel]): The SQLModel class to read records for.
+            mode (str): Optional mode for model_dump (default is 'json').
 
         Returns:
             dict[str, Any]: Dictionary of all records in the table.
@@ -216,7 +216,7 @@ class DuckDB:
                 result: ScalarResult[SQLModel] = session.exec(select(model))
                 rows = result.all()
                 if rows:
-                    new_result = [row.model_dump(mode='json') for row in rows]
+                    new_result = [row.model_dump(mode=mode) for row in rows]
                     return new_result
         except Exception as e:
             logger.error(f'Error fetching metadata for table project_metadata: {e}')
@@ -225,41 +225,38 @@ class DuckDB:
         empty_instance = model()
         return empty_instance.model_dump(mode='json')
 
-    def read_project_metadata_record(self) -> dict[str, Any]:
+    def read_project_metadata_record(self, mode: Literal['json', 'python'] | str = 'json') -> dict[str, Any]:
         """Read project metadata record.
+
+        Args:
+            mode (str): Optional mode for model_dump (default is 'json').
 
         Returns:
             dict[str, Any]: Project metadata dictionary
 
         """
-        return self.sql_read_table_records(self.duckdb_models.project_metadata_record())[0]
+        return self.sql_read_table_records(self.duckdb_models.project_metadata_record(), mode=mode)[0]
 
-    def read_check_results(self, table_name: str) -> dict[str, Any]:
+    def read_check_results(self, mode: Literal['json', 'python'] | str = 'json') -> dict[str, Any]:
         """Read check results for specific table (with check_id as table_name).
-
-        Args:
-            table_name (str): Name of the table
 
         Returns:
             dict[str, Any]: Check results dictionary
 
         """
         model_class = self.duckdb_models.check_results()
-        check_results = {'check_results': self.sql_read_table_records(model_class)}
+        check_results = {'check_results': self.sql_read_table_records(model_class, mode=mode)}
         return check_results
 
-    def read_checklist(self) -> dict[str, Any]:
-        """Read checklist checklist table.
-
-        Args:
-            table_name (str): Name of the table
+    def read_checklist(self, mode: Literal['json', 'python'] | str = 'json') -> dict[str, Any]:
+        """Read `checklist` table.
 
         Returns:
             dict[str, Any]: Checklist dictionary
 
         """
         model_class = self.duckdb_models.checklist()
-        checklist = {'checklist': self.sql_read_table_records(model_class)}
+        checklist = {'checklist': self.sql_read_table_records(model_class, mode=mode)}
         return checklist
 
     def read_schema_tables(self) -> list[str]:
@@ -317,7 +314,9 @@ class DuckDB:
         except Exception as e:
             logger.error(f'Error dropping schema {schema_name}: {e}')
 
-    def sql_update_checklist_item(self, item_id: str, status: str | None = None, comments: str | None = None, time_spent: str | None = None) -> bool:
+    def sql_update_checklist_item(
+        self, item_id: str, status: str | None = None, comments: str | None = None, time_spent: timedelta | None = None
+    ) -> bool:
         """Update a checklist item in the DuckDB database.
 
         Args:
@@ -335,9 +334,7 @@ class DuckDB:
             with self.sql_get_connection() as (session, engine):
                 # First check if the item exists
                 checklist_model = self.duckdb_models.checklist()
-                existing_item = session.exec(
-                    select(checklist_model).where(checklist_model.id == item_id)
-                ).first()
+                existing_item = session.exec(select(checklist_model).where(checklist_model.id == item_id)).first()
 
                 if not existing_item:
                     logger.warning(f'Checklist item {item_id} not found in schema {self.schema_name}')
@@ -352,15 +349,13 @@ class DuckDB:
                     existing_item.comments = comments
                     logger.debug(f'Updated comments for item {item_id}')
 
-                if time_spent is not None:
+                if time_spent is not None and hasattr(existing_item, 'time_spent'):
                     # Assuming there's a time_spent field in the model
-                    if hasattr(existing_item, 'time_spent'):
-                        existing_item.time_spent = time_spent
-                        logger.debug(f'Updated time_spent for item {item_id}: {time_spent}')
+                    existing_item.time_spent = time_spent
+                    logger.debug(f'Updated time_spent for item {item_id}: {time_spent}')
 
                 # Update the last modified timestamp if it exists
                 if hasattr(existing_item, 'last_modified_datetime'):
-                    from datetime import datetime
                     existing_item.last_modified_datetime = datetime.now()
 
                 session.add(existing_item)
@@ -372,3 +367,29 @@ class DuckDB:
         except Exception as e:
             logger.error(f'Error updating checklist item {item_id}: {e}')
             return False
+
+    def sql_read_row(self, sqlmodel: type[SQLModel], column: str, value: str) -> dict[str, Any] | None:
+        """Get a single row from a table based on a column value.
+
+        Args:
+            sqlmodel (type[SQLModel]): The SQLModel class to query.
+            column (str): The column to filter on.
+            value (str): The value to match in the specified column.
+
+        Returns:
+            dict[str, Any] | None: The row data as a dictionary, or None if not found.
+
+        """
+        try:
+            with self.sql_get_readonly_connection() as (session, _engine):
+                # Get the actual column attribute from the model
+                column_attr = getattr(sqlmodel, column)
+                query = select(sqlmodel).where(column_attr == value)
+                result = session.exec(query)
+                row = result.first()
+                if row:
+                    return row.model_dump(mode='json')
+                return None
+        except Exception as e:
+            logger.error(f'Error reading row from {sqlmodel.__tablename__}: {e}')
+            return None

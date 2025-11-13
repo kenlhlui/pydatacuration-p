@@ -1,81 +1,65 @@
-"""pydatacuration-p: FastAPI application for curation report generation."""
+"""NiceGUI Proof of Concept - With Production-Ready Styling.
 
+This version uses the nicegui_styles module for exact CSS matching.
+"""
+
+# ruff: noqa: PLR1702
 import asyncio
 import os
-import re
 from pathlib import Path
 
-import markdown2
-import yaml
+import orjson
 from dotenv import load_dotenv
-from fastapi import FastAPI
 from fastapi import HTTPException
-from fastapi import Request
-from fastapi.responses import HTMLResponse
 from fastapi.responses import JSONResponse
-from fastapi.staticfiles import StaticFiles
-from fastapi.templating import Jinja2Templates
-from pydantic import BaseModel
-from pydantic import ValidationError
+from nicegui import app
+from nicegui import app as nicegui_app
+from nicegui import ui
+from nicegui.elements.input import Input
+from sqlmodel import SQLModel
 
 from pydatacuration.custom_logging import logger
 from pydatacuration.custom_logging import setup_logging
+
+# Import pydatacuration modules
 from pydatacuration.directory_manager import DirectoryManager
 from pydatacuration.duck_db import DuckDB
-from pydatacuration.new_generate_log import render_report_from_yaml
+from pydatacuration.frontend.helpers import NiceGUIHelper
+from pydatacuration.frontend.helpers import back_to_main_menu_button
+from pydatacuration.frontend.helpers import priority_options
+from pydatacuration.frontend.helpers import status_options
+
+# Import styles and styled components
+from pydatacuration.frontend.styles import apply_pdc_styles
+from pydatacuration.frontend.styles import create_checklist_select
+from pydatacuration.frontend.styles import create_info_grid
+from pydatacuration.frontend.styles import create_priority_badge
+from pydatacuration.frontend.styles import create_status_select
+from pydatacuration.main import CtxObj
+
+# Import the typer app for CLI command execution
+from pydatacuration.main import run_all
+from pydatacuration.sqlmodels import DuckDBmodels
 
 
+# Load environment variables
 load_dotenv(override=True)
 MAIN_DIR: Path = Path(os.getenv('MAIN_DIR', 'workdir'))
 
 # Setup logging with your custom style
 setup_logging(log_file_dir=MAIN_DIR / 'logs', log_level='DEBUG')
 
-
-class ChecklistItem(BaseModel):
-    """Model a single checklist item.
-
-    Args:
-        id (str): item identifier
-        action (str): description of the action
-        instructions (str): detailed instructions
-        priority (str): priority level
-        section (str): section this item belongs to (optional)
-        automated_check_ids (list[str]): list of automated check IDs that map to this item
-        information_location (str): location where information can be found
-
-    Returns:
-        None: data container
-    """
-
-    id: str
-    action: str
-    instructions: str
-    priority: str
-    section: str = ''
-    automated_check_ids: list[str] | None = []
-    information_location: str = ''
-    check_type: str = ''
+# temp: set up the RES_DIR constant
+RES_DIR = Path('res')
 
 
-class SetupRequest(BaseModel):
-    """Model for the setup form data matching CLI parameters.
+# ============================================================================
+# Data Models
+# ============================================================================
 
-    Args:
-        pid (str): Persistent Identifier of the dataset
-        base_url (str): Base URL of the Dataverse installation
-        api_token (str): API token for the Dataverse installation
-        ticket_number (str): Ticket number for the curation report
-        curator_name (str): Curator's name
-        curator_email (str): Curator's email
-        main_dir (str): Working directory path
-        force_del (bool): Force delete existing directory
-        check_zip (bool): Unzip and check contents of zip files
-        checklist (str): Checklist type to use (high or medium)
 
-    Returns:
-        None: data container
-    """
+class SetupRequest(SQLModel):
+    """Setup form data model."""
 
     pid: str
     base_url: str | None = None
@@ -83,217 +67,319 @@ class SetupRequest(BaseModel):
     ticket_number: str
     curator_name: str
     curator_email: str
-    main_dir: str = str(MAIN_DIR.resolve())
+    main_dir: str = 'workdir'
     force_del: bool = False
     check_zip: bool = True
     checklist: str = 'high'
+    collection_alias: str | None = None
 
 
-app = FastAPI()
-templates = Jinja2Templates(directory='pydatacuration/frontend/')
-
-# Mount static files for CSS, JS, and other assets
-app.mount('/static', StaticFiles(directory='pydatacuration/frontend'), name='static')
-
-# Load environment variables
-load_dotenv()
+# ============================================================================
+# Main Entrance Page
+# ============================================================================
 
 
-@app.get('/health')
-async def health_check() -> JSONResponse:
-    """Health check endpoint to verify the server is running.
+@ui.page('/')
+async def main_page() -> None:
+    """Main entrance page to start new project, resume work, or delete project."""
+    apply_pdc_styles()
 
-    Returns:
-        JSONResponse: Health status
-    """
-    return JSONResponse(content={'status': 'ok', 'message': 'Server is running'})
+    # Add custom CSS for main page
+    ui.add_head_html("""
+    <style>
+        /* Center everything on the page */
+        .nicegui-content {
+            display: flex !important;
+            align-items: center !important;
+            justify-content: center !important;
+            min-height: 100vh !important;
+            padding: 20px !important;
+        }
+        .main-container {
+            max-width: 1000px;
+            width: 90%;
+            background-color: white;
+            padding: 40px;
+            border-radius: 12px;
+            box-shadow: 0 10px 30px rgba(0,0,0,0.2);
+            text-align: center;
+            align-items: center;
+        }
+        .main-container > * {
+            width: 100%;
+        }
+        body {
+            background: #1E3765 !important;
+            min-height: 100vh;
+        }
+        .option-card {
+            background-color: #f8f9fa;
+            border: 2px solid #e9ecef;
+            border-radius: 8px;
+            padding: 35px;
+            margin: 0;
+            cursor: pointer;
+            transition: all 0.3s ease;
+            height: 100%;
+            display: flex;
+            flex-direction: column;
+            justify-content: center;
+        }
+        .option-card:hover {
+            border-color: #3498db;
+            background-color: #ebf3fd;
+            transform: translateY(-2px);
+            box-shadow: 0 5px 15px rgba(52, 152, 219, 0.2);
+        }
+        .option-title {
+            font-size: 1.4rem;
+            font-weight: 600;
+            color: #2c3e50;
+            margin-bottom: 12px;
+        }
+        .option-description {
+            color: #6c757d;
+            font-size: 1rem;
+        }
+        .icon {
+            font-size: 2.5rem;
+            margin-bottom: 15px;
+        }
+        .options-grid {
+            display: grid;
+            grid-template-columns: 1fr 1fr;
+            gap: 25px;
+            margin-bottom: 25px;
+        }
+        .resume-container {
+            display: flex;
+            justify-content: center;
+            width: 100%;
+            margin-top: 0;
+        }
+        .resume-card {
+            width: 70%;
+            max-width: 600px;
+        }
+        @media (max-width: 768px) {
+            .options-grid {
+                grid-template-columns: 1fr;
+            }
+            .resume-card {
+                width: 100%;
+            }
+        }
+    </style>
+    """)
 
-def get_checklist_items(ticket_number: str) -> list[ChecklistItem]:
-    """Get all checklist items from the DuckDB database for the specified ticket.
-
-    The checklist type is determined by what was stored in the database during setup.
-
-    Args:
-        ticket_number (str): Ticket number to get checklist items for.
-
-    Returns:
-        list[ChecklistItem]: List of checklist items with their details.
-
-    """
-    dir_manager = DirectoryManager(ticket_number, MAIN_DIR)
-    duck_db = DuckDB(schema_name=ticket_number, db_file=dir_manager.db_path)
-    duck_db_data = duck_db.read_checklist()
-    items = []
-    for item in duck_db_data.get('checklist', []):
-        checklist_item = ChecklistItem(
-            id=item['id'],
-            action=item['action'],
-            instructions=markdown2.markdown(item['instructions']) if item['instructions'] else '',
-            priority=item['priority'],
-            section=item.get('section', ''),
-            automated_check_ids=item.get('automated_check_ids', []),
-            information_location=markdown2.markdown(  # Convert Markdown to HTML
-                item.get('information_location', '')
+    with ui.column().classes('main-container'):
+        # Logo and Header container (centered)
+        with ui.element('div').style('text-align: center; width: 100%;'):
+            ui.html(
+                '<img src="/static/UTL.png" '
+                'alt="University of Toronto Libraries Logo" '
+                'style="height: 60px; width: auto; margin: 8px auto; display: block;">',
+                sanitize=False,
             )
-            if item.get('information_location')
-            else '',  # Handle missing information_location
-            check_type=item.get('check_type', 'Manual'),  # Optional field for check type
-        )
-        items.append(checklist_item)
-    return items
+            ui.html(
+                '<h1 style="color: #1E3765; font-size: 2.6rem; margin-bottom: 10px; margin-top: 10px;">'
+                '<b>Data Curation Tool</b></h1>',
+                sanitize=False,
+            )
+
+        # Top row options
+        with ui.element('div').classes('options-grid'):
+            # New Project Option
+            with ui.element('div').classes('option-card').on('click', lambda: ui.navigate.to('/new')):
+                ui.html('<div class="icon">📁</div>', sanitize=False)
+                ui.html('<div class="option-title">New Project</div>', sanitize=False)
+                ui.html(
+                    '<div class="option-description">Start a new curation process for a new project</div>',
+                    sanitize=False,
+                )
+
+            # Delete Project Option
+            with ui.element('div').classes('option-card').on('click', lambda: ui.navigate.to('/delete')):
+                ui.html('<div class="icon">🗑️</div>', sanitize=False)
+                ui.html('<div class="option-title">Delete Project</div>', sanitize=False)
+                ui.html('<div class="option-description">Delete a project from the database</div>', sanitize=False)
+
+        # Resume Work Option (centered)
+        with (
+            ui.element('div').classes('resume-container'),
+            ui.element('div').classes('option-card resume-card').on('click', lambda: ui.navigate.to('/resume')),
+        ):
+            ui.html('<div class="icon">✏️</div>', sanitize=False)
+            ui.html('<div class="option-title">Resume Project</div>', sanitize=False)
+            ui.html('<div class="option-description">Continue working on an existing project</div>', sanitize=False)
 
 
-@app.get('/', response_class=HTMLResponse)
-def main_landing(request: Request) -> HTMLResponse:
-    """Render the main landing page with navigation options.
-
-    Args:
-        request (Request): incoming HTTP request
-
-    Returns:
-        HTMLResponse: main landing page
-    """
-    return templates.TemplateResponse('main.html', {'request': request})
+# ============================================================================
+# New Dataset Setup Page
+# ============================================================================
 
 
-@app.get('/new-dataset', response_class=HTMLResponse)
-def new_dataset(request: Request) -> HTMLResponse:
-    """Render the new dataset setup page.
+@ui.page('/new')
+async def new_dataset_page() -> None:
+    """New dataset setup page with exact CSS matching your current design."""
+    # Enable the session storage for form persistence
+    await ui.context.client.connected()
 
-    Args:
-        request (Request): incoming HTTP request
+    # Apply our custom CSS
+    apply_pdc_styles()
 
-    Returns:
-        HTMLResponse: new dataset setup page
-    """
-    # Get environment variables for prefilling form fields
-    env_data = {
-        'base_url': os.getenv('BASE_URL', ''),
-        'api_token': os.getenv('API_TOKEN', ''),
-        'curator_name': os.getenv('CURATOR_NAME', ''),
-        'curator_email': os.getenv('CURATOR_EMAIL', ''),
-        'main_dir': str(MAIN_DIR.resolve()),
-    }
-
-    return templates.TemplateResponse('landing.html', {'request': request, 'env_data': env_data})
-
-
-@app.get('/checklist', response_class=HTMLResponse)
-async def checklist(request: Request) -> HTMLResponse:
-    """Render the checklist UI with a table.
-
-    Args:
-        request (Request): incoming HTTP request
-
-    Returns:
-        HTMLResponse: page with checklist table
-    """
-    ticket_number = request.query_params.get('ticket_number')
-    items = get_checklist_items(ticket_number)
-
-    resume_schema = request.query_params.get('resume')
-
-    # Get curator information and checklist type from project metadata
-    curator_name = ''
-    curator_email = ''
-    checklist_type = 'high'  # Default value
-
-    if ticket_number:
-        try:
-            dir_manager = DirectoryManager(ticket_number, MAIN_DIR)
-            duck_db = DuckDB(schema_name=ticket_number, db_file=dir_manager.db_path)
-            metadata = duck_db.read_project_metadata_record()
-
-            curator_name = metadata.get('curator_name', '')
-            curator_email = metadata.get('curator_email', '')
-            checklist_type = metadata.get('checklist_type', 'high')
-
-            logger.debug(f'Loaded curator info for {ticket_number}: {curator_name}, {curator_email}')
-            logger.debug(f'Loaded checklist type for {ticket_number}: {checklist_type}')
-
-        except Exception as e:
-            logger.warning(f'Could not load curator info for {ticket_number}: {e}')
-
-    # Check results will be loaded via JavaScript from session storage
-    return templates.TemplateResponse(
-        'index.html',
-        {
-            'request': request,
-            'items': items,
-            'curator_name': curator_name,
-            'curator_email': curator_email,
-            'ticket_number': ticket_number or '',
-            'check_results': [],  # Empty, will be populated by frontend JavaScript
-            'resume_schema': resume_schema,  # Pass to frontend for handling
-            'checklist_type': checklist_type,  # Pass checklist type for heading
-        },
-    )
-
-
-async def run_command(command: str) -> dict:
-    """Run a command and return the result with real-time output streaming to logger.
-
-    Args:
-        command (str): Command to run
-
-    Returns:
-        dict: Command result with stdout, stderr, and return code
-    """
-    try:
-        logger.info('🚀 Starting the CLI application')
-
-        process = await asyncio.create_subprocess_shell(
-            command,
-            stdout=asyncio.subprocess.PIPE,
-            stderr=asyncio.subprocess.PIPE,
+    with ui.column().classes('pdc-container').style('width: 100%; max-width: 800px;'):
+        # Logo
+        ui.html(
+            '<img src="/static/UTL.png" '
+            'alt="University of Toronto Libraries Logo" '
+            'class="pdc-logo" '
+            'style="height: 60px; width: auto; margin: 8px;">',
+            sanitize=False,
         )
 
-        stdout_lines = []
-        stderr_lines = []
+        # Header
+        ui.label('Data Curation Tool').classes('pdc-header')
 
-        def strip_ansi_codes(text: str) -> str:
-            """Remove ANSI escape codes from text."""
-            ansi_escape = re.compile(r'\x1b\[[0-9;]*m')
-            return ansi_escape.sub('', text)
+        # Messages
+        error_msg = ui.label().classes('hidden')
+        success_msg = ui.label().classes('hidden')
 
-        async def read_stream(stream, lines_list, log_func):
-            """Read stream line by line and log in real-time."""
-            while True:
-                line = await stream.readline()
-                if not line:
-                    break
-                decoded_line = line.decode().rstrip()
-                if decoded_line:  # Only log non-empty lines
-                    lines_list.append(decoded_line)
-                    # Strip ANSI codes before logging to prevent double formatting
-                    clean_line = strip_ansi_codes(decoded_line)
-                    if clean_line.strip():  # Only log if there's content after stripping
-                        log_func(f'[CLI] {clean_line}')
-
-        # Create tasks to read both streams concurrently
-        stdout_task = asyncio.create_task(read_stream(process.stdout, stdout_lines, logger.info))
-        stderr_task = asyncio.create_task(read_stream(process.stderr, stderr_lines, logger.error))
-
-        # Wait for both streams to complete
-        await asyncio.gather(stdout_task, stderr_task)
-
-        # Wait for process to finish
-        return_code = await process.wait()
-
-        result = {
-            'stdout': '\n'.join(stdout_lines),
-            'stderr': '\n'.join(stderr_lines),
-            'return_code': return_code,
-            'success': return_code == 0,
+        # Form state - automatically persisted
+        # Initialize with environment variable defaults
+        default_form_data = {
+            'pid': '',
+            'ticket_number': '',
+            'collection_alias': '',
+            'base_url': os.getenv('BASE_URL', ''),
+            'api_token': os.getenv('API_TOKEN', ''),
+            'curator_name': os.getenv('CURATOR_NAME', ''),
+            'curator_email': os.getenv('CURATOR_EMAIL', ''),
+            'main_dir': str(MAIN_DIR.resolve()),
+            'force_del': False,
+            'check_zip': True,
+            'checklist': 'high',
         }
 
-        logger.info(f'✅ Command completed with return code: {return_code}')
-        return result
+        # Get existing form data or create new
+        form_data = app.storage.tab.setdefault('setup_form', default_form_data)
 
-    except Exception as e:
-        error_msg = f'❌ Command execution failed: {str(e)}'
-        logger.error(error_msg)
-        return {'stdout': '', 'stderr': error_msg, 'return_code': -1, 'success': False}
+        # Update empty fields with environment variable defaults
+        for key, default_value in default_form_data.items():
+            if key not in form_data or not form_data.get(key):
+                form_data[key] = default_value
+
+        # Dataset Information Section
+        with ui.element('div').classes('pdc-form-section').style('width: 100%;'):
+            ui.label('Dataset Information').classes('text-lg font-semibold text-gray-700').style('margin-bottom: 12px;')
+
+            with ui.element('div').classes('pdc-form-group'):
+                ui.label('Dataset Persistent Identifier (PID) *').classes('pdc-form-label')
+                ui.input(placeholder='doi:10.5683/SP2/... or hdl:1902.1/...').classes(
+                    'pdc-form-input w-full'
+                ).bind_value(form_data, 'pid').style('width: 100%')
+                ui.label('Enter the DOI or Handle of the dataset').classes('pdc-form-helper')
+
+            with ui.element('div').classes('pdc-form-group'):
+                ui.label('Dataverse Base URL *').classes('pdc-form-label')
+                ui.input(placeholder='https://demo.borealisdata.ca/').classes('pdc-form-input w-full').bind_value(
+                    form_data, 'base_url'
+                ).style('width: 100%')
+                ui.label('Base URL of the Dataverse installation').classes('pdc-form-helper')
+
+            with ui.element('div').classes('pdc-form-group'):
+                ui.label('API Token *').classes('pdc-form-label')
+                ui.input(
+                    placeholder='Enter your Dataverse API token', password=True, password_toggle_button=True
+                ).classes('pdc-form-input w-full').bind_value(form_data, 'api_token').style('width: 100%')
+                ui.label('Your Dataverse API token (will be hidden)').classes('pdc-form-helper')
+
+            with ui.element('div').classes('pdc-form-group'):
+                ui.label('Ticket Number *').classes('pdc-form-label')
+                ui.input(placeholder='TICKET-123').classes('pdc-form-input w-full').bind_value(
+                    form_data, 'ticket_number'
+                ).style('width: 100%')
+                ui.label('Ticket number for the curation report').classes('pdc-form-helper')
+
+        # Curator Information Section
+        with ui.element('div').classes('pdc-form-section').style('width: 100%;'):
+            ui.label('Curator Information').classes('text-lg font-semibold text-gray-700').style('margin-bottom: 12px;')
+
+            with ui.element('div').classes('pdc-form-group'):
+                ui.label('Curator Name *').classes('pdc-form-label')
+                ui.input(placeholder='Enter your name').classes('pdc-form-input w-full').bind_value(
+                    form_data, 'curator_name'
+                ).style('width: 100%')
+
+            with ui.element('div').classes('pdc-form-group'):
+                ui.label('Curator Email *').classes('pdc-form-label')
+                ui.input(placeholder='Enter your email').classes('pdc-form-input w-full').bind_value(
+                    form_data, 'curator_email'
+                ).style('width: 100%')
+
+        # Directory Settings Section
+        with ui.element('div').classes('pdc-form-section').style('width: 100%;'):
+            ui.label('Directory Settings').classes('text-lg font-semibold text-gray-700').style('margin-bottom: 12px;')
+
+            with ui.element('div').classes('pdc-form-group'):
+                ui.label('Main Directory Path').classes('pdc-form-label')
+                ui.input(placeholder='workdir').classes('pdc-form-input w-full').bind_value(
+                    form_data, 'main_dir'
+                ).style('width: 100%')
+                ui.label('The main (base) directory for project files').classes('pdc-form-helper')
+
+        # Checklist Selection Section
+        with ui.element('div').classes('pdc-form-section').style('width: 100%;'):
+            ui.label('Checklist Selection').classes('text-lg font-semibold text-gray-700').style('margin-bottom: 12px;')
+
+            with ui.element('div').classes('pdc-form-group'):
+                # Use our custom checklist select with styling
+                create_checklist_select(
+                    current_value=form_data.get('checklist', 'high'),
+                    on_change=lambda e: form_data.update({'checklist': e.value}),
+                ).style('width: 100%')
+                ui.label('Select the checklist level for this curation task').classes('pdc-form-helper')
+
+        # Processing Options Section
+        with ui.element('div').classes('pdc-form-section').style('width: 100%;'):
+            ui.label('Processing Options').classes('text-lg font-semibold text-gray-700').style('margin-bottom: 12px;')
+
+            with ui.row().classes('gap-4'):
+                ui.checkbox('Force delete existing project', value=form_data.get('force_del', False)).bind_value(
+                    form_data, 'force_del'
+                )
+
+                ui.checkbox('Unzip and check contents of zip files', value=form_data.get('check_zip', True)).bind_value(
+                    form_data, 'check_zip'
+                )
+
+            with ui.element('div').classes('pdc-form-group'):
+                ui.label('Dataverse Collection Alias').classes('pdc-form-label')
+                ui.input(placeholder='Enter dataverse collection alias').classes('pdc-form-input w-full').bind_value(
+                    form_data, 'collection_alias'
+                ).style('width: 100%')
+
+        # Action buttons
+        with ui.element('div').classes('pdc-actions'):
+            start_button = ui.button(
+                'Start Curation Process',
+                on_click=lambda: handle_setup_submit(
+                    form_data, error_msg, success_msg, loading_spinner, start_button, reset_button, back_button
+                ),
+            ).classes('pdc-btn pdc-btn-primary')
+
+            reset_button = ui.button(
+                'Reset Form', on_click=lambda: reset_form(form_data, default_form_data, reset_button)
+            ).classes('pdc-btn pdc-btn-secondary')
+
+            back_button = ui.button('Back', on_click=lambda: handle_back_navigation(back_button), color='red').classes(
+                'pdc-btn pdc-btn-secondary'
+            )
+
+        # Loading indicator
+        with ui.element('div').classes('pdc-loading hidden') as loading_spinner:
+            ui.element('div').classes('pdc-loading-spinner')
+            ui.label('Running curation process...')
 
 
 @app.post('/setup')
@@ -321,529 +407,752 @@ async def setup(request: SetupRequest) -> JSONResponse:
             logger.error(f'Validation failed: Curator email is missing or empty. Received: "{request.curator_email}"')
             raise HTTPException(status_code=400, detail='Curator email is required')
 
-        # Build the command to run pydatacuration CLI
-        cmd_parts = [
-            'python',
-            '-m',
-            'pydatacuration.main',
-            'all',
-            '--pid',
-            f'"{request.pid}"',
-            '--ticket-number',
-            f'"{request.ticket_number}"',
-            '--curator-name',
-            f'"{request.curator_name}"',
-            '--curator-email',
-            f'"{request.curator_email}"',
-        ]
+        # Create context object
+        ctx_obj = CtxObj(main_dir=Path(request.main_dir))
 
-        # Add base URL if provided
-        if request.base_url and request.base_url.strip():
-            cmd_parts.extend(['--base-url', f'"{request.base_url}"'])
-
-        # Add API token if provided
-        if request.api_token and request.api_token.strip():
-            cmd_parts.extend(['--api-token', f'"{request.api_token}"'])
-
-        # Add optional flags
-        if request.force_del:
-            cmd_parts.append('--force-del')
-        else:
-            cmd_parts.append('--no-force-del')
-
-        if request.check_zip:
-            cmd_parts.append('-z')
-        else:
-            cmd_parts.append('-nz')
-
-        # Add checklist type
-        if request.checklist:
-            cmd_parts.extend(['--checklist', request.checklist])
-
-        # Join command parts
-        cmd = ' '.join(cmd_parts)
-
-        # Store state variables using DirectoryManager
+        # Store state variables
         dir_manager = DirectoryManager(request.ticket_number, request.main_dir)
         app.state.work_dir = dir_manager.project_dir
         app.state.base_url = request.base_url
-        # Run the command
-        result = await run_command(cmd)
 
-        if result['success']:
-            url = f'/checklist?ticket_number={request.ticket_number}'
-            return JSONResponse(content={'success': True, 'redirect_url': url})
-        # Extract the last meaningful error message from CLI output
-        error_details = []
-        if result['stderr']:
-            error_details.append(f'CLI Error: {result["stderr"].strip()}')
-        if result['stdout']:
-            # Look for error patterns in stdout (CLI logs errors there too)
-            stdout_lines = result['stdout'].strip().split('\n')
-            for line in reversed(stdout_lines):
-                clean_line = line.strip()
-                if (
-                    'error' in clean_line.lower()
-                    or 'aborting' in clean_line.lower()
-                    or 'failed' in clean_line.lower()
-                ):
-                    error_details.append(f'CLI Message: {clean_line}')
-                    break
+        # Create a minimal mock context with the obj
+        # We create a simple object that has the required .obj attribute
+        class MockContext:
+            def __init__(self, obj: CtxObj) -> None:
+                self.obj: CtxObj = obj
 
-        error_message = '. '.join(error_details) if error_details else 'Curation command failed'
-        logger.error(f'Command failed with return code {result["return_code"]}: {error_message}')
-        raise HTTPException(status_code=400, detail=error_message)
-    except ValidationError as e:
-        logger.error(f'Pydantic validation error: {e}')
-        logger.error(f'Validation errors details: {e.errors()}')
-    except HTTPException as e:
-        logger.error(f'HTTP exception: status={e.status_code}, detail={e.detail}')
-        raise e
-    except Exception as e:
-        logger.error(f'Unexpected error in setup endpoint: {e}', exc_info=True)
-    return JSONResponse(content={'success': False, 'message': 'Unexpected error occurred'})
+        ctx = MockContext(ctx_obj)
 
+        # Run in a thread pool to avoid blocking the event loop
+        # This is necessary because run_all uses asyncio.run() internally
+        loop = asyncio.get_event_loop()
 
-@app.get('/ds-metadata')
-async def get_ds_metadata(main_dir: str, ticket_number: str, base_url: str = ''):
-    """Serve the dataset metadata file for a specific ticket.
+        def run_curation() -> None:
+            """Run the curation in a separate thread."""
+            run_all(
+                ctx=ctx,
+                pid=request.pid,
+                base_url=request.base_url or '',
+                api_token=request.api_token or '',
+                ticket_number=request.ticket_number,
+                force_del=request.force_del,
+                check_zip=request.check_zip,
+                collection_alias=request.collection_alias,
+                curator_name=request.curator_name,
+                curator_email=request.curator_email,
+                open_dir=False,
+                checklist=request.checklist,
+            )
 
-    Args:
-        main_dir (str): Main directory name
-        ticket_number (str): Ticket number
-        base_url (str): Base URL for dataset links (optional)
+        # Execute in thread pool to avoid event loop conflicts
+        await loop.run_in_executor(None, run_curation)
 
-    Returns:
-        JSONResponse: Dataset metadata data
-    """
-    try:
-        processed_metadata = {}
-        dir_manager = DirectoryManager(ticket_number, main_dir)
-
-        if dir_manager.db_path.exists():
-            try:
-                # Use DuckDB to get metadata
-                duck_db = DuckDB(schema_name=ticket_number, db_file=dir_manager.db_path)
-                processed_metadata = duck_db.read_project_metadata_record()
-                if processed_metadata and processed_metadata.get('dataset_pid'):
-                    return JSONResponse(content=processed_metadata)
-                logger.warning(f'No data found in DuckDB for ticket {ticket_number}')
-            except Exception as db_error:
-                logger.warning(f'DuckDB query failed for ticket {ticket_number}: {db_error}')
+        url = f'/checklist?ticket_number={request.ticket_number}'
+        return JSONResponse(content={'success': True, 'redirect_url': url})
 
     except Exception as e:
-        logger.error(f'Error reading dataset metadata for ticket {ticket_number}: {e}')
-        raise HTTPException(status_code=500, detail=f'Error reading dataset metadata: {str(e)}')
+        logger.error(f'Curation failed: {e}', exc_info=True)
+        raise HTTPException(status_code=400, detail=str(e))
 
 
-def _get_check_results_from_duckdb(main_dir: str, ticket_number: str, table_name: str) -> dict:
-    """Get the check results from DuckDB for a specific ticket."""
+async def handle_setup_submit(
+    form_data: dict,
+    error_msg: ui.label,
+    success_msg: ui.label,
+    loading_spinner: ui.element,
+    start_button: ui.button,
+    reset_button: ui.button,
+    back_button: ui.button,
+) -> None:
+    """Handle form submission."""
+    # Validation
+    required_fields = ['pid', 'base_url', 'api_token', 'ticket_number', 'curator_name', 'curator_email']
+    missing = [f for f in required_fields if not form_data.get(f)]
+
+    if missing:
+        error_msg.set_text(f'Missing required fields: {", ".join(missing)}')
+        error_msg.classes(remove='hidden', add='pdc-error')
+        return
+
+    # Disable all buttons and show loading
+    start_button.set_enabled(False)
+    reset_button.set_enabled(False)
+    back_button.set_enabled(False)
+    loading_spinner.classes(remove='hidden')
+    error_msg.classes(add='hidden')
+    success_msg.classes(add='hidden')
+
     try:
-        dir_manager = DirectoryManager(ticket_number, main_dir)
-        duck_db = DuckDB(schema_name=ticket_number, db_file=dir_manager.db_path)
-        return duck_db.read_check_results(table_name)
-    except Exception as e:
-        logger.error(f'Error fetching check results from DuckDB for ticket {ticket_number}: {e}')
-        return {'error': str(e)}
+        # In production, call your FastAPI /setup endpoint
+        response = await setup(SetupRequest(**form_data))
+        response_data = orjson.loads(response.body)
+        ui.notify(f'Setup returned: {response_data}', type='info')
 
+        # Show success
+        success_msg.set_text('Curation process completed successfully!')
+        success_msg.classes(remove='hidden', add='pdc-success')
 
-def get_checklist_from_duckdb(main_dir: str | Path, ticket_number: str) -> dict:
-    """Get the checklist from DuckDB for a specific ticket."""
-    try:
-        dir_manager = DirectoryManager(ticket_number, main_dir)
-        duck_db = DuckDB(schema_name=ticket_number, db_file=dir_manager.db_path)
-        return duck_db.read_checklist()
-    except Exception as e:
-        logger.error(f'Error fetching checklist from DuckDB for ticket {ticket_number}: {e}')
-        return {'error': str(e)}
-
-
-@app.delete('/api/schemas/{schema_name}')
-async def delete_schema(schema_name: str) -> JSONResponse:
-    """Delete a specific schema from DuckDB.
-
-    Args:
-        schema_name (str): Name of the schema to delete
-
-    Returns:
-        JSONResponse: Result of the delete operation
-    """
-    try:
-        # Use default main database directory to find the main database file
-        main_dir = MAIN_DIR
-        db_dir = Path(main_dir) / 'db'
-        db_file = db_dir / 'duckdb.db'
-
-        if not db_file.exists():
-            logger.warning(f'Database file not found at {db_file}')
-            return JSONResponse(status_code=404, content={'error': 'Database file not found'})
-
-        # Create a DuckDB instance to delete the schema
-        duck_db = DuckDB(schema_name='temp', db_file=db_file)
-
-        # Prune the schema name
-        schema_name_pruned = schema_name.replace('duckdb.', '').replace('"', '')
-
-        # Delete the schema
-        duck_db.sql_drop_schema(schema_name_pruned)
-        logger.info(f'Successfully deleted schema: {schema_name_pruned}')
-
-        return JSONResponse(content={'success': True, 'message': f'Schema {schema_name_pruned} deleted successfully'})
-
-    except Exception as e:
-        logger.error(f'Error deleting schema {schema_name_pruned}: {e}')
-        return JSONResponse(status_code=500, content={'error': f'Error deleting schema: {str(e)}'})
-
-
-@app.get('/api/schemas')
-async def get_schemas() -> JSONResponse:
-    """Get all available schemas (projects) from DuckDB.
-
-    Returns:
-        JSONResponse: List of available schemas with metadata
-    """
-    try:
-        # Use default main database directory to find the main database file
-        main_dir = MAIN_DIR
-        db_dir = Path(main_dir) / 'db'
-        db_file = db_dir / 'duckdb.db'
-
-        if not db_file.exists():
-            logger.warning(f'Database file not found at {db_file}')
-            return JSONResponse(content={'schemas': []})
-
-        # Create a DuckDB instance to get schemas (schema_name doesn't matter for this operation)
-        duck_db = DuckDB(schema_name='temp', db_file=db_file)
-        schema_names = duck_db.get_all_schema_names()
-
-        # Get additional metadata for each schema
-        schemas_with_metadata = []
-        for schema_name in schema_names:
-            try:
-                # Try to get project metadata for last modified date
-                schema_duck_db = DuckDB(schema_name=schema_name, db_file=db_file)
-                metadata = schema_duck_db.read_project_metadata_record()
-
-                last_modified = 'Unknown'
-                if metadata and 'log_last_update_date' in metadata:
-                    last_modified = metadata['log_last_update_date']
-                elif metadata and 'log_init_date' in metadata:
-                    last_modified = metadata['log_init_date']
-
-                # Prune the schema, removing the prefixes
-                schema_name_display = schema_name.replace('duckdb.', '').replace('"', '')
-
-                schemas_with_metadata.append(
-                    {
-                        'display_name': schema_name_display,
-                        'name': schema_name,
-                        'last_modified': last_modified,
-                        'checklist_type': metadata.get('checklist_type', 'unknown'),
-                        'has_metadata': bool(metadata and metadata.get('dataset_pid')),
-                    }
-                )
-            except Exception as e:
-                logger.warning(f'Could not get metadata for schema {schema_name}: {e}')
-                schemas_with_metadata.append({'name': schema_name, 'last_modified': 'Unknown', 'has_metadata': False})
-
-        # Sort by last modified (most recent first)
-        schemas_with_metadata.sort(key=lambda x: x['last_modified'], reverse=True)
-
-        return JSONResponse(content={'schemas': schemas_with_metadata})
-
-    except Exception as e:
-        logger.error(f'Error fetching schemas: {e}')
-        return JSONResponse(status_code=500, content={'error': f'Error fetching schemas: {str(e)}'})
-
-
-@app.get('/api/check-results')
-async def get_check_results_from_session(request: Request) -> JSONResponse:
-    """Serve check results based on session storage data (via query params).
-
-    Expected query parameters:
-    - ticket_number: from sessionStorage
-    - main_dir: optional, defaults to 'workdir'
-
-    Returns:
-        JSONResponse: Check results data or empty results if not found
-    """
-    try:
-        main_dir = MAIN_DIR
-        ticket_number = request.query_params.get('ticket_number')
-        _check_results = _get_check_results_from_duckdb(main_dir, ticket_number, 'check_results')
-
-        return JSONResponse(content=_check_results)
-    except Exception as e:
-        print(f'Error loading check results: {e}')
-        return JSONResponse(content={'check_results': []})
-
-
-@app.post('/shutdown')
-async def shutdown() -> None:
-    """Shutdown the uvicorn server."""
-    os._exit(0)
-
-
-class CurationLogRequest(BaseModel):
-    curationLog: str
-
-
-class ChecklistUpdateRequest(BaseModel):
-    """Model for updating checklist items in DuckDB."""
-    ticket_number: str
-    item_id: str
-    status: str | None = None
-    comments: str | None = None
-    time_spent: str | None = None
-
-
-@app.post('/export-curation-log')
-async def export_log_yaml(request: CurationLogRequest) -> JSONResponse:
-    """Export the curationLog from sessionStorage to a YAML file."""
-    try:
-        # Parse YAML data
-        yaml_data = yaml.safe_load(request.curationLog)
-
-        checklist_items = yaml_data.get('checklist_items', [])
-        # Convert array to dictionary for easier lookup
-        checklist_map = {}
-        if isinstance(checklist_items, list):
-            for item in checklist_items:
-                if isinstance(item, dict) and 'id' in item:
-                    checklist_map[item['id']] = item
-        elif isinstance(checklist_items, dict):
-            checklist_map = checklist_items
-
-        # Load the metadata block
-        metadata = yaml_data.get('metadata', {})
-
-        # Get the ticket number from metadata
-        ticket_number = metadata.get('ticket_number', 'unknown')
-
-        # Read the check-list_template_high.yaml to get the checklist items
-        checklist = get_checklist_from_duckdb(MAIN_DIR, ticket_number)
-        check_list_template_items = checklist.get('checklist', [])
-
-        # Update checklist items with user data
-        for item in check_list_template_items:
-            item_id = item['id']
-            # Look up our map (keys are already strings)
-            data = checklist_map.get(item_id, {})
-            # Update the item with status, comments, and time spent
-            item['status'] = data.get('status', '')
-            item['comments'] = data.get('comments', '')
-            item['time_spent'] = data.get('time', '')
-
-        # Create the final output structure
-        output_data = {'metadata': {}, 'checklist': check_list_template_items}
-
-        # Add metadata from the YAML data
-        metadata = yaml_data.get('metadata', {})
-        if metadata:
-            for key, value in metadata.items():
-                # Handle datetime objects
-                if hasattr(value, 'strftime'):  # Check if it's a date/datetime object
-                    output_data['metadata'][key] = value.strftime('%Y-%m-%d')
-                else:
-                    output_data['metadata'][key] = value
-
-        # Save to file
-        ticket_number = metadata.get('ticket_number', 'unknown')
-        main_dir = metadata.get('main_dir', 'workdir')
-        dir_manager = DirectoryManager(ticket_number, main_dir)
-        output_path = dir_manager.get_dir('outputs') / f'{ticket_number}.yaml'
-
-        with output_path.open('w', encoding='utf-8') as f:
-            yaml.dump(output_data, f, default_flow_style=False, sort_keys=False, allow_unicode=True)
-
-        return JSONResponse(
-            content={
-                'success': True,
-                'message': f'Curation log in YAML format exported successfully to {output_path}',
-                'data': output_data,
-                'file_path': str(output_path),
-            }
-        )
-
-    except Exception as e:
-        print(f'Error in export_log_yaml: {e}')
-        return JSONResponse(status_code=500, content={'success': False, 'message': str(e)})
-
-
-@app.post('/render-report')
-async def render_report(request: Request) -> JSONResponse:
-    """Render a DOCX report from the YAML curation log.
-
-    Args:
-        request (Request): HTTP request containing the curation log data
-
-    Returns:
-        JSONResponse: Result of the report generation
-    """
-    try:
-        # Handle both JSON and form data
-        if request.headers.get('content-type') == 'application/json':
-            data = await request.json()
-            curation_log_data = data.get('curationLog')
+        # Redirect using the redirect_url from response
+        if response_data.get('redirect_url'):
+            ui.navigate.to(response_data['redirect_url'])
         else:
-            # Handle form data - reconstruct the YAML from form fields
-            form_data = await request.form()
-
-            # Get the YAML data from sessionStorage (passed via form)
-            curation_log_data = form_data.get('curationLog', '')
-
-            if not curation_log_data:
-                # If no YAML data in form, try to reconstruct from session storage
-                # This might require getting it from the frontend differently
-                return JSONResponse(
-                    status_code=400, content={'success': False, 'message': 'No curation log data found in request'}
-                )
-
-        # Create CurationLogRequest object for save_log_yaml
-        curation_request = CurationLogRequest(curationLog=curation_log_data)
-
-        # Invoke save_log_yaml before rendering the report
-        save_result = await export_log_yaml(curation_request)
-
-        # Check if save was successful
-        if not save_result.status_code == 200:
-            return JSONResponse(
-                status_code=500, content={'success': False, 'message': 'Failed to save curation log before rendering'}
-            )
-
-        # Parse YAML to get ticket number for dynamic file paths
-        yaml_data = yaml.safe_load(curation_log_data)
-        ticket_number = yaml_data.get('metadata', {}).get('ticket_number', 'unknown')
-        main_dir = yaml_data.get('metadata', {}).get('main_dir', 'workdir')
-        dir_manager = DirectoryManager(ticket_number, main_dir)
-
-        # Render the report from the saved YAML file with dynamic paths
-        yaml_path = dir_manager.get_dir('outputs') / f'{ticket_number}.yaml'
-        output_path = dir_manager.get_dir('outputs') / f'{ticket_number}.docx'
-
-        render_report_from_yaml(
-            yaml_path=yaml_path, template_path=Path('res/new_template_high.docx'), output_path=output_path
-        )
-
-        return JSONResponse(
-            content={
-                'success': True,
-                'message': f'Curation log saved to {output_path} successfully',
-                'output_file': str(output_path),
-            }
-        )
+            ui.navigate.to(f'/checklist?ticket_number={form_data["ticket_number"]}')
 
     except Exception as e:
-        return JSONResponse(
-            status_code=500, content={'success': False, 'message': f'Error when rendering report: {str(e)}'}
-        )
+        error_msg.set_text(f'Error: {str(e)}')
+        error_msg.classes(remove='hidden', add='pdc-error')
+    finally:
+        # Re-enable all buttons and hide loading
+        start_button.set_enabled(True)
+        reset_button.set_enabled(True)
+        back_button.set_enabled(True)
+        loading_spinner.classes(add='hidden')
 
 
-@app.get('/api/checklist-data')
-async def get_checklist_data(request: Request) -> JSONResponse:
-    """Get checklist data with saved status, comments, and time_spent from DuckDB.
-
-    Expected query parameters:
-    - ticket_number: The ticket number to get data for
-
-    Returns:
-        JSONResponse: Checklist data with saved values
-    """
-    try:
-        ticket_number = request.query_params.get('ticket_number')
-        if not ticket_number:
-            return JSONResponse(
-                status_code=400,
-                content={'success': False, 'message': 'ticket_number parameter is required'}
-            )
-
-        # Get checklist data from DuckDB
-        checklist_data = get_checklist_from_duckdb(MAIN_DIR, ticket_number)
-
-        # Also get curator information and log dates from project metadata
-        try:
-            dir_manager = DirectoryManager(ticket_number, MAIN_DIR)
-            duck_db = DuckDB(schema_name=ticket_number, db_file=dir_manager.db_path)
-            metadata = duck_db.read_project_metadata_record()
-
-            # Add curator info and log dates to response
-            checklist_data['curator_name'] = metadata.get('curator_name', '')
-            checklist_data['curator_email'] = metadata.get('curator_email', '')
-            checklist_data['log_init_date'] = metadata.get('log_init_date', '')
-            checklist_data['log_last_update_date'] = metadata.get('log_last_update_date', '')
-
-        except Exception as e:
-            logger.warning(f'Could not load metadata for API response: {e}')
-            checklist_data['curator_name'] = ''
-            checklist_data['curator_email'] = ''
-            checklist_data['log_init_date'] = ''
-            checklist_data['log_last_update_date'] = ''
-
-        return JSONResponse(content=checklist_data)
-
-    except Exception as e:
-        ticket_number = request.query_params.get('ticket_number', 'unknown')
-        logger.error(f'Error fetching checklist data for ticket {ticket_number}: {e}')
-        return JSONResponse(
-            status_code=500,
-            content={'success': False, 'message': f'Error fetching checklist data: {str(e)}'}
-        )
+def reset_form(form_data: dict, default_form_data: dict, reset_button: ui.button) -> None:
+    """Reset form to defaults."""
+    # Disable button during reset
+    reset_button.set_enabled(False)
+    form_data.update(default_form_data)
+    ui.notify('Form reset to defaults', type='info')
+    # Re-enable button
+    reset_button.set_enabled(True)
 
 
-@app.post('/update-checklist-item')
-async def update_checklist_item(request: ChecklistUpdateRequest) -> JSONResponse:
-    """Update a single checklist item in DuckDB.
+def handle_back_navigation(back_button: ui.button) -> None:
+    """Handle back button navigation."""
+    # Disable button during navigation
+    back_button.set_enabled(False)
+    ui.navigate.to('/')
+
+
+# ============================================================================
+# Shared Project Table Component
+# ============================================================================
+
+
+async def render_project_table(
+    schemas: list[dict],
+    mode: str = 'resume',  # 'resume' or 'delete'
+    refresh_callback=None,
+) -> None:
+    """Render a filterable project table.
 
     Args:
-        request (ChecklistUpdateRequest): Request containing checklist item update data
-
-    Returns:
-        JSONResponse: Result of the update operation
+        schemas: List of project schemas
+        mode: 'resume' for clickable rows, 'delete' for delete buttons
+        refresh_callback: Optional callback to refresh the list after deletion
     """
-    try:
-        logger.info(f'Updating checklist item {request.item_id} for ticket {request.ticket_number}')
+    if not schemas:
+        with ui.element('div').classes('no-projects'):
+            ui.label('No projects found').classes('text-xl')
+        return
 
-        # Get the database file path
-        dir_manager = DirectoryManager(request.ticket_number, MAIN_DIR)
-        db_file = dir_manager.db_path
+    # Filters
+    with ui.element('div').classes('pdc-form-section').style('width: 100%; margin-bottom: 20px;'):
+        ui.label('Filters').classes('text-lg font-semibold text-gray-700').style('margin-bottom: 12px;')
 
-        # Create DuckDB instance for the ticket's schema
-        duck_db = DuckDB(schema_name=request.ticket_number, db_file=db_file)
+        with ui.row().classes('gap-4').style('align-items: flex-end;'):
+            # Search filter
+            with ui.element('div').style('flex: 1; min-width: 200px;'):
+                ui.label('Search').classes('pdc-form-label')
+                search_input: Input = (
+                    ui.input(placeholder='Search Title, DOI, ID (Versioned), URL')
+                    .classes('pdc-form-input')
+                    .style('width: 100%;')
+                )
 
-        # Check if schema exists
-        if not duck_db.sql_check_schema_exists(request.ticket_number):
-            logger.warning(f'Schema {request.ticket_number} does not exist')
-            return JSONResponse(
-                status_code=404,
-                content={'success': False, 'message': f'Ticket schema {request.ticket_number} not found'}
+            # Curator filter
+            with ui.element('div').style('flex: 1; min-width: 200px;'):
+                ui.label('Filter by Curator').classes('pdc-form-label')
+                curators = [''] + sorted(list({s.get('curator_name', '') for s in schemas if s.get('curator_name')}))
+                curator_filter = (
+                    ui.select(
+                        options=curators,
+                        value='',
+                        with_input=False,
+                    )
+                    .classes('pdc-status-select')
+                    .style('width: 100%;')
+                )
+
+            # Clear filters button
+            ui.button('Clear Filters', on_click=lambda: clear_filters(search_input, curator_filter)).classes(
+                'pdc-btn pdc-btn-secondary'
             )
 
-        # Update the checklist item
-        success = duck_db.sql_update_checklist_item(
-            item_id=request.item_id,
-            status=request.status,
-            comments=request.comments,
-            time_spent=request.time_spent
-        )
+    # Table container
+    table_container = ui.column().style('width: 100%;')
 
+    # Define render function that applies filters
+    def render_filtered_table() -> None:
+        # Apply filters
+        filtered_schemas = schemas
+        if search_input.value:
+            search_term = search_input.value.lower()
+            filtered_schemas = [
+                s
+                for s in filtered_schemas
+                if search_term in str(s.get('ticket_number', '')).lower()
+                or search_term in str(s.get('dataset_title', '')).lower()
+                or search_term in str(s.get('dataset_pid', '')).lower()
+                or search_term in str(s.get('dataset_id', '')).lower()
+            ]
+        if curator_filter.value:
+            filtered_schemas = [s for s in filtered_schemas if s.get('curator_name') == curator_filter.value]
+
+        table_container.clear()
+        with table_container:
+            ui.label(f'Found {len(filtered_schemas)} project(s)').classes('text-lg font-semibold').style(
+                'margin: 20px 0;'
+            )
+
+            # Render table
+            with ui.element('table').classes('pdc-checklist-table'):
+                # Table Header
+                with ui.element('thead'), ui.element('tr'):
+                    headers = ['Ticket Number', 'Dataset Information', 'Curator', 'Project Last Modified']
+                    if mode == 'delete':
+                        headers.append('Action')
+                    for header in headers:
+                        with ui.element('th'):
+                            ui.html(header, sanitize=False)
+
+                # Table Body
+                with ui.element('tbody'):
+                    for schema in filtered_schemas:
+                        row_classes = 'clickable-row' if mode == 'resume' else ''
+                        with ui.element('tr').classes(row_classes):
+                            # Ticket Number
+                            with ui.element('td'):
+                                if mode == 'resume':
+                                    ui.html(
+                                        f'<a href="/checklist?ticket_number={schema["ticket_number"]}" '
+                                        f'style="color: #3498db; text-decoration: none; font-weight: 600;">'
+                                        f'📋 {schema["ticket_number"]}</a>',
+                                        sanitize=False,
+                                    )
+                                else:
+                                    ui.label(f'📋 {schema["ticket_number"]}').style('font-weight: 600;')
+
+                            # Dataset Metadata
+                            with ui.element('td'):
+                                ui.html(f'<strong>Title:</strong> {schema.get("dataset_title", "N/A")}', sanitize=False)  # noqa: E501
+                                ui.html(f'<strong>PID:</strong> {schema.get("dataset_pid", "N/A")}', sanitize=False)
+                                ui.html(
+                                    f'<strong>ID (Versioned):</strong> {schema.get("dataset_id", "N/A")}',
+                                    sanitize=False,
+                                )  # noqa: E501
+                                ui.html(
+                                    f'<strong>URL:</strong> <a href="{schema.get("dataset_url", "N/A")}" target="_blank">{schema.get("dataset_url", "N/A")}</a>',
+                                    sanitize=False,
+                                )  # noqa: E501
+                            # Curator
+                            with ui.element('td'):
+                                ui.label(schema.get('curator_name', 'N/A'))
+
+                            # Last Modified
+                            with ui.element('td'):
+                                ui.label(schema['last_modified']).style('color: #7f8c8d;')
+
+                            # Action column (only for delete mode)
+                            if mode == 'delete':
+                                with ui.element('td').style('text-align: center; vertical-align: middle;'):
+                                    ui.button(
+                                        '🗑️ Delete',
+                                        color='red',
+                                        on_click=lambda s=schema: confirm_delete_project(s, refresh_callback),
+                                    ).props('unelevated no-caps').classes('pdc-btn pdc-btn-danger')
+
+    # Define clear filters function
+    def clear_filters(search_inp: ui.input, curator_sel: ui.select) -> None:
+        search_inp.value = ''
+        curator_sel.value = ''
+        render_filtered_table()
+
+    # Connect filters to table refresh - bind directly to the function
+    search_input.on_value_change(lambda e: render_filtered_table())
+    curator_filter.on_value_change(lambda e: render_filtered_table())
+
+    # Initial render
+    render_filtered_table()
+
+
+# ============================================================================
+# Resume Work Page
+# ============================================================================
+
+
+@ui.page('/resume')
+async def resume_work_page() -> None:
+    """Resume work page - shows list of existing projects."""
+    apply_pdc_styles()
+
+    with ui.column().classes('pdc-container'):
+        # Logo and Header
+        ui.html(
+            '<img src="/static/UTL.png" '
+            'alt="University of Toronto Libraries Logo" '
+            'class="pdc-logo" '
+            'style="height: 60px; width: auto; margin: 8px;">',
+            sanitize=False,
+        )
+        ui.label('Resume Project').classes('pdc-header')
+
+        # Back button
+        back_to_main_menu_button()
+
+        # Get all schemas/projects
+        schemas = NiceGUIHelper.get_all_schemas(MAIN_DIR)
+
+        # Render project table
+        await render_project_table(schemas, mode='resume')
+
+
+# ============================================================================
+# Delete Project Page
+# ============================================================================
+
+
+@ui.page('/delete')
+async def delete_project_page() -> None:
+    """Delete project page - shows list of projects with delete buttons."""
+    apply_pdc_styles()
+
+    # Container to hold the project list (for refreshing after delete)
+    container = ui.column().classes('pdc-container')
+
+    with container:
+        # Logo and Header
+        ui.html(
+            '<img src="/static/UTL.png" '
+            'alt="University of Toronto Libraries Logo" '
+            'class="pdc-logo" '
+            'style="height: 60px; width: auto; margin: 8px;">',
+            sanitize=False,
+        )
+        ui.label('Delete Project').classes('pdc-header')
+
+        # Back button
+        back_to_main_menu_button()
+
+        # Warning banner
+        with ui.element('div').classes('warning-banner'):
+            ui.label('⚠️ Warning: Deleting a project is permanent and cannot be undone!').classes(
+                'text-lg font-semibold'
+            )
+
+        # Project list container (for dynamic updates)
+        project_list_container = ui.column()
+
+    async def refresh_project_list(main_dir: Path = MAIN_DIR):
+        """Refresh the project list after deletion."""
+        project_list_container.clear()
+        with project_list_container:
+            schemas = NiceGUIHelper.get_all_schemas(main_dir)
+            await render_project_table(schemas, mode='delete', refresh_callback=refresh_project_list)
+
+    # Initial load
+    await refresh_project_list(MAIN_DIR)
+
+
+def confirm_delete_project(schema: dict, refresh_callback) -> None:
+    """Show confirmation dialog before deleting a project."""
+
+    async def handle_delete() -> None:
+        success, message = NiceGUIHelper.delete_project(schema.get('name'), MAIN_DIR)
         if success:
-            logger.info(f'Successfully updated checklist item {request.item_id}')
-            return JSONResponse(
-                content={
-                    'success': True,
-                    'message': f'Checklist item {request.item_id} updated successfully'
-                }
+            ui.notify(message, type='positive')
+            await refresh_callback()
+            dialog.close()
+        else:
+            ui.notify(message, type='negative')
+            dialog.close()
+
+    with ui.dialog() as dialog, ui.card().style('min-width: 400px;'):
+        ui.label(f'Delete project "{schema["ticket_number"]}"?').classes('text-xl font-semibold')
+        ui.label('This action cannot be undone. All data will be permanently deleted.').classes('text-red-600')
+
+        with ui.row().classes('w-full justify-end gap-2').style('margin-top: 20px;'):
+            ui.button('Cancel', on_click=dialog.close).classes('pdc-btn pdc-btn-secondary')
+            ui.button('Delete', color='red', on_click=handle_delete).classes('pdc-btn pdc-btn-danger')
+
+    dialog.open()
+
+
+# ============================================================================
+# Checklist Page
+# ============================================================================
+
+
+@ui.page('/checklist')
+async def checklist_page(ticket_number: str) -> None:
+    """Checklist page with exact styling match."""
+    apply_pdc_styles()
+
+    # Initialize the duckdb connection for this ticket number
+    dir_manager = DirectoryManager(ticket_number, MAIN_DIR, RES_DIR)
+    duck_db = DuckDB(schema_name=ticket_number, db_file=dir_manager.db_path)
+    helpers = NiceGUIHelper(duck_db, ticket_number)
+
+    # Load metadata from database
+    project_metadata = duck_db.read_project_metadata_record()
+    checklist_type: str | None = project_metadata.get('checklist_type')
+
+    # Load checklist items
+    checklist_items = helpers.get_checklist_items()
+
+    # Load checklist results from database
+    check_results = duck_db.read_check_results()
+
+    with ui.column().classes('pdc-container'):
+        # Logo
+        ui.html(
+            '<img src="/static/UTL.png" '
+            'alt="University of Toronto Libraries Logo" '
+            'class="pdc-logo" '
+            'style="height: 60px; width: auto; margin: 8px;">',
+            sanitize=False,
+        )
+
+        # Header, with dynamic checklist type
+        checklist_name = f'{checklist_type.title()}-Level ' if checklist_type else ''
+        ui.label(f'{checklist_name}Curation Checklist').classes('pdc-header')
+
+        # Metadata Display using our helper function
+        create_info_grid(
+            project_metadata,
+            [
+                ('ticket_number', 'Ticket number'),
+                ('curator_name', 'Curator name'),
+                ('curator_email', 'Curator email'),
+                ('dataset_title', 'Dataset title'),
+                ('dataset_pid', 'Dataset persistent identifier'),
+                ('dataset_id', 'Dataset ID (versioned)'),
+                ('dataset_url', 'Dataset access URL'),
+                ('dataset_path', 'Dataset Path'),
+            ],
+        )
+
+        # # Status Legend  # (commented out for cleaner UI); can be re-enabled for other content if needed
+        # with ui.element('div').classes('pdc-status-legend'):
+        #     ui.label('Status Explanation').classes('text-xl font-semibold')
+        #     with ui.element('div').classes('pdc-status-list'):
+        #         for code, meaning in [
+        #             ('P', 'Passed'),
+        #             ('F', 'Follow-up'),
+        #             ('TBD', 'To Be Determined'),
+        #             ('NA', 'Not Applicable'),
+        #         ]:
+        #             with ui.element('div').classes('pdc-status-item'):
+        #                 ui.label(f'{code}:').classes('pdc-status-code')
+        #                 ui.label(f' {meaning}')
+
+        # Filters Section
+        with ui.element('div').classes('pdc-form-section').style('width: 100%; margin-bottom: 20px;'):
+            ui.label('Filters').classes('text-lg font-semibold text-gray-700').style('margin-bottom: 12px;')
+
+            with ui.row().classes('gap-4').style('align-items: flex-end;'):
+                # Status filter
+                with ui.element('div').style('flex: 1; min-width: 200px;'):
+                    ui.label('Filter by Status').classes('pdc-form-label')
+                    status_filter = (
+                        ui.select(
+                            options=status_options(),
+                            value='',
+                            with_input=False,
+                        )
+                        .classes('pdc-status-select')
+                        .style('width: 100%;')
+                    )
+
+                # Priority filter
+                with ui.element('div').style('flex: 1; min-width: 200px;'):
+                    ui.label('Filter by Priority').classes('pdc-form-label')
+                    priority_filter = (
+                        ui.select(
+                            options=priority_options(),
+                            value='',
+                            with_input=False,
+                        )
+                        .classes('pdc-status-select')
+                        .style('width: 100%;')
+                    )
+
+                # Clear filters button
+                ui.button('Clear Filters', on_click=lambda: clear_filters(status_filter, priority_filter)).classes(
+                    'pdc-btn pdc-btn-secondary'
+                )
+
+        # Table container that will be refreshed when filters change
+        table_container = ui.column().style('width: 100%;')
+
+        # Define clear filters function
+        async def clear_filters(status_sel: ui.select, priority_sel: ui.select) -> None:
+            status_sel.value = ''
+            priority_sel.value = ''
+            # Explicitly trigger a refresh after clearing
+            await render_filtered_table()
+
+        # Define render function that applies filters
+        async def render_filtered_table() -> None:
+            # Reload checklist items from database to get latest changes
+            fresh_items = helpers.get_checklist_items()
+
+            table_container.clear()
+            with table_container:
+                await render_checklist_table(
+                    duck_db,
+                    fresh_items,
+                    check_results,
+                    ticket_number,
+                    status_filter=status_filter.value,
+                    priority_filter=priority_filter.value,
+                    refresh_callback=render_filtered_table,
+                )
+
+        # Connect filters to table refresh
+        status_filter.on('update:model-value', render_filtered_table)
+        priority_filter.on('update:model-value', render_filtered_table)
+
+        # Initial render
+        await render_filtered_table()
+
+        # Action Buttons
+        with ui.element('div').classes('pdc-actions'):
+            ui.button(
+                'Save Curation Log (Word)', on_click=lambda: NiceGUIHelper.export_word_button(duck_db, dir_manager)
+            ).classes('pdc-btn pdc-btn-primary')
+
+            ui.button('Calculate Time Spent', on_click=lambda: helpers.calculate_total_time(checklist_items)).classes(
+                'pdc-btn pdc-btn-calculate'
             )
 
-        logger.error(f'Failed to update checklist item {request.item_id}')
-        return JSONResponse(
-            status_code=400,
-            content={'success': False, 'message': f'Failed to update checklist item {request.item_id}'}
-        )
+            ui.button('Export YAML', on_click=lambda: NiceGUIHelper.export_yaml_button(duck_db, dir_manager)).classes(
+                'pdc-btn pdc-btn-secondary'
+            )
 
-    except Exception as e:
-        logger.error(f'Error updating checklist item {request.item_id}: {e}')
-        return JSONResponse(
-            status_code=500,
-            content={'success': False, 'message': f'Internal server error: {str(e)}'}
-        )
+            ui.button('New Dataset', on_click=helpers.confirm_new_dataset).classes('pdc-btn pdc-btn-danger')
+
+
+async def render_checklist_table(  # noqa: PLR0913
+    duckdb_instance: DuckDB,
+    checklist_items: list,
+    check_results: dict[str, str],
+    ticket_number: str,
+    status_filter: str = '',
+    priority_filter: str = '',
+    refresh_callback: None = None,
+) -> None:
+    """Render checklist table with exact styling.
+
+    Args:
+        duckdb_instance: DuckDB instance
+        checklist_items: List of checklist items
+        check_results: Dictionary of check results
+        ticket_number: Ticket number
+        status_filter: Filter by status (empty string means no filter)
+        priority_filter: Filter by priority (empty string means no filter)
+        refresh_callback: Optional callback function to refresh the UI after updates
+    """
+    # Internal helper functions for creating UI components
+    helpers = NiceGUIHelper(duckdb_instance, ticket_number, refresh_callback)
+
+    # Apply filters to checklist items
+    filtered_items = checklist_items
+    if status_filter:
+        filtered_items = [item for item in filtered_items if item.status == status_filter]
+    if priority_filter:
+        filtered_items = [item for item in filtered_items if item.priority.lower() == priority_filter.lower()]
+
+    with ui.element('table').classes('pdc-checklist-table'):
+        # Table Header
+        with ui.element('thead'), ui.element('tr'):
+            for header in [
+                'ID',
+                'Action Item',
+                'Information Location',
+                'Status',
+                "Curator's Comments",
+                'Priority',
+                'Time Spent',
+            ]:
+                with ui.element('th'):
+                    ui.html(header, sanitize=False)
+
+        # Table Body
+        with ui.element('tbody'):
+            current_section = None
+            for item in filtered_items:
+                # Section header row
+                if item.section != current_section:
+                    current_section = item.section
+                    with ui.element('tr'), ui.element('td').props('colspan=7').classes('pdc-section-header'):
+                        ui.html(item.section, sanitize=False)
+
+                # Item row
+                with ui.element('tr').props(f'data-item-id="{item.id}"'):
+                    # ID
+                    with ui.element('td').classes('pdc-item-id'):
+                        ui.html(item.id, sanitize=False)
+
+                    # Action & Instructions
+                    with ui.element('td').classes('details-cell'):
+                        with ui.element('div').classes('pdc-action-item'):
+                            ui.html(item.action, sanitize=False)
+                        if item.instructions:
+                            with ui.element('div').classes('pdc-instructions-header'):
+                                ui.html('Guidance:', sanitize=False)
+                            ui.markdown(item.instructions).classes('pdc-instructions')
+
+                    # Information Location
+                    with (
+                        ui.element('td').classes('information-location-column'),
+                        ui.element('div').classes('pdc-info-location-container'),
+                    ):  # noqa: E501
+                        if item.information_location:
+                            ui.markdown(item.information_location).classes('pdc-static-info-location')
+                        if item.automated_check_ids:
+                            for ac_id in item.automated_check_ids:
+                                result: dict | None = duckdb_instance.sql_read_row(
+                                    DuckDBmodels(ticket_number).check_results(),
+                                    'check_id',
+                                    ac_id,
+                                )
+                                # Render the 'results' item, if it exists
+                                if result and result.get('results') and len(result['results']) > 0:
+                                    # Use the scrollable container class from nicegui_styles.py
+                                    # Only render the grey scrollable box if there are results
+                                    with ui.element('div').classes('pdc-dynamic-check-results'):
+                                        render_check_results(result['results'], result['unit'], ac_id)
+
+                    # Status
+                    with ui.element('td'):
+                        create_status_select(
+                            item.id,
+                            item.status or '',
+                            on_change=lambda e, iid=item.id: helpers.handle_status_change(iid, e.value),
+                        )
+
+                    # Comments
+                    with ui.element('td'):
+                        ui.textarea(value=item.comments or '', placeholder="Curator's comments...").classes(
+                            'pdc-comments-input'
+                        ).on(
+                            'change',
+                            lambda e, iid=item.id: helpers.handle_comments_change(iid, e.sender.value),
+                        )
+
+                    # Priority
+                    with ui.element('td'), ui.element('div').classes('pdc-priority-badge-container'):
+                        create_priority_badge(item.priority)
+
+                    # Time Spent with Timer
+                    with (
+                        ui.element('td'),
+                        ui.row().classes('gap-1').style('align-items: center;'),
+                    ):
+                        time_input = (
+                            ui.input(value=item.time_spent or '', placeholder='MM:SS')
+                            .classes('pdc-time-input')
+                            .on('change', lambda e, iid=item.id: helpers.handle_time_change(iid, e.sender.value))
+                            .props('maxlength=5')
+                            .style('flex: 1; min-width: 60px;')
+                        )
+
+                        # Single toggle timer button
+                        # Create a closure-safe callback
+                        def create_timer_callback(item_id: str, time_inp: ui.input) -> ui.button:
+                            timer_btn = (
+                                ui.button(icon='play_arrow')
+                                .props('flat dense round size=sm color=positive')
+                                .tooltip('Start/Stop Timer')
+                            )
+                            timer_btn.on('click', lambda: helpers.toggle_timer(item_id, time_inp, timer_btn))
+                            return timer_btn
+
+                        create_timer_callback(item.id, time_input)
+
+
+def render_check_results(results, result_name: str, check_id: str) -> None:
+    """Render check results based on their type (list, dict, or other).
+
+    Args:
+        results (Any): The results data to render (can be list, dict, or other types).
+        result_name (str): The name of the result to display as a sub-label.
+        check_id (str): The check identifier to display as a label.
+
+    """
+    # Use the pdc-check-result class from nicegui_styles.py instead of inline styles
+    with ui.element('div').classes('pdc-check-result'):
+        # Header with check ID - using pdc-static-info-location class
+        ui.label(f'{check_id}').classes('pdc-check-result-header')
+
+        if isinstance(results, list):
+            # Show count description
+            ui.label(f'{len(results)} {result_name} found').classes('pdc-check-description')
+
+            # Use pdc-check-details-list class for the numbered list
+            with ui.element('ol').classes('pdc-check-details-list'):
+                for item in results:
+                    with ui.element('li').classes('result-item'):
+                        if isinstance(item, dict):
+                            # If list contains dicts, render key-value pairs
+                            ui.html(
+                                '<br>'.join([f'<strong>{k}:</strong> {v}' for k, v in item.items()]),
+                                sanitize=False,
+                            )
+                        else:
+                            ui.label(str(item))
+
+        elif isinstance(results, dict):
+            # Show count description
+            ui.label(f'{len(results)} {result_name} found').classes('pdc-check-description')
+
+            # Use pdc-check-details-list class for the numbered list
+            with ui.element('ol').classes('pdc-check-details-list'):
+                for key, value in results.items():
+                    with ui.element('li').classes('result-item'):
+                        ui.html(f'<strong>{key}:</strong> {value}', sanitize=False)
+
+        else:
+            # Render as plain text for other types
+            ui.label(str(results)).classes('pdc-check-description')
+
+
+# ============================================================================
+# Health Check Endpoint
+# ============================================================================
+
+
+@ui.page('/health')
+def health_check() -> dict:
+    """Health check endpoint."""
+    return {'status': 'ok'}
+
+
+# ============================================================================
+# Static Files Setup - Must be BEFORE ui.run()
+# ============================================================================
+
+# Mount static files from your existing frontend directory
+# Determine the correct path to static files
+static_path = Path('pydatacuration/frontend')
+if not static_path.exists():
+    static_path = Path(__file__).parent / 'pydatacuration' / 'frontend'
+
+if static_path.exists():
+    # Add static files route
+    nicegui_app.add_static_files('/static', str(static_path))
+    logger.info('✓ Static files mounted:', static_path.absolute())
+else:
+    logger.warning('⚠ WARNING: Static directory not found!')
+    logger.warning('Looked for:', static_path.absolute())
+
+
+# ============================================================================
+# Run the application
+# ============================================================================
+
+if __name__ in {'__main__', '__mp_main__'}:
+    ui.run(title='PyDataCuration - Styled POC', favicon='🔬', port=8080, storage_secret=str(os.urandom(16)))

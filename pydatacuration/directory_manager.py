@@ -9,17 +9,19 @@ from .custom_logging import logger
 class DirectoryManager:
     """Generic directory manager for creating and managing project directories."""
 
-    def __init__(self, ticket_number: str, main_dir: str | Path) -> None:
+    def __init__(self, ticket_number: str, main_dir: str | Path, res_dir: str | Path | None = None) -> None:
         """Initialize the class.
 
         Args:
             ticket_number (str): The ticket number, also the name of the working directory.
             main_dir (str | Path): The main directory that contains /db and the /projects directories.
+            res_dir (str | Path | None): The resource directory path.
         """
         self.ticket_number = ticket_number
         self.main_dir = main_dir
         self.project_dir = self._define_project_dir()
         self.logger = logger
+        self.res_dir = res_dir
 
         # Pre-defined directory structure
         self._directory_structure = {
@@ -37,8 +39,8 @@ class DirectoryManager:
         Returns:
             Path: The path object of the project directory.
         """
-        if self.main_dir:
-            project_dir = Path(self.main_dir)
+        if self.main_dir_path:
+            project_dir = Path(self.main_dir_path)
             # If project_dir already ends with the ticket number, use it directly
             if project_dir.name == self.ticket_number:
                 return project_dir.resolve()
@@ -52,7 +54,7 @@ class DirectoryManager:
         Returns:
             Path: The path object of the database directory.
         """
-        return Path(self.main_dir, 'db').resolve()
+        return Path(self.main_dir_path, 'db').resolve()
 
     def _define_db_path(self) -> Path:
         """Define the database file path.
@@ -215,3 +217,8 @@ class DirectoryManager:
     def files_dir(self) -> Path:
         """Get files directory path."""
         return self.get_dir('dataset/files')
+
+    @property
+    def main_dir_path(self) -> Path:
+        """Get main directory path."""
+        return Path(self.main_dir).resolve()

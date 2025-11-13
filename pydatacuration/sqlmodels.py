@@ -2,14 +2,17 @@
 
 from datetime import date
 from datetime import datetime
+from datetime import timedelta
 
 from sqlalchemy import Column
 from sqlalchemy import Integer
+from sqlalchemy import Interval
 from sqlmodel import DATE
 from sqlmodel import DATETIME
 from sqlmodel import JSON
 from sqlmodel import Field
 from sqlmodel import SQLModel
+from sqlmodel import SQLModel as BaseSQLModel
 from sqlmodel import String
 from sqlmodel import text
 
@@ -32,11 +35,15 @@ class DuckDBmodels:
         Returns:
             type[SQLModel]: The ProjectMetadata class with the specified schema.
         """
+        # Only clear if table already exists in metadata
+        table_key = f'{self.schema_name}.project_metadata'
+        if table_key in BaseSQLModel.metadata.tables:
+            BaseSQLModel.metadata.remove(BaseSQLModel.metadata.tables[table_key])
 
         class ProjectMetadata(SQLModel, table=True):
             """Project metadata table model."""
 
-            __tablename__ = 'project_metadata'
+            __tablename__ = 'project_metadata'  # type: ignore[assignment]
             __table_args__ = {'schema': self.schema_name}
             ticket_number: str = Field(
                 default='', sa_column=Column(String, nullable=False, unique=True), description='Unique ticket number'
@@ -96,11 +103,16 @@ class DuckDBmodels:
         Returns:
             type[SQLModel]: The Checklist class with the specified schema.
         """
+        # Clear metadata to avoid "already defined" errors in long-running processes
+
+        table_key = f'{self.schema_name}.checklist'
+        if table_key in BaseSQLModel.metadata.tables:
+            BaseSQLModel.metadata.remove(BaseSQLModel.metadata.tables[table_key])
 
         class Checklist(SQLModel, table=True):
             """Checklist table model."""
 
-            __tablename__ = 'checklist'
+            __tablename__ = 'checklist'  # type: ignore[assignment]
             __table_args__ = {'schema': self.schema_name, 'extend_existing': True}
 
             id: str = Field(
@@ -119,7 +131,9 @@ class DuckDBmodels:
             check_type: str = Field(sa_column=Column(String, nullable=True), description='Type of check')
             status: str = Field(sa_column=Column(String, nullable=True), description='Checklist status')
             comments: str = Field(sa_column=Column(String, nullable=True), description="Curator's Comments")
-            time_spent: str = Field(sa_column=Column(String, nullable=True), description='Time spent on this item')
+            time_spent: timedelta = Field(
+                sa_column=Column(Interval, nullable=True), description='Time spent on this item'
+            )
             last_modified_datetime: datetime = Field(
                 default=datetime.today(),
                 sa_column=Column(DATETIME, nullable=False),
@@ -134,11 +148,15 @@ class DuckDBmodels:
         Returns:
             type[SQLModel]: The CheckResult class with the specified schema.
         """
+        # Clear metadata to avoid "already defined" errors in long-running processes
+        table_key = f'{self.schema_name}.check_results'
+        if table_key in BaseSQLModel.metadata.tables:
+            BaseSQLModel.metadata.remove(BaseSQLModel.metadata.tables[table_key])
 
         class CheckResult(SQLModel, table=True):
             """Check result list table model."""
 
-            __tablename__ = 'check_results'
+            __tablename__ = 'check_results'  # type: ignore[assignment]
             __table_args__ = {'schema': self.schema_name, 'extend_existing': True}
 
             check_name: str = Field(sa_column=Column(String, nullable=False), description='Name of the check')
@@ -146,7 +164,7 @@ class DuckDBmodels:
                 sa_column=Column(String, nullable=False, primary_key=True), description='ID of the check'
             )
             description: str = Field(sa_column=Column(String, nullable=False), description='Description of the check')
-            result_name: str = Field(sa_column=Column(String, nullable=False), description='Name of the result')
+            unit: str = Field(sa_column=Column(String, nullable=False), description='Unit of each result item')
             results: list[str] | list[dict] = Field(
                 sa_column=Column(JSON, nullable=False), description='(Nested) List of check results'
             )  # This support writing a list[str] and list[dict] to duckdb # noqa

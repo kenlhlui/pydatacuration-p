@@ -238,7 +238,6 @@ def check_ds_access(pid: str, base_url: str, api_token: str) -> None:
     try:
         # Check whether the user has access to the dataset
         response = httpx_client.sync_get(f'api/datasets/:persistentId/?persistentId={pid}', raise_for_status=False)
-        httpx_client.logger.debug(f'{response.status_code} {response.text}')
 
         if response.status_code in http_unauthorized_codes:
             httpx_client.logger.error(

@@ -46,7 +46,7 @@ htmlcov/
 nosetests.xml
 coverage.xml
 *.cover
-*.py,cover
+*.py.cover
 .hypothesis/
 .pytest_cache/
 cover/
@@ -182,3 +182,12 @@ new_dir/
 # res/config.yaml
 res/config.yaml
 test/ 
+
+# .nicegui/
+.nicegui/
+
+# Debug/dev files
+dev.py
+dev.ipynb
+temp.py
+temp.ipynb
