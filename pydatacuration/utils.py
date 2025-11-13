@@ -15,6 +15,10 @@ import typer
 from loguru import logger
 from tenacity import RetryError
 
+from pydatacuration.exceptions import DatasetAccessError
+from pydatacuration.exceptions import DatasetNotFoundError
+from pydatacuration.exceptions import DatasetUnauthorizedError
+
 from .httpx_client import HTTPXClient
 
 
@@ -221,13 +225,18 @@ def check_ticket_num_input(ticket_num: str) -> str:
     return ticket_num
 
 
-def check_ds_access(pid: str, base_url: str, api_token: str) -> None:
+def check_ds_read_access(pid: str, base_url: str, api_token: str) -> None:
     """Check if the API token is valid; the PID is valid; and the user has access to the dataset.
 
     Args:
         pid (str): The PID of the dataset.
         base_url (str): The base URL of the Dataverse installation.
         api_token: The API token for the Dataverse installation.
+
+    Raises:
+        DatasetUnauthorizedError: If the user does not have access to the dataset.
+        DatasetNotFoundError: If the dataset does not exist.
+        DatasetAccessError: If there are network or connection issues.
     """
     httpx_client = HTTPXClient(base_url, api_token)
 
@@ -240,22 +249,25 @@ def check_ds_access(pid: str, base_url: str, api_token: str) -> None:
         response = httpx_client.sync_get(f'api/datasets/:persistentId/?persistentId={pid}', raise_for_status=False)
 
         if response.status_code in http_unauthorized_codes:
-            httpx_client.logger.error(
-                '❌You do not have access to the dataset. \nPlease check your API token or permissions.'
-            )  # noqa: E501
+            msg = 'You do not have read access to the dataset. Please check your API token or permissions.'
+            httpx_client.logger.error(f'❌{msg}')
+            raise DatasetUnauthorizedError(msg)
 
-            sys.exit(1)
-        elif response.status_code in http_not_found_codes:
-            httpx_client.logger.error('❌The dataset does not exist. Please check the PID input.')
-            sys.exit(1)
-        elif response.status_code in http_success_codes:
-            httpx_client.logger.info('✅ Access to the dataset checked successfully.')
+        if response.status_code in http_not_found_codes:
+            msg = 'The dataset does not exist. Please check the PID input.'
+            httpx_client.logger.error(f'❌{msg}')
+            raise DatasetNotFoundError(msg)
 
-    except RetryError:
-        logger.error(
-            'The retry limit has been reached for checking dataset access. \nCheck your input of `base_url` and `pid`. Or check your internet connection.'
-        )  # noqa: E501
-        sys.exit(1)
+        if response.status_code in http_success_codes:
+            httpx_client.logger.info('✅ Dataset access verified.')
+
+    except RetryError as e:
+        error_msg = (
+            'The retry limit has been reached for checking dataset access. '
+            'Check your input of `base_url` and `pid`. Or check your internet connection.'
+        )
+        logger.error(error_msg)
+        raise DatasetAccessError(error_msg) from e
 
 
 def validate_api_token(value: str) -> str | None:
