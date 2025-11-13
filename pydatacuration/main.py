@@ -21,6 +21,7 @@ from .checker import Checker
 from .custom_logging import add_cli_run_logging
 from .custom_logging import logger
 from .custom_logging import setup_global_logging
+from .exceptions import DatasetAccessError
 
 
 load_dotenv(override=True)
@@ -228,7 +229,11 @@ def fetch(
 
     with Progress(SpinnerColumn(), expand=True) as progress:
         progress.add_task('Checking dataset access...', total=None, visible=True)
-        utils.check_ds_access(pid, base_url, api_token)
+        try:
+            utils.check_ds_read_access(pid, base_url, api_token)
+        except DatasetAccessError as e:
+            # Error already logged by check_ds_read_access
+            raise typer.Exit(1) from e
 
         progress.add_task('Downloading dataset...', total=None, visible=True)
         asyncio.run(downloads.Downloads(base_url, api_token, pid, dirs.project_dir, ticket_number).downloader())
