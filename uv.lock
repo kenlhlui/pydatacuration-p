@@ -1118,7 +1118,7 @@ wheels = [
 
 [[package]]
 name = "nicegui"
-version = "3.3.0"
+version = "3.3.1"
 source = { registry = "https://pypi.org/simple" }
 dependencies = [
     { name = "aiofiles" },
@@ -1142,9 +1142,9 @@ dependencies = [
     { name = "uvicorn", extra = ["standard"] },
     { name = "watchfiles" },
 ]
-sdist = { url = "https://files.pythonhosted.org/packages/e7/b5/a20086d19027d6ea58221c84e8a9cb698f53ff5c4c511b869c70454dae19/nicegui-3.3.0.tar.gz", hash = "sha256:e0ea59de946b232fcd6aacc4a0ee4d6ef58a6ed42aee656a37c8b604c24f49fc", size = 20352887, upload-time = "2025-11-13T15:51:22.503Z" }
+sdist = { url = "https://files.pythonhosted.org/packages/e3/ee/43ecb61be17b3487d9bc17bf493970714dfb85bda32bff2f268cd9304262/nicegui-3.3.1.tar.gz", hash = "sha256:0de625b836acf1c36875dc290ae769ef114aba9535e33d302566b19381b206fa", size = 20353012, upload-time = "2025-11-17T10:24:16.452Z" }
 wheels = [
-    { url = "https://files.pythonhosted.org/packages/95/6a/199b667028b4c259735f44282ccac92b123596fa1cd21e91d75c6ca612cb/nicegui-3.3.0-py3-none-any.whl", hash = "sha256:2267bdcb7596d877c8b1b360cfd9bd4f0a0e884687f21154e671eb87489d4584", size = 21007477, upload-time = "2025-11-13T15:51:19.392Z" },
+    { url = "https://files.pythonhosted.org/packages/d7/5c/fccb05fd8e9e9bdb5dd1531af1d40bcfbb3d7e850b2d43902ca117becde9/nicegui-3.3.1-py3-none-any.whl", hash = "sha256:7eb4e35936958c1df4b0fa6f5f4ed51d6e060c2938aca09b229abfec6b25e35e", size = 21007617, upload-time = "2025-11-17T10:24:13.13Z" },
 ]
 
 [[package]]
@@ -1544,7 +1544,7 @@ requires-dist = [
     { name = "loguru", specifier = ">=0.7.3" },
     { name = "markdown2", specifier = ">=2.5.4" },
     { name = "netcdf4", specifier = ">=1.7.2,<2" },
-    { name = "nicegui", specifier = "==3.3.0" },
+    { name = "nicegui", specifier = "==3.3.1" },
     { name = "openpyxl", specifier = ">=3.1.5,<4" },
     { name = "orjson", specifier = ">=3.10.7,<4" },
     { name = "pandas", extras = ["excel"], specifier = ">=2.2.3,<3" },
