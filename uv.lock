@@ -1549,7 +1549,7 @@ requires-dist = [
     { name = "orjson", specifier = ">=3.10.7,<4" },
     { name = "pandas", extras = ["excel"], specifier = ">=2.2.3,<3" },
     { name = "pillow", specifier = ">=11.0.0,<12" },
-    { name = "py7zr", specifier = ">=0.22.0,<0.23" },
+    { name = "py7zr", specifier = ">=0.22.0,<1.1" },
     { name = "pypdf", specifier = ">=5.1.0,<7" },
     { name = "pyreadr", specifier = ">=0.5.2,<0.6" },
     { name = "pyreadstat", specifier = ">=1.2.8,<2" },
