@@ -760,7 +760,7 @@ def confirm_delete_project(schema: dict, refresh_callback) -> None:
     """Show confirmation dialog before deleting a project."""
 
     async def handle_delete() -> None:
-        success, message = NiceGUIHelper.delete_project(schema.get('name'), MAIN_DIR)
+        success, message = NiceGUIHelper.delete_project(schema.get('ticket_number'), MAIN_DIR)
         if success:
             ui.notify(message, type='positive')
             await refresh_callback()
