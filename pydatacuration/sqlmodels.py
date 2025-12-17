@@ -3,7 +3,9 @@
 from datetime import date
 from datetime import datetime
 from datetime import timedelta
+from typing import Any
 
+from pydantic import field_serializer
 from sqlalchemy import Column
 from sqlalchemy import Integer
 from sqlalchemy import Interval
@@ -139,6 +141,13 @@ class DuckDBmodels:
                 sa_column=Column(DATETIME, nullable=False),
                 description='Last modified datetime',
             )
+
+            @field_serializer('time_spent')
+            def serialize_time_spent(self, value: timedelta | None, _info: Any) -> float | None:
+                """Serialize timedelta to total seconds for JSON compatibility."""
+                if value is None:
+                    return None
+                return value.total_seconds()
 
         return Checklist
 
