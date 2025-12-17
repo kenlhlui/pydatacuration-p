@@ -143,11 +143,14 @@ class DuckDBmodels:
             )
 
             @field_serializer('time_spent')
-            def serialize_time_spent(self, value: timedelta | None, _info: Any) -> float | None:
-                """Serialize timedelta to total seconds for JSON compatibility."""
+            def serialize_time_spent(self, value: timedelta | None, _info: Any) -> str | None:
+                """Serialize timedelta to MM:SS format for JSON compatibility."""
                 if value is None:
                     return None
-                return value.total_seconds()
+                total_seconds = int(value.total_seconds())
+                minutes = total_seconds // 60
+                seconds = total_seconds % 60
+                return f'{minutes:02d}:{seconds:02d}'
 
         return Checklist
 
