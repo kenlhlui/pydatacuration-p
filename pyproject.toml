@@ -43,6 +43,7 @@ dependencies = [
     "nicegui==3.4.0",
     "html-sanitizer>=2.6.0",
     "typer==0.20.0",
+    "pydantic>=2",
 ]
 
 [dependency-groups]
