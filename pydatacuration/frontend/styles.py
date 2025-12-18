@@ -436,6 +436,12 @@ tr.row-status-NA {
     background-color: #e67e22;
 }
 
+.pdc-check-type-automated,
+.pdc-check-type-manual,
+.pdc-check-type-hybrid {
+    margin-bottom: 8px;
+}
+
 /* ========================================================================
    Buttons
    ======================================================================== */

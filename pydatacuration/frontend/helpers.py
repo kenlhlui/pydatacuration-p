@@ -7,7 +7,6 @@ from datetime import timedelta
 from pathlib import Path
 from typing import Any
 
-import markdown2
 from nicegui import app
 from nicegui import ui
 from sqlmodel import SQLModel
@@ -72,19 +71,15 @@ class NiceGUIHelper:
 
             checklist_item = Checklist(
                 id=item['id'],
-                action=markdown2.markdown(item['action']) if item['action'] else '',
-                instructions=markdown2.markdown(item['instructions']) if item['instructions'] else '',
+                action=item.get('action', ''),
+                instructions=item.get('instructions', ''),
                 priority=item['priority'],
                 section=item.get('section', ''),
                 automated_check_ids=item.get('automated_check_ids', []),
                 status=item.get('status', ''),
                 comments=item.get('comments', ''),
                 time_spent=time_spent_display,
-                information_location=markdown2.markdown(  # Convert Markdown to HTML
-                    item.get('information_location', '')
-                )
-                if item.get('information_location')
-                else '',  # Handle missing information_location
+                information_location=item.get('information_location', ''),
                 check_type=item.get('check_type', 'Manual'),  # Optional field for check type
             )
             items.append(checklist_item)
