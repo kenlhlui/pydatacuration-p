@@ -1013,8 +1013,7 @@ async def render_checklist_table(  # noqa: PLR0913, C901, PLR0917
                     ):  # noqa: E501
                         if item.check_type:
                             create_check_type_badge(item.check_type)
-                        if item.information_location:
-                            ui.markdown(item.information_location).classes('pdc-static-info-location')
+
                         if item.automated_check_ids:
                             for ac_id in item.automated_check_ids:
                                 result: dict | None = duckdb_instance.sql_read_row(
@@ -1028,7 +1027,8 @@ async def render_checklist_table(  # noqa: PLR0913, C901, PLR0917
                                     # Only render the grey scrollable box if there are results
                                     with ui.element('div').classes('pdc-dynamic-check-results'):
                                         render_check_results(result['results'], result['unit'], ac_id)
-
+                        if item.information_location:
+                            ui.markdown(item.information_location).classes('pdc-static-info-location')
                     # Status
                     with ui.element('td'):
                         create_status_select(
