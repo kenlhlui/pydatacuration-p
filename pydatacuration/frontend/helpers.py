@@ -72,7 +72,7 @@ class NiceGUIHelper:
 
             checklist_item = Checklist(
                 id=item['id'],
-                action=item['action'],
+                action=markdown2.markdown(item['action']) if item['action'] else '',
                 instructions=markdown2.markdown(item['instructions']) if item['instructions'] else '',
                 priority=item['priority'],
                 section=item.get('section', ''),

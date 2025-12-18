@@ -250,7 +250,6 @@ tr.row-status-NA {
 
 .pdc-action-item {
     width: 100%;
-    font-weight: bold;
 }
 
 .pdc-instructions-header {

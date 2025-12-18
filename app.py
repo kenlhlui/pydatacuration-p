@@ -1000,7 +1000,7 @@ async def render_checklist_table(  # noqa: PLR0913, C901, PLR0917
                     # Action & Instructions
                     with ui.element('td').classes('details-cell'):
                         with ui.element('div').classes('pdc-action-item'):
-                            ui.html(item.action, sanitize=False)
+                            ui.markdown(item.action)
                         if item.instructions:
                             with ui.element('div').classes('pdc-instructions-header'):
                                 ui.html('Guidance:', sanitize=False)
