@@ -175,7 +175,14 @@ class DuckDBmodels:
             check_id: str = Field(
                 sa_column=Column(String, nullable=False, primary_key=True), description='ID of the check'
             )
-            description: str = Field(sa_column=Column(String, nullable=False), description='Description of the check')
+            description: str = Field(
+                sa_column=Column(String, nullable=False),
+                description='Description of the check for database documentation',
+            )
+            explanation_to_user: str = Field(
+                sa_column=Column(String, nullable=True),
+                description='Explanation to the user that will show in the checklist UI',
+            )
             unit: str = Field(sa_column=Column(String, nullable=False), description='Unit of each result item')
             results: list[str] | list[dict] = Field(
                 sa_column=Column(JSON, nullable=False), description='(Nested) List of check results'
