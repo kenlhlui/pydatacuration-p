@@ -31,6 +31,7 @@ from pydatacuration.frontend.helpers import status_options
 
 # Import styles and styled components
 from pydatacuration.frontend.styles import apply_pdc_styles
+from pydatacuration.frontend.styles import create_check_type_badge
 from pydatacuration.frontend.styles import create_checklist_select
 from pydatacuration.frontend.styles import create_info_grid
 from pydatacuration.frontend.styles import create_priority_badge
@@ -935,7 +936,7 @@ async def checklist_page(ticket_number: str) -> None:
             ui.button('New Dataset', on_click=helpers.confirm_new_dataset).classes('pdc-btn pdc-btn-danger')
 
 
-async def render_checklist_table(  # noqa: PLR0913
+async def render_checklist_table(  # noqa: PLR0913, C901, PLR0917
     duckdb_instance: DuckDB,
     checklist_items: list,
     check_results: dict[str, str],
@@ -1010,6 +1011,8 @@ async def render_checklist_table(  # noqa: PLR0913
                         ui.element('td').classes('information-location-column'),
                         ui.element('div').classes('pdc-info-location-container'),
                     ):  # noqa: E501
+                        if item.check_type:
+                            create_check_type_badge(item.check_type)
                         if item.information_location:
                             ui.markdown(item.information_location).classes('pdc-static-info-location')
                         if item.automated_check_ids:
