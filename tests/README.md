@@ -1,5 +1,15 @@
 # Running tests
 
+## Justfile way
+
+If you have [`just`](https://github.com/casey/just) installed, you can run the tests with coverage using the following command:
+
+```bash
+just run-tests
+```
+
+## Manual way
+
 1. First, ensure you have `pytest` installed. With uv:
 
     ```bash
