@@ -17,10 +17,10 @@ from .metadata_checker import MetadataChecker
 from .spell_checker import SpellCheckerCustomized
 from .unzip import Unzipper
 from .utils import FileNameFormatChecker
+from .utils import check_readme_file_existence
 from .utils import compare_files_and_metadata
 from .utils import parse_dataset_url
 from .utils import parse_file_list_metadata
-from .utils import readme_file_checker
 
 
 RES_DIR = Path('res')
@@ -192,7 +192,7 @@ class Checker:
                 self.logger.info(f'File extension does not found: {file_rel_path}')
                 missing_ext_files.append(str(file_rel_path))
 
-            if readme_file_checker(file_name)[1] is True:
+            if check_readme_file_existence(file_name)[1] is True:
                 self.logger.info(f'README file found: {file_rel_path}')
                 readme_files.append(str(file_rel_path))
 

@@ -114,7 +114,7 @@ class FileNameFormatChecker:
         return file, False
 
 
-def readme_file_checker(file: str) -> tuple:
+def check_readme_file_existence(file: str) -> tuple:
     """Check if the file is a README file.
 
     Args:
