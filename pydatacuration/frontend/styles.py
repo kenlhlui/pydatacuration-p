@@ -250,7 +250,6 @@ tr.row-status-NA {
 
 .pdc-action-item {
     width: 100%;
-    font-weight: bold;
 }
 
 .pdc-instructions-header {
@@ -420,6 +419,27 @@ tr.row-status-NA {
     width: 100px;
     min-width: 100px;
     max-width: 100px;
+}
+
+/* ========================================================================
+   Check Type Badges
+   ======================================================================== */
+.pdc-check-type-automated {
+    background-color: #3498db;
+}
+
+.pdc-check-type-manual {
+    background-color: #f1c500;
+}
+
+.pdc-check-type-hybrid {
+    background-color: #e67e22;
+}
+
+.pdc-check-type-automated,
+.pdc-check-type-manual,
+.pdc-check-type-hybrid {
+    margin-bottom: 8px;
 }
 
 /* ========================================================================
@@ -970,6 +990,25 @@ def create_priority_badge(priority: str):
     }
 
     text, css_class = priority_map.get(priority.lower(), (priority.title(), 'pdc-priority-info'))
+    return ui.label(text).classes(f'pdc-priority-badge {css_class}')
+
+
+def create_check_type_badge(check_type: str) -> ui.label:
+    """Create a check type badge with correct styling.
+
+    Args:
+        check_type: Check type value (Fully-automated, Manual, Semi-automated)
+
+    Returns:
+        NiceGUI label element with appropriate styling
+    """
+    check_type_map = {
+        'fully-automated': ('Automated Check', 'pdc-check-type-automated'),
+        'manual': ('Manual Review', 'pdc-check-type-manual'),
+        'semi-automated': ('Hybrid Check & Review', 'pdc-check-type-hybrid'),
+    }
+
+    text, css_class = check_type_map.get(check_type.lower(), (check_type.title(), 'pdc-check-type-manual'))
     return ui.label(text).classes(f'pdc-priority-badge {css_class}')
 
 

@@ -31,6 +31,7 @@ from pydatacuration.frontend.helpers import status_options
 
 # Import styles and styled components
 from pydatacuration.frontend.styles import apply_pdc_styles
+from pydatacuration.frontend.styles import create_check_type_badge
 from pydatacuration.frontend.styles import create_checklist_select
 from pydatacuration.frontend.styles import create_info_grid
 from pydatacuration.frontend.styles import create_priority_badge
@@ -935,7 +936,7 @@ async def checklist_page(ticket_number: str) -> None:
             ui.button('New Dataset', on_click=helpers.confirm_new_dataset).classes('pdc-btn pdc-btn-danger')
 
 
-async def render_checklist_table(  # noqa: PLR0913
+async def render_checklist_table(  # noqa: PLR0913, C901, PLR0917
     duckdb_instance: DuckDB,
     checklist_items: list,
     check_results: dict[str, str],
@@ -999,7 +1000,7 @@ async def render_checklist_table(  # noqa: PLR0913
                     # Action & Instructions
                     with ui.element('td').classes('details-cell'):
                         with ui.element('div').classes('pdc-action-item'):
-                            ui.html(item.action, sanitize=False)
+                            ui.markdown(item.action)
                         if item.instructions:
                             with ui.element('div').classes('pdc-instructions-header'):
                                 ui.html('Guidance:', sanitize=False)
@@ -1010,10 +1011,21 @@ async def render_checklist_table(  # noqa: PLR0913
                         ui.element('td').classes('information-location-column'),
                         ui.element('div').classes('pdc-info-location-container'),
                     ):  # noqa: E501
-                        if item.information_location:
-                            ui.markdown(item.information_location).classes('pdc-static-info-location')
-                        if item.automated_check_ids:
-                            for ac_id in item.automated_check_ids:
+                        # 1. Create check type badge if applicable
+                        item_check_type = getattr(item, 'check_type', None)
+                        if item_check_type:
+                            create_check_type_badge(item_check_type)
+
+                        # 2. Show tool execution
+                        tool_explanation = getattr(item, 'tool_explanation', None)
+                        if tool_explanation:
+                            with ui.element('div').classes('pdc-tool-execution'):
+                                ui.markdown(f'**Tool Used:** {tool_explanation}')
+
+                        # 3. Render automated check results if applicable
+                        automated_check_ids = getattr(item, 'automated_check_ids', [])
+                        if automated_check_ids:
+                            for ac_id in automated_check_ids:
                                 result: dict | None = duckdb_instance.sql_read_row(
                                     DuckDBmodels(ticket_number).check_results(),
                                     'check_id',
@@ -1026,6 +1038,10 @@ async def render_checklist_table(  # noqa: PLR0913
                                     with ui.element('div').classes('pdc-dynamic-check-results'):
                                         render_check_results(result['results'], result['unit'], ac_id)
 
+                        # 4. Finally, show any manually entered information location
+                        information_location = getattr(item, 'information_location', None)
+                        if information_location:
+                            ui.markdown(information_location).classes('pdc-static-info-location')
                     # Status
                     with ui.element('td'):
                         create_status_select(
