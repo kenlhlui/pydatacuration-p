@@ -46,7 +46,10 @@ dependencies = [
 ]
 
 [dependency-groups]
-dev = ["ipykernel>=6.29.5,<7"]
+dev = [
+    "ipykernel>=6.29.5,<7",
+    "pytest>=9.0.2",
+]
 
 [tool.uv]
 package = false
