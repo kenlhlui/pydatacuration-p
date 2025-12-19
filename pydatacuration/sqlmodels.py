@@ -127,6 +127,10 @@ class DuckDBmodels:
             automated_check_ids: list[str] = Field(
                 sa_column=Column(JSON, nullable=True), description='List of automated check IDs'
             )
+            tool_explanation: str = Field(
+                sa_column=Column(String, nullable=True),
+                description='Explanation of what automated tools check for this item (shown to user, supports markdown)',
+            )
             information_location: str = Field(
                 sa_column=Column(String, nullable=True), description='Location of information'
             )
@@ -178,10 +182,6 @@ class DuckDBmodels:
             description: str = Field(
                 sa_column=Column(String, nullable=False),
                 description='Description of the check for database documentation',
-            )
-            explanation_to_user: str = Field(
-                sa_column=Column(String, nullable=True),
-                description='Explanation to the user that will show in the checklist UI',
             )
             unit: str = Field(sa_column=Column(String, nullable=False), description='Unit of each result item')
             results: list[str] | list[dict] = Field(

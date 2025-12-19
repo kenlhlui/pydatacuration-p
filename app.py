@@ -1011,11 +1011,21 @@ async def render_checklist_table(  # noqa: PLR0913, C901, PLR0917
                         ui.element('td').classes('information-location-column'),
                         ui.element('div').classes('pdc-info-location-container'),
                     ):  # noqa: E501
-                        if item.check_type:
-                            create_check_type_badge(item.check_type)
+                        # 1. Create check type badge if applicable
+                        item_check_type = getattr(item, 'check_type', None)
+                        if item_check_type:
+                            create_check_type_badge(item_check_type)
 
-                        if item.automated_check_ids:
-                            for ac_id in item.automated_check_ids:
+                        # 2. Show tool execution
+                        tool_explanation = getattr(item, 'tool_explanation', None)
+                        if tool_explanation:
+                            with ui.element('div').classes('pdc-tool-execution'):
+                                ui.markdown(f'**Tool Used:** {tool_explanation}')
+
+                        # 3. Render automated check results if applicable
+                        automated_check_ids = getattr(item, 'automated_check_ids', [])
+                        if automated_check_ids:
+                            for ac_id in automated_check_ids:
                                 result: dict | None = duckdb_instance.sql_read_row(
                                     DuckDBmodels(ticket_number).check_results(),
                                     'check_id',
@@ -1027,8 +1037,11 @@ async def render_checklist_table(  # noqa: PLR0913, C901, PLR0917
                                     # Only render the grey scrollable box if there are results
                                     with ui.element('div').classes('pdc-dynamic-check-results'):
                                         render_check_results(result['results'], result['unit'], ac_id)
-                        if item.information_location:
-                            ui.markdown(item.information_location).classes('pdc-static-info-location')
+
+                        # 4. Finally, show any manually entered information location
+                        information_location = getattr(item, 'information_location', None)
+                        if information_location:
+                            ui.markdown(information_location).classes('pdc-static-info-location')
                     # Status
                     with ui.element('td'):
                         create_status_select(
