@@ -97,7 +97,7 @@ select = [
     "PTH", # flake8-use-pathlib
     "PL",  # Pylint
 ]
-ignore = ["RET504", "T201", "W505", "G004"]  # Ignore 'unnecessary-assign (RET504) rule'; 'Print (T201)'; W505 "doc-line-too-long"; G004 "logging-f-string"
+ignore = ["RET504", "T201", "W505", "G004", "F401"]  # Ignore 'unnecessary-assign (RET504) rule'; 'Print (T201)'; W505 "doc-line-too-long"; G004 "logging-f-string"
 
 [tool.ruff.lint.pydocstyle]
 convention = "google"
