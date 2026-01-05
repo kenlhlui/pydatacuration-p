@@ -127,15 +127,6 @@ wheels = [
 ]
 
 [[package]]
-name = "babel"
-version = "2.17.0"
-source = { registry = "https://pypi.org/simple" }
-sdist = { url = "https://files.pythonhosted.org/packages/7d/6b/d52e42361e1aa00709585ecc30b3f9684b3ab62530771402248b1b1d6240/babel-2.17.0.tar.gz", hash = "sha256:0c54cffb19f690cdcc52a3b50bcbf71e07a808d1c80d549f2459b9d2cf0afb9d", size = 9951852, upload-time = "2025-02-01T15:17:41.026Z" }
-wheels = [
-    { url = "https://files.pythonhosted.org/packages/b7/b8/3fe70c75fe32afc4bb507f75563d39bc5642255d1d94f1f23604725780bf/babel-2.17.0-py3-none-any.whl", hash = "sha256:4d0b53093fdfb4b21c92b5213dba5a1b23885afa8383709427046b21c366e5f2", size = 10182537, upload-time = "2025-02-01T15:17:37.39Z" },
-]
-
-[[package]]
 name = "beautifulsoup4"
 version = "4.13.3"
 source = { registry = "https://pypi.org/simple" }
@@ -365,31 +356,17 @@ wheels = [
 ]
 
 [[package]]
-name = "docxcompose"
-version = "1.4.0"
-source = { registry = "https://pypi.org/simple" }
-dependencies = [
-    { name = "babel" },
-    { name = "lxml" },
-    { name = "python-docx" },
-    { name = "setuptools" },
-    { name = "six" },
-]
-sdist = { url = "https://files.pythonhosted.org/packages/5d/25/07597a0fda04adf2f2fc375f48f704612a91c0c1da64f4c18e78a4a26630/docxcompose-1.4.0.tar.gz", hash = "sha256:bcf2799a0b63c29eb77a3d799a2f28443ae0f69f8691ff3d753f706be515c3e9", size = 20219, upload-time = "2022-12-14T09:45:09.195Z" }
-
-[[package]]
 name = "docxtpl"
-version = "0.19.1"
+version = "0.20.2"
 source = { registry = "https://pypi.org/simple" }
 dependencies = [
-    { name = "docxcompose" },
     { name = "jinja2" },
     { name = "lxml" },
     { name = "python-docx" },
 ]
-sdist = { url = "https://files.pythonhosted.org/packages/89/fe/8a71f561cc07ec01aad2a2a961828dfe6ca28994b1c9f3997c04d9da4b26/docxtpl-0.19.1.tar.gz", hash = "sha256:5836aab5583a82e2e81b086fae130ce94dc080f6b7fe0e43f83f4e3e3e5daecf", size = 31156, upload-time = "2024-12-29T17:54:03.516Z" }
+sdist = { url = "https://files.pythonhosted.org/packages/b2/b4/4435f3fcb1357ec441079c4af1dda3ea926fad6dcead4aed2d93b369944e/docxtpl-0.20.2.tar.gz", hash = "sha256:eddf3350d70b4d123208e801d585bcb313d21044a377a14f75a66d0965841de1", size = 17890, upload-time = "2025-11-13T12:47:15.943Z" }
 wheels = [
-    { url = "https://files.pythonhosted.org/packages/7c/db/18fadca96a1895a25afaec1d4a373a0f1a9087fe088363719ba590d14c95/docxtpl-0.19.1-py2.py3-none-any.whl", hash = "sha256:12dbf93069d3d08897e3a44a4a043cb60d0320b88228ec2a6c6cf0e103c732dd", size = 29508, upload-time = "2024-12-29T17:54:00.967Z" },
+    { url = "https://files.pythonhosted.org/packages/a4/ad/e07939d8e020e513d3860400413ba1e0e06102c469639b440d921337efef/docxtpl-0.20.2-py3-none-any.whl", hash = "sha256:626d5c570a46a62b2ca73b4d08f1c240fa031a5bc45371e1466a4fe184923d10", size = 17881, upload-time = "2025-11-13T12:47:13.704Z" },
 ]
 
 [[package]]
@@ -1734,15 +1711,6 @@ dependencies = [
 sdist = { url = "https://files.pythonhosted.org/packages/46/84/530a5e4abbc0bb195f388b040268e9c81a52f7127cab41a7dbb448087c54/seedir-0.5.0.tar.gz", hash = "sha256:e6f80f9535b57413100f04933fd269f856aca1d067bccadf3ea3ca98a2fc6fc5", size = 3105170, upload-time = "2024-06-25T03:27:45.328Z" }
 wheels = [
     { url = "https://files.pythonhosted.org/packages/e5/b4/0f5c167f3ab597c693f4c98d3bcaad940cc8a1529ce4029d8e988d0f52da/seedir-0.5.0-py3-none-any.whl", hash = "sha256:fd30221e9a6d92701b6f82cc09285d0c88b16b63a728652c34b3a0bd7363ae68", size = 112992, upload-time = "2024-06-25T03:27:39.982Z" },
-]
-
-[[package]]
-name = "setuptools"
-version = "78.1.0"
-source = { registry = "https://pypi.org/simple" }
-sdist = { url = "https://files.pythonhosted.org/packages/a9/5a/0db4da3bc908df06e5efae42b44e75c81dd52716e10192ff36d0c1c8e379/setuptools-78.1.0.tar.gz", hash = "sha256:18fd474d4a82a5f83dac888df697af65afa82dec7323d09c3e37d1f14288da54", size = 1367827, upload-time = "2025-03-25T22:49:35.332Z" }
-wheels = [
-    { url = "https://files.pythonhosted.org/packages/54/21/f43f0a1fa8b06b32812e0975981f4677d28e0f3271601dc88ac5a5b83220/setuptools-78.1.0-py3-none-any.whl", hash = "sha256:3e386e96793c8702ae83d17b853fb93d3e09ef82ec62722e61da5cd22376dcd8", size = 1256108, upload-time = "2025-03-25T22:49:33.13Z" },
 ]
 
 [[package]]
