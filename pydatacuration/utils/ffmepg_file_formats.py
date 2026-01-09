@@ -58,7 +58,7 @@ class FFmpegFileFormats:
                 ['ffmpeg', '-formats', '-hide_banner'],
                 stdout=subprocess.PIPE,
                 stderr=subprocess.STDOUT,
-                universal_newlines=True,
+                text=True,
                 check=False,
             )
             output = result.stdout
