@@ -18,11 +18,6 @@ from nicegui import ui
 from nicegui.elements.input import Input
 from sqlmodel import SQLModel
 
-from pydatacuration.custom_logging import logger
-from pydatacuration.custom_logging import setup_logging
-
-# Import pydatacuration modules
-from pydatacuration.directory_manager import DirectoryManager
 from pydatacuration.duck_db import DuckDB
 from pydatacuration.frontend.helpers import NiceGUIHelper
 from pydatacuration.frontend.helpers import back_to_main_menu_button
@@ -41,6 +36,11 @@ from pydatacuration.main import CtxObj
 # Import the typer app for CLI command execution
 from pydatacuration.main import run_all
 from pydatacuration.sqlmodels import DuckDBmodels
+from pydatacuration.utils.custom_logging import logger
+from pydatacuration.utils.custom_logging import setup_logging
+
+# Import pydatacuration modules
+from pydatacuration.utils.directory_manager import DirectoryManager
 
 
 # Load environment variables

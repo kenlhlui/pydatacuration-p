@@ -18,8 +18,7 @@ from tenacity import RetryError
 from pydatacuration.exceptions import DatasetAccessError
 from pydatacuration.exceptions import DatasetNotFoundError
 from pydatacuration.exceptions import DatasetUnauthorizedError
-
-from .httpx_client import HTTPXClient
+from pydatacuration.httpx_client import HTTPXClient
 
 
 # Logger is imported directly from loguru

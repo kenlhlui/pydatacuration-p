@@ -15,11 +15,11 @@ from pydatacuration.checksum import Checksum
 from pydatacuration.duck_db import DuckDB
 from pydatacuration.httpx_client import HTTPXClient
 from pydatacuration.sqlmodels import DuckDBmodels
-from pydatacuration.unzip import Unzipper
-from pydatacuration.utils import check_readme_file_existence
-from pydatacuration.utils import compare_files_and_metadata
-from pydatacuration.utils import parse_dataset_url
-from pydatacuration.utils import parse_file_list_metadata
+from pydatacuration.utils.unzip import Unzipper
+from pydatacuration.utils.utils import check_readme_file_existence
+from pydatacuration.utils.utils import compare_files_and_metadata
+from pydatacuration.utils.utils import parse_dataset_url
+from pydatacuration.utils.utils import parse_file_list_metadata
 
 
 RES_DIR = Path('res')

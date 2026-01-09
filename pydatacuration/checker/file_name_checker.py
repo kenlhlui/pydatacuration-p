@@ -4,7 +4,7 @@ import re
 import sys
 from pathlib import Path
 
-from pydatacuration.custom_logging import logger
+from pydatacuration.utils.custom_logging import logger
 
 
 class FileNameFormatChecker:

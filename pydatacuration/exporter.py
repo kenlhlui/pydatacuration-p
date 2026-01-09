@@ -6,8 +6,9 @@ from typing import Any
 import yaml
 from docxtpl import DocxTemplate
 
-from .custom_logging import logger
-from .directory_manager import DirectoryManager
+from pydatacuration.utils.custom_logging import logger
+from pydatacuration.utils.directory_manager import DirectoryManager
+
 from .duck_db import DuckDB
 from .sqlmodels import DuckDBmodels
 

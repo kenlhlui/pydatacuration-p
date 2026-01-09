@@ -5,7 +5,7 @@ from pathlib import Path
 
 import pytest
 
-from pydatacuration.unzip import Unzipper
+from pydatacuration.utils.unzip import Unzipper
 
 
 @pytest.mark.parametrize(
