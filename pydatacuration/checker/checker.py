@@ -8,16 +8,14 @@ from loguru import logger
 from sqlmodel import SQLModel
 
 from pydatacuration.checker.file_name_checker import FileNameFormatChecker
+from pydatacuration.checker.files_open_checker import FilesOpener
 from pydatacuration.checker.metadata_checker import MetadataChecker
 from pydatacuration.checker.spell_checker import SpellCheckerCustomized
 from pydatacuration.checksum import Checksum
 from pydatacuration.duck_db import DuckDB
-from pydatacuration.files_opener import FilesOpener
 from pydatacuration.httpx_client import HTTPXClient
 from pydatacuration.sqlmodels import DuckDBmodels
 from pydatacuration.unzip import Unzipper
-
-# from pydatacuration.utils import FileNameFormatChecker
 from pydatacuration.utils import check_readme_file_existence
 from pydatacuration.utils import compare_files_and_metadata
 from pydatacuration.utils import parse_dataset_url
