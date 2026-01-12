@@ -18,7 +18,8 @@ from sqlmodel import inspect
 from sqlmodel import select
 from sqlmodel import text
 
-from .custom_logging import logger
+from pydatacuration.utils.custom_logging import logger
+
 from .sqlmodels import DuckDBmodels
 
 

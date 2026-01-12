@@ -11,12 +11,12 @@ from nicegui import app
 from nicegui import ui
 from sqlmodel import SQLModel
 
-from pydatacuration.custom_logging import logger
-from pydatacuration.custom_logging import setup_logging
-from pydatacuration.directory_manager import DirectoryManager
 from pydatacuration.duck_db import DuckDB
 from pydatacuration.exporter import Exporter
 from pydatacuration.sqlmodels import DuckDBmodels
+from pydatacuration.utils.custom_logging import logger
+from pydatacuration.utils.custom_logging import setup_logging
+from pydatacuration.utils.directory_manager import DirectoryManager
 
 
 setup_logging()

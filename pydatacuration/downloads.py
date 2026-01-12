@@ -9,9 +9,10 @@ import httpx
 import jmespath
 from loguru import logger
 
-from .directory_manager import DirectoryManager
+from pydatacuration.utils.directory_manager import DirectoryManager
+from pydatacuration.utils.utils import orjson_export
+
 from .httpx_client import HTTPXClient
-from .utils import orjson_export
 
 
 class Downloads:

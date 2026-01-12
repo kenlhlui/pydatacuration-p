@@ -17,6 +17,12 @@ A containerized data curation tool for Dataverse repositories with web interface
 Refer to the [Container Guide](docs/container/README.md) for detailed setup instructions.
 
 
+> [!NOTE]
+> Or if you have just installed, then you can simply run:
+> ```sh
+> just docker-build-and-run -f # The -f flag skips the confirmation prompt for removing existing './workdir'
+> ```
+
 ### 🏗️ Development Mode
 For development with rebuild and reloading the container, run:
 ```sh

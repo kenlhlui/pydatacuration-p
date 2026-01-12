@@ -7,20 +7,19 @@ import yaml
 from loguru import logger
 from sqlmodel import SQLModel
 
+from pydatacuration.checker.file_name_checker import FileNameFormatChecker
+from pydatacuration.checker.files_open_checker import FilesOpener
+from pydatacuration.checker.metadata_checker import MetadataChecker
+from pydatacuration.checker.spell_checker import SpellCheckerCustomized
+from pydatacuration.checksum import Checksum
+from pydatacuration.duck_db import DuckDB
+from pydatacuration.httpx_client import HTTPXClient
 from pydatacuration.sqlmodels import DuckDBmodels
-
-from .checksum import Checksum
-from .duck_db import DuckDB
-from .files_opener import FilesOpener
-from .httpx_client import HTTPXClient
-from .metadata_checker import MetadataChecker
-from .spell_checker import SpellCheckerCustomized
-from .unzip import Unzipper
-from .utils import FileNameFormatChecker
-from .utils import check_readme_file_existence
-from .utils import compare_files_and_metadata
-from .utils import parse_dataset_url
-from .utils import parse_file_list_metadata
+from pydatacuration.utils.unzip import Unzipper
+from pydatacuration.utils.utils import check_readme_file_existence
+from pydatacuration.utils.utils import compare_files_and_metadata
+from pydatacuration.utils.utils import parse_dataset_url
+from pydatacuration.utils.utils import parse_file_list_metadata
 
 
 RES_DIR = Path('res')
