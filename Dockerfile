@@ -42,7 +42,6 @@ RUN uv venv --relocatable && \
 # Copy the rest of your app
 COPY --chown=app:app app.py /app/
 COPY --chown=app:app pydatacuration /app/pydatacuration
-COPY --chown=app:app res /app/res
 
 # Start the app with uv
 CMD ["uv", "run", "app.py"]
