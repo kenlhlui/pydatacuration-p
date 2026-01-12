@@ -50,6 +50,7 @@ instructions](https://github.com/containers/podman-compose)
         - ./.env  # Configure the path to your .env file if it's located elsewhere
         volumes:
         - ./new_dir:/app/workdir  # Configure the path on the left side of colon to your desired host directory
+        - ./res:/app/res  # Configure the path for the res directory
         ...
     ```
     podman-compose.yml:
@@ -59,6 +60,7 @@ instructions](https://github.com/containers/podman-compose)
         - ./.env  # Configure the path to your .env file if it's located elsewhere
         volumes:
         - ./new_dir:/app/workdir:Z,U  # Configure the path on the left side of colon to your desired host directory
+        - ./res:/app/res:Z,U  # Configure the path for the res directory
         ...
     ```
 ------------------------------------------------------------------------
@@ -75,13 +77,25 @@ instructions](https://github.com/containers/podman-compose)
     mkdir -p ./new_dir
     ```
 
-3.  Start the container:
+3. The res folder should contain necessary resources. If it does not exist, create it:
+
+    ``` bash
+    mkdir -p ./res
+    ```
+    It should have the following files:
+    ```
+    common_file_formats.yaml
+    check-list_template_high.yaml
+    check-list_template_medium.yaml
+    ```
+
+4.  Start the container:
 
     ``` bash
     docker compose up -d
     ```
 
-4.  To stop the container:
+5.  To stop the container:
 
     ``` bash
     docker compose down
@@ -114,17 +128,28 @@ docker compose up
     ``` bash
     mkdir -p ./new_dir
     ```
+5. The res folder should contain necessary resources. If it does not exist, create it:
 
-5.  Navigate to the root directory of your project (where the
+    ``` bash
+    mkdir -p ./res
+    ```
+    It should have the following files:
+    ```
+    common_file_formats.yaml
+    check-list_template_high.yaml
+    check-list_template_medium.yaml
+    ```
+
+6.  Navigate to the root directory of your project (where the
     `docker-compose.yml` file is located).
 
-6.  Start the containers:
+7.  Start the containers:
 
     ``` bash
     podman compose -f podman-compose.yml up -d
     ```
 
-7.  To stop the containers:
+8.  To stop the containers:
 
     ``` bash
     podman compose down

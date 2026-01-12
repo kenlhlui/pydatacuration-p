@@ -13,40 +13,9 @@ A containerized data curation tool for Dataverse repositories with web interface
 - **Alternative**: **Podman** and **podman-compose**
   - 👉 [Installation instructions](https://github.com/containers/podman-compose)
 
-### Setup & Run
+### ⚙️ Setup & Run
+Refer to the [Container Guide](docs/container/README.md) for detailed setup instructions.
 
-1. **Clone the repository**
-   ```bash
-   git clone https://github.com/kenlhlui/pydatacuration-p
-   cd pydatacuration-p
-   ```
-
-2. **Configure environment**
-   Create a `.env` file with your settings:
-   ```bash
-   API_TOKEN=your_api_token_here
-   BASE_URL=https://demo.borealisdata.ca/
-   CURATOR_NAME=Your Name
-   CURATOR_EMAIL=your_email@example.com
-   ```
-
-3. **Create working directory**
-   ```bash
-   mkdir -p ./workdir  # Ensure this matches the volume path in docker-compose.yml, or else it will cause errors
-   ```
-
-4. **Start the application**
-   ```bash
-   docker compose up -d
-   ```
-
-5. **Access the tool**
-   Open http://localhost:9005 in your browser
-
-6. **Stop the application**
-   ```sh
-   docker compose down
-   ```
 
 ### 🏗️ Development Mode
 For development with rebuild and reloading the container, run:
@@ -54,11 +23,11 @@ For development with rebuild and reloading the container, run:
 docker compose down && docker compose build && docker compose up
 ```
 
-### 📋 Detailed Setup
-
-For complete container setup instructions including Podman alternatives and volume configuration, see the [Container Guide](docs/container/README.md).
-
 ## 💻 CLI/TUI version
+>[!WARNING]
+> This section might contain outdated steps. The recommended way to use the tool is via Docker/Podman as described above.
+
+
 > [!NOTE]  
 > The CLI/TUI version outlined below has no web interface. It is more suitable for mass curation tasks, such as downloading files and creating folder structures for multiple datasets.
 
