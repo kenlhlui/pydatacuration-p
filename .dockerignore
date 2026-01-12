@@ -19,3 +19,6 @@ __pycache__
 docker-compose.yml
 *.md
 *.log
+
+# Ignore res directory
+res/
