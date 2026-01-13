@@ -7,32 +7,36 @@ import yaml
 from docxtpl import DocxTemplate
 
 from .custom_logging import logger
+from .database_handler import DatabaseHandler
 from .directory_manager import DirectoryManager
 from .duck_db import DuckDB
+from .sqlmodels import DatabaseModels
 from .sqlmodels import DuckDBmodels
 
 
 class Exporter:
     """Class for exporting data to YAML and word formats."""
 
-    def __init__(self, duckdb: DuckDB, dir_manager: DirectoryManager, res_dir: Path | None = None) -> None:
-        """Initialize the Exports class with DuckDB and DirectoryManager instances."""
-        self.duckdb = duckdb
+    def __init__(
+        self, database_instance: DatabaseHandler, dir_manager: DirectoryManager, res_dir: Path | None = None
+    ) -> None:
+        """Initialize the Exports class with DatabaseHandler and DirectoryManager instances."""
+        self.database_instance = database_instance
         self.dir_manager = dir_manager
         self.res_dir = res_dir if res_dir is not None else Path.cwd() / 'res'
 
     def generate_yaml(self) -> dict[str, Any]:
         """Generate YAML data by reading the database."""
-        project_metadata = self.duckdb.read_project_metadata_record()
-        checklist: dict[str, Any] = self.duckdb.read_checklist()
-        # check_results: dict[str, Any] = self.duckdb.read_check_results()
+        project_metadata = self.database_instance.read_project_metadata_record()
+        checklist: dict[str, Any] = self.database_instance.read_checklist()
+        # check_results: dict[str, Any] = self.database_instance.read_check_results()
 
         # Merge checklist results into checklist
         for item in checklist.get('checklist', []):
             if item.get('automated_check_ids') and item.get('automated_check_ids') != []:
                 for check_id in item['automated_check_ids']:
-                    result = self.duckdb.sql_read_row(
-                        DuckDBmodels(self.duckdb.schema_name).check_results(), 'check_id', check_id
+                    result = self.database_instance.read_row(
+                        self.database_instance.models.check_results(), 'check_id', check_id
                     )
                     if result:
                         check_name = result.get('check_name', '')
