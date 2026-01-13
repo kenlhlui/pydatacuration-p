@@ -19,6 +19,7 @@ from pydatacuration.utils.custom_logging import add_cli_run_logging
 from pydatacuration.utils.custom_logging import logger
 from pydatacuration.utils.custom_logging import setup_global_logging
 
+from . import database_handler
 from . import downloads
 from . import duck_db
 from .checker import Checker
@@ -170,6 +171,19 @@ def get_duck(schema_name: str, db_file: Path) -> duck_db.DuckDB:
     return duck_db.DuckDB(schema_name=schema_name, db_file=db_file)
 
 
+def get_db(schema_name: str, db_file: Path) -> database_handler.DatabaseHandler:
+    """Instantiate DatabaseHandler.
+
+    Args:
+        schema_name (str): Schema (ticket) name.
+        db_file (Path): DB file path.
+
+    Returns:
+        database_handler.DatabaseHandler: DatabaseHandler instance.
+    """
+    return database_handler.DatabaseHandler(schema_name=schema_name, db_path=db_file)
+
+
 @app.command()
 def init(
     ctx: typer.Context,
@@ -197,10 +211,13 @@ def init(
     dirs.make_dirs()
     add_cli_run_logging(dirs.log_files_dir)
 
-    duck = get_duck(schema_name=dirs.ticket_number, db_file=dirs.db_path)
-    duck.create_database()
-    duck.sql_drop_schema(ticket_number)
-    duck.create_schema()
+    # duck = get_duck(schema_name=dirs.ticket_number, db_file=dirs.db_path)
+    # duck.create_database()
+    # duck.sql_drop_schema(ticket_number)
+    # duck.create_schema()
+    db = get_db(schema_name=dirs.ticket_number, db_file=dirs.db_path)
+    db.drop_schema(ticket_number)
+    db.create_schema()
     logger.info(f'Initialized working area at {workdir_path}')
 
 
@@ -277,6 +294,7 @@ def check(
     """
     dirs: directory_manager.DirectoryManager = get_dirs(ticket_number, ctx.obj.main_dir)
     duck = get_duck(schema_name=dirs.ticket_number, db_file=dirs.db_path)
+    db = get_db(schema_name=dirs.ticket_number, db_file=dirs.db_path)
 
     add_cli_run_logging(dirs.log_files_dir)
 
@@ -297,7 +315,7 @@ def check(
         dv_tree,
         dirs.project_dir,
         check_zip,
-        duck,
+        db,
         collection_alias,
         curator_name,
         curator_email,
