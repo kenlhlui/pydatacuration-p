@@ -3,7 +3,6 @@
 from pathlib import Path
 
 import pytest
-
 from pydatacuration.directory_manager import DirectoryManager
 
 
@@ -232,11 +231,11 @@ def test_add_directory(tmp_path: Path) -> None:
     dir_manager = DirectoryManager(ticket_number='TEST-011', main_dir=tmp_path, res_dir=None)
     initial_count = len(dir_manager._directory_structure)
 
-    dir_manager.add_directory('new_dir', 'path/to/new_dir')
+    dir_manager.add_directory('workdir', 'path/to/workdir')
 
     assert len(dir_manager._directory_structure) == initial_count + 1
-    assert 'new_dir' in dir_manager._directory_structure
-    assert dir_manager._directory_structure['new_dir'] == 'path/to/new_dir'
+    assert 'workdir' in dir_manager._directory_structure
+    assert dir_manager._directory_structure['workdir'] == 'path/to/workdir'
 
 
 def test_list_directories(tmp_path: Path) -> None:

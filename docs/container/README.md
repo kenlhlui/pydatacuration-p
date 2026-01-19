@@ -49,7 +49,7 @@ instructions](https://github.com/containers/podman-compose)
         env_file:
         - ./.env  # Configure the path to your .env file if it's located elsewhere
         volumes:
-        - ./new_dir:/app/workdir  # Configure the path on the left side of colon to your desired host directory
+        - ./workdir:/app/workdir  # Configure the path on the left side of colon to your desired host directory
         - ./res:/app/res  # Configure the path for the res directory
         ...
     ```
@@ -59,7 +59,7 @@ instructions](https://github.com/containers/podman-compose)
         env_file:
         - ./.env  # Configure the path to your .env file if it's located elsewhere
         volumes:
-        - ./new_dir:/app/workdir:Z,U  # Configure the path on the left side of colon to your desired host directory
+        - ./workdir:/app/workdir:Z,U  # Configure the path on the left side of colon to your desired host directory
         - ./res:/app/res:Z,U  # Configure the path for the res directory
         ...
     ```
@@ -74,7 +74,7 @@ instructions](https://github.com/containers/podman-compose)
     under the `volumes` section. For example:
 
     ``` bash
-    mkdir -p ./new_dir
+    mkdir -p ./workdir
     ```
 
 3. The res folder should contain necessary resources. If it does not exist, create it:
@@ -126,7 +126,7 @@ docker compose up
     under the `volumes` section. For example:
 
     ``` bash
-    mkdir -p ./new_dir
+    mkdir -p ./workdir
     ```
 5. The res folder should contain necessary resources. If it does not exist, create it:
 
