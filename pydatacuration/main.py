@@ -21,7 +21,6 @@ from pydatacuration.utils.custom_logging import setup_global_logging
 
 from . import database_handler
 from . import downloads
-from . import duck_db
 from .checker import Checker
 from .exceptions import DatasetAccessError
 
@@ -158,19 +157,6 @@ def get_dirs(ticket_number: str, main_dir: Path) -> directory_manager.DirectoryM
     return directory_manager.DirectoryManager(ticket_number, str(main_dir))
 
 
-def get_duck(schema_name: str, db_file: Path) -> duck_db.DuckDB:
-    """Instantiate DuckDB wrapper.
-
-    Args:
-        schema_name (str): Schema (ticket) name.
-        db_file (Path): DB file path.
-
-    Returns:
-        duck_db.DuckDB: DuckDB instance.
-    """
-    return duck_db.DuckDB(schema_name=schema_name, db_file=db_file)
-
-
 def get_db(schema_name: str, db_file: Path) -> database_handler.DatabaseHandler:
     """Instantiate DatabaseHandler.
 
@@ -190,7 +176,7 @@ def init(
     ticket_number: str = TyperOptions.ticket_number_option,
     force_del: bool = TyperOptions.force_del_option,
 ) -> None:
-    """Prepare working directory and DuckDB schema.
+    """Prepare working directory and database schema.
 
     Args:
         ctx (typer.Context): Typer context (provides main_dir).
@@ -290,10 +276,10 @@ def check(
         checklist (str): Type of checklist to use (high or medium).
 
     Returns:
-        None: Writes check results to DuckDB and logs.
+        None: Writes check results to database and logs.
     """
     dirs: directory_manager.DirectoryManager = get_dirs(ticket_number, ctx.obj.main_dir)
-    duck = get_duck(schema_name=dirs.ticket_number, db_file=dirs.db_path)
+    # duck = get_duck(schema_name=dirs.ticket_number, db_file=dirs.db_path)
     db = get_db(schema_name=dirs.ticket_number, db_file=dirs.db_path)
 
     add_cli_run_logging(dirs.log_files_dir)

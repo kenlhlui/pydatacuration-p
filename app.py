@@ -20,7 +20,6 @@ from sqlmodel import SQLModel
 
 # Import pydatacuration modules
 from pydatacuration.database_handler import DatabaseHandler
-from pydatacuration.duck_db import DuckDB
 from pydatacuration.frontend.helpers import NiceGUIHelper
 from pydatacuration.frontend.helpers import back_to_main_menu_button
 from pydatacuration.frontend.helpers import priority_options
@@ -37,7 +36,6 @@ from pydatacuration.main import CtxObj
 
 # Import the typer app for CLI command execution
 from pydatacuration.main import run_all
-from pydatacuration.sqlmodels import DuckDBmodels
 from pydatacuration.utils.custom_logging import logger
 from pydatacuration.utils.custom_logging import setup_logging
 
@@ -793,7 +791,7 @@ async def checklist_page(ticket_number: str) -> None:
     """Checklist page with exact styling match."""
     apply_pdc_styles()
 
-    # Initialize the duckdb connection for this ticket number
+    # Initialize the directory manager and database handler
     dir_manager = DirectoryManager(ticket_number, MAIN_DIR, RES_DIR)
     database_handler = DatabaseHandler(schema_name=ticket_number, db_path=dir_manager.db_path)
     helpers = NiceGUIHelper(database_handler, ticket_number)

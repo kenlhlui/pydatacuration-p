@@ -10,9 +10,7 @@ from pydatacuration.utils.custom_logging import logger
 from pydatacuration.utils.directory_manager import DirectoryManager
 
 from .database_handler import DatabaseHandler
-from .duck_db import DuckDB
 from .sqlmodels import DatabaseModels
-from .sqlmodels import DuckDBmodels
 
 
 class Exporter:

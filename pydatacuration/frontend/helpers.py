@@ -12,10 +12,8 @@ from nicegui import ui
 from sqlmodel import SQLModel
 
 from pydatacuration.database_handler import DatabaseHandler
-from pydatacuration.duck_db import DuckDB
 from pydatacuration.exporter import Exporter
 from pydatacuration.sqlmodels import DatabaseModels
-from pydatacuration.sqlmodels import DuckDBmodels
 from pydatacuration.utils.custom_logging import logger
 from pydatacuration.utils.custom_logging import setup_logging
 from pydatacuration.utils.directory_manager import DirectoryManager
@@ -48,7 +46,7 @@ class NiceGUIHelper:
         self.timers: dict[str, dict] = {}
 
     def get_checklist_items(self) -> list:
-        """Get all checklist items from the DuckDB database for the specified ticket.
+        """Get all checklist items from the database for the specified ticket.
 
         The checklist type is determined by what was stored in the database during setup.
 
@@ -283,7 +281,7 @@ class NiceGUIHelper:
 
     @staticmethod
     def get_all_schemas(main_dir: Path) -> list[dict]:
-        """Get all available schemas (projects) from DuckDB.
+        """Get all available schemas (projects) from the database.
 
         Returns:
             list[dict]: List of schemas with metadata
@@ -324,7 +322,9 @@ class NiceGUIHelper:
                     logger.error(f'Could not get metadata for schema {schema_name}: {e}')
                     project_metadata_schema.append(
                         {
-                            'ticket_number': schema_name.replace('duckdb.', '').replace('"', ''),
+                            'ticket_number': schema_name.replace('duckdb.', '').replace(
+                                '"', ''
+                            ),  # FIXME: remove this line as we move away from duckdb  # noqa: E501
                             'name': schema_name,
                             'last_modified': 'Unknown',
                             'has_metadata': False,

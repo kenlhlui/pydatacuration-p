@@ -13,10 +13,7 @@ from pydatacuration.checker.metadata_checker import MetadataChecker
 from pydatacuration.checker.spell_checker import SpellCheckerCustomized
 from pydatacuration.checksum import Checksum
 from pydatacuration.database_handler import DatabaseHandler
-from pydatacuration.duck_db import DuckDB
 from pydatacuration.httpx_client import HTTPXClient
-from pydatacuration.sqlmodels import DatabaseModels
-from pydatacuration.sqlmodels import DuckDBmodels
 from pydatacuration.utils.unzip import Unzipper
 from pydatacuration.utils.utils import check_readme_file_existence
 from pydatacuration.utils.utils import compare_files_and_metadata
@@ -197,7 +194,6 @@ class Checker:
                 self.logger.info(f'README file found: {file_rel_path}')
                 readme_files.append(str(file_rel_path))
 
-        # DEBUG: Write to duckDB
         try:
             check_result_list_schema = self.sqlmodels.check_results()
             self.database_instance.merge_records_to_table(
@@ -698,8 +694,8 @@ class Checker:
             logger.error(f'Failed to write keywords to Database: {e}')
 
     # The below writes the to the Database database
-    def write_project_metadata_to_duckdb(self) -> None:
-        """Write the project metadata to the Database database."""
+    def write_project_metadata_to_db(self) -> None:
+        """Write the project metadata to the database."""
         project_metadata_schema = self.sqlmodels.project_metadata_record()
 
         # Check if record already exists
@@ -733,7 +729,7 @@ class Checker:
             self.logger.error(f'Failed to write to Database: {e}')
 
     # Note: maybe to migrate this to main.py
-    def write_checklist_to_duckdb(self, checklist_type: str = 'high'):
+    def write_checklist_to_db(self, checklist_type: str = 'high'):
         """Write the checklist items to Database.
 
         Args:
@@ -784,6 +780,6 @@ class Checker:
         self.check_terms_of_access()
         self.check_keywords()
         self.check_license()
-        self.write_project_metadata_to_duckdb()
+        self.write_project_metadata_to_db()
         # Write the checklist to Database using the configured checklist type
-        self.write_checklist_to_duckdb(self.checklist_type)
+        self.write_checklist_to_db(self.checklist_type)
