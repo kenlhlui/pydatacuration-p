@@ -18,6 +18,7 @@ from nicegui import ui
 from nicegui.elements.input import Input
 from pydatacuration.custom_logging import logger
 from pydatacuration.custom_logging import setup_logging
+from pydatacuration.database_handler import DatabaseHandler
 
 # Import pydatacuration modules
 from pydatacuration.directory_manager import DirectoryManager

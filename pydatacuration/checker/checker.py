@@ -22,6 +22,20 @@ from pydatacuration.utils.utils import compare_files_and_metadata
 from pydatacuration.utils.utils import parse_dataset_url
 from pydatacuration.utils.utils import parse_file_list_metadata
 
+from .checksum import Checksum
+from .database_handler import DatabaseHandler
+from .duck_db import DuckDB
+from .files_opener import FilesOpener
+from .httpx_client import HTTPXClient
+from .metadata_checker import MetadataChecker
+from .spell_checker import SpellCheckerCustomized
+from .unzip import Unzipper
+from .utils import FileNameFormatChecker
+from .utils import check_readme_file_existence
+from .utils import compare_files_and_metadata
+from .utils import parse_dataset_url
+from .utils import parse_file_list_metadata
+
 
 RES_DIR = Path('res')
 
