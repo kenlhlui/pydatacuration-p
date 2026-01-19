@@ -435,23 +435,6 @@ class DatabaseHandler:  # noqa: PLR0904
             logger.error(f'Error updating checklist item {item_id}: {e}')
             return False
 
-    # def sql_update_checklist_item(
-    #     self, item_id: str, status: str | None = None, comments: str | None = None, time_spent: timedelta | None = None
-    # ) -> bool:
-    #     """Alias for update_checklist_item for compatibility with DuckDB interface.
-
-    #     Args:
-    #         item_id: The checklist item ID to update.
-    #         status: The status value (P, F, TBD, NA).
-    #         comments: The comments value.
-    #         time_spent: The time spent value.
-
-    #     Returns:
-    #         bool: True if update was successful, False otherwise.
-
-    #     """
-    #     return self.update_checklist_item(item_id=item_id, status=status, comments=comments, time_spent=time_spent)
-
     def read_row(self, sqlmodel: type[SQLModel], column: str, value: str) -> dict[str, Any] | None:
         """Get a single row from a table based on a column value.
 

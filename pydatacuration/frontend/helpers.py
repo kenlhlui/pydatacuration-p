@@ -322,9 +322,7 @@ class NiceGUIHelper:
                     logger.error(f'Could not get metadata for schema {schema_name}: {e}')
                     project_metadata_schema.append(
                         {
-                            'ticket_number': schema_name.replace('duckdb.', '').replace(
-                                '"', ''
-                            ),  # FIXME: remove this line as we move away from duckdb  # noqa: E501
+                            'ticket_number': schema_name,
                             'name': schema_name,
                             'last_modified': 'Unknown',
                             'has_metadata': False,
@@ -345,19 +343,18 @@ class NiceGUIHelper:
         """Delete a specific project by removing its schema and the project directory.
 
         Args:
-            schema_name (str | None): Name of the schema to delete (includes duckdb. prefix)
+            schema_name (str | None): Name of the schema to delete
             main_dir (Path): Main directory where the database, logs, and project directories are stored.
 
         """
         if not schema_name:
             return False, 'Invalid schema name'
-        schema_name_pruned = schema_name.replace('duckdb.', '').replace('"', '')
 
-        def delete_schema(schema_name_pruned: str) -> tuple[bool, str]:
+        def delete_schema(schema_name: str) -> tuple[bool, str]:
             """Delete a specific schema from database.
 
             Args:
-                schema_name_pruned (str): Name of the schema to delete (without duckdb. prefix)
+                schema_name (str): Name of the schema to delete
 
             Returns:
                 tuple[bool, str]: Success status and message
@@ -373,9 +370,9 @@ class NiceGUIHelper:
                 database_handler = DatabaseHandler(schema_name='_system_query_', db_path=db_file)
 
                 # Delete the schema
-                database_handler.drop_schema(schema_name_pruned)
+                database_handler.drop_schema(schema_name)
 
-                return True, f'Schema {schema_name_pruned} deleted successfully'
+                return True, f'Schema {schema_name} deleted successfully'
 
             except Exception as e:
                 return False, f'Error deleting schema: {str(e)}'
@@ -384,7 +381,7 @@ class NiceGUIHelper:
             """Delete the project directory for a specific ticket number.
 
             Args:
-                ticket_number (str): Ticket number of the project to delete (is schema_name_pruned)
+                ticket_number (str): Ticket number of the project to delete
 
             """
             try:
@@ -393,9 +390,9 @@ class NiceGUIHelper:
             except Exception as e:
                 logger.error(f'Error deleting project directory for {ticket_number}: {e}')
 
-        delete_project_directory(schema_name_pruned)
-        delete_schema(schema_name_pruned)
-        return True, f'Project {schema_name_pruned} deleted successfully'
+        delete_project_directory(schema_name)
+        delete_schema(schema_name)
+        return True, f'Project {schema_name} deleted successfully'
 
     @staticmethod
     def export_word_button(
