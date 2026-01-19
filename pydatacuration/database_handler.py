@@ -63,12 +63,11 @@ class DatabaseHandler:  # noqa: PLR0904
             msg = 'Either db_path or connection_string must be provided'
             raise ValueError(msg)
 
-        # Initialize models with connection type
-        self.models = DatabaseModels(schema_name, is_sqlite=self.connection_string.startswith('sqlite'))
+        # Initialize models (unified table naming convention for all database types)
+        self.models = DatabaseModels(schema_name)
 
         # Create engine
         self._engine: Engine | None = None
-        self.system_schemas = {'information_schema', 'pg_catalog', 'pg_toast'}
 
     @property
     def engine(self) -> Engine:
@@ -79,14 +78,8 @@ class DatabaseHandler:  # noqa: PLR0904
 
         """
         if self._engine is None:
-            # PostgreSQL-specific settings for schema support
-            connect_args = {}
-            if self.connection_string.startswith('postgresql'):
-                connect_args = {'options': f'-c search_path={self.schema_name},public'}
-
             self._engine = create_engine(
                 self.connection_string,
-                connect_args=connect_args,
                 echo=False,  # Set to True for SQL debugging
                 pool_timeout=10,
                 pool_recycle=300,
@@ -118,7 +111,7 @@ class DatabaseHandler:  # noqa: PLR0904
         # For PostgreSQL, use read-only transaction settings
         # For SQLite, use the same engine as writes (SQLite handles concurrency differently)
         if self.connection_string.startswith('postgresql'):
-            connect_args = {'options': f'-c search_path={self.schema_name},public -c default_transaction_read_only=on'}
+            connect_args = {'options': '-c default_transaction_read_only=on'}
             engine = create_engine(
                 self.connection_string,
                 connect_args=connect_args,
@@ -138,30 +131,23 @@ class DatabaseHandler:  # noqa: PLR0904
                 engine.dispose()
 
     def check_schema_exists(self, schema_name: str) -> bool:
-        """Check if a schema exists in the database.
+        """Check if a schema exists in the database by looking for tables with the schema prefix.
 
         Args:
             schema_name: The name of the schema to check.
 
         Returns:
-            bool: True if the schema exists, False otherwise.
+            bool: True if tables with the schema prefix exist, False otherwise.
 
         """
         try:
             with self.get_readonly_connection() as (_session, _engine):
                 inspector: Inspector = inspect(_engine)
-
-                # Try the schema name as-is first
-                result = inspector.has_schema(schema_name)
-                logger.info(f'Schema {schema_name} exists (direct): {result}')
-
-                if not result:
-                    # Try without quotes if it has them
-                    clean_name = schema_name.strip('"')
-                    if clean_name != schema_name:
-                        result = inspector.has_schema(clean_name)
-                        logger.info(f'Schema {clean_name} exists (unquoted): {result}')
-
+                table_names = inspector.get_table_names()
+                # Check if any table starts with the schema prefix
+                prefix = f'{schema_name}__'
+                result = any(name.startswith(prefix) for name in table_names)
+                logger.info(f'Schema {schema_name} exists (by table prefix): {result}')
                 return result
         except Exception as e:
             logger.error(f'Error checking schema {schema_name}: {e}')
@@ -170,36 +156,21 @@ class DatabaseHandler:  # noqa: PLR0904
     def create_schema(self) -> None:
         """Create a schema in the database.
 
-        For PostgreSQL, creates a true schema.
-        For SQLite, this is a no-op as SQLite doesn't support schemas.
+        With unified table naming (schema_name__table_name), this is a no-op.
+        The schema is implicitly created when tables are created with the prefix.
 
         """
-        try:
-            if self.connection_string.startswith('postgresql'):
-                logger.info(f'Creating schema: {self.schema_name}')
-                with self.get_connection() as (session, engine), engine.begin() as conn:
-                    conn.execute(text(f'CREATE SCHEMA IF NOT EXISTS "{self.schema_name}"'))
-                logger.info(f'Created schema: {self.schema_name}')
-            else:
-                logger.info('SQLite does not support schemas; skipping schema creation')
-        except Exception as e:
-            logger.error(f'Error creating schema {self.schema_name}: {e}')
+        logger.info(f'Schema {self.schema_name} will be created via table naming convention')
 
     def create_tables(self) -> None:
         """Create all tables in the database.
 
-        For PostgreSQL, creates the schema if it doesn't exist.
-        For SQLite, schemas are simulated using table name prefixes.
+        Tables are created with the unified naming convention: schema_name__table_name.
 
         """
-        # Create schema first if PostgreSQL
-        if self.connection_string.startswith('postgresql'):
-            self.create_schema()
-
-        # Create all tables
         try:
             SQLModel.metadata.create_all(self.engine)
-            logger.info(f'Created tables in schema: {self.schema_name}')
+            logger.info(f'Created tables with schema prefix: {self.schema_name}')
         except Exception as e:
             logger.error(f'Error creating tables: {e}')
 
@@ -207,7 +178,7 @@ class DatabaseHandler:  # noqa: PLR0904
         """Check whether a table has any records.
 
         Args:
-            table_name: The name of the table to check.
+            table_name: The name of the table to check (without schema prefix).
 
         Returns:
             bool: True if the table has records, False otherwise.
@@ -215,11 +186,8 @@ class DatabaseHandler:  # noqa: PLR0904
         """
         try:
             with self.get_readonly_connection() as (session, engine):
-                # Build the full table reference
-                if self.connection_string.startswith('postgresql'):
-                    full_table_name = f'"{self.schema_name}".{table_name}'
-                else:
-                    full_table_name = table_name
+                # Build the full table name with schema prefix
+                full_table_name = f'{self.schema_name}__{table_name}'
 
                 result = session.exec(text(f'SELECT COUNT(*) FROM {full_table_name}')).first()
                 logger.info(f'Query result for existing records in table {table_name}: {result}')
@@ -336,20 +304,21 @@ class DatabaseHandler:  # noqa: PLR0904
         return checklist
 
     def read_schema_tables(self) -> list[str]:
-        """Get the names of the tables inside a schema.
+        """Get the names of the tables inside a schema (with the schema prefix).
 
         Returns:
-            list[str]: List of table names in the schema.
+            list[str]: List of table names in the schema (with prefix stripped).
 
         """
         try:
             with self.get_readonly_connection() as (_session, engine):
                 inspector = inspect(engine)
-                if self.connection_string.startswith('postgresql'):
-                    table_names = inspector.get_table_names(schema=self.schema_name)
-                else:
-                    # SQLite doesn't support schemas, get all tables
-                    table_names = inspector.get_table_names()
+                all_tables = inspector.get_table_names()
+                # Filter tables that start with the schema prefix and strip the prefix
+                prefix = f'{self.schema_name}__'
+                table_names = [
+                    name[len(prefix):] for name in all_tables if name.startswith(prefix)
+                ]
                 return table_names or []
         except Exception as e:
             logger.error(f'Error fetching schema tables for {self.schema_name}: {e}')
@@ -368,18 +337,23 @@ class DatabaseHandler:  # noqa: PLR0904
         return filtered_names
 
     def get_all_schema_names(self) -> list[str]:
-        """Get all schema names from the database.
+        """Get all schema names from the database by extracting unique prefixes from table names.
 
         Returns:
-            list[str]: List of schema names, excluding system schemas.
+            list[str]: List of schema names (unique table prefixes).
 
         """
         try:
             with self.get_readonly_connection() as (_session, engine):
                 inspector = inspect(engine)
-                all_schemas = inspector.get_schema_names()
-                # Filter out system schemas
-                user_schemas = [schema for schema in all_schemas if schema not in self.system_schemas]
+                all_tables = inspector.get_table_names()
+                # Extract unique schema prefixes from table names (format: schema__table)
+                schema_names = set()
+                for table_name in all_tables:
+                    if '__' in table_name:
+                        schema_prefix = table_name.split('__')[0]
+                        schema_names.add(schema_prefix)
+                user_schemas = list(schema_names)
                 logger.debug(f'Found user schemas: {user_schemas}')
                 return user_schemas
         except Exception as e:
@@ -387,19 +361,25 @@ class DatabaseHandler:  # noqa: PLR0904
             return []
 
     def drop_schema(self, schema_name: str) -> None:
-        """Drop a schema from the database.
+        """Drop a schema from the database by dropping all tables with the schema prefix.
 
         Args:
             schema_name: The name of the schema to drop.
 
         """
         try:
-            with self.get_connection() as (_session, engine), engine.begin() as conn:
-                if self.connection_string.startswith('postgresql'):
-                    conn.execute(text(f'DROP SCHEMA IF EXISTS "{schema_name}" CASCADE'))
-                    logger.info(f'Dropped schema: {schema_name}')
-                else:
-                    logger.warning('SQLite does not support schema dropping; use drop table instead')
+            with self.get_connection() as (_session, engine):
+                inspector = inspect(engine)
+                all_tables = inspector.get_table_names()
+                prefix = f'{schema_name}__'
+                tables_to_drop = [name for name in all_tables if name.startswith(prefix)]
+
+                with engine.begin() as conn:
+                    for table_name in tables_to_drop:
+                        conn.execute(text(f'DROP TABLE IF EXISTS "{table_name}"'))
+                        logger.info(f'Dropped table: {table_name}')
+
+                logger.info(f'Dropped schema: {schema_name} ({len(tables_to_drop)} tables)')
         except Exception as e:
             logger.error(f'Error dropping schema {schema_name}: {e}')
 
