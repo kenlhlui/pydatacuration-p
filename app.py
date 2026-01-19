@@ -16,14 +16,9 @@ from nicegui import app
 from nicegui import app as nicegui_app
 from nicegui import ui
 from nicegui.elements.input import Input
-from pydatacuration.custom_logging import logger
-from pydatacuration.custom_logging import setup_logging
-from pydatacuration.database_handler import DatabaseHandler
-
-# Import pydatacuration modules
-from pydatacuration.directory_manager import DirectoryManager
 from sqlmodel import SQLModel
 
+# Import pydatacuration modules
 from pydatacuration.database_handler import DatabaseHandler
 from pydatacuration.duck_db import DuckDB
 from pydatacuration.frontend.helpers import NiceGUIHelper
