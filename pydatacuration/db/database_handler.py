@@ -14,10 +14,10 @@ from sqlalchemy import ScalarResult
 from sqlalchemy import column
 from sqlalchemy import func
 from sqlalchemy import table
-from sqlalchemy import text
 from sqlalchemy.engine import Engine
 from sqlmodel import Session
 from sqlmodel import SQLModel
+from sqlmodel import Table
 from sqlmodel import create_engine
 from sqlmodel import inspect
 from sqlmodel import select
@@ -199,7 +199,6 @@ class DatabaseHandler:  # noqa: PLR0904
 
                 result = session.exec(select(func.count()).select_from(full_table_name)).first()
 
-                # result = session.exec(text(f'SELECT COUNT(*) FROM {full_table_name}')).first()
                 logger.info(f'Query result for existing records in table {table_name}: {result}')
                 if result and result > 0:
                     logger.info(f'Found existing record in {full_table_name}')
@@ -380,12 +379,11 @@ class DatabaseHandler:  # noqa: PLR0904
                 inspector = inspect(engine)
                 all_tables = inspector.get_table_names()
                 prefix = f'{schema_name}__'
-                tables_to_drop = [name for name in all_tables if name.startswith(prefix)]
-
-                with engine.begin() as conn:
-                    for table_name in tables_to_drop:
-                        conn.execute(text(f'DROP TABLE IF EXISTS "{table_name}"'))
-                        logger.info(f'Dropped table: {table_name}')
+                tables_to_drop: list[str] = [name for name in all_tables if name.startswith(prefix)]
+                tables_to_drop_models: list[Table] = [
+                    SQLModel.metadata.tables[name] for name in tables_to_drop if name in SQLModel.metadata.tables
+                ]
+                SQLModel.metadata.drop_all(bind=engine, tables=tables_to_drop_models)
 
                 logger.info(f'Dropped schema: {schema_name} ({len(tables_to_drop)} tables)')
         except Exception as e:
