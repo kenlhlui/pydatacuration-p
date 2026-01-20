@@ -12,7 +12,7 @@ from pydatacuration.checker.files_open_checker import FilesOpener
 from pydatacuration.checker.metadata_checker import MetadataChecker
 from pydatacuration.checker.spell_checker import SpellCheckerCustomized
 from pydatacuration.checksum import Checksum
-from pydatacuration.database_handler import DatabaseHandler
+from pydatacuration.db.database_handler import DatabaseHandler
 from pydatacuration.httpx_client import HTTPXClient
 from pydatacuration.utils.unzip import Unzipper
 from pydatacuration.utils.utils import check_readme_file_existence

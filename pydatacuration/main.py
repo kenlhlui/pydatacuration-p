@@ -13,13 +13,13 @@ from rich.progress import Progress
 from rich.progress import SpinnerColumn
 from trogon.typer import init_tui
 
+from pydatacuration.db.database_handler import DatabaseHandler
 from pydatacuration.utils import directory_manager
 from pydatacuration.utils import utils
 from pydatacuration.utils.custom_logging import add_cli_run_logging
 from pydatacuration.utils.custom_logging import logger
 from pydatacuration.utils.custom_logging import setup_global_logging
 
-from . import database_handler
 from . import downloads
 from .checker import Checker
 from .exceptions import DatasetAccessError
@@ -157,7 +157,7 @@ def get_dirs(ticket_number: str, main_dir: Path) -> directory_manager.DirectoryM
     return directory_manager.DirectoryManager(ticket_number, str(main_dir))
 
 
-def get_db(schema_name: str, db_file: Path) -> database_handler.DatabaseHandler:
+def get_db(schema_name: str, db_file: Path) -> DatabaseHandler:
     """Instantiate DatabaseHandler.
 
     Args:
@@ -165,9 +165,9 @@ def get_db(schema_name: str, db_file: Path) -> database_handler.DatabaseHandler:
         db_file (Path): DB file path.
 
     Returns:
-        database_handler.DatabaseHandler: DatabaseHandler instance.
+        DatabaseHandler: DatabaseHandler instance.
     """
-    return database_handler.DatabaseHandler(schema_name=schema_name, db_path=db_file)
+    return DatabaseHandler(schema_name=schema_name, db_path=db_file)
 
 
 @app.command()

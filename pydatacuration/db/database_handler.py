@@ -19,9 +19,8 @@ from sqlmodel import create_engine
 from sqlmodel import inspect
 from sqlmodel import select
 
+from pydatacuration.db.sqlmodels import DatabaseModels
 from pydatacuration.utils.custom_logging import logger
-
-from .sqlmodels import DatabaseModels
 
 
 class DatabaseHandler:  # noqa: PLR0904

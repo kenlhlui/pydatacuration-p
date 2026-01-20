@@ -11,9 +11,9 @@ from nicegui import app
 from nicegui import ui
 from sqlmodel import SQLModel
 
-from pydatacuration.database_handler import DatabaseHandler
+from pydatacuration.db.database_handler import DatabaseHandler
+from pydatacuration.db.sqlmodels import DatabaseModels
 from pydatacuration.exporter import Exporter
-from pydatacuration.sqlmodels import DatabaseModels
 from pydatacuration.utils.custom_logging import logger
 from pydatacuration.utils.custom_logging import setup_logging
 from pydatacuration.utils.directory_manager import DirectoryManager

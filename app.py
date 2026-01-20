@@ -19,7 +19,7 @@ from nicegui.elements.input import Input
 from sqlmodel import SQLModel
 
 # Import pydatacuration modules
-from pydatacuration.database_handler import DatabaseHandler
+from pydatacuration.db.database_handler import DatabaseHandler
 from pydatacuration.frontend.helpers import NiceGUIHelper
 from pydatacuration.frontend.helpers import back_to_main_menu_button
 from pydatacuration.frontend.helpers import priority_options
