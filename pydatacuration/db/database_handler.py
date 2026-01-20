@@ -268,7 +268,7 @@ class DatabaseHandler:  # noqa: PLR0904
         except Exception as e:
             logger.error(f'Error fetching records from table {model.__tablename__}: {e}')
 
-        # Return empty instance if no records found
+        # Return empty instance if no records found for return type consistency
         empty_instance = model()
         return [empty_instance.model_dump(mode='json')]
 
