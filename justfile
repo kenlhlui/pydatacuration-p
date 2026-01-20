@@ -29,3 +29,7 @@ docker-build-and-run *ARGS:
     docker compose down
     docker compose build
     docker compose up
+
+# Initiate the sqlite_web
+sqlite-web PORT='8080' PATH='workdir/db/database.db':
+    uvx sqlite_web -H 0.0.0.0 -p {{PORT}} -r {{PATH}}
