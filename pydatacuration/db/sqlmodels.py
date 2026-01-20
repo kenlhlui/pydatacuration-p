@@ -1,5 +1,6 @@
 """Module for SQLmodels."""
 
+from datetime import UTC
 from datetime import date
 from datetime import datetime
 from datetime import timedelta
@@ -12,6 +13,7 @@ from sqlalchemy import Interval
 from sqlmodel import DATE
 from sqlmodel import DATETIME
 from sqlmodel import JSON
+from sqlmodel import TIMESTAMP
 from sqlmodel import Field
 from sqlmodel import SQLModel
 from sqlmodel import SQLModel as BaseSQLModel
@@ -90,14 +92,14 @@ class DatabaseModels:
                 description='Date when the log was initialized',
             )
             log_last_update_date: date = Field(
-                default=date.today(),
+                default=datetime.now().astimezone().date(),
                 sa_column=Column(DATE, nullable=False),
                 description='Date when the log was last updated',
             )
             last_modified_datetime: datetime = Field(
-                default=datetime.today(),
-                sa_column=Column(DATETIME, nullable=False),
-                description='Timestamp when the log was last modified',
+                default_factory=lambda: datetime.now(UTC),
+                sa_column=Column(TIMESTAMP(timezone=True), nullable=False),
+                description='Timestamp when the log was last modified (stored as UTC)',
             )
 
         return ProjectMetadata
@@ -143,9 +145,9 @@ class DatabaseModels:
                 sa_column=Column(Interval, nullable=True), description='Time spent on this item'
             )
             last_modified_datetime: datetime = Field(
-                default=datetime.today(),
-                sa_column=Column(DATETIME, nullable=False),
-                description='Last modified datetime',
+                default_factory=lambda: datetime.now(UTC),
+                sa_column=Column(TIMESTAMP(timezone=True), nullable=False),
+                description='Last modified datetime (stored as UTC)',
             )
 
             @field_serializer('time_spent')
@@ -190,9 +192,9 @@ class DatabaseModels:
                 sa_column=Column(JSON, nullable=False), description='(Nested) List of check results'
             )  # This support writing a list[str] and list[dict] to duckdb # noqa
             last_modified_datetime: datetime = Field(
-                default=datetime.today(),
-                sa_column=Column(DATETIME, nullable=False),
-                description='Last modified datetime',
+                default_factory=lambda: datetime.now(UTC),
+                sa_column=Column(TIMESTAMP(timezone=True), nullable=False),
+                description='Last modified datetime (stored as UTC)',
             )
 
         return CheckResult

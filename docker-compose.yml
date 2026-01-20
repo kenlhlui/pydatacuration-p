@@ -4,6 +4,8 @@ services:
     image: data-curation-tool:latest
     container_name: data-curation-tool
     user: "${UID:-1000}:${GID:-1000}"
+    environment:
+      - TZ=America/Toronto # Set your desired timezone
     ports:
       - "9005:8080"
     env_file:

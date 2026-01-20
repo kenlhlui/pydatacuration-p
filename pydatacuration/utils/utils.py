@@ -3,6 +3,7 @@
 import os
 import re
 import sys
+from datetime import datetime
 from pathlib import Path
 from pathlib import PurePosixPath
 from urllib.parse import urlencode
@@ -223,3 +224,16 @@ def parse_dataset_url(base_url: str | None, pid: str | None) -> str:
         return urljoin(base, api_path) + '?' + query
 
     return 'No URL'
+
+
+def convert_datetime_to_local_timezone(datatime_obj: datetime) -> datetime:
+    """Convert a native datetime object from UTC to local timezone.
+
+    Args:
+        datatime_obj (datetime): The naive datetime object.
+
+    Returns:
+        datetime: The UTC timezone-aware datetime object.
+    """
+    timezone_info = datetime.now().astimezone().tzinfo
+    return datatime_obj.replace(tzinfo=timezone_info)

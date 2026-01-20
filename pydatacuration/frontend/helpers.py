@@ -3,6 +3,7 @@
 import re
 import time
 from collections.abc import Callable
+from datetime import datetime
 from datetime import timedelta
 from pathlib import Path
 from typing import Any
@@ -17,6 +18,7 @@ from pydatacuration.exporter import Exporter
 from pydatacuration.utils.custom_logging import logger
 from pydatacuration.utils.custom_logging import setup_logging
 from pydatacuration.utils.directory_manager import DirectoryManager
+from pydatacuration.utils.utils import convert_datetime_to_local_timezone
 
 
 setup_logging()
@@ -309,8 +311,14 @@ class NiceGUIHelper:
 
                     # Turn the last_modified_datetime into a YYYY-MM-DD HH:MM:SS format
                     last_modified_dt = project_metadata_record.get('last_modified_datetime')
+
+                    last_modified_dt_local = (
+                        convert_datetime_to_local_timezone(last_modified_dt) if last_modified_dt else None
+                    )
+                    logger.debug(f'Last modified (local) for {schema_name}: {last_modified_dt_local}')
+                    logger.debug(f'The timezone for this user: {datetime.now().astimezone().tzinfo}')
                     last_modified_display = (
-                        last_modified_dt.strftime('%Y-%m-%d %H:%M:%S') if last_modified_dt else 'Unknown'
+                        last_modified_dt_local.strftime('%Y-%m-%d %H:%M:%S') if last_modified_dt_local else 'Unknown'
                     )  # noqa: E501
 
                     project_metadata_record['last_modified'] = last_modified_display
