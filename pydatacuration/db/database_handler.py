@@ -11,6 +11,9 @@ from typing import Literal
 
 from sqlalchemy import Inspector
 from sqlalchemy import ScalarResult
+from sqlalchemy import column
+from sqlalchemy import func
+from sqlalchemy import table
 from sqlalchemy import text
 from sqlalchemy.engine import Engine
 from sqlmodel import Session
@@ -186,9 +189,11 @@ class DatabaseHandler:  # noqa: PLR0904
         try:
             with self.get_readonly_connection() as (session, engine):
                 # Build the full table name with schema prefix
-                full_table_name = f'{self.schema_name}__{table_name}'
+                full_table_name = table(f'{self.schema_name}__{table_name}')
 
-                result = session.exec(text(f'SELECT COUNT(*) FROM {full_table_name}')).first()
+                result = session.exec(select(func.count()).select_from(full_table_name)).first()
+
+                # result = session.exec(text(f'SELECT COUNT(*) FROM {full_table_name}')).first()
                 logger.info(f'Query result for existing records in table {table_name}: {result}')
                 if result and result > 0:
                     logger.info(f'Found existing record in {full_table_name}')
