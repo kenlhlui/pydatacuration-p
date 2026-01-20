@@ -99,6 +99,9 @@ class DatabaseHandler:  # noqa: PLR0904
         session = Session(self.engine)
         try:
             yield session, self.engine
+        except Exception:
+            session.rollback()
+            raise
         finally:
             session.close()
 
@@ -126,6 +129,9 @@ class DatabaseHandler:  # noqa: PLR0904
         session = Session(engine)
         try:
             yield session, engine
+        except Exception:
+            session.rollback()
+            raise
         finally:
             session.close()
             # Only dispose of PostgreSQL engines we created
