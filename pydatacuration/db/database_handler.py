@@ -1,13 +1,13 @@
 """The module for SQLite/PostgreSQL database handling using SQLModel."""
 
+import datetime
 from collections.abc import Generator
 from contextlib import contextmanager
-from datetime import UTC
-from datetime import datetime
 from datetime import timedelta
 from pathlib import Path
 from typing import Any
 from typing import Literal
+from zoneinfo import ZoneInfo
 
 from sqlalchemy import Inspector
 from sqlalchemy import ScalarResult
@@ -427,7 +427,7 @@ class DatabaseHandler:  # noqa: PLR0904
 
                 # Update the last modified timestamp if it exists
                 if hasattr(existing_item, 'last_modified_datetime'):
-                    existing_item.last_modified_datetime = datetime.now(UTC)
+                    existing_item.last_modified_datetime = datetime.datetime.now().astimezone()
 
                 session.add(existing_item)
                 session.commit()
