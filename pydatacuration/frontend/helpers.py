@@ -57,9 +57,9 @@ class NiceGUIHelper:
             list: List of checklist items with their details.
 
         """
-        duck_db_data = self.database_handler.read_checklist(mode='python')
+        database_data = self.database_handler.read_checklist(mode='python')
         items = []
-        for item in duck_db_data.get('checklist', []):
+        for item in database_data.get('checklist', []):
             # Convert timedelta to MM:SS format for display
             # ! Temp fix for time_spent being stored as string in older DBs
             time_spent_value = item.get('time_spent', '')

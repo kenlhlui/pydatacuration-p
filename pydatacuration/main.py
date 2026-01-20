@@ -279,7 +279,6 @@ def check(
         None: Writes check results to database and logs.
     """
     dirs: directory_manager.DirectoryManager = get_dirs(ticket_number, ctx.obj.main_dir)
-    # duck = get_duck(schema_name=dirs.ticket_number, db_file=dirs.db_path)
     db = get_db(schema_name=dirs.ticket_number, db_file=dirs.db_path)
 
     add_cli_run_logging(dirs.log_files_dir)
