@@ -6,11 +6,10 @@ from typing import Any
 import yaml
 from docxtpl import DocxTemplate
 
+from pydatacuration.db.duck_db import DuckDB
+from pydatacuration.db.sqlmodels import DuckDBmodels
 from pydatacuration.utils.custom_logging import logger
 from pydatacuration.utils.directory_manager import DirectoryManager
-
-from .duck_db import DuckDB
-from .sqlmodels import DuckDBmodels
 
 
 class Exporter:
