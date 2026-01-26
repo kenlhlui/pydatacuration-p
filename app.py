@@ -249,17 +249,17 @@ async def new_dataset_page() -> None:
         # Form state - automatically persisted
         # Initialize with environment variable defaults
         default_form_data = {
-            'pid': '',
-            'ticket_number': '',
-            'collection_alias': '',
+            'pid': os.getenv('PID', ''),
+            'ticket_number': os.getenv('TICKET_NUMBER', ''),
+            'collection_alias': os.getenv('COLLECTION_ALIAS', ''),
             'base_url': os.getenv('BASE_URL', ''),
             'api_token': os.getenv('API_TOKEN', ''),
             'curator_name': os.getenv('CURATOR_NAME', ''),
             'curator_email': os.getenv('CURATOR_EMAIL', ''),
             'main_dir': str(MAIN_DIR.resolve()),
-            'force_del': False,
-            'check_zip': True,
-            'checklist': 'high',
+            'force_del': os.getenv('FORCE_DELETE', 'false').lower() == 'true',
+            'check_zip': os.getenv('CHECK_ZIP', 'false').lower() == 'true',
+            'checklist': os.getenv('CHECK_LIST', 'high'),
         }
 
         # Get existing form data or create new
