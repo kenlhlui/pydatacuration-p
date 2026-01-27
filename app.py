@@ -184,10 +184,8 @@ async def main_page() -> None:
     with ui.column().classes('main-container'):
         # Logo and Header container (centered)
         with ui.element('div').style('text-align: center; width: 100%;'):
-            ui.markdown(
-                '<img src="/static/UTL.png" '
-                'alt="University of Toronto Libraries Logo" '
-                'style="height: 60px; width: auto; margin: 8px auto; display: block;">',
+            ui.image('/static/UTL.png').style('height: 60px; width: auto; margin: 8px auto; display: block;').props(
+                'alt="University of Toronto Libraries Logo"'
             )
             ui.markdown(
                 '<h1 style="color: #1E3765; font-size: 2.6rem; margin-bottom: 10px; margin-top: 10px;">'
@@ -237,12 +235,8 @@ async def new_dataset_page() -> None:
 
     with ui.column().classes('pdc-container').style('width: 100%; max-width: 800px;'):
         # Logo
-        ui.html(
-            '<img src="/static/UTL.png" '
-            'alt="University of Toronto Libraries Logo" '
-            'class="pdc-logo" '
-            'style="height: 60px; width: auto; margin: 8px;">',
-            sanitize=sanitizer.sanitize,
+        ui.image('/static/UTL.png').style('height: 60px; width: auto; margin: 8px auto; display: block;').props(
+            'alt="University of Toronto Libraries Logo"'
         )
 
         # Header
@@ -633,9 +627,11 @@ async def render_project_table(
                             # Ticket Number
                             with ui.element('td'):
                                 if mode == 'resume':
-                                    with ui.element('a').props(
-                                        f'href="/checklist?ticket_number={schema["ticket_number"]}"'
-                                    ).style('color: #3498db; text-decoration: none; font-weight: 600;'):
+                                    with (
+                                        ui.element('a')
+                                        .props(f'href="/checklist?ticket_number={schema["ticket_number"]}"')
+                                        .style('color: #3498db; text-decoration: none; font-weight: 600;')
+                                    ):
                                         ui.label(f'📋 {schema["ticket_number"]}')
                                 else:
                                     ui.label(f'📋 {schema["ticket_number"]}').style('font-weight: 600;')
@@ -644,19 +640,21 @@ async def render_project_table(
                             with ui.element('td'):
                                 with ui.element('div'):
                                     ui.html('<strong>Title:</strong> ', sanitize=False)
-                                    ui.label(schema.get("dataset_title", "N/A")).style('display: inline;')
+                                    ui.label(schema.get('dataset_title', 'N/A')).style('display: inline;')
                                 with ui.element('div'):
                                     ui.html('<strong>PID:</strong> ', sanitize=False)
-                                    ui.label(schema.get("dataset_pid", "N/A")).style('display: inline;')
+                                    ui.label(schema.get('dataset_pid', 'N/A')).style('display: inline;')
                                 with ui.element('div'):
                                     ui.html('<strong>ID (Versioned):</strong> ', sanitize=False)
-                                    ui.label(schema.get("dataset_id", "N/A")).style('display: inline;')
+                                    ui.label(schema.get('dataset_id', 'N/A')).style('display: inline;')
                                 with ui.element('div'):
                                     ui.html('<strong>URL:</strong> ', sanitize=False)
-                                    with ui.element('a').props(
-                                        f'href="{schema.get("dataset_url", "N/A")}" target="_blank"'
-                                    ).style('display: inline;'):
-                                        ui.label(schema.get("dataset_url", "N/A"))
+                                    with (
+                                        ui.element('a')
+                                        .props(f'href="{schema.get("dataset_url", "N/A")}" target="_blank"')
+                                        .style('display: inline;')
+                                    ):
+                                        ui.label(schema.get('dataset_url', 'N/A'))
                             # Curator
                             with ui.element('td'):
                                 ui.label(schema.get('curator_name', 'N/A'))
@@ -700,12 +698,8 @@ async def resume_work_page() -> None:
 
     with ui.column().classes('pdc-container'):
         # Logo and Header
-        ui.html(
-            '<img src="/static/UTL.png" '
-            'alt="University of Toronto Libraries Logo" '
-            'class="pdc-logo" '
-            'style="height: 60px; width: auto; margin: 8px;">',
-            sanitize=False,
+        ui.image('/static/UTL.png').style('height: 60px; width: auto; margin: 8px auto; display: block;').props(
+            'alt="University of Toronto Libraries Logo"'
         )
         ui.label('Resume Project').classes('pdc-header')
 
@@ -734,12 +728,8 @@ async def delete_project_page() -> None:
 
     with container:
         # Logo and Header
-        ui.html(
-            '<img src="/static/UTL.png" '
-            'alt="University of Toronto Libraries Logo" '
-            'class="pdc-logo" '
-            'style="height: 60px; width: auto; margin: 8px;">',
-            sanitize=False,
+        ui.image('/static/UTL.png').style('height: 60px; width: auto; margin: 8px auto; display: block;').props(
+            'alt="University of Toronto Libraries Logo"'
         )
         ui.label('Delete Project').classes('pdc-header')
 
@@ -817,12 +807,8 @@ async def checklist_page(ticket_number: str) -> None:
 
     with ui.column().classes('pdc-container'):
         # Logo
-        ui.html(
-            '<img src="/static/UTL.png" '
-            'alt="University of Toronto Libraries Logo" '
-            'class="pdc-logo" '
-            'style="height: 60px; width: auto; margin: 8px;">',
-            sanitize=False,
+        ui.image('/static/UTL.png').style('height: 60px; width: auto; margin: 8px auto; display: block;').props(
+            'alt="University of Toronto Libraries Logo"'
         )
 
         # Header, with dynamic checklist type
