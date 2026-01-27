@@ -7,7 +7,7 @@ services:
     ports:
       - "9005:8080"
     environment:
-      - TZ=America/New_York  # Set your desired with tz database time zones
+      - TZ=America/Toronto  # Set your desired with tz database time zones
     env_file:
       - ./.env  # Configure the path to your .env file if it's located elsewhere
     volumes:
