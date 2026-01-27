@@ -18,7 +18,8 @@ from nicegui import ui
 from nicegui.elements.input import Input
 from sqlmodel import SQLModel
 
-from pydatacuration.duck_db import DuckDB
+from pydatacuration.db.duck_db import DuckDB
+from pydatacuration.db.sqlmodels import DuckDBmodels
 from pydatacuration.frontend.helpers import NiceGUIHelper
 from pydatacuration.frontend.helpers import back_to_main_menu_button
 from pydatacuration.frontend.helpers import priority_options
@@ -35,7 +36,6 @@ from pydatacuration.main import CtxObj
 
 # Import the typer app for CLI command execution
 from pydatacuration.main import run_all
-from pydatacuration.sqlmodels import DuckDBmodels
 from pydatacuration.utils.custom_logging import logger
 from pydatacuration.utils.custom_logging import setup_logging
 
@@ -249,17 +249,17 @@ async def new_dataset_page() -> None:
         # Form state - automatically persisted
         # Initialize with environment variable defaults
         default_form_data = {
-            'pid': '',
-            'ticket_number': '',
-            'collection_alias': '',
+            'pid': os.getenv('PID', ''),
+            'ticket_number': os.getenv('TICKET_NUMBER', ''),
+            'collection_alias': os.getenv('COLLECTION_ALIAS', ''),
             'base_url': os.getenv('BASE_URL', ''),
             'api_token': os.getenv('API_TOKEN', ''),
             'curator_name': os.getenv('CURATOR_NAME', ''),
             'curator_email': os.getenv('CURATOR_EMAIL', ''),
             'main_dir': str(MAIN_DIR.resolve()),
-            'force_del': False,
-            'check_zip': True,
-            'checklist': 'high',
+            'force_del': os.getenv('FORCE_DELETE', 'false').lower() == 'true',
+            'check_zip': os.getenv('CHECK_ZIP', 'false').lower() == 'true',
+            'checklist': os.getenv('CHECK_LIST', 'high'),
         }
 
         # Get existing form data or create new

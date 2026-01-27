@@ -4,3 +4,20 @@ Run the following to launch the Web UI to launch the app in localhost:9001
 ```bash
 uvicorn app:app --reload --host 0.0.0.0 --port 9001
 ```
+
+# Dev settings in .env file
+To quicker populate the new dataset form in the Web UI, you can set the following environment variables in the `.env` file:
+
+```bash
+# Dev settings, for prefilling the new dataset form for faster testing
+PID = 'doi:10.80240/FK2/FCZB4A'
+TICKET_NUMBER = 'CUR-999'
+FORCE_DELETE = true
+CHECK_ZIP = true
+CHECK_LIST =  'high'
+COLLECTION_ALIAS = 'toronto'
+```
+
+You can then load `http://localhost:9005` in your web browser to access the Web UI for curating new datasets.
+
+These will prefill the respective fields in the new dataset form when you launch the Web UI.

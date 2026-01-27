@@ -11,9 +11,9 @@ from nicegui import app
 from nicegui import ui
 from sqlmodel import SQLModel
 
-from pydatacuration.duck_db import DuckDB
+from pydatacuration.db.duck_db import DuckDB
+from pydatacuration.db.sqlmodels import DuckDBmodels
 from pydatacuration.exporter import Exporter
-from pydatacuration.sqlmodels import DuckDBmodels
 from pydatacuration.utils.custom_logging import logger
 from pydatacuration.utils.custom_logging import setup_logging
 from pydatacuration.utils.directory_manager import DirectoryManager
@@ -286,7 +286,7 @@ class NiceGUIHelper:
         """
         try:
             db_dir = Path(main_dir) / 'db'
-            db_file = db_dir / 'duckdb.db'
+            db_file = db_dir / DirectoryManager.DB_FILE_NAME
 
             if not db_file.exists():
                 return []
@@ -357,8 +357,8 @@ class NiceGUIHelper:
                 tuple[bool, str]: Success status and message
             """
             try:
-                db_dir = Path(main_dir) / 'db'
-                db_file = db_dir / 'duckdb.db'
+                db_dir = Path(main_dir) / DirectoryManager.DB_SUBDIR
+                db_file = db_dir / DirectoryManager.DB_FILE_NAME
 
                 if not db_file.exists():
                     return False, 'Database file not found'

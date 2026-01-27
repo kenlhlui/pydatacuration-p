@@ -14,18 +14,18 @@ run-tests-with-report-html:
     coverage html
 
 
-# Remove workdir (with confirmation), recreate it, then rebuild and run containers
+# Remove new_dir (with confirmation), recreate it, then rebuild and run containers
 docker-build-and-run *ARGS:
-    @if [ -d ./workdir ] && [ "{{ARGS}}" != "-f" ]; then \
-        read -p "Remove ./workdir? [y/N] " ans; \
+    @if [ -d ./new_dir ] && [ "{{ARGS}}" != "-f" ]; then \
+        read -p "Remove ./new_dir? [y/N] " ans; \
         case "$$ans" in [Yy]*) ;; *) echo "Aborted."; exit 1 ;; esac; \
     fi
-    @if [ -d ./workdir ]; then rm -rf ./workdir; fi
-    @mkdir -p ./workdir
+    @if [ -d ./new_dir ]; then rm -rf ./new_dir; fi
+    @mkdir -p ./new_dir/db
     @if [ "{{ARGS}}" != "-f" ]; then \
         read -p "This will stop/remove containers and rebuild. Continue? [y/N] " ans; \
         case "$$ans" in [Yy]*) ;; *) echo "Aborted."; exit 1 ;; esac; \
     fi
-    docker compose down
-    docker compose build
-    docker compose up
+    UID=$(id -u) GID=$(id -g) docker compose down
+    UID=$(id -u) GID=$(id -g) docker compose build
+    UID=$(id -u) GID=$(id -g) docker compose up --force-recreate

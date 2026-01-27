@@ -9,6 +9,10 @@ from .custom_logging import logger
 class DirectoryManager:
     """Generic directory manager for creating and managing project directories."""
 
+    # Pre-defined constants
+    DB_FILE_NAME = 'db.duckdb'
+    DB_SUBDIR = 'db'
+
     def __init__(self, ticket_number: str, main_dir: str | Path, res_dir: str | Path | None = None) -> None:
         """Initialize the class.
 
@@ -54,7 +58,7 @@ class DirectoryManager:
         Returns:
             Path: The path object of the database directory.
         """
-        return Path(self.main_dir_path, 'db').resolve()
+        return Path(self.main_dir_path, self.DB_SUBDIR).resolve()
 
     def _define_db_path(self) -> Path:
         """Define the database file path.
@@ -62,7 +66,7 @@ class DirectoryManager:
         Returns:
             Path: The path object of the database file.
         """
-        return Path(self._define_db_dir(), 'duckdb.db').resolve()
+        return Path(self._define_db_dir(), self.DB_FILE_NAME).resolve()
 
     def get_dir(self, dir_name: str) -> Path:
         """Get a directory path by name.

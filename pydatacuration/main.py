@@ -13,6 +13,7 @@ from rich.progress import Progress
 from rich.progress import SpinnerColumn
 from trogon.typer import init_tui
 
+from pydatacuration.db import duck_db
 from pydatacuration.utils import directory_manager
 from pydatacuration.utils import utils
 from pydatacuration.utils.custom_logging import add_cli_run_logging
@@ -20,7 +21,6 @@ from pydatacuration.utils.custom_logging import logger
 from pydatacuration.utils.custom_logging import setup_global_logging
 
 from . import downloads
-from . import duck_db
 from .checker import Checker
 from .exceptions import DatasetAccessError
 
