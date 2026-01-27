@@ -1027,14 +1027,11 @@ async def render_checklist_table(  # noqa: PLR0913, C901, PLR0917
                                 checks_info = []
 
                                 if automated_check_ids:
-                                    all_results = duckdb_instance.sql_read_table_records(
-                                        DuckDBmodels(ticket_number).check_results()
+                                    checks_info = duckdb_instance.sql_read_with_in_filter(
+                                        DuckDBmodels(ticket_number).check_results(),
+                                        'check_id',
+                                        automated_check_ids,
                                     )
-                                    # Filter in Python
-                                    id_set = set(automated_check_ids)
-                                    for result in all_results:
-                                        if result.get('check_id') in id_set:
-                                            checks_info.append(result)
 
                                 # Display Tool Checks header with check names
                                 with ui.element('div').classes('pdc-instructions-header'):
@@ -1056,7 +1053,7 @@ async def render_checklist_table(  # noqa: PLR0913, C901, PLR0917
                             if checks_info:
                                 results_displayed = False
                                 for result in checks_info:
-                                    if result and len(result['results']) > 0:
+                                    if result and result.get('results') and len(result['results']) > 0:
                                         with ui.element('div').classes('pdc-dynamic-check-results'):
                                             render_check_results(result)
                                         results_displayed = True
@@ -1124,9 +1121,7 @@ def render_check_results(results: dict) -> None:
     """Render check results based on their type (list, dict, or other).
 
     Args:
-        results (Any): The results data to render (can be list, dict, or other types).
-        result_name (str): The name of the result to display as a sub-label.
-        check_id (str): The check identifier to display as a label.
+        results (dict): The results data to render (can be list, dict, or other types).
 
     """
     check_id = results.get('check_id', 'Unknown Check ID')
