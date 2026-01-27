@@ -62,7 +62,7 @@ class DirectoryManager:
         Returns:
             Path: The path object of the database file.
         """
-        return Path(self._define_db_dir(), 'duckdb.db').resolve()
+        return Path(self._define_db_dir(), 'db.duckdb').resolve()
 
     def get_dir(self, dir_name: str) -> Path:
         """Get a directory path by name.

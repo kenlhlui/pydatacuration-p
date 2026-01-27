@@ -286,7 +286,7 @@ class NiceGUIHelper:
         """
         try:
             db_dir = Path(main_dir) / 'db'
-            db_file = db_dir / 'duckdb.db'
+            db_file = db_dir / 'db.duckdb'
 
             if not db_file.exists():
                 return []
@@ -358,7 +358,7 @@ class NiceGUIHelper:
             """
             try:
                 db_dir = Path(main_dir) / 'db'
-                db_file = db_dir / 'duckdb.db'
+                db_file = db_dir / 'db.duckdb'
 
                 if not db_file.exists():
                     return False, 'Database file not found'
