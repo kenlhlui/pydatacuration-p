@@ -6,6 +6,8 @@ services:
     user: "${UID:-1000}:${GID:-1000}"
     ports:
       - "9005:8080"
+    environment:
+      - TZ=America/New_York  # Set your desired with tz database time zones
     env_file:
       - ./.env  # Configure the path to your .env file if it's located elsewhere
     volumes:
