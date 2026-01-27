@@ -1016,11 +1016,23 @@ async def render_checklist_table(  # noqa: PLR0913, C901, PLR0917
                         if item_check_type:
                             create_check_type_badge(item_check_type)
 
-                        # 2. Show tool execution
-                        tool_explanation = getattr(item, 'tool_explanation', None)
-                        if tool_explanation:
-                            with ui.element('div').classes('pdc-tool-execution'):
-                                ui.markdown(f'**Tool Checks:**\n\n{tool_explanation}')
+                        # 2. Show tool execution - fetch check names from automated_check_ids
+                        automated_check_ids = getattr(item, 'automated_check_ids', [])
+                        if automated_check_ids:
+                            check_names = []
+                            for ac_id in automated_check_ids:
+                                result: dict | None = duckdb_instance.sql_read_row(
+                                    DuckDBmodels(ticket_number).check_results(),
+                                    'check_id',
+                                    ac_id,
+                                )
+                                if result and result.get('check_name'):
+                                    check_names.append(result['check_name'])
+
+                            if check_names:
+                                with ui.element('div').classes('pdc-tool-execution'):
+                                    check_list = '\n'.join([f'- {name}' for name in check_names])
+                                    ui.markdown(f'**Tool Checks:**\n\n{check_list}')
 
                         # 3. Render automated check results if applicable
                         automated_check_ids = getattr(item, 'automated_check_ids', [])

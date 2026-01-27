@@ -129,7 +129,7 @@ class DuckDBmodels:
             )
             tool_explanation: str = Field(
                 sa_column=Column(String, nullable=True),
-                description='Explanation of what automated tools check for this item (shown to user, supports markdown)',
+                description='Explanation of what automated tools check for this item (shown to user, supports markdown)',  # noqa: E501
             )
             curator_check_item: str = Field(
                 sa_column=Column(String, nullable=True),
