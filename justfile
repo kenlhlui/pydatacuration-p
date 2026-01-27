@@ -21,11 +21,11 @@ docker-build-and-run *ARGS:
         case "$$ans" in [Yy]*) ;; *) echo "Aborted."; exit 1 ;; esac; \
     fi
     @if [ -d ./new_dir ]; then rm -rf ./new_dir; fi
-    @mkdir -p ./new_dir
+    @mkdir -p ./new_dir/db
     @if [ "{{ARGS}}" != "-f" ]; then \
         read -p "This will stop/remove containers and rebuild. Continue? [y/N] " ans; \
         case "$$ans" in [Yy]*) ;; *) echo "Aborted."; exit 1 ;; esac; \
     fi
-    docker compose down
-    docker compose build
-    docker compose up --build --force-recreate
+    UID=$(id -u) GID=$(id -g) docker compose down
+    UID=$(id -u) GID=$(id -g) docker compose build
+    UID=$(id -u) GID=$(id -g) docker compose up
