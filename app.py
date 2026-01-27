@@ -1003,7 +1003,7 @@ async def render_checklist_table(  # noqa: PLR0913, C901, PLR0917
                             ui.markdown(item.action)
                         if item.instructions:
                             with ui.element('div').classes('pdc-instructions-header'):
-                                ui.html('Guidance:', sanitize=False)
+                                ui.html('<b>Guidance:</b>', sanitize=False)
                             ui.markdown(item.instructions).classes('pdc-instructions')
 
                     # Information Location
@@ -1041,7 +1041,9 @@ async def render_checklist_table(  # noqa: PLR0913, C901, PLR0917
                         # 4. Finally, show any manually entered information location
                         information_location = getattr(item, 'information_location', None)
                         if information_location:
-                            ui.markdown(information_location).classes('pdc-static-info-location')
+                            ui.markdown(f'**Curator checks:**\n\n{information_location}').classes(
+                                'pdc-static-info-location'
+                            )
                     # Status
                     with ui.element('td'):
                         create_status_select(
