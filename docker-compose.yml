@@ -14,6 +14,3 @@ services:
       - ./new_dir:/app/workdir  # Configure the path on the left side of colon to your desired host directory
       - ./res:/app/res  # Configure the path for the res directory
     restart: unless-stopped
-
-volumes:
-  cloudbeaver_data:
