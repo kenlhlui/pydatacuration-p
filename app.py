@@ -1038,14 +1038,16 @@ async def render_checklist_table(  # noqa: PLR0913, C901, PLR0917
                                             checks_info.append({'name': check_name, 'id': ac_id, 'result': result})
 
                                 # Display Tool Checks header with check names
+                                with ui.element('div').classes('pdc-instructions-header'):
+                                    ui.html('<b>Tool Checks:</b>', sanitize=False)
                                 if checks_info:
                                     check_names = [f'- {info["name"]}' for info in checks_info if info['name']]
                                     check_list = '\n'.join(check_names)
-                                    ui.markdown(f'**Tool Checks:**\n\n{check_list}')
+                                    ui.markdown(check_list)
                                 elif tool_explanation:
-                                    ui.markdown(f'**Tool Checks:**\n\n{tool_explanation}')
+                                    ui.markdown(tool_explanation)
                                 else:
-                                    ui.markdown('**Tool Checks:**\n\n*No automated checks configured*')
+                                    ui.markdown('*No automated checks configured*')
 
                             # 3. Render actual check results
                             if checks_info:
@@ -1065,9 +1067,9 @@ async def render_checklist_table(  # noqa: PLR0913, C901, PLR0917
                         # 4. Finally, show any manually entered information location
                         curator_check_item = getattr(item, 'curator_check_item', None)
                         if curator_check_item:
-                            ui.markdown(f'**Curator checks:**\n\n{curator_check_item}').classes(
-                                'pdc-static-curator-check-item'
-                            )
+                            with ui.element('div').classes('pdc-instructions-header'):
+                                ui.html('<b>Curator checks:</b>', sanitize=False)
+                            ui.markdown(curator_check_item).classes('pdc-static-curator-check-item')
                     # Status
                     with ui.element('td'):
                         create_status_select(
