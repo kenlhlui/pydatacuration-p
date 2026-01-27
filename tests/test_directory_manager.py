@@ -3,7 +3,6 @@
 from pathlib import Path
 
 import pytest
-
 from pydatacuration.directory_manager import DirectoryManager
 
 
@@ -60,9 +59,9 @@ def test_define_db_dir(main_dir: str | None, expected_db_dir: str) -> None:
 @pytest.mark.parametrize(
     ('main_dir', 'expected_db_path'),
     [
-        ('/home/user/projects', '/home/user/projects/db/duckdb.db'),
-        ('/data/main_dir', '/data/main_dir/db/duckdb.db'),
-        (None, str(Path.cwd() / 'db' / 'duckdb.db')),
+        ('/home/user/projects', '/home/user/projects/db/database.db'),
+        ('/data/main_dir', '/data/main_dir/db/database.db'),
+        (None, str(Path.cwd() / 'db' / 'database.db')),
     ],
 )
 def test_define_db_path(main_dir: str | None, expected_db_path: str) -> None:
@@ -232,11 +231,11 @@ def test_add_directory(tmp_path: Path) -> None:
     dir_manager = DirectoryManager(ticket_number='TEST-011', main_dir=tmp_path, res_dir=None)
     initial_count = len(dir_manager._directory_structure)
 
-    dir_manager.add_directory('new_dir', 'path/to/new_dir')
+    dir_manager.add_directory('workdir', 'path/to/workdir')
 
     assert len(dir_manager._directory_structure) == initial_count + 1
-    assert 'new_dir' in dir_manager._directory_structure
-    assert dir_manager._directory_structure['new_dir'] == 'path/to/new_dir'
+    assert 'workdir' in dir_manager._directory_structure
+    assert dir_manager._directory_structure['workdir'] == 'path/to/workdir'
 
 
 def test_list_directories(tmp_path: Path) -> None:
@@ -344,7 +343,7 @@ def test_property_db_path(tmp_path: Path) -> None:
         tmp_path (Path): Pytest fixture for temporary directory.
     """
     dir_manager = DirectoryManager(ticket_number='TEST-016', main_dir=tmp_path, res_dir=None)
-    assert dir_manager.db_path == tmp_path / 'db' / 'duckdb.db'
+    assert dir_manager.db_path == tmp_path / 'db' / 'database.db'
 
 
 def test_property_outputs_dir(tmp_path: Path) -> None:

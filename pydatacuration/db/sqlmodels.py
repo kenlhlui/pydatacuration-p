@@ -1,5 +1,6 @@
 """Module for SQLmodels."""
 
+from datetime import UTC
 from datetime import date
 from datetime import datetime
 from datetime import timedelta
@@ -12,6 +13,7 @@ from sqlalchemy import Interval
 from sqlmodel import DATE
 from sqlmodel import DATETIME
 from sqlmodel import JSON
+from sqlmodel import TIMESTAMP
 from sqlmodel import Field
 from sqlmodel import SQLModel
 from sqlmodel import SQLModel as BaseSQLModel
@@ -19,15 +21,18 @@ from sqlmodel import String
 from sqlmodel import text
 
 
-# NOTE: The description field does not write into DuckDB; it's just for documentation purposes in this python file.
-class DuckDBmodels:
-    """SQLmodels implementation for writing to DuckDB."""
+class DatabaseModels:
+    """SQLmodels implementation for writing to Database (SQLite and PostgreSQL).
+
+    Uses a unified table naming convention: schema_name__table_name (double underscore separator)
+    to maximize compatibility across both SQLite and PostgreSQL without relying on PostgreSQL schemas.
+    """
 
     def __init__(self, schema_name: str) -> None:
-        """Initialize DuckDBmodels with the specified schema name.
+        """Initialize DatabaseModels with the specified schema name.
 
         Args:
-            schema_name (str): The name of the schema to use for the DuckDB tables.
+            schema_name (str): The name of the schema prefix to use for the Database tables.
         """
         self.schema_name = schema_name
 
@@ -38,15 +43,15 @@ class DuckDBmodels:
             type[SQLModel]: The ProjectMetadata class with the specified schema.
         """
         # Only clear if table already exists in metadata
-        table_key = f'{self.schema_name}.project_metadata'
-        if table_key in BaseSQLModel.metadata.tables:
-            BaseSQLModel.metadata.remove(BaseSQLModel.metadata.tables[table_key])
+        table_name = f'{self.schema_name}__project_metadata'
+        if table_name in BaseSQLModel.metadata.tables:
+            BaseSQLModel.metadata.remove(BaseSQLModel.metadata.tables[table_name])
 
         class ProjectMetadata(SQLModel, table=True):
             """Project metadata table model."""
 
-            __tablename__ = 'project_metadata'  # type: ignore[assignment]
-            __table_args__ = {'schema': self.schema_name}
+            __tablename__ = table_name  # type: ignore[assignment]
+            __table_args__ = {'extend_existing': True}
             ticket_number: str = Field(
                 default='', sa_column=Column(String, nullable=False, unique=True), description='Unique ticket number'
             )
@@ -87,14 +92,14 @@ class DuckDBmodels:
                 description='Date when the log was initialized',
             )
             log_last_update_date: date = Field(
-                default=date.today(),
+                default=datetime.now().astimezone().date(),
                 sa_column=Column(DATE, nullable=False),
                 description='Date when the log was last updated',
             )
             last_modified_datetime: datetime = Field(
-                default=datetime.today(),
-                sa_column=Column(DATETIME, nullable=False),
-                description='Timestamp when the log was last modified',
+                default_factory=lambda: datetime.now(UTC),
+                sa_column=Column(TIMESTAMP(timezone=True), nullable=False),
+                description='Timestamp when the log was last modified (stored as UTC)',
             )
 
         return ProjectMetadata
@@ -106,16 +111,15 @@ class DuckDBmodels:
             type[SQLModel]: The Checklist class with the specified schema.
         """
         # Clear metadata to avoid "already defined" errors in long-running processes
-
-        table_key = f'{self.schema_name}.checklist'
-        if table_key in BaseSQLModel.metadata.tables:
-            BaseSQLModel.metadata.remove(BaseSQLModel.metadata.tables[table_key])
+        table_name = f'{self.schema_name}__checklist'
+        if table_name in BaseSQLModel.metadata.tables:
+            BaseSQLModel.metadata.remove(BaseSQLModel.metadata.tables[table_name])
 
         class Checklist(SQLModel, table=True):
             """Checklist table model."""
 
-            __tablename__ = 'checklist'  # type: ignore[assignment]
-            __table_args__ = {'schema': self.schema_name, 'extend_existing': True}
+            __tablename__ = table_name  # type: ignore[assignment]
+            __table_args__ = {'extend_existing': True}
 
             id: str = Field(
                 sa_column=Column(String, nullable=False, primary_key=True), description='Unique checklist identifier'
@@ -141,9 +145,9 @@ class DuckDBmodels:
                 sa_column=Column(Interval, nullable=True), description='Time spent on this item'
             )
             last_modified_datetime: datetime = Field(
-                default=datetime.today(),
-                sa_column=Column(DATETIME, nullable=False),
-                description='Last modified datetime',
+                default_factory=lambda: datetime.now(UTC),
+                sa_column=Column(TIMESTAMP(timezone=True), nullable=False),
+                description='Last modified datetime (stored as UTC)',
             )
 
             @field_serializer('time_spent')
@@ -165,15 +169,15 @@ class DuckDBmodels:
             type[SQLModel]: The CheckResult class with the specified schema.
         """
         # Clear metadata to avoid "already defined" errors in long-running processes
-        table_key = f'{self.schema_name}.check_results'
-        if table_key in BaseSQLModel.metadata.tables:
-            BaseSQLModel.metadata.remove(BaseSQLModel.metadata.tables[table_key])
+        table_name = f'{self.schema_name}__check_results'
+        if table_name in BaseSQLModel.metadata.tables:
+            BaseSQLModel.metadata.remove(BaseSQLModel.metadata.tables[table_name])
 
         class CheckResult(SQLModel, table=True):
             """Check result list table model."""
 
-            __tablename__ = 'check_results'  # type: ignore[assignment]
-            __table_args__ = {'schema': self.schema_name, 'extend_existing': True}
+            __tablename__ = table_name  # type: ignore[assignment]
+            __table_args__ = {'extend_existing': True}
 
             check_name: str = Field(sa_column=Column(String, nullable=False), description='Name of the check')
             check_id: str = Field(
@@ -188,9 +192,9 @@ class DuckDBmodels:
                 sa_column=Column(JSON, nullable=False), description='(Nested) List of check results'
             )  # This support writing a list[str] and list[dict] to duckdb # noqa
             last_modified_datetime: datetime = Field(
-                default=datetime.today(),
-                sa_column=Column(DATETIME, nullable=False),
-                description='Last modified datetime',
+                default_factory=lambda: datetime.now(UTC),
+                sa_column=Column(TIMESTAMP(timezone=True), nullable=False),
+                description='Last modified datetime (stored as UTC)',
             )
 
         return CheckResult

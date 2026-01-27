@@ -10,6 +10,6 @@ services:
     env_file:
       - ./.env # Configure the path to your .env file if it's located elsewhere
     volumes:
-      - ./new_dir:/app/workdir:Z,U # Configure the path on the left side of colon to your desired host directory
+      - ./workdir:/app/workdir:Z,U # Configure the path on the left side of colon to your desired host directory
       - ./res:/app/res:Z,U # Configure the path for the res directory
     restart: unless-stopped

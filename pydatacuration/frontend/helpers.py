@@ -3,6 +3,7 @@
 import re
 import time
 from collections.abc import Callable
+from datetime import datetime
 from datetime import timedelta
 from pathlib import Path
 from typing import Any
@@ -11,40 +12,43 @@ from nicegui import app
 from nicegui import ui
 from sqlmodel import SQLModel
 
-from pydatacuration.duck_db import DuckDB
+from pydatacuration.db.database_handler import DatabaseHandler
+from pydatacuration.db.sqlmodels import DatabaseModels
 from pydatacuration.exporter import Exporter
-from pydatacuration.sqlmodels import DuckDBmodels
 from pydatacuration.utils.custom_logging import logger
 from pydatacuration.utils.custom_logging import setup_logging
 from pydatacuration.utils.directory_manager import DirectoryManager
+from pydatacuration.utils.utils import convert_datetime_to_local_timezone
 
 
 setup_logging()
 
 # Type alias for checklist items - uses dummy schema for type hints only
 # The actual schema name will be provided at runtime
-Checklist: type[SQLModel] = DuckDBmodels('_type_hints_').checklist()
+Checklist: type[SQLModel] = DatabaseModels('_type_hints_').checklist()
 
 
 class NiceGUIHelper:
     """Helper class for NiceGUI components."""
 
-    def __init__(self, duckdb: DuckDB, ticket_number: str, refresh_callback: Callable | None = None) -> None:
+    def __init__(
+        self, database_handler: DatabaseHandler, ticket_number: str, refresh_callback: Callable | None = None
+    ) -> None:
         """Initialize NiceGUIHelper.
 
         Args:
-            duckdb (DuckDB): Instance of DuckDB.
+            database_handler (DatabaseHandler): Instance of DatabaseHandler.
             ticket_number (str): Ticket number to work with.
             refresh_callback: Optional callback function to refresh the UI after updates.
         """
-        self.duckdb: DuckDB = duckdb
+        self.database_handler: DatabaseHandler = database_handler
         self.ticket_number: str = ticket_number
         self.refresh_callback = refresh_callback
         # Timer tracking: {item_id: {'start_time': timestamp, 'elapsed': seconds}}
         self.timers: dict[str, dict] = {}
 
     def get_checklist_items(self) -> list:
-        """Get all checklist items from the DuckDB database for the specified ticket.
+        """Get all checklist items from the database for the specified ticket.
 
         The checklist type is determined by what was stored in the database during setup.
 
@@ -55,9 +59,9 @@ class NiceGUIHelper:
             list: List of checklist items with their details.
 
         """
-        duck_db_data = self.duckdb.read_checklist(mode='python')
+        database_data = self.database_handler.read_checklist(mode='python')
         items = []
-        for item in duck_db_data.get('checklist', []):
+        for item in database_data.get('checklist', []):
             # Convert timedelta to MM:SS format for display
             # ! Temp fix for time_spent being stored as string in older DBs
             time_spent_value = item.get('time_spent', '')
@@ -87,7 +91,7 @@ class NiceGUIHelper:
 
     def handle_status_change(self, item_id: str, new_status: str) -> None:
         """Handle status change with auto-save."""
-        self.duckdb.sql_update_checklist_item(item_id=item_id, status=new_status)
+        self.database_handler.update_checklist_item(item_id=item_id, status=new_status)
         ui.notify(f'Status updated for {item_id}', type='positive', position='top-right', close_button=True)
         if self.refresh_callback:
             # Schedule the async callback to run
@@ -95,7 +99,7 @@ class NiceGUIHelper:
 
     def handle_comments_change(self, item_id: str, new_comments: str) -> None:
         """Handle comments change."""
-        self.duckdb.sql_update_checklist_item(item_id=item_id, comments=new_comments)
+        self.database_handler.update_checklist_item(item_id=item_id, comments=new_comments)
         ui.notify(f'Comments updated for {item_id}', type='positive', position='top-right', close_button=True)
         if self.refresh_callback:
             # Schedule the async callback to run
@@ -110,7 +114,7 @@ class NiceGUIHelper:
             minutes = int(parts[0])
             seconds = int(parts[1])
             time_spent_delta: timedelta = timedelta(minutes=minutes, seconds=seconds)
-            self.duckdb.sql_update_checklist_item(item_id=item_id, time_spent=time_spent_delta)
+            self.database_handler.update_checklist_item(item_id=item_id, time_spent=time_spent_delta)
             ui.notify(f'Time updated for {item_id}', type='positive', position='top-right', close_button=True)
             if self.refresh_callback:
                 # Schedule the async callback to run
@@ -214,7 +218,7 @@ class NiceGUIHelper:
 
         # Save to database as timedelta
         time_delta = timedelta(seconds=elapsed_seconds)
-        self.duckdb.sql_update_checklist_item(item_id=item_id, time_spent=time_delta)
+        self.database_handler.update_checklist_item(item_id=item_id, time_spent=time_delta)
 
         # Remove from active timers
         del self.timers[item_id]
@@ -279,34 +283,42 @@ class NiceGUIHelper:
 
     @staticmethod
     def get_all_schemas(main_dir: Path) -> list[dict]:
-        """Get all available schemas (projects) from DuckDB.
+        """Get all available schemas (projects) from the database.
 
         Returns:
             list[dict]: List of schemas with metadata
         """
         try:
             db_dir = Path(main_dir) / 'db'
-            db_file = db_dir / 'duckdb.db'
+            db_file = db_dir / 'database.db'
 
             if not db_file.exists():
                 return []
 
-            # Create a DuckDB instance to get schemas names for further querying
-            duck_db = DuckDB(schema_name='_system_query_', db_file=db_file)
-            schema_names = duck_db.get_all_schema_names()
+            # Create a DatabaseHandler instance to get schemas names for further querying
+            database_handler = DatabaseHandler(schema_name='_system_query_', db_path=db_file)
+            schema_names = database_handler.get_all_schema_names()
 
             # Get additional project metadata for each schema
             project_metadata_schema = []
             for schema_name in schema_names:
                 try:
                     # Try to get project metadata for last modified date
-                    schema_duck_db = DuckDB(schema_name=schema_name, db_file=db_file)
-                    project_metadata_record: dict[str, Any] = schema_duck_db.read_project_metadata_record(mode='python')
+                    schema_database_handler = DatabaseHandler(schema_name=schema_name, db_path=db_file)
+                    project_metadata_record: dict[str, Any] = schema_database_handler.read_project_metadata_record(
+                        mode='python'
+                    )
 
                     # Turn the last_modified_datetime into a YYYY-MM-DD HH:MM:SS format
                     last_modified_dt = project_metadata_record.get('last_modified_datetime')
+
+                    last_modified_dt_local = (
+                        convert_datetime_to_local_timezone(last_modified_dt) if last_modified_dt else None
+                    )
+                    logger.debug(f'Last modified (local) for {schema_name}: {last_modified_dt_local}')
+                    logger.debug(f'The timezone for this user: {datetime.now().astimezone().tzinfo}')
                     last_modified_display = (
-                        last_modified_dt.strftime('%Y-%m-%d %H:%M:%S') if last_modified_dt else 'Unknown'
+                        last_modified_dt_local.strftime('%Y-%m-%d %H:%M:%S') if last_modified_dt_local else 'Unknown'
                     )  # noqa: E501
 
                     project_metadata_record['last_modified'] = last_modified_display
@@ -318,7 +330,7 @@ class NiceGUIHelper:
                     logger.error(f'Could not get metadata for schema {schema_name}: {e}')
                     project_metadata_schema.append(
                         {
-                            'ticket_number': schema_name.replace('duckdb.', '').replace('"', ''),
+                            'ticket_number': schema_name,
                             'name': schema_name,
                             'last_modified': 'Unknown',
                             'has_metadata': False,
@@ -339,37 +351,36 @@ class NiceGUIHelper:
         """Delete a specific project by removing its schema and the project directory.
 
         Args:
-            schema_name (str | None): Name of the schema to delete (includes duckdb. prefix)
+            schema_name (str | None): Name of the schema to delete
             main_dir (Path): Main directory where the database, logs, and project directories are stored.
 
         """
         if not schema_name:
             return False, 'Invalid schema name'
-        schema_name_pruned = schema_name.replace('duckdb.', '').replace('"', '')
 
-        def delete_schema(schema_name_pruned: str) -> tuple[bool, str]:
-            """Delete a specific schema from DuckDB.
+        def delete_schema(schema_name: str) -> tuple[bool, str]:
+            """Delete a specific schema from database.
 
             Args:
-                schema_name_pruned (str): Name of the schema to delete (without duckdb. prefix)
+                schema_name (str): Name of the schema to delete
 
             Returns:
                 tuple[bool, str]: Success status and message
             """
             try:
                 db_dir = Path(main_dir) / 'db'
-                db_file = db_dir / 'duckdb.db'
+                db_file = db_dir / 'database.db'
 
                 if not db_file.exists():
                     return False, 'Database file not found'
 
-                # Create a DuckDB instance to delete the schema
-                duck_db = DuckDB(schema_name='_system_query_', db_file=db_file)
+                # Create a DatabaseHandler instance to delete the schema
+                database_handler = DatabaseHandler(schema_name='_system_query_', db_path=db_file)
 
                 # Delete the schema
-                duck_db.sql_drop_schema(schema_name_pruned)
+                database_handler.drop_schema(schema_name)
 
-                return True, f'Schema {schema_name_pruned} deleted successfully'
+                return True, f'Schema {schema_name} deleted successfully'
 
             except Exception as e:
                 return False, f'Error deleting schema: {str(e)}'
@@ -378,7 +389,7 @@ class NiceGUIHelper:
             """Delete the project directory for a specific ticket number.
 
             Args:
-                ticket_number (str): Ticket number of the project to delete (is schema_name_pruned)
+                ticket_number (str): Ticket number of the project to delete
 
             """
             try:
@@ -387,24 +398,24 @@ class NiceGUIHelper:
             except Exception as e:
                 logger.error(f'Error deleting project directory for {ticket_number}: {e}')
 
-        delete_project_directory(schema_name_pruned)
-        delete_schema(schema_name_pruned)
-        return True, f'Project {schema_name_pruned} deleted successfully'
+        delete_project_directory(schema_name)
+        delete_schema(schema_name)
+        return True, f'Project {schema_name} deleted successfully'
 
     @staticmethod
     def export_word_button(
-        duckdb: DuckDB, dir_manager: DirectoryManager, word_template_name: str | None = None
+        db: DatabaseHandler, dir_manager: DirectoryManager, word_template_name: str | None = None
     ) -> None:
         """Save curation report to Word."""
-        exporter = Exporter(duckdb, dir_manager)
+        exporter = Exporter(db, dir_manager)
         exporter.export_word(word_template_name=word_template_name)
 
         ui.notify('Curation report saved successfully!', type='positive')
 
     @staticmethod
-    def export_yaml_button(duckdb: DuckDB, dir_manager: DirectoryManager) -> None:
+    def export_yaml_button(db: DatabaseHandler, dir_manager: DirectoryManager) -> None:
         """Export YAML file from the project directory."""
-        exporter = Exporter(duckdb, dir_manager)
+        exporter = Exporter(db, dir_manager)
         exporter.export_yaml()
 
         ui.notify('YAML exported successfully!', type='positive')

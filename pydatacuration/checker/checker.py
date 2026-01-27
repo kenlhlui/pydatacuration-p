@@ -12,9 +12,8 @@ from pydatacuration.checker.files_open_checker import FilesOpener
 from pydatacuration.checker.metadata_checker import MetadataChecker
 from pydatacuration.checker.spell_checker import SpellCheckerCustomized
 from pydatacuration.checksum import Checksum
-from pydatacuration.duck_db import DuckDB
+from pydatacuration.db.database_handler import DatabaseHandler
 from pydatacuration.httpx_client import HTTPXClient
-from pydatacuration.sqlmodels import DuckDBmodels
 from pydatacuration.utils.unzip import Unzipper
 from pydatacuration.utils.utils import check_readme_file_existence
 from pydatacuration.utils.utils import compare_files_and_metadata
@@ -36,7 +35,7 @@ class Checker:
         dv_tree: dict,
         workdir: Path,
         check_zip: bool,
-        duckdb_instance: DuckDB,
+        database_handler: DatabaseHandler,
         collection_alias: str | None = None,
         curator_name: str | None = None,
         curator_email: str | None = None,
@@ -51,7 +50,7 @@ class Checker:
             dv_tree (dict): The Dataverse tree metadata.
             workdir (Path): The working directory.
             check_zip (bool): Whether to check zip files.
-            duckdb_instance (DuckDB): An instance of the DuckDB class for database operations.
+            database_handler (DatabaseHandler): An instance of the DatabaseHandler class for database operations.
             collection_alias (str | None): The collection alias for the author name to be searched.
             curator_name (str | None): The name of the data curator.
             curator_email (str | None): The email of the data curator.
@@ -64,8 +63,8 @@ class Checker:
         self.workdir = workdir
         self.check_zip = check_zip
         self.collection_alias = collection_alias
-        self.duckdb_instance = duckdb_instance
-        self.sqlmodels = DuckDBmodels(self.duckdb_instance.schema_name)
+        self.database_instance = database_handler
+        self.sqlmodels = self.database_instance.models
         self.curator_name = curator_name
         self.curator_email = curator_email
         self.checklist_type = checklist_type
@@ -195,10 +194,9 @@ class Checker:
                 self.logger.info(f'README file found: {file_rel_path}')
                 readme_files.append(str(file_rel_path))
 
-        # DEBUG: Write to duckDB
         try:
             check_result_list_schema = self.sqlmodels.check_results()
-            self.duckdb_instance.sql_merge_records_to_table(
+            self.database_instance.merge_records_to_table(
                 check_result_list_schema(
                     check_id='filename_special_chars',
                     check_name='Files with Special Characters',
@@ -208,11 +206,11 @@ class Checker:
                 )
             )
         except Exception as e:
-            logger.error(f'Failed to write special character files to DuckDB: {e}')
+            logger.error(f'Failed to write special character files to Database: {e}')
 
         try:
             check_result_list_schema = self.sqlmodels.check_results()
-            self.duckdb_instance.sql_merge_records_to_table(
+            self.database_instance.merge_records_to_table(
                 check_result_list_schema(
                     check_id='missing_file_extensions',
                     check_name='Files Missing Extensions',
@@ -222,11 +220,11 @@ class Checker:
                 )
             )
         except Exception as e:
-            logger.error(f'Failed to write missing_file_extensions to DuckDB: {e}')
+            logger.error(f'Failed to write missing_file_extensions to Database: {e}')
 
         try:
             check_result_list_schema = self.sqlmodels.check_results()
-            self.duckdb_instance.sql_merge_records_to_table(
+            self.database_instance.merge_records_to_table(
                 check_result_list_schema(
                     check_id='readme_files',
                     check_name='README Files Found',
@@ -236,7 +234,7 @@ class Checker:
                 )
             )
         except Exception as e:
-            logger.error(f'Failed to write readme_files to DuckDB: {e}')
+            logger.error(f'Failed to write readme_files to Database: {e}')
 
     def check_file_open(self) -> None:
         """Check if the file can be opened."""
@@ -288,7 +286,7 @@ class Checker:
 
         try:
             check_result_list_schema = self.sqlmodels.check_results()
-            self.duckdb_instance.sql_merge_records_to_table(
+            self.database_instance.merge_records_to_table(
                 check_result_list_schema(
                     check_id='file_accessibility',
                     check_name='Inaccessible Files',
@@ -298,11 +296,11 @@ class Checker:
                 )
             )
         except Exception as e:
-            logger.error(f'Failed to write file_accessibility to DuckDB: {e}')
+            logger.error(f'Failed to write file_accessibility to Database: {e}')
 
         try:
             check_result_list_schema = self.sqlmodels.check_results()
-            self.duckdb_instance.sql_merge_records_to_table(
+            self.database_instance.merge_records_to_table(
                 check_result_list_schema(
                     check_id='unsupported_files',
                     check_name='Files with Unsupported Formats',
@@ -312,7 +310,7 @@ class Checker:
                 )
             )
         except Exception as e:
-            logger.error(f'Failed to write unsupported_files to DuckDB: {e}')
+            logger.error(f'Failed to write unsupported_files to Database: {e}')
 
     def check_common_file_format(self) -> None:
         """Check if the file format is in the common file format."""
@@ -332,7 +330,7 @@ class Checker:
 
         try:
             check_result_list_schema = self.sqlmodels.check_results()
-            self.duckdb_instance.sql_merge_records_to_table(
+            self.database_instance.merge_records_to_table(
                 check_result_list_schema(
                     check_id='uncommon_file_formats',
                     check_name='Files with Uncommon Formats',
@@ -342,7 +340,7 @@ class Checker:
                 )
             )
         except Exception as e:
-            logger.error(f'Failed to write uncommon_file_formats to DuckDB: {e}')
+            logger.error(f'Failed to write uncommon_file_formats to Database: {e}')
 
     def check_missing_metadata(self) -> None:
         """Check for missing metadata."""
@@ -395,7 +393,7 @@ class Checker:
 
         try:
             check_result_list_schema = self.sqlmodels.check_results()
-            self.duckdb_instance.sql_merge_records_to_table(
+            self.database_instance.merge_records_to_table(
                 check_result_list_schema(
                     check_id='missing_required_fields',
                     check_name='Missing Required Metadata Fields',
@@ -405,11 +403,11 @@ class Checker:
                 )
             )
         except Exception as e:
-            logger.error(f'Failed to write missing_required_fields to DuckDB: {e}')
+            logger.error(f'Failed to write missing_required_fields to Database: {e}')
 
         try:
             check_result_list_schema = self.sqlmodels.check_results()
-            self.duckdb_instance.sql_merge_records_to_table(
+            self.database_instance.merge_records_to_table(
                 check_result_list_schema(
                     check_id='authors_missing_affiliation',
                     check_name='Authors Without Affiliation',
@@ -419,11 +417,11 @@ class Checker:
                 )
             )
         except Exception as e:
-            logger.error(f'Failed to write authors_missing_affiliation to DuckDB: {e}')
+            logger.error(f'Failed to write authors_missing_affiliation to Database: {e}')
 
         try:
             check_result_list_schema = self.sqlmodels.check_results()
-            self.duckdb_instance.sql_merge_records_to_table(
+            self.database_instance.merge_records_to_table(
                 check_result_list_schema(
                     check_id='authors_missing_identifier',
                     check_name='Authors Without Identifier',
@@ -433,11 +431,11 @@ class Checker:
                 )
             )
         except Exception as e:
-            logger.error(f'Failed to write authors_missing_identifier to DuckDB: {e}')
+            logger.error(f'Failed to write authors_missing_identifier to Database: {e}')
 
         try:
             check_result_list_schema = self.sqlmodels.check_results()
-            self.duckdb_instance.sql_merge_records_to_table(
+            self.database_instance.merge_records_to_table(
                 check_result_list_schema(
                     check_id='authors_missing_scheme',
                     check_name='Authors Without Identifier Scheme',
@@ -447,7 +445,7 @@ class Checker:
                 )
             )
         except Exception as e:
-            logger.error(f'Failed to write authors_missing_scheme to DuckDB: {e}')
+            logger.error(f'Failed to write authors_missing_scheme to Database: {e}')
 
     def check_spelling(self) -> None:
         """Check for spelling mistakes in the metadata."""
@@ -478,7 +476,7 @@ class Checker:
 
         try:
             check_result_list_schema = self.sqlmodels.check_results()
-            self.duckdb_instance.sql_merge_records_to_table(
+            self.database_instance.merge_records_to_table(
                 check_result_list_schema(
                     check_name='Potential Spelling Errors',
                     check_id='potential_typos',
@@ -488,7 +486,7 @@ class Checker:
                 )
             )
         except Exception as e:
-            logger.error(f'Failed to write potential typos to DuckDB: {e}')
+            logger.error(f'Failed to write potential typos to Database: {e}')
 
     def check_dv_record(self) -> None:
         """Check if the author has deposited data in Dataverse.
@@ -537,7 +535,7 @@ class Checker:
 
         try:
             check_result_list_schema = self.sqlmodels.check_results()
-            self.duckdb_instance.sql_merge_records_to_table(
+            self.database_instance.merge_records_to_table(
                 check_result_list_schema(
                     check_id='author_dataverse_history',
                     check_name='Author Publication History',
@@ -547,7 +545,7 @@ class Checker:
                 )
             )
         except Exception as e:
-            logger.error(f'Failed to write author publication history to DuckDB: {e}')
+            logger.error(f'Failed to write author publication history to Database: {e}')
 
     def check_ds_tree_info(self) -> str | None:
         """Check the path of the dataset in the dataverse Repository."""
@@ -595,7 +593,7 @@ class Checker:
 
         try:
             check_result_list_schema: type[SQLModel] = self.sqlmodels.check_results()
-            self.duckdb_instance.sql_merge_records_to_table(
+            self.database_instance.merge_records_to_table(
                 check_result_list_schema(
                     check_id='restricted_files',
                     check_name='Restricted Access Files',
@@ -605,7 +603,7 @@ class Checker:
                 )
             )
         except Exception as e:
-            logger.error(f'Failed to write restricted_files to DuckDB: {e}')
+            logger.error(f'Failed to write restricted_files to Database: {e}')
 
     def check_terms_of_use(self) -> None:
         """Check if the terms of use are present."""
@@ -613,7 +611,7 @@ class Checker:
 
         try:
             check_result_list_schema = self.sqlmodels.check_results()
-            self.duckdb_instance.sql_merge_records_to_table(
+            self.database_instance.merge_records_to_table(
                 check_result_list_schema(
                     check_id='termsOfUse',
                     check_name='Terms of Use of the Dataset',
@@ -625,7 +623,7 @@ class Checker:
                 )
             )
         except Exception as e:
-            logger.error(f'Failed to write termsOfUse to DuckDB: {e}')
+            logger.error(f'Failed to write termsOfUse to Database: {e}')
 
     def check_terms_of_access(self) -> None:
         """Check if the terms of access are present."""
@@ -633,7 +631,7 @@ class Checker:
 
         try:
             check_result_list_schema = self.sqlmodels.check_results()
-            self.duckdb_instance.sql_merge_records_to_table(
+            self.database_instance.merge_records_to_table(
                 check_result_list_schema(
                     check_id='termsOfAccess',
                     check_name='Terms of Access of the Dataset',
@@ -645,7 +643,7 @@ class Checker:
                 )
             )
         except Exception as e:
-            logger.error(f'Failed to write termsOfAccess to DuckDB: {e}')
+            logger.error(f'Failed to write termsOfAccess to Database: {e}')
 
     def check_license(self) -> None:
         """Check if the terms of use and license are present."""
@@ -653,7 +651,7 @@ class Checker:
 
         try:
             check_result_list_schema = self.sqlmodels.check_results()
-            self.duckdb_instance.sql_merge_records_to_table(
+            self.database_instance.merge_records_to_table(
                 check_result_list_schema(
                     check_id='license',
                     check_name='License of the Dataset',
@@ -665,7 +663,7 @@ class Checker:
                 )
             )
         except Exception as e:
-            logger.error(f'Failed to write license to DuckDB: {e}')
+            logger.error(f'Failed to write license to Database: {e}')
 
         if license_name == 'CC0 1.0':
             self.logger.info('The license is CC0 1.0')
@@ -679,11 +677,11 @@ class Checker:
         if isinstance(keyword_list, list):
             self.logger.info(f'Keywords found in the metadata: {keyword_list}')
 
-        # DEBUG: Test for writing to DuckDB using CheckResultList
+        # DEBUG: Test for writing to Database using CheckResultList
         # FIXME: fix the update logic; it won't work if there's table
         try:
             check_result_list_schema = self.sqlmodels.check_results()
-            self.duckdb_instance.sql_merge_records_to_table(
+            self.database_instance.merge_records_to_table(
                 check_result_list_schema(
                     check_name='Keywords Existence',
                     check_id='keywords_existence',
@@ -693,16 +691,16 @@ class Checker:
                 )
             )
         except Exception as e:
-            logger.error(f'Failed to write keywords to DuckDB: {e}')
+            logger.error(f'Failed to write keywords to Database: {e}')
 
-    # The below writes the to the DuckDB database
-    def write_project_metadata_to_duckdb(self) -> None:
-        """Write the project metadata to the DuckDB database."""
+    # The below writes the to the Database database
+    def write_project_metadata_to_db(self) -> None:
+        """Write the project metadata to the database."""
         project_metadata_schema = self.sqlmodels.project_metadata_record()
 
         # Check if record already exists
         try:
-            ticket_number = self.duckdb_instance.schema_name
+            ticket_number = self.database_instance.schema_name
             curator_name: str | None = self.curator_name
             curator_email: str | None = self.curator_email
             dataset_title = self.ds_title if self.ds_title else 'No Title'
@@ -712,8 +710,8 @@ class Checker:
             dataset_url = parse_dataset_url(self.base_url, dataset_pid)
             dataset_path = self.check_ds_tree_info()
 
-            # if not self.duckdb_instance.check_table_has_records('project_metadata'):
-            self.duckdb_instance.sql_merge_records_to_table(
+            # if not self.database_instance.check_table_has_records('project_metadata'):
+            self.database_instance.merge_records_to_table(
                 project_metadata_schema(
                     curator_name=curator_name,
                     curator_email=curator_email,
@@ -728,17 +726,17 @@ class Checker:
                 )
             )
         except Exception as e:
-            self.logger.error(f'Failed to write to DuckDB: {e}')
+            self.logger.error(f'Failed to write to Database: {e}')
 
     # Note: maybe to migrate this to main.py
-    def write_checklist_to_duckdb(self, checklist_type: str = 'high'):
-        """Write the checklist items to DuckDB.
+    def write_checklist_to_db(self, checklist_type: str = 'high'):
+        """Write the checklist items to Database.
 
         Args:
             checklist_type (str): Type of checklist to use ('medium' or 'high'). Defaults to 'high'.
         """
         try:
-            self.logger.debug(f'Writing the {checklist_type} checklist to DuckDB...')
+            self.logger.debug(f'Writing the {checklist_type} checklist to Database...')
             checklist_schema = self.sqlmodels.checklist()
             checklist_file: Path = RES_DIR.joinpath(f'check-list_template_{checklist_type}.yaml')
 
@@ -749,10 +747,10 @@ class Checker:
             with Path.open(checklist_file, 'r') as f:
                 checklist_data = yaml.safe_load(f)
 
-            # Write each checklist item to DuckDB
+            # Write each checklist item to Database
             for item in checklist_data.get('checklist', []):
-                self.logger.debug(f'Writing checklist item to DuckDB: {item}')
-                self.duckdb_instance.sql_merge_records_to_table(
+                self.logger.debug(f'Writing checklist item to Database: {item}')
+                self.database_instance.merge_records_to_table(
                     checklist_schema(
                         id=item.get('id'),
                         action=item.get('action'),
@@ -765,7 +763,7 @@ class Checker:
                     )
                 )
         except Exception as e:
-            self.logger.error(f'Failed to write checklist to DuckDB: {e}')
+            self.logger.error(f'Failed to write checklist to Database: {e}')
 
     def run_checks(self) -> None:
         """Run all the checks."""
@@ -782,6 +780,6 @@ class Checker:
         self.check_terms_of_access()
         self.check_keywords()
         self.check_license()
-        self.write_project_metadata_to_duckdb()
-        # Write the checklist to DuckDB using the configured checklist type
-        self.write_checklist_to_duckdb(self.checklist_type)
+        self.write_project_metadata_to_db()
+        # Write the checklist to Database using the configured checklist type
+        self.write_checklist_to_db(self.checklist_type)
