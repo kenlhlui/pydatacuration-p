@@ -14,7 +14,7 @@ run-tests-with-report-html:
     coverage html
 
 
-# Remove workdir (with confirmation), recreate it, then rebuild and run containers
+# Remove new_dir (with confirmation), recreate it, then rebuild and run containers
 docker-build-and-run *ARGS:
     @if [ -d ./new_dir ] && [ "{{ARGS}}" != "-f" ]; then \
         read -p "Remove ./new_dir? [y/N] " ans; \
@@ -28,4 +28,4 @@ docker-build-and-run *ARGS:
     fi
     UID=$(id -u) GID=$(id -g) docker compose down
     UID=$(id -u) GID=$(id -g) docker compose build
-    UID=$(id -u) GID=$(id -g) docker compose up
+    UID=$(id -u) GID=$(id -g) docker compose up --force-recreate
