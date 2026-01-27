@@ -1016,39 +1016,51 @@ async def render_checklist_table(  # noqa: PLR0913, C901, PLR0917
                         if item_check_type:
                             create_check_type_badge(item_check_type)
 
-                        # 2. Show tool execution - fetch check names from automated_check_ids
+                        # 2. Show tool execution and results - combined section
                         automated_check_ids = getattr(item, 'automated_check_ids', [])
-                        if automated_check_ids:
-                            check_names = []
-                            for ac_id in automated_check_ids:
-                                result: dict | None = duckdb_instance.sql_read_row(
-                                    DuckDBmodels(ticket_number).check_results(),
-                                    'check_id',
-                                    ac_id,
-                                )
-                                if result and result.get('check_name'):
-                                    check_names.append(result['check_name'])
+                        tool_explanation = getattr(item, 'tool_explanation', None)
 
-                            if check_names:
-                                with ui.element('div').classes('pdc-tool-execution'):
-                                    check_list = '\n'.join([f'- {name}' for name in check_names])
+                        # Show for Automated checks or when check IDs exist
+                        if item_check_type == 'Automated' or automated_check_ids:
+                            with ui.element('div').classes('pdc-tool-execution'):
+                                # Collect check info
+                                checks_info = []
+
+                                if automated_check_ids:
+                                    for ac_id in automated_check_ids:
+                                        result: dict | None = duckdb_instance.sql_read_row(
+                                            DuckDBmodels(ticket_number).check_results(),
+                                            'check_id',
+                                            ac_id,
+                                        )
+                                        if result:
+                                            check_name = result.get('check_name', '')
+                                            checks_info.append({'name': check_name, 'id': ac_id, 'result': result})
+
+                                # Display Tool Checks header with check names
+                                if checks_info:
+                                    check_names = [f'- {info["name"]}' for info in checks_info if info['name']]
+                                    check_list = '\n'.join(check_names)
                                     ui.markdown(f'**Tool Checks:**\n\n{check_list}')
+                                elif tool_explanation:
+                                    ui.markdown(f'**Tool Checks:**\n\n{tool_explanation}')
+                                else:
+                                    ui.markdown('**Tool Checks:**\n\n*No automated checks configured*')
 
-                        # 3. Render automated check results if applicable
-                        automated_check_ids = getattr(item, 'automated_check_ids', [])
-                        if automated_check_ids:
-                            for ac_id in automated_check_ids:
-                                result: dict | None = duckdb_instance.sql_read_row(
-                                    DuckDBmodels(ticket_number).check_results(),
-                                    'check_id',
-                                    ac_id,
-                                )
-                                # Render the 'results' item, if it exists
-                                if result and result.get('results') and len(result['results']) > 0:
-                                    # Use the scrollable container class from nicegui_styles.py
-                                    # Only render the grey scrollable box if there are results
+                            # 3. Render actual check results
+                            if checks_info:
+                                results_displayed = False
+                                for check_info in checks_info:
+                                    result = check_info['result']
+                                    if result and result.get('results') and len(result['results']) > 0:
+                                        with ui.element('div').classes('pdc-dynamic-check-results'):
+                                            render_check_results(result['results'], result['unit'], check_info['id'])
+                                        results_displayed = True
+
+                                # Show "no applicable result" if checks exist but no results
+                                if not results_displayed:
                                     with ui.element('div').classes('pdc-dynamic-check-results'):
-                                        render_check_results(result['results'], result['unit'], ac_id)
+                                        ui.markdown('*No applicable results*')
 
                         # 4. Finally, show any manually entered information location
                         curator_check_item = getattr(item, 'curator_check_item', None)
