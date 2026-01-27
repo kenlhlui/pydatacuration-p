@@ -131,8 +131,9 @@ class DuckDBmodels:
                 sa_column=Column(String, nullable=True),
                 description='Explanation of what automated tools check for this item (shown to user, supports markdown)',
             )
-            information_location: str = Field(
-                sa_column=Column(String, nullable=True), description='Location of information'
+            curator_check_item: str = Field(
+                sa_column=Column(String, nullable=True),
+                description='Curator check item (shown to user, supports markdown)',
             )
             check_type: str = Field(sa_column=Column(String, nullable=True), description='Type of check')
             status: str = Field(sa_column=Column(String, nullable=True), description='Checklist status')

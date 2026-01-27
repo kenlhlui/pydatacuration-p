@@ -760,7 +760,7 @@ class Checker:
                         priority=item.get('priority'),
                         section=item.get('section'),
                         automated_check_ids=item.get('automated_check_ids'),
-                        information_location=item.get('information_location'),
+                        curator_check_item=item.get('curator_check_item'),
                         check_type=item.get('check_type'),
                     )
                 )

@@ -1039,9 +1039,9 @@ async def render_checklist_table(  # noqa: PLR0913, C901, PLR0917
                                         render_check_results(result['results'], result['unit'], ac_id)
 
                         # 4. Finally, show any manually entered information location
-                        information_location = getattr(item, 'information_location', None)
-                        if information_location:
-                            ui.markdown(f'**Curator checks:**\n\n{information_location}').classes(
+                        curator_check_item = getattr(item, 'curator_check_item', None)
+                        if curator_check_item:
+                            ui.markdown(f'**Curator checks:**\n\n{curator_check_item}').classes(
                                 'pdc-static-info-location'
                             )
                     # Status
