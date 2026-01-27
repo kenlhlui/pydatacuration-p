@@ -8,10 +8,12 @@ import asyncio
 import os
 from pathlib import Path
 
+import html_sanitizer
 import orjson
 from dotenv import load_dotenv
 from fastapi import HTTPException
 from fastapi.responses import JSONResponse
+from html_sanitizer import Sanitizer
 from nicegui import app
 from nicegui import app as nicegui_app
 from nicegui import ui
@@ -74,6 +76,12 @@ class SetupRequest(SQLModel):
     checklist: str = 'high'
     collection_alias: str | None = None
 
+
+# ============================================================================
+# HTML Sanitizer Setup
+# ============================================================================
+
+sanitizer = Sanitizer()
 
 # ============================================================================
 # Main Entrance Page
@@ -176,16 +184,14 @@ async def main_page() -> None:
     with ui.column().classes('main-container'):
         # Logo and Header container (centered)
         with ui.element('div').style('text-align: center; width: 100%;'):
-            ui.html(
+            ui.markdown(
                 '<img src="/static/UTL.png" '
                 'alt="University of Toronto Libraries Logo" '
                 'style="height: 60px; width: auto; margin: 8px auto; display: block;">',
-                sanitize=False,
             )
-            ui.html(
+            ui.markdown(
                 '<h1 style="color: #1E3765; font-size: 2.6rem; margin-bottom: 10px; margin-top: 10px;">'
                 '<b>Data Curation Tool</b></h1>',
-                sanitize=False,
             )
 
         # Top row options
@@ -236,7 +242,7 @@ async def new_dataset_page() -> None:
             'alt="University of Toronto Libraries Logo" '
             'class="pdc-logo" '
             'style="height: 60px; width: auto; margin: 8px;">',
-            sanitize=False,
+            sanitize=sanitizer.sanitize,
         )
 
         # Header
@@ -627,27 +633,30 @@ async def render_project_table(
                             # Ticket Number
                             with ui.element('td'):
                                 if mode == 'resume':
-                                    ui.html(
-                                        f'<a href="/checklist?ticket_number={schema["ticket_number"]}" '
-                                        f'style="color: #3498db; text-decoration: none; font-weight: 600;">'
-                                        f'📋 {schema["ticket_number"]}</a>',
-                                        sanitize=False,
-                                    )
+                                    with ui.element('a').props(
+                                        f'href="/checklist?ticket_number={schema["ticket_number"]}"'
+                                    ).style('color: #3498db; text-decoration: none; font-weight: 600;'):
+                                        ui.label(f'📋 {schema["ticket_number"]}')
                                 else:
                                     ui.label(f'📋 {schema["ticket_number"]}').style('font-weight: 600;')
 
                             # Dataset Metadata
                             with ui.element('td'):
-                                ui.html(f'<strong>Title:</strong> {schema.get("dataset_title", "N/A")}', sanitize=False)  # noqa: E501
-                                ui.html(f'<strong>PID:</strong> {schema.get("dataset_pid", "N/A")}', sanitize=False)
-                                ui.html(
-                                    f'<strong>ID (Versioned):</strong> {schema.get("dataset_id", "N/A")}',
-                                    sanitize=False,
-                                )  # noqa: E501
-                                ui.html(
-                                    f'<strong>URL:</strong> <a href="{schema.get("dataset_url", "N/A")}" target="_blank">{schema.get("dataset_url", "N/A")}</a>',
-                                    sanitize=False,
-                                )  # noqa: E501
+                                with ui.element('div'):
+                                    ui.html('<strong>Title:</strong> ', sanitize=False)
+                                    ui.label(schema.get("dataset_title", "N/A")).style('display: inline;')
+                                with ui.element('div'):
+                                    ui.html('<strong>PID:</strong> ', sanitize=False)
+                                    ui.label(schema.get("dataset_pid", "N/A")).style('display: inline;')
+                                with ui.element('div'):
+                                    ui.html('<strong>ID (Versioned):</strong> ', sanitize=False)
+                                    ui.label(schema.get("dataset_id", "N/A")).style('display: inline;')
+                                with ui.element('div'):
+                                    ui.html('<strong>URL:</strong> ', sanitize=False)
+                                    with ui.element('a').props(
+                                        f'href="{schema.get("dataset_url", "N/A")}" target="_blank"'
+                                    ).style('display: inline;'):
+                                        ui.label(schema.get("dataset_url", "N/A"))
                             # Curator
                             with ui.element('td'):
                                 ui.label(schema.get('curator_name', 'N/A'))
@@ -989,13 +998,13 @@ async def render_checklist_table(  # noqa: PLR0913, C901, PLR0917
                 if item.section != current_section:
                     current_section = item.section
                     with ui.element('tr'), ui.element('td').props('colspan=7').classes('pdc-section-header'):
-                        ui.html(item.section, sanitize=False)
+                        ui.label(item.section)
 
                 # Item row
                 with ui.element('tr').props(f'data-item-id="{item.id}"'):
                     # ID
                     with ui.element('td').classes('pdc-item-id'):
-                        ui.html(item.id, sanitize=False)
+                        ui.label(item.id)
 
                     # Action & Instructions
                     with ui.element('td').classes('details-cell'):
@@ -1003,7 +1012,7 @@ async def render_checklist_table(  # noqa: PLR0913, C901, PLR0917
                             ui.markdown(item.action)
                         if item.instructions:
                             with ui.element('div').classes('pdc-instructions-header'):
-                                ui.html('<b>Guidance:</b>', sanitize=False)
+                                ui.markdown('<b>Guidance:</b>')
                             ui.markdown(item.instructions).classes('pdc-instructions')
 
                     # Information Location
@@ -1035,7 +1044,7 @@ async def render_checklist_table(  # noqa: PLR0913, C901, PLR0917
 
                                 # Display Tool Checks header with check names
                                 with ui.element('div').classes('pdc-instructions-header'):
-                                    ui.html('<b>Tool Checks:</b>', sanitize=False)
+                                    ui.markdown('<b>Tool Checks:</b>')
                                 if checks_info:
                                     check_names = [
                                         f'- {info["check_name"]}' for info in checks_info if info.get('check_name')
@@ -1067,7 +1076,7 @@ async def render_checklist_table(  # noqa: PLR0913, C901, PLR0917
                         curator_check_item = getattr(item, 'curator_check_item', None)
                         if curator_check_item:
                             with ui.element('div').classes('pdc-instructions-header'):
-                                ui.html('<b>Curator Checks:</b>', sanitize=False)
+                                ui.markdown('<b>Curator Checks:</b>')
                             ui.markdown(curator_check_item).classes('pdc-static-curator-check-item')
                     # Status
                     with ui.element('td'):
@@ -1143,10 +1152,10 @@ def render_check_results(results: dict) -> None:
                     with ui.element('li').classes('result-item'):
                         if isinstance(item, dict):
                             # If list contains dicts, render key-value pairs
-                            ui.html(
-                                '<br>'.join([f'<strong>{k}:</strong> {v}' for k, v in item.items()]),
-                                sanitize=False,
-                            )
+                            for k, v in item.items():
+                                with ui.element('div'):
+                                    ui.html(f'<strong>{k}:</strong> ', sanitize=False)
+                                    ui.label(str(v)).style('display: inline;')
                         else:
                             ui.label(str(item))
 
@@ -1158,7 +1167,7 @@ def render_check_results(results: dict) -> None:
             with ui.element('ol').classes('pdc-check-details-list'):
                 for key, value in results.items():
                     with ui.element('li').classes('result-item'):
-                        ui.html(f'<strong>{key}:</strong> {value}', sanitize=False)
+                        ui.markdown(f'**{key}:** {value}')
 
         else:
             # Render as plain text for other types
