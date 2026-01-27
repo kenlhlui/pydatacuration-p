@@ -393,3 +393,32 @@ class DuckDB:  # noqa: PLR0904
         except Exception as e:
             logger.error(f'Error reading row from {sqlmodel.__tablename__}: {e}')
             return None
+
+    def sql_read_with_in_filter(
+        self,
+        sqlmodel: type[SQLModel],
+        column: str,
+        values: list[Any],
+        mode: Literal['json', 'python'] | str = 'json',
+    ) -> list[dict[str, Any]]:
+        """Get rows where column value is in the provided list.
+
+        Args:
+            sqlmodel: The SQLModel class to query.
+            column: The column to filter on.
+            values: List of values to match.
+            mode: Optional mode for model_dump.
+
+        Returns:
+            List of row data as dictionaries.
+        """
+        try:
+            with self.sql_get_readonly_connection() as (session, _engine):
+                column_attr = getattr(sqlmodel, column)
+                query = select(sqlmodel).where(column_attr.in_(values))
+                result = session.exec(query)
+                rows = result.all()
+                return [row.model_dump(mode=mode) for row in rows]
+        except Exception as e:
+            logger.error(f'Error reading with IN filter from {sqlmodel.__tablename__}: {e}')
+            return []

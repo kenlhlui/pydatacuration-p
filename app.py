@@ -1027,21 +1027,22 @@ async def render_checklist_table(  # noqa: PLR0913, C901, PLR0917
                                 checks_info = []
 
                                 if automated_check_ids:
-                                    for ac_id in automated_check_ids:
-                                        result: dict | None = duckdb_instance.sql_read_row(
-                                            DuckDBmodels(ticket_number).check_results(),
-                                            'check_id',
-                                            ac_id,
-                                        )
-                                        if result:
-                                            check_name = result.get('check_name', '')
-                                            checks_info.append({'name': check_name, 'id': ac_id, 'result': result})
+                                    all_results = duckdb_instance.sql_read_table_records(
+                                        DuckDBmodels(ticket_number).check_results()
+                                    )
+                                    # Filter in Python
+                                    id_set = set(automated_check_ids)
+                                    for result in all_results:
+                                        if result.get('check_id') in id_set:
+                                            checks_info.append(result)
 
                                 # Display Tool Checks header with check names
                                 with ui.element('div').classes('pdc-instructions-header'):
                                     ui.html('<b>Tool Checks:</b>', sanitize=False)
                                 if checks_info:
-                                    check_names = [f'- {info["name"]}' for info in checks_info if info['name']]
+                                    check_names = [
+                                        f'- {info["check_name"]}' for info in checks_info if info.get('check_name')
+                                    ]
                                     check_list = '\n'.join(check_names)
                                     ui.markdown(check_list).classes('pdc-static-curator-check-item')
                                 elif tool_explanation:
@@ -1054,11 +1055,10 @@ async def render_checklist_table(  # noqa: PLR0913, C901, PLR0917
                             # 3. Render actual check results
                             if checks_info:
                                 results_displayed = False
-                                for check_info in checks_info:
-                                    result = check_info['result']
-                                    if result and result.get('results') and len(result['results']) > 0:
+                                for result in checks_info:
+                                    if result and len(result['results']) > 0:
                                         with ui.element('div').classes('pdc-dynamic-check-results'):
-                                            render_check_results(result['results'], result['unit'], check_info['id'])
+                                            render_check_results(result)
                                         results_displayed = True
 
                                 # Show "no applicable result" if checks exist but no results
@@ -1120,7 +1120,7 @@ async def render_checklist_table(  # noqa: PLR0913, C901, PLR0917
                         create_timer_callback(item.id, time_input)
 
 
-def render_check_results(results, result_name: str, check_id: str) -> None:
+def render_check_results(results: dict) -> None:
     """Render check results based on their type (list, dict, or other).
 
     Args:
@@ -1129,6 +1129,10 @@ def render_check_results(results, result_name: str, check_id: str) -> None:
         check_id (str): The check identifier to display as a label.
 
     """
+    check_id = results.get('check_id', 'Unknown Check ID')
+    result_name = results.get('unit', 'result')
+    results = results.get('results', {})
+
     # Use the pdc-check-result class from nicegui_styles.py instead of inline styles
     with ui.element('div').classes('pdc-check-result'):
         # Header with check ID - using pdc-static-curator-check-item class
