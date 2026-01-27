@@ -1020,7 +1020,7 @@ async def render_checklist_table(  # noqa: PLR0913, C901, PLR0917
                         tool_explanation = getattr(item, 'tool_explanation', None)
                         if tool_explanation:
                             with ui.element('div').classes('pdc-tool-execution'):
-                                ui.markdown(f'**Tool Used:** {tool_explanation}')
+                                ui.markdown(f'**Tool Checks:**\n\n{tool_explanation}')
 
                         # 3. Render automated check results if applicable
                         automated_check_ids = getattr(item, 'automated_check_ids', [])
@@ -1042,7 +1042,7 @@ async def render_checklist_table(  # noqa: PLR0913, C901, PLR0917
                         curator_check_item = getattr(item, 'curator_check_item', None)
                         if curator_check_item:
                             ui.markdown(f'**Curator checks:**\n\n{curator_check_item}').classes(
-                                'pdc-static-info-location'
+                                'pdc-static-curator-check-item'
                             )
                     # Status
                     with ui.element('td'):
@@ -1103,7 +1103,7 @@ def render_check_results(results, result_name: str, check_id: str) -> None:
     """
     # Use the pdc-check-result class from nicegui_styles.py instead of inline styles
     with ui.element('div').classes('pdc-check-result'):
-        # Header with check ID - using pdc-static-info-location class
+        # Header with check ID - using pdc-static-curator-check-item class
         ui.label(f'{check_id}').classes('pdc-check-result-header')
 
         if isinstance(results, list):

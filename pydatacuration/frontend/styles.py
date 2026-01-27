@@ -298,14 +298,14 @@ tr.row-status-NA {
     background-color: #ffffff;
 }
 
-.pdc-static-info-location {
+.pdc-static-curator-check-item {
     margin-top: 0px;
     font-size: 12px;
     color: #000000;
     display: block;
 }
 
-.pdc-static-info-location:empty {
+.pdc-static-curator-check-item:empty {
     display: none;
 }
 

@@ -9,7 +9,7 @@ checklist:
     section: "1. Structure of deposit"
     automated_check_ids: ["author_dataverse_history"]
     tool_explanation: |
-      **Tool explanation**: This line generates before the python check result is out.
+      This line generates before the python check result is out.
     curator_check_item: "Author metadata, dataverse collection history"
     check_type: "Fully-automated"
 
