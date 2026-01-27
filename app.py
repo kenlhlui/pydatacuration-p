@@ -188,35 +188,33 @@ async def main_page() -> None:
                 'alt="University of Toronto Libraries Logo"'
             )
             ui.markdown(
-                '<h1 style="color: #1E3765; font-size: 2.6rem; margin-bottom: 10px; margin-top: 10px;">'
-                '<b>Data Curation Tool</b></h1>',
-            )
+                'Data Curation Tool',
+            ).classes('pdc-header')
 
         # Top row options
         with ui.element('div').classes('options-grid'):
             # New Project Option
             with ui.element('div').classes('option-card').on('click', lambda: ui.navigate.to('/new')):
-                ui.html('<div class="icon">📁</div>', sanitize=False)
-                ui.html('<div class="option-title">New Project</div>', sanitize=False)
-                ui.html(
-                    '<div class="option-description">Start a new curation process for a new project</div>',
-                    sanitize=False,
-                )
+                ui.markdown('📁').classes('icon')
+                ui.markdown('New Project').classes('option-title')
+                ui.markdown(
+                    'Start a new curation process for a new project',
+                ).classes('option-description')
 
             # Delete Project Option
             with ui.element('div').classes('option-card').on('click', lambda: ui.navigate.to('/delete')):
-                ui.html('<div class="icon">🗑️</div>', sanitize=False)
-                ui.html('<div class="option-title">Delete Project</div>', sanitize=False)
-                ui.html('<div class="option-description">Delete a project from the database</div>', sanitize=False)
+                ui.markdown('🗑️').classes('icon')
+                ui.markdown('Delete Project').classes('option-title')
+                ui.markdown('Delete a project from the database').classes('option-description')
 
         # Resume Work Option (centered)
         with (
             ui.element('div').classes('resume-container'),
             ui.element('div').classes('option-card resume-card').on('click', lambda: ui.navigate.to('/resume')),
         ):
-            ui.html('<div class="icon">✏️</div>', sanitize=False)
-            ui.html('<div class="option-title">Resume Project</div>', sanitize=False)
-            ui.html('<div class="option-description">Continue working on an existing project</div>', sanitize=False)
+            ui.markdown('✏️').classes('icon')
+            ui.markdown('Resume Project').classes('option-title')
+            ui.markdown('Continue working on an existing project').classes('option-description')
 
 
 # ============================================================================
@@ -240,7 +238,7 @@ async def new_dataset_page() -> None:
         )
 
         # Header
-        ui.label('Data Curation Tool').classes('pdc-header')
+        ui.markdown('Data Curation Tool').classes('pdc-header')
 
         # Messages
         error_msg = ui.label().classes('hidden')
@@ -617,7 +615,7 @@ async def render_project_table(
                         headers.append('Action')
                     for header in headers:
                         with ui.element('th'):
-                            ui.html(header, sanitize=False)
+                            ui.markdown(header)
 
                 # Table Body
                 with ui.element('tbody'):
@@ -639,16 +637,24 @@ async def render_project_table(
                             # Dataset Metadata
                             with ui.element('td'):
                                 with ui.element('div'):
-                                    ui.html('<strong>Title:</strong> ', sanitize=False)
+                                    ui.markdown(
+                                        '**Title:** ',
+                                    )
                                     ui.label(schema.get('dataset_title', 'N/A')).style('display: inline;')
                                 with ui.element('div'):
-                                    ui.html('<strong>PID:</strong> ', sanitize=False)
+                                    ui.markdown(
+                                        '**PID:** ',
+                                    )
                                     ui.label(schema.get('dataset_pid', 'N/A')).style('display: inline;')
                                 with ui.element('div'):
-                                    ui.html('<strong>ID (Versioned):</strong> ', sanitize=False)
+                                    ui.markdown(
+                                        '**ID (Versioned):** ',
+                                    )
                                     ui.label(schema.get('dataset_id', 'N/A')).style('display: inline;')
                                 with ui.element('div'):
-                                    ui.html('<strong>URL:</strong> ', sanitize=False)
+                                    ui.markdown(
+                                        '**URL:** ',
+                                    )
                                     with (
                                         ui.element('a')
                                         .props(f'href="{schema.get("dataset_url", "N/A")}" target="_blank"')
@@ -661,7 +667,7 @@ async def render_project_table(
 
                             # Last Modified
                             with ui.element('td'):
-                                ui.label(schema['last_modified']).style('color: #7f8c8d;')
+                                ui.label(schema['last_modified'])
 
                             # Action column (only for delete mode)
                             if mode == 'delete':
@@ -974,7 +980,7 @@ async def render_checklist_table(  # noqa: PLR0913, C901, PLR0917
                 'Time Spent',
             ]:
                 with ui.element('th'):
-                    ui.html(header, sanitize=False)
+                    ui.markdown(header)
 
         # Table Body
         with ui.element('tbody'):
@@ -998,7 +1004,7 @@ async def render_checklist_table(  # noqa: PLR0913, C901, PLR0917
                             ui.markdown(item.action)
                         if item.instructions:
                             with ui.element('div').classes('pdc-instructions-header'):
-                                ui.markdown('<b>Guidance:</b>')
+                                ui.markdown('**Guidance**')
                             ui.markdown(item.instructions).classes('pdc-instructions')
 
                     # Information Location
@@ -1030,7 +1036,7 @@ async def render_checklist_table(  # noqa: PLR0913, C901, PLR0917
 
                                 # Display Tool Checks header with check names
                                 with ui.element('div').classes('pdc-instructions-header'):
-                                    ui.markdown('<b>Tool Checks:</b>')
+                                    ui.markdown('**Tool Checks:**')
                                 if checks_info:
                                     check_names = [
                                         f'- {info["check_name"]}' for info in checks_info if info.get('check_name')
@@ -1062,7 +1068,7 @@ async def render_checklist_table(  # noqa: PLR0913, C901, PLR0917
                         curator_check_item = getattr(item, 'curator_check_item', None)
                         if curator_check_item:
                             with ui.element('div').classes('pdc-instructions-header'):
-                                ui.markdown('<b>Curator Checks:</b>')
+                                ui.markdown('**Curator Checks:**')
                             ui.markdown(curator_check_item).classes('pdc-static-curator-check-item')
                     # Status
                     with ui.element('td'):
@@ -1140,7 +1146,7 @@ def render_check_results(results: dict) -> None:
                             # If list contains dicts, render key-value pairs
                             for k, v in item.items():
                                 with ui.element('div'):
-                                    ui.html(f'<strong>{k}:</strong> ', sanitize=False)
+                                    ui.markdown(f'**{k}:** ')
                                     ui.label(str(v)).style('display: inline;')
                         else:
                             ui.label(str(item))
