@@ -1043,11 +1043,13 @@ async def render_checklist_table(  # noqa: PLR0913, C901, PLR0917
                                 if checks_info:
                                     check_names = [f'- {info["name"]}' for info in checks_info if info['name']]
                                     check_list = '\n'.join(check_names)
-                                    ui.markdown(check_list)
+                                    ui.markdown(check_list).classes('pdc-static-curator-check-item')
                                 elif tool_explanation:
-                                    ui.markdown(tool_explanation)
+                                    ui.markdown(tool_explanation).classes('pdc-static-curator-check-item')
                                 else:
-                                    ui.markdown('*No automated checks configured*')
+                                    ui.markdown('*No automated checks configured*').classes(
+                                        'pdc-static-curator-check-item'
+                                    )
 
                             # 3. Render actual check results
                             if checks_info:
@@ -1068,7 +1070,7 @@ async def render_checklist_table(  # noqa: PLR0913, C901, PLR0917
                         curator_check_item = getattr(item, 'curator_check_item', None)
                         if curator_check_item:
                             with ui.element('div').classes('pdc-instructions-header'):
-                                ui.html('<b>Curator checks:</b>', sanitize=False)
+                                ui.html('<b>Curator Checks:</b>', sanitize=False)
                             ui.markdown(curator_check_item).classes('pdc-static-curator-check-item')
                     # Status
                     with ui.element('td'):
