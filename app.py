@@ -8,7 +8,6 @@ import asyncio
 import os
 from pathlib import Path
 
-import html_sanitizer
 import orjson
 from dotenv import load_dotenv
 from fastapi import HTTPException
