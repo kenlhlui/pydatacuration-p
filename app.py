@@ -182,14 +182,13 @@ async def main_page() -> None:
     """)
 
     with ui.column().classes('main-container'):
-        # Logo and Header container (centered)
-        with ui.element('div').style('text-align: center; width: 100%;'):
-            ui.image('/static/UTL.png').style('height: 60px; width: auto; margin: 8px auto; display: block;').props(
-                'alt="University of Toronto Libraries Logo"'
-            )
-            ui.markdown(
-                'Data Curation Tool',
-            ).classes('pdc-header')
+        # Logo and Header
+        ui.image('/static/UTL.png').props(
+            'fit=scale-down alt="University of Toronto Libraries Logo" style="height: 60px width: auto margin: 8px"'
+        )
+        ui.markdown(
+            'Data Curation Tool',
+        ).classes('pdc-header')
 
         # Top row options
         with ui.element('div').classes('options-grid'):
@@ -233,8 +232,8 @@ async def new_dataset_page() -> None:
 
     with ui.column().classes('pdc-container').style('width: 100%; max-width: 800px;'):
         # Logo
-        ui.image('/static/UTL.png').style('height: 60px; width: auto; margin: 8px auto; display: block;').props(
-            'alt="University of Toronto Libraries Logo"'
+        ui.image('/static/UTL.png').props(
+            'fit=scale-down alt="University of Toronto Libraries Logo" style="height: 60px; width: auto; margin: 8px;"'
         )
 
         # Header
@@ -704,8 +703,8 @@ async def resume_work_page() -> None:
 
     with ui.column().classes('pdc-container'):
         # Logo and Header
-        ui.image('/static/UTL.png').style('height: 60px; width: auto; margin: 8px auto; display: block;').props(
-            'alt="University of Toronto Libraries Logo"'
+        ui.image('/static/UTL.png').props(
+            'fit=scale-down alt="University of Toronto Libraries Logo" style="height: 60px; width: auto; margin: 8px;"'
         )
         ui.label('Resume Project').classes('pdc-header')
 
@@ -734,8 +733,8 @@ async def delete_project_page() -> None:
 
     with container:
         # Logo and Header
-        ui.image('/static/UTL.png').style('height: 60px; width: auto; margin: 8px auto; display: block;').props(
-            'alt="University of Toronto Libraries Logo"'
+        ui.image('/static/UTL.png').props(
+            'fit=scale-down alt="University of Toronto Libraries Logo" style="height: 60px; width: auto; margin: 8px;"'
         )
         ui.label('Delete Project').classes('pdc-header')
 
@@ -813,8 +812,8 @@ async def checklist_page(ticket_number: str) -> None:
 
     with ui.column().classes('pdc-container'):
         # Logo
-        ui.image('/static/UTL.png').style('height: 60px; width: auto; margin: 8px auto; display: block;').props(
-            'alt="University of Toronto Libraries Logo"'
+        ui.image('/static/UTL.png').props(
+            'fit=scale-down alt="University of Toronto Libraries Logo" style="height: 60px; width: auto; margin: 8px;"'
         )
 
         # Header, with dynamic checklist type
