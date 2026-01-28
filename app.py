@@ -186,7 +186,7 @@ async def main_page() -> None:
             '<img src="/static/UTL.png" alt="University of Toronto Libraries Logo" class="utl-logo">',
             sanitize=False,
         )
-        ui.markdown(
+        ui.label(
             'Data Curation Tool',
         ).classes('pdc-header')
 
@@ -237,7 +237,7 @@ async def new_dataset_page() -> None:
             sanitize=False,
         )
         # Header
-        ui.markdown('Data Curation Tool').classes('pdc-header')
+        ui.label('Data Curation Tool').classes('pdc-header')
 
         # Messages
         error_msg = ui.label().classes('hidden')
