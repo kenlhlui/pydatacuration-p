@@ -29,7 +29,7 @@ body {
    Container & Layout
    ======================================================================== */
 .pdc-container {
-    max-width: 1600px;
+    max-width: 800px;
     width: 100%;
     margin: 0 auto;
     background-color: white;
@@ -522,11 +522,11 @@ select.checklist-medium {
     box-sizing: border-box;
 }
 
-.pdc-form-section h3 {
-    margin-top: 0;
-    margin-bottom: 12px;  /* Reduced from default */
-    color: #2c3e50;
-    font-size: 1.1rem;  /* Slightly smaller */
+.pdc-form-section-header {
+    font-size: 1.125rem; /* text-lg */
+    font-weight: 600; /* font-semibold */
+    color: #374151; /* text-gray-700 */
+    margin-bottom: 12px;
 }
 
 .pdc-form-group {
@@ -916,6 +916,93 @@ a[href^="http"] {
 </style>
 """
 
+MAIN_PAGE_HEAD_CSS: str = """
+<style>
+        /* Center everything on the page */
+        .nicegui-content {
+            display: flex !important;
+            align-items: center !important;
+            justify-content: center !important;
+            min-height: 100vh !important;
+            padding: 20px !important;
+        }
+        .main-container {
+            max-width: 1000px;
+            width: 90%;
+            background-color: white;
+            padding: 40px;
+            border-radius: 12px;
+            box-shadow: 0 10px 30px rgba(0,0,0,0.2);
+            text-align: center;
+            align-items: center;
+        }
+        .main-container > * {
+            width: 100%;
+        }
+        body {
+            background: #1E3765 !important;
+            min-height: 100vh;
+        }
+        .option-card {
+            background-color: #f8f9fa;
+            border: 2px solid #e9ecef;
+            border-radius: 8px;
+            padding: 35px;
+            margin: 0;
+            cursor: pointer;
+            transition: all 0.3s ease;
+            height: 100%;
+            display: flex;
+            flex-direction: column;
+            justify-content: center;
+        }
+        .option-card:hover {
+            border-color: #3498db;
+            background-color: #ebf3fd;
+            transform: translateY(-2px);
+            box-shadow: 0 5px 15px rgba(52, 152, 219, 0.2);
+        }
+        .option-title {
+            font-size: 1.4rem;
+            font-weight: 600;
+            color: #2c3e50;
+            margin-bottom: 12px;
+        }
+        .option-description {
+            color: #6c757d;
+            font-size: 1rem;
+        }
+        .icon {
+            font-size: 2.5rem;
+            margin-bottom: 15px;
+        }
+        .options-grid {
+            display: grid;
+            grid-template-columns: 1fr 1fr;
+            gap: 25px;
+            margin-bottom: 25px;
+        }
+        .resume-container {
+            display: flex;
+            justify-content: center;
+            width: 100%;
+            margin-top: 0;
+        }
+        .resume-card {
+            width: 70%;
+            max-width: 600px;
+        }
+        @media (max-width: 768px) {
+            .options-grid {
+                grid-template-columns: 1fr;
+            }
+            .resume-card {
+                width: 100%;
+            }
+        }
+    </style>
+"""
+
 
 # ============================================================================
 # Tailwind Class Mappings (for inline usage)
@@ -975,7 +1062,7 @@ class PDCStyles:
 # ============================================================================
 
 
-def apply_pdc_styles():
+def apply_pdc_styles() -> None:
     """Apply PyDataCuration CSS to the current page and configure external links."""
     ui.add_head_html(PYDATACURATION_CSS)
 
@@ -1008,8 +1095,8 @@ def apply_pdc_styles():
     """)
 
 
-def create_info_grid(metadata: dict, columns: list[tuple[str, str]]):
-    """Create a standardized info grid matching your current design
+def create_info_grid(metadata: dict, columns: list[tuple[str, str]]) -> None:
+    """Create a standardized info grid matching your current design.
 
     Args:
         metadata: Dictionary of metadata values
@@ -1025,8 +1112,13 @@ def create_info_grid(metadata: dict, columns: list[tuple[str, str]]):
                 ui.label(metadata.get(key, 'N/A')).classes('pdc-info-value')
 
 
-def create_priority_badge(priority: str):
-    """Create a priority badge with correct styling"""
+def create_priority_badge(priority: str) -> ui.label:
+    """Create a priority badge with correct styling.
+
+    Args:
+        priority: Priority value (Required, Recommended, Info)
+
+    """
     priority_map = {
         'required': ('Required', 'pdc-priority-required'),
         'recommended': ('Recommended', 'pdc-priority-recommended'),
@@ -1129,38 +1221,38 @@ def create_checklist_select(current_value: str, on_change=None):
 # Usage Example
 # ============================================================================
 
-if __name__ == '__main__':
-    """Example usage of the styling module"""
+# if __name__ == '__main__':
+#     """Example usage of the styling module"""
 
-    # Apply styles
-    apply_pdc_styles()
+#     # Apply styles
+#     apply_pdc_styles()
 
-    with ui.column().classes(PDCStyles.CONTAINER):
-        ui.label('PyDataCuration Tool').classes(PDCStyles.HEADER)
+#     with ui.column().classes(PDCStyles.CONTAINER):
+#         ui.label('PyDataCuration Tool').classes(PDCStyles.HEADER)
 
-        # Example info grid
-        metadata = {'ticket_number': 'TICKET-123', 'curator_name': 'John Doe', 'dataset_title': 'Sample Dataset'}
+#         # Example info grid
+#         metadata = {'ticket_number': 'TICKET-123', 'curator_name': 'John Doe', 'dataset_title': 'Sample Dataset'}
 
-        create_info_grid(
-            metadata,
-            [('ticket_number', 'Ticket Number'), ('curator_name', 'Curator Name'), ('dataset_title', 'Dataset Title')],
-        )
+#         create_info_grid(
+#             metadata,
+#             [('ticket_number', 'Ticket Number'), ('curator_name', 'Curator Name'), ('dataset_title', 'Dataset Title')],  # noqa: E501
+#         )
 
-        # Example status select
-        with ui.row():
-            ui.label('Status:')
-            create_status_select('ABC-001', 'P')
+#         # Example status select
+#         with ui.row():
+#             ui.label('Status:')
+#             create_status_select('ABC-001', 'P')
 
-        # Example priority badge
-        with ui.row():
-            ui.label('Priority:')
-            create_priority_badge('required')
+#         # Example priority badge
+#         with ui.row():
+#             ui.label('Priority:')
+#             create_priority_badge('required')
 
-        # Example buttons
-        with ui.row().classes('pdc-actions'):
-            ui.button('Primary Action').classes(PDCStyles.BTN_PRIMARY)
-            ui.button('Secondary').classes(PDCStyles.BTN_SECONDARY)
-            ui.button('Calculate').classes(PDCStyles.BTN_CALCULATE)
-            ui.button('Danger').classes(PDCStyles.BTN_DANGER)
+#         # Example buttons
+#         with ui.row().classes('pdc-actions'):
+#             ui.button('Primary Action').classes(PDCStyles.BTN_PRIMARY)
+#             ui.button('Secondary').classes(PDCStyles.BTN_SECONDARY)
+#             ui.button('Calculate').classes(PDCStyles.BTN_CALCULATE)
+#             ui.button('Danger').classes(PDCStyles.BTN_DANGER)
 
-    ui.run(title='PDC Styles Demo')
+#     ui.run(title='PDC Styles Demo')

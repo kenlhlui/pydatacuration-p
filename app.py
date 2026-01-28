@@ -26,6 +26,7 @@ from pydatacuration.frontend.helpers import NiceGUIHelper
 from pydatacuration.frontend.helpers import back_to_main_menu_button
 from pydatacuration.frontend.helpers import priority_options
 from pydatacuration.frontend.helpers import status_options
+from pydatacuration.frontend.styles import MAIN_PAGE_HEAD_CSS
 
 # Import styles and styled components
 from pydatacuration.frontend.styles import apply_pdc_styles
@@ -34,9 +35,9 @@ from pydatacuration.frontend.styles import create_checklist_select
 from pydatacuration.frontend.styles import create_info_grid
 from pydatacuration.frontend.styles import create_priority_badge
 from pydatacuration.frontend.styles import create_status_select
-from pydatacuration.main import CtxObj
 
 # Import the typer app for CLI command execution
+from pydatacuration.main import CtxObj
 from pydatacuration.main import run_all
 from pydatacuration.utils.custom_logging import logger
 from pydatacuration.utils.custom_logging import setup_logging
@@ -94,92 +95,7 @@ async def main_page() -> None:
     apply_pdc_styles()
 
     # Add custom CSS for main page
-    ui.add_head_html("""
-    <style>
-        /* Center everything on the page */
-        .nicegui-content {
-            display: flex !important;
-            align-items: center !important;
-            justify-content: center !important;
-            min-height: 100vh !important;
-            padding: 20px !important;
-        }
-        .main-container {
-            max-width: 1000px;
-            width: 90%;
-            background-color: white;
-            padding: 40px;
-            border-radius: 12px;
-            box-shadow: 0 10px 30px rgba(0,0,0,0.2);
-            text-align: center;
-            align-items: center;
-        }
-        .main-container > * {
-            width: 100%;
-        }
-        body {
-            background: #1E3765 !important;
-            min-height: 100vh;
-        }
-        .option-card {
-            background-color: #f8f9fa;
-            border: 2px solid #e9ecef;
-            border-radius: 8px;
-            padding: 35px;
-            margin: 0;
-            cursor: pointer;
-            transition: all 0.3s ease;
-            height: 100%;
-            display: flex;
-            flex-direction: column;
-            justify-content: center;
-        }
-        .option-card:hover {
-            border-color: #3498db;
-            background-color: #ebf3fd;
-            transform: translateY(-2px);
-            box-shadow: 0 5px 15px rgba(52, 152, 219, 0.2);
-        }
-        .option-title {
-            font-size: 1.4rem;
-            font-weight: 600;
-            color: #2c3e50;
-            margin-bottom: 12px;
-        }
-        .option-description {
-            color: #6c757d;
-            font-size: 1rem;
-        }
-        .icon {
-            font-size: 2.5rem;
-            margin-bottom: 15px;
-        }
-        .options-grid {
-            display: grid;
-            grid-template-columns: 1fr 1fr;
-            gap: 25px;
-            margin-bottom: 25px;
-        }
-        .resume-container {
-            display: flex;
-            justify-content: center;
-            width: 100%;
-            margin-top: 0;
-        }
-        .resume-card {
-            width: 70%;
-            max-width: 600px;
-        }
-        @media (max-width: 768px) {
-            .options-grid {
-                grid-template-columns: 1fr;
-            }
-            .resume-card {
-                width: 100%;
-            }
-        }
-    </style>
-    """)
+    ui.add_head_html(MAIN_PAGE_HEAD_CSS)
 
     with ui.column().classes('main-container'):
         # Logo and Header
@@ -231,7 +147,7 @@ async def new_dataset_page() -> None:
     # Apply our custom CSS
     apply_pdc_styles()
 
-    with ui.column().classes('pdc-container').style('width: 100%; max-width: 800px;'):
+    with ui.column().classes('pdc-container'):
         # Logo
         ui.html(
             '<img src="/static/UTL.png" alt="University of Toronto Libraries Logo" class="utl-logo">',
@@ -269,8 +185,8 @@ async def new_dataset_page() -> None:
                 form_data[key] = default_value
 
         # Dataset Information Section
-        with ui.element('div').classes('pdc-form-section').style('width: 100%;'):
-            ui.label('Dataset Information').classes('text-lg font-semibold text-gray-700').style('margin-bottom: 12px;')
+        with ui.element('div').classes('pdc-form-section'):
+            ui.label('Dataset Information').classes('pdc-form-section-header')
 
             with ui.element('div').classes('pdc-form-group'):
                 ui.label('Dataset Persistent Identifier (PID) *').classes('pdc-form-label')
@@ -301,8 +217,8 @@ async def new_dataset_page() -> None:
                 ui.label('Ticket number for the curation report').classes('pdc-form-helper')
 
         # Curator Information Section
-        with ui.element('div').classes('pdc-form-section').style('width: 100%;'):
-            ui.label('Curator Information').classes('text-lg font-semibold text-gray-700').style('margin-bottom: 12px;')
+        with ui.element('div').classes('pdc-form-section'):
+            ui.label('Curator Information').classes('pdc-form-section-header')
 
             with ui.element('div').classes('pdc-form-group'):
                 ui.label('Curator Name *').classes('pdc-form-label')
@@ -317,8 +233,8 @@ async def new_dataset_page() -> None:
                 ).style('width: 100%')
 
         # Directory Settings Section
-        with ui.element('div').classes('pdc-form-section').style('width: 100%;'):
-            ui.label('Directory Settings').classes('text-lg font-semibold text-gray-700').style('margin-bottom: 12px;')
+        with ui.element('div').classes('pdc-form-section'):
+            ui.label('Directory Settings').classes('pdc-form-section-header')
 
             with ui.element('div').classes('pdc-form-group'):
                 ui.label('Main Directory Path').classes('pdc-form-label')
@@ -328,8 +244,8 @@ async def new_dataset_page() -> None:
                 ui.label('The main (base) directory for project files').classes('pdc-form-helper')
 
         # Checklist Selection Section
-        with ui.element('div').classes('pdc-form-section').style('width: 100%;'):
-            ui.label('Checklist Selection').classes('text-lg font-semibold text-gray-700').style('margin-bottom: 12px;')
+        with ui.element('div').classes('pdc-form-section'):
+            ui.label('Checklist Selection').classes('pdc-form-section-header')
 
             with ui.element('div').classes('pdc-form-group'):
                 # Use our custom checklist select with styling
@@ -340,8 +256,8 @@ async def new_dataset_page() -> None:
                 ui.label('Select the checklist level for this curation task').classes('pdc-form-helper')
 
         # Processing Options Section
-        with ui.element('div').classes('pdc-form-section').style('width: 100%;'):
-            ui.label('Processing Options').classes('text-lg font-semibold text-gray-700').style('margin-bottom: 12px;')
+        with ui.element('div').classes('pdc-form-section'):
+            ui.label('Processing Options').classes('pdc-form-section-header')
 
             with ui.row().classes('gap-4'):
                 ui.checkbox('Force delete existing project', value=form_data.get('force_del', False)).bind_value(
@@ -658,10 +574,7 @@ async def render_project_table(
                                     dataset_url = schema.get('dataset_url', 'N/A')
                                     with (
                                         ui.element('a')
-                                        .props(
-                                            f'href="{dataset_url}" '
-                                            'target="_blank" rel="noopener noreferrer"'
-                                        )
+                                        .props(f'href="{dataset_url}" target="_blank" rel="noopener noreferrer"')
                                         .style('display: inline;')
                                     ):
                                         ui.label(dataset_url)
