@@ -18,11 +18,23 @@ PYDATACURATION_CSS = """
 /* ========================================================================
    Base Styles
    ======================================================================== */
+* {
+    box-sizing: border-box;
+}
+
+html {
+    overflow-x: hidden;
+    width: 100%;
+}
+
 body {
     font-family: Arial, sans-serif;
     margin: 20px;
     background-color: #f5f5f5;
     line-height: 1.6;
+    overflow-x: hidden;
+    max-width: 100vw;
+    box-sizing: border-box;
 }
 
 /* ========================================================================
@@ -38,6 +50,7 @@ body {
     border-radius: 8px;
     box-shadow: 0 2px 10px rgba(0,0,0,0.1);
     box-sizing: border-box;
+    overflow-x: auto;
 }
 
 .pdc-container > * {
@@ -54,6 +67,7 @@ body {
     border-radius: 8px;
     box-shadow: 0 2px 10px rgba(0,0,0,0.1);
     box-sizing: border-box;
+    overflow-x: auto;
 }
 
 .pdc-container-narrow > * {
@@ -77,12 +91,16 @@ body {
     padding: 25px;
     border-radius: 8px;
     margin-bottom: 30px;
+    max-width: 100%;
+    box-sizing: border-box;
 }
 
 .pdc-info-grid {
     display: grid;
     grid-template-columns: 1fr 1fr;
     gap: 12px 40px;
+    max-width: 100%;
+    box-sizing: border-box;
 }
 
 .pdc-info-item {
@@ -225,6 +243,14 @@ tr.row-status-NA {
     width: 100%;
     border-collapse: collapse;
     margin-bottom: 30px;
+    table-layout: auto;
+}
+
+/* Prevent table from forcing horizontal scroll */
+.pdc-checklist-table td,
+.pdc-checklist-table th {
+    word-wrap: break-word;
+    word-break: break-word;
 }
 
 .pdc-checklist-table th,
@@ -382,7 +408,7 @@ tr.row-status-NA {
 .pdc-comments-input {
     width: 100%;
     min-height: 80px;
-    min-width: 400px;
+    min-width: 200px;
     max-width: 100%;
     padding: 10px;
     border: 1px solid #ddd;
@@ -536,6 +562,7 @@ select.checklist-medium {
     padding: 15px;  /* Reduced from 20px */
     border-radius: 5px;
     width: 100%;
+    max-width: 100%;
     box-sizing: border-box;
     margin-bottom: 20px;
 }
@@ -550,6 +577,7 @@ select.checklist-medium {
 .pdc-form-group {
     margin-bottom: 12px;  /* Reduced from 20px */
     width: 100%;
+    max-width: 100%;
     box-sizing: border-box;
 }
 
@@ -562,7 +590,6 @@ select.checklist-medium {
 
 .pdc-form-input {
     width: 100% !important;
-    min-width: 100% !important;
     padding: 8px;  /* Reduced from 10px */
     border: 1px solid #ddd;
     border-radius: 4px;
@@ -655,18 +682,23 @@ select.checklist-medium {
 .pdc-form-input .q-field,
 .pdc-form-input.q-field {
     width: 100% !important;
-    min-width: 100% !important;
+    max-width: 100% !important;
+    box-sizing: border-box !important;
 }
 
 .pdc-form-input .q-field__control,
 .pdc-form-input.q-field .q-field__control {
     width: 100% !important;
-    background-color: white !important;  /* Force white background */
+    max-width: 100% !important;
+    background-color: white !important;
+    box-sizing: border-box !important;
 }
 
 .pdc-form-group .q-field,
 .pdc-form-group .q-input {
     width: 100% !important;
+    max-width: 100% !important;
+    box-sizing: border-box !important;
 }
 
 /* Force white background on all input controls in form groups */
@@ -677,76 +709,48 @@ select.checklist-medium {
     background-color: white !important;
     border: 1px solid #ddd !important;
     border-radius: 4px !important;
-    box-shadow: none !important;  /* Remove inner shadow/border */
+    box-shadow: none !important;
+    box-sizing: border-box !important;
+    max-width: 100% !important;
 }
 
 /* Reduce padding on Quasar fields */
 .pdc-form-group .q-field__control {
     padding: 0 !important;
-    min-height: 40px !important;  /* Slightly taller for better UX */
+    min-height: 40px !important;
+    box-sizing: border-box !important;
 }
 
 /* For text inputs only - not select dropdowns */
 .pdc-form-group .q-input .q-field__control {
-    height: 40px !important;  /* Fixed height only for text inputs */
+    height: 40px !important;
 }
 
 .pdc-form-group .q-field__native {
     padding: 8px !important;
+    box-sizing: border-box !important;
 }
 
 /* Remove bottom border line from Quasar inputs */
 .pdc-form-group .q-field__control:before,
 .pdc-form-group .q-field__control:after {
-    display: none !important;  /* Remove the weird bottom line */
+    display: none !important;
 }
 
 .pdc-form-group .q-field__bottom {
-    display: none !important;  /* Hide hint/error area */
+    display: none !important;
 }
 
 /* Remove inner border/shadow from Quasar components */
 .pdc-form-group .q-field__control-container {
     border: none !important;
+    box-sizing: border-box !important;
+    max-width: 100% !important;
 }
 
 .pdc-form-group .q-field__marginal {
     height: auto !important;
-}
-
-/* Override NiceGUI's default card styling */
-.q-card.pdc-card {
-    background-color: #ecf0f1;
-    padding: 20px;
-    border-radius: 8px;
-    margin-bottom: 20px;
-}
-
-/* Override NiceGUI's select styling for status */
-.q-select.status-P .q-field__control {
-    background-color: #d4edda !important;
-    color: #155724 !important;
-}
-
-.q-select.status-F .q-field__control {
-    background-color: #f8d7da !important;
-    color: #721c24 !important;
-}
-
-.q-select.status-TBD .q-field__control {
-    background-color: #fff3cd !important;
-    color: #856404 !important;
-}
-
-.q-select.status-NA .q-field__control {
-    background-color: #e2e3e5 !important;
-    color: #383d41 !important;
-}
-
-/* Override NiceGUI input focus colors */
-.q-field--focused .q-field__control {
-    border-color: #3498db !important;
-    box-shadow: 0 0 0 2px rgba(52, 152, 219, 0.2) !important;
+    max-width: 100% !important;
 }
 
 /* ========================================================================

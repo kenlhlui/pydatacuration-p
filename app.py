@@ -465,7 +465,7 @@ async def render_project_table(
 
     # Filters
     with ui.element('div').classes('pdc-form-section'):
-        ui.label('Filters').classes('text-lg font-semibold text-gray-700').style('margin-bottom: 12px;')
+        ui.label('Filters').classes('pdc-form-section')
 
         with ui.row().classes('gap-4').style('align-items: flex-end;'):
             # Search filter
