@@ -34,6 +34,7 @@ services:
     container_name: pgadmin
     image: dpage/pgadmin4:latest
     environment:
+      - TZ=${TIMEZONE:-America/Toronto}
       - PGADMIN_DEFAULT_EMAIL=${PGADMIN_MAIL:-curation@example.com}
       - PGADMIN_DEFAULT_PASSWORD=${PGADMIN_PW:-curation}
     ports:
