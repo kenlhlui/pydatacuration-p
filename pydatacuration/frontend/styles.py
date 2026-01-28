@@ -29,8 +29,9 @@ body {
    Container & Layout
    ======================================================================== */
 .pdc-container {
-    max-width: 1600px;
+    max-width: 85%;
     width: 100%;
+    min-width: 320px;
     margin: 0 auto;
     background-color: white;
     padding: 30px;
@@ -45,7 +46,7 @@ body {
 }
 
 .pdc-container-narrow {
-    max-width: 900px;  /* Narrower than pdc-container's 1600px */
+    max-width: 50%;
     width: 100%;
     margin: 0 auto;
     background-color: white;
