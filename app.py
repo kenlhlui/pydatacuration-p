@@ -712,9 +712,6 @@ async def checklist_page(ticket_number: str) -> None:
     project_metadata = duck_db.read_project_metadata_record()
     checklist_type: str | None = project_metadata.get('checklist_type')
 
-    # Load checklist items
-    checklist_items = helpers.get_checklist_items()
-
     # Load checklist results from database
     check_results = duck_db.read_check_results()
 
@@ -833,7 +830,7 @@ async def checklist_page(ticket_number: str) -> None:
                 'Save Curation Log (Word)', on_click=lambda: NiceGUIHelper.export_word_button(duck_db, dir_manager)
             ).classes('pdc-btn pdc-btn-primary')
 
-            ui.button('Calculate Time Spent', on_click=lambda: helpers.calculate_total_time(checklist_items)).classes(
+            ui.button('Calculate Time Spent', on_click=helpers.calculate_total_time).classes(
                 'pdc-btn pdc-btn-calculate'
             )
 

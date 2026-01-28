@@ -5,6 +5,7 @@ from typing import Any
 
 import yaml
 from docxtpl import DocxTemplate
+from sqlmodel import SQLModel
 
 from pydatacuration.db.duck_db import DuckDB
 from pydatacuration.db.sqlmodels import DuckDBmodels
@@ -24,23 +25,24 @@ class Exporter:
     def generate_yaml(self) -> dict[str, Any]:
         """Generate YAML data by reading the database."""
         project_metadata = self.duckdb.read_project_metadata_record()
-        checklist: dict[str, Any] = self.duckdb.read_checklist()
-        # check_results: dict[str, Any] = self.duckdb.read_check_results()
+        checklist: list[SQLModel] = self.duckdb.read_checklist()
 
         # Merge checklist results into checklist
-        for item in checklist.get('checklist', []):
-            if item.get('automated_check_ids') and item.get('automated_check_ids') != []:
-                for check_id in item['automated_check_ids']:
+        for row in checklist:
+            row_dict = row.model_dump()
+            # Unpack the automated check results to the checklist item
+            if row_dict.get('automated_check_ids') and row_dict.get('automated_check_ids') != []:
+                for check_id in row_dict['automated_check_ids']:
                     result = self.duckdb.sql_read_row(
                         DuckDBmodels(self.duckdb.schema_name).check_results(), 'check_id', check_id
                     )
                     if result:
                         check_name = result.get('check_name', '')
-                        item.setdefault('automated_check_results', {})[check_name] = result.get('results')
+                        row_dict.setdefault('automated_check_results', {})[check_name] = result.get('results')
 
         yaml_data = {
             'project_metadata': project_metadata,
-            'checklist': checklist.get('checklist', []),
+            'checklist': [item.model_dump() for item in checklist],
         }
 
         return yaml_data
@@ -73,8 +75,7 @@ class Exporter:
         }
 
         # pass the list in under the name 'rows' to match the template
-        logger.debug('Rendering word document with checklist and metadata')
         doc.render(context)
-        logger.debug(f'Exporting word to {self.dir_manager.outputs_dir / "curation_report.docx"}')
+        logger.info(f'Exporting word to {self.dir_manager.outputs_dir / "curation_report.docx"}')
         output_path = self.dir_manager.outputs_dir / 'curation_report.docx'
         doc.save(output_path)
