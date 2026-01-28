@@ -103,9 +103,12 @@ class NiceGUIHelper:
         else:
             ui.notify('Please enter time in MM:SS format', type='negative')
 
-    @staticmethod
-    def calculate_total_time(items: list) -> None:
+    def calculate_total_time(
+        self,
+    ) -> None:
         """Calculate total time spent."""
+        items = self.get_checklist_items()
+
         total_minutes = 0
         for item in items:
             if item.time_spent:
