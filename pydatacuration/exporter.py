@@ -26,11 +26,11 @@ class Exporter:
         """Generate YAML data by reading the database."""
         project_metadata = self.duckdb.read_project_metadata_record()
         checklist: list[SQLModel] = self.duckdb.read_checklist()
-        # check_results: dict[str, Any] = self.duckdb.read_check_results()
 
         # Merge checklist results into checklist
         for row in checklist:
             row_dict = row.model_dump()
+            # Unpack the automated check results to the checklist item
             if row_dict.get('automated_check_ids') and row_dict.get('automated_check_ids') != []:
                 for check_id in row_dict['automated_check_ids']:
                     result = self.duckdb.sql_read_row(
