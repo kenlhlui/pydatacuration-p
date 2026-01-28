@@ -897,6 +897,14 @@ select.checklist-medium {
     padding: 15px;
     margin-bottom: 20px;
 }
+
+.utl-logo {
+    height: 60px;
+    width: auto;
+    margin: 8px 0;
+    display: block;
+}
+
 </style>
 """
 
