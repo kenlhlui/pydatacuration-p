@@ -147,7 +147,7 @@ async def new_dataset_page() -> None:
     # Apply our custom CSS
     apply_pdc_styles()
 
-    with ui.column().classes('pdc-container'):
+    with ui.column().classes('pdc-container-narrow'):
         # Logo
         ui.html(
             '<img src="/static/UTL.png" alt="University of Toronto Libraries Logo" class="utl-logo">',
@@ -464,7 +464,7 @@ async def render_project_table(
         return
 
     # Filters
-    with ui.element('div').classes('pdc-form-section').style('width: 100%; margin-bottom: 20px;'):
+    with ui.element('div').classes('pdc-form-section'):
         ui.label('Filters').classes('text-lg font-semibold text-gray-700').style('margin-bottom: 12px;')
 
         with ui.row().classes('gap-4').style('align-items: flex-end;'):

@@ -29,7 +29,7 @@ body {
    Container & Layout
    ======================================================================== */
 .pdc-container {
-    max-width: 800px;
+    max-width: 1600px;
     width: 100%;
     margin: 0 auto;
     background-color: white;
@@ -40,6 +40,22 @@ body {
 }
 
 .pdc-container > * {
+    width: 100%;
+    box-sizing: border-box;
+}
+
+.pdc-container-narrow {
+    max-width: 900px;  /* Narrower than pdc-container's 1600px */
+    width: 100%;
+    margin: 0 auto;
+    background-color: white;
+    padding: 30px;
+    border-radius: 8px;
+    box-shadow: 0 2px 10px rgba(0,0,0,0.1);
+    box-sizing: border-box;
+}
+
+.pdc-container-narrow > * {
     width: 100%;
     box-sizing: border-box;
 }
@@ -520,6 +536,7 @@ select.checklist-medium {
     border-radius: 5px;
     width: 100%;
     box-sizing: border-box;
+    margin-bottom: 20px;
 }
 
 .pdc-form-section-header {
