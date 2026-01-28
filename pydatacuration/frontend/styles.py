@@ -905,6 +905,14 @@ select.checklist-medium {
     display: block;
 }
 
+/* ========================================================================
+   Global Link Behavior - Open external links in new tab
+   ======================================================================== */
+/* This applies to markdown-rendered links and other content */
+a[href^="http"] {
+    /* External links handled via JavaScript for target and rel attributes */
+}
+
 </style>
 """
 
@@ -968,8 +976,36 @@ class PDCStyles:
 
 
 def apply_pdc_styles():
-    """Apply PyDataCuration CSS to the current page"""
+    """Apply PyDataCuration CSS to the current page and configure external links."""
     ui.add_head_html(PYDATACURATION_CSS)
+
+    # Add JavaScript to make all external links open in new tab
+    ui.add_body_html("""
+    <script>
+        // Make all external links open in new tab with security attributes
+        document.addEventListener('DOMContentLoaded', function() {
+            function updateExternalLinks() {
+                const links = document.querySelectorAll('a[href^="http"]');
+                links.forEach(link => {
+                    if (!link.hasAttribute('target')) {
+                        link.setAttribute('target', '_blank');
+                        link.setAttribute('rel', 'noopener noreferrer');
+                    }
+                });
+            }
+
+            // Run initially
+            updateExternalLinks();
+
+            // Re-run when content changes (for dynamically added content)
+            const observer = new MutationObserver(updateExternalLinks);
+            observer.observe(document.body, {
+                childList: true,
+                subtree: true
+            });
+        });
+    </script>
+    """)
 
 
 def create_info_grid(metadata: dict, columns: list[tuple[str, str]]):
