@@ -14,3 +14,30 @@ services:
       - ./new_dir:/app/workdir  # Configure the path on the left side of colon to your desired host directory
       - ./res:/app/res  # Configure the path for the res directory
     restart: unless-stopped
+
+  # NEED TO SET UP .env VARIABLES FOR POSTGRES IF USING THIS IN PRODUCTION
+  # See https://github.com/docker/awesome-compose/tree/master/postgresql-pgadmin for more details
+  # Comment out it if you are using duckdb (built-in local db), or an external database
+  postgres:
+    container_name: postgres
+    image: postgres:18-alpine
+    environment:
+      - TZ=${TIMEZONE:-America/Toronto}
+      - POSTGRES_USER=${POSTGRES_USER:-curation}
+      - POSTGRES_PASSWORD=${POSTGRES_PASSWORD:-curation}
+      - POSTGRES_DB=${POSTGRES_DB:-curation}
+    ports:
+      - "5432:5432"
+    restart: always
+
+  pgadmin:
+    container_name: pgadmin
+    image: dpage/pgadmin4:latest
+    environment:
+      - PGADMIN_DEFAULT_EMAIL=${PGADMIN_MAIL:-curation@example.com}
+      - PGADMIN_DEFAULT_PASSWORD=${PGADMIN_PW:-curation}
+    ports:
+      - "5050:80"
+    volumes:
+      - ./dev/servers.json:/pgadmin4/servers.json  # For dev only, remove this line in production
+    restart: always
