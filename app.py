@@ -7,6 +7,7 @@ This version uses the nicegui_styles module for exact CSS matching.
 import asyncio
 import os
 from pathlib import Path
+from urllib.parse import quote
 
 import orjson
 from dotenv import load_dotenv
@@ -445,7 +446,7 @@ async def setup(request: SetupRequest) -> JSONResponse:
         # Execute in thread pool to avoid event loop conflicts
         await loop.run_in_executor(None, run_curation)
 
-        url = f'/checklist?ticket_number={request.ticket_number}'
+        url = f'/checklist?ticket_number={quote(request.ticket_number)}'
         return JSONResponse(content={'success': True, 'redirect_url': url})
 
     except Exception as e:
@@ -494,7 +495,7 @@ async def handle_setup_submit(
         if response_data.get('redirect_url'):
             ui.navigate.to(response_data['redirect_url'])
         else:
-            ui.navigate.to(f'/checklist?ticket_number={form_data["ticket_number"]}')
+            ui.navigate.to(f'/checklist?ticket_number={quote(form_data["ticket_number"])}')
 
     except Exception as e:
         error_msg.set_text(f'Error: {str(e)}')
@@ -626,7 +627,7 @@ async def render_project_table(
                                 if mode == 'resume':
                                     with (
                                         ui.element('a')
-                                        .props(f'href="/checklist?ticket_number={schema["ticket_number"]}"')
+                                        .props(f'href="/checklist?ticket_number={quote(schema["ticket_number"])}"')
                                         .style('color: #3498db; text-decoration: none; font-weight: 600;')
                                     ):
                                         ui.label(f'📋 {schema["ticket_number"]}')
@@ -654,12 +655,16 @@ async def render_project_table(
                                     ui.markdown(
                                         '**URL:** ',
                                     )
+                                    dataset_url = schema.get('dataset_url', 'N/A')
                                     with (
                                         ui.element('a')
-                                        .props(f'href="{schema.get("dataset_url", "N/A")}" target="_blank"')
+                                        .props(
+                                            f'href="{dataset_url}" '
+                                            'target="_blank" rel="noopener noreferrer"'
+                                        )
                                         .style('display: inline;')
                                     ):
-                                        ui.label(schema.get('dataset_url', 'N/A'))
+                                        ui.label(dataset_url)
                             # Curator
                             with ui.element('td'):
                                 ui.label(schema.get('curator_name', 'N/A'))
