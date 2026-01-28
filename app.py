@@ -13,7 +13,7 @@ import orjson
 from dotenv import load_dotenv
 from fastapi import HTTPException
 from fastapi.responses import JSONResponse
-from html_sanitizer import Sanitizer
+from future.backports.urllib.parse import urlparse
 from nicegui import app
 from nicegui import app as nicegui_app
 from nicegui import ui
@@ -77,12 +77,6 @@ class SetupRequest(SQLModel):
     checklist: str = 'high'
     collection_alias: str | None = None
 
-
-# ============================================================================
-# HTML Sanitizer Setup
-# ============================================================================
-
-sanitizer = Sanitizer()
 
 # ============================================================================
 # Main Entrance Page
@@ -465,7 +459,7 @@ async def render_project_table(
 
     # Filters
     with ui.element('div').classes('pdc-form-section'):
-        ui.label('Filters').classes('pdc-form-section')
+        ui.label('Filters').classes('pdc-form-section-header')
 
         with ui.row().classes('gap-4').style('align-items: flex-end;'):
             # Search filter
@@ -554,30 +548,24 @@ async def render_project_table(
                             with ui.element('td'):
                                 with ui.element('div'):
                                     ui.markdown(
-                                        '**Title:** ',
+                                        f'**Title:** {schema.get("dataset_title", "N/A")}',
                                     )
-                                    ui.label(schema.get('dataset_title', 'N/A')).style('display: inline;')
+                                with ui.element('div'):
+                                    ui.markdown(f'**PID:** {schema.get("dataset_pid", "N/A")} ').style(
+                                        'display: inline;'
+                                    )
+
                                 with ui.element('div'):
                                     ui.markdown(
-                                        '**PID:** ',
-                                    )
-                                    ui.label(schema.get('dataset_pid', 'N/A')).style('display: inline;')
+                                        f'**ID (Versioned):** {schema.get("dataset_id", "N/A")}',
+                                    ).style('display: inline;')
                                 with ui.element('div'):
-                                    ui.markdown(
-                                        '**ID (Versioned):** ',
-                                    )
-                                    ui.label(schema.get('dataset_id', 'N/A')).style('display: inline;')
-                                with ui.element('div'):
-                                    ui.markdown(
-                                        '**URL:** ',
-                                    )
                                     dataset_url = schema.get('dataset_url', 'N/A')
-                                    with (
-                                        ui.element('a')
-                                        .props(f'href="{dataset_url}" target="_blank" rel="noopener noreferrer"')
-                                        .style('display: inline;')
-                                    ):
-                                        ui.label(dataset_url)
+                                    parsed = urlparse(dataset_url)
+                                    if parsed.scheme in {'http', 'https'}:
+                                        # Use proper HTML escaping or NiceGUI's built-in link component
+                                        ui.html('URL: ', sanitize=False).style('display: inline; font-weight: bold;')
+                                        ui.link(dataset_url, dataset_url, new_tab=True).style('display: inline;')
                             # Curator
                             with ui.element('td'):
                                 ui.label(schema.get('curator_name', 'N/A'))
