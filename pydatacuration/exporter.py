@@ -75,8 +75,7 @@ class Exporter:
         }
 
         # pass the list in under the name 'rows' to match the template
-        logger.debug('Rendering word document with checklist and metadata')
         doc.render(context)
-        logger.debug(f'Exporting word to {self.dir_manager.outputs_dir / "curation_report.docx"}')
+        logger.info(f'Exporting word to {self.dir_manager.outputs_dir / "curation_report.docx"}')
         output_path = self.dir_manager.outputs_dir / 'curation_report.docx'
         doc.save(output_path)

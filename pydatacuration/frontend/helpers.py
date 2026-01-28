@@ -56,7 +56,7 @@ class NiceGUIHelper:
 
         """
         duck_db_data = self.duckdb.read_checklist()
-        logger.debug(f'Fetched {type(duck_db_data)} checklist items from DuckDB for ticket {self.ticket_number}')
+
         # Change the timedelta to MM:SS format for each item to prevent JSON serialization issues
         for item in duck_db_data:
             time_spent = item.time_spent  # FIXME for the linting issue
