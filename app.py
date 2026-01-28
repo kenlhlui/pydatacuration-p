@@ -712,9 +712,6 @@ async def checklist_page(ticket_number: str) -> None:
     project_metadata = duck_db.read_project_metadata_record()
     checklist_type: str | None = project_metadata.get('checklist_type')
 
-    # Load checklist items
-    checklist_items = helpers.get_checklist_items()
-
     # Load checklist results from database
     check_results = duck_db.read_check_results()
 
