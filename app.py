@@ -7,11 +7,13 @@ This version uses the nicegui_styles module for exact CSS matching.
 import asyncio
 import os
 from pathlib import Path
+from urllib.parse import quote
 
 import orjson
 from dotenv import load_dotenv
 from fastapi import HTTPException
 from fastapi.responses import JSONResponse
+from future.backports.urllib.parse import urlparse
 from nicegui import app
 from nicegui import app as nicegui_app
 from nicegui import ui
@@ -24,6 +26,7 @@ from pydatacuration.frontend.helpers import NiceGUIHelper
 from pydatacuration.frontend.helpers import back_to_main_menu_button
 from pydatacuration.frontend.helpers import priority_options
 from pydatacuration.frontend.helpers import status_options
+from pydatacuration.frontend.styles import MAIN_PAGE_HEAD_CSS
 
 # Import styles and styled components
 from pydatacuration.frontend.styles import apply_pdc_styles
@@ -32,9 +35,9 @@ from pydatacuration.frontend.styles import create_checklist_select
 from pydatacuration.frontend.styles import create_info_grid
 from pydatacuration.frontend.styles import create_priority_badge
 from pydatacuration.frontend.styles import create_status_select
-from pydatacuration.main import CtxObj
 
 # Import the typer app for CLI command execution
+from pydatacuration.main import CtxObj
 from pydatacuration.main import run_all
 from pydatacuration.utils.custom_logging import logger
 from pydatacuration.utils.custom_logging import setup_logging
@@ -86,133 +89,42 @@ async def main_page() -> None:
     apply_pdc_styles()
 
     # Add custom CSS for main page
-    ui.add_head_html("""
-    <style>
-        /* Center everything on the page */
-        .nicegui-content {
-            display: flex !important;
-            align-items: center !important;
-            justify-content: center !important;
-            min-height: 100vh !important;
-            padding: 20px !important;
-        }
-        .main-container {
-            max-width: 1000px;
-            width: 90%;
-            background-color: white;
-            padding: 40px;
-            border-radius: 12px;
-            box-shadow: 0 10px 30px rgba(0,0,0,0.2);
-            text-align: center;
-            align-items: center;
-        }
-        .main-container > * {
-            width: 100%;
-        }
-        body {
-            background: #1E3765 !important;
-            min-height: 100vh;
-        }
-        .option-card {
-            background-color: #f8f9fa;
-            border: 2px solid #e9ecef;
-            border-radius: 8px;
-            padding: 35px;
-            margin: 0;
-            cursor: pointer;
-            transition: all 0.3s ease;
-            height: 100%;
-            display: flex;
-            flex-direction: column;
-            justify-content: center;
-        }
-        .option-card:hover {
-            border-color: #3498db;
-            background-color: #ebf3fd;
-            transform: translateY(-2px);
-            box-shadow: 0 5px 15px rgba(52, 152, 219, 0.2);
-        }
-        .option-title {
-            font-size: 1.4rem;
-            font-weight: 600;
-            color: #2c3e50;
-            margin-bottom: 12px;
-        }
-        .option-description {
-            color: #6c757d;
-            font-size: 1rem;
-        }
-        .icon {
-            font-size: 2.5rem;
-            margin-bottom: 15px;
-        }
-        .options-grid {
-            display: grid;
-            grid-template-columns: 1fr 1fr;
-            gap: 25px;
-            margin-bottom: 25px;
-        }
-        .resume-container {
-            display: flex;
-            justify-content: center;
-            width: 100%;
-            margin-top: 0;
-        }
-        .resume-card {
-            width: 70%;
-            max-width: 600px;
-        }
-        @media (max-width: 768px) {
-            .options-grid {
-                grid-template-columns: 1fr;
-            }
-            .resume-card {
-                width: 100%;
-            }
-        }
-    </style>
-    """)
+    ui.add_head_html(MAIN_PAGE_HEAD_CSS)
 
     with ui.column().classes('main-container'):
-        # Logo and Header container (centered)
-        with ui.element('div').style('text-align: center; width: 100%;'):
-            ui.html(
-                '<img src="/static/UTL.png" '
-                'alt="University of Toronto Libraries Logo" '
-                'style="height: 60px; width: auto; margin: 8px auto; display: block;">',
-                sanitize=False,
-            )
-            ui.html(
-                '<h1 style="color: #1E3765; font-size: 2.6rem; margin-bottom: 10px; margin-top: 10px;">'
-                '<b>Data Curation Tool</b></h1>',
-                sanitize=False,
-            )
+        # Logo and Header
+        ui.html(
+            '<img src="/static/UTL.png" alt="University of Toronto Libraries Logo" class="utl-logo">',
+            sanitize=False,
+        )
+        ui.label(
+            'Data Curation Tool',
+        ).classes('pdc-header')
 
         # Top row options
         with ui.element('div').classes('options-grid'):
             # New Project Option
             with ui.element('div').classes('option-card').on('click', lambda: ui.navigate.to('/new')):
-                ui.html('<div class="icon">📁</div>', sanitize=False)
-                ui.html('<div class="option-title">New Project</div>', sanitize=False)
-                ui.html(
-                    '<div class="option-description">Start a new curation process for a new project</div>',
-                    sanitize=False,
-                )
+                ui.markdown('📁').classes('icon')
+                ui.markdown('New Project').classes('option-title')
+                ui.markdown(
+                    'Start a new curation process for a new project',
+                ).classes('option-description')
 
             # Delete Project Option
             with ui.element('div').classes('option-card').on('click', lambda: ui.navigate.to('/delete')):
-                ui.html('<div class="icon">🗑️</div>', sanitize=False)
-                ui.html('<div class="option-title">Delete Project</div>', sanitize=False)
-                ui.html('<div class="option-description">Delete a project from the database</div>', sanitize=False)
+                ui.markdown('🗑️').classes('icon')
+                ui.markdown('Delete Project').classes('option-title')
+                ui.markdown('Delete a project from the database').classes('option-description')
 
         # Resume Work Option (centered)
         with (
             ui.element('div').classes('resume-container'),
             ui.element('div').classes('option-card resume-card').on('click', lambda: ui.navigate.to('/resume')),
         ):
-            ui.html('<div class="icon">✏️</div>', sanitize=False)
-            ui.html('<div class="option-title">Resume Project</div>', sanitize=False)
-            ui.html('<div class="option-description">Continue working on an existing project</div>', sanitize=False)
+            ui.markdown('✏️').classes('icon')
+            ui.markdown('Resume Project').classes('option-title')
+            ui.markdown('Continue working on an existing project').classes('option-description')
 
 
 # ============================================================================
@@ -229,16 +141,12 @@ async def new_dataset_page() -> None:
     # Apply our custom CSS
     apply_pdc_styles()
 
-    with ui.column().classes('pdc-container').style('width: 100%; max-width: 800px;'):
+    with ui.column().classes('pdc-container-narrow'):
         # Logo
         ui.html(
-            '<img src="/static/UTL.png" '
-            'alt="University of Toronto Libraries Logo" '
-            'class="pdc-logo" '
-            'style="height: 60px; width: auto; margin: 8px;">',
+            '<img src="/static/UTL.png" alt="University of Toronto Libraries Logo" class="utl-logo">',
             sanitize=False,
         )
-
         # Header
         ui.label('Data Curation Tool').classes('pdc-header')
 
@@ -271,8 +179,8 @@ async def new_dataset_page() -> None:
                 form_data[key] = default_value
 
         # Dataset Information Section
-        with ui.element('div').classes('pdc-form-section').style('width: 100%;'):
-            ui.label('Dataset Information').classes('text-lg font-semibold text-gray-700').style('margin-bottom: 12px;')
+        with ui.element('div').classes('pdc-form-section'):
+            ui.label('Dataset Information').classes('pdc-form-section-header')
 
             with ui.element('div').classes('pdc-form-group'):
                 ui.label('Dataset Persistent Identifier (PID) *').classes('pdc-form-label')
@@ -303,8 +211,8 @@ async def new_dataset_page() -> None:
                 ui.label('Ticket number for the curation report').classes('pdc-form-helper')
 
         # Curator Information Section
-        with ui.element('div').classes('pdc-form-section').style('width: 100%;'):
-            ui.label('Curator Information').classes('text-lg font-semibold text-gray-700').style('margin-bottom: 12px;')
+        with ui.element('div').classes('pdc-form-section'):
+            ui.label('Curator Information').classes('pdc-form-section-header')
 
             with ui.element('div').classes('pdc-form-group'):
                 ui.label('Curator Name *').classes('pdc-form-label')
@@ -319,8 +227,8 @@ async def new_dataset_page() -> None:
                 ).style('width: 100%')
 
         # Directory Settings Section
-        with ui.element('div').classes('pdc-form-section').style('width: 100%;'):
-            ui.label('Directory Settings').classes('text-lg font-semibold text-gray-700').style('margin-bottom: 12px;')
+        with ui.element('div').classes('pdc-form-section'):
+            ui.label('Directory Settings').classes('pdc-form-section-header')
 
             with ui.element('div').classes('pdc-form-group'):
                 ui.label('Main Directory Path').classes('pdc-form-label')
@@ -330,8 +238,8 @@ async def new_dataset_page() -> None:
                 ui.label('The main (base) directory for project files').classes('pdc-form-helper')
 
         # Checklist Selection Section
-        with ui.element('div').classes('pdc-form-section').style('width: 100%;'):
-            ui.label('Checklist Selection').classes('text-lg font-semibold text-gray-700').style('margin-bottom: 12px;')
+        with ui.element('div').classes('pdc-form-section'):
+            ui.label('Checklist Selection').classes('pdc-form-section-header')
 
             with ui.element('div').classes('pdc-form-group'):
                 # Use our custom checklist select with styling
@@ -342,8 +250,8 @@ async def new_dataset_page() -> None:
                 ui.label('Select the checklist level for this curation task').classes('pdc-form-helper')
 
         # Processing Options Section
-        with ui.element('div').classes('pdc-form-section').style('width: 100%;'):
-            ui.label('Processing Options').classes('text-lg font-semibold text-gray-700').style('margin-bottom: 12px;')
+        with ui.element('div').classes('pdc-form-section'):
+            ui.label('Processing Options').classes('pdc-form-section-header')
 
             with ui.row().classes('gap-4'):
                 ui.checkbox('Force delete existing project', value=form_data.get('force_del', False)).bind_value(
@@ -448,7 +356,7 @@ async def setup(request: SetupRequest) -> JSONResponse:
         # Execute in thread pool to avoid event loop conflicts
         await loop.run_in_executor(None, run_curation)
 
-        url = f'/checklist?ticket_number={request.ticket_number}'
+        url = f'/checklist?ticket_number={quote(request.ticket_number)}'
         return JSONResponse(content={'success': True, 'redirect_url': url})
 
     except Exception as e:
@@ -497,7 +405,7 @@ async def handle_setup_submit(
         if response_data.get('redirect_url'):
             ui.navigate.to(response_data['redirect_url'])
         else:
-            ui.navigate.to(f'/checklist?ticket_number={form_data["ticket_number"]}')
+            ui.navigate.to(f'/checklist?ticket_number={quote(form_data["ticket_number"])}')
 
     except Exception as e:
         error_msg.set_text(f'Error: {str(e)}')
@@ -550,8 +458,8 @@ async def render_project_table(
         return
 
     # Filters
-    with ui.element('div').classes('pdc-form-section').style('width: 100%; margin-bottom: 20px;'):
-        ui.label('Filters').classes('text-lg font-semibold text-gray-700').style('margin-bottom: 12px;')
+    with ui.element('div').classes('pdc-form-section'):
+        ui.label('Filters').classes('pdc-form-section-header')
 
         with ui.row().classes('gap-4').style('align-items: flex-end;'):
             # Search filter
@@ -617,7 +525,7 @@ async def render_project_table(
                         headers.append('Action')
                     for header in headers:
                         with ui.element('th'):
-                            ui.html(header, sanitize=False)
+                            ui.markdown(header)
 
                 # Table Body
                 with ui.element('tbody'):
@@ -627,34 +535,44 @@ async def render_project_table(
                             # Ticket Number
                             with ui.element('td'):
                                 if mode == 'resume':
-                                    ui.html(
-                                        f'<a href="/checklist?ticket_number={schema["ticket_number"]}" '
-                                        f'style="color: #3498db; text-decoration: none; font-weight: 600;">'
-                                        f'📋 {schema["ticket_number"]}</a>',
-                                        sanitize=False,
-                                    )
+                                    with (
+                                        ui.element('a')
+                                        .props(f'href="/checklist?ticket_number={quote(schema["ticket_number"])}"')
+                                        .style('color: #3498db; text-decoration: none; font-weight: 600;')
+                                    ):
+                                        ui.label(f'📋 {schema["ticket_number"]}')
                                 else:
                                     ui.label(f'📋 {schema["ticket_number"]}').style('font-weight: 600;')
 
                             # Dataset Metadata
                             with ui.element('td'):
-                                ui.html(f'<strong>Title:</strong> {schema.get("dataset_title", "N/A")}', sanitize=False)  # noqa: E501
-                                ui.html(f'<strong>PID:</strong> {schema.get("dataset_pid", "N/A")}', sanitize=False)
-                                ui.html(
-                                    f'<strong>ID (Versioned):</strong> {schema.get("dataset_id", "N/A")}',
-                                    sanitize=False,
-                                )  # noqa: E501
-                                ui.html(
-                                    f'<strong>URL:</strong> <a href="{schema.get("dataset_url", "N/A")}" target="_blank">{schema.get("dataset_url", "N/A")}</a>',
-                                    sanitize=False,
-                                )  # noqa: E501
+                                with ui.element('div'):
+                                    ui.markdown(
+                                        f'**Title:** {schema.get("dataset_title", "N/A")}',
+                                    )
+                                with ui.element('div'):
+                                    ui.markdown(f'**PID:** {schema.get("dataset_pid", "N/A")} ').style(
+                                        'display: inline;'
+                                    )
+
+                                with ui.element('div'):
+                                    ui.markdown(
+                                        f'**ID (Versioned):** {schema.get("dataset_id", "N/A")}',
+                                    ).style('display: inline;')
+                                with ui.element('div'):
+                                    dataset_url = schema.get('dataset_url', 'N/A')
+                                    parsed = urlparse(dataset_url)
+                                    if parsed.scheme in {'http', 'https'}:
+                                        # Use proper HTML escaping or NiceGUI's built-in link component
+                                        ui.html('URL: ', sanitize=False).style('display: inline; font-weight: bold;')
+                                        ui.link(dataset_url, dataset_url, new_tab=True).style('display: inline;')
                             # Curator
                             with ui.element('td'):
                                 ui.label(schema.get('curator_name', 'N/A'))
 
                             # Last Modified
                             with ui.element('td'):
-                                ui.label(schema['last_modified']).style('color: #7f8c8d;')
+                                ui.label(schema['last_modified'])
 
                             # Action column (only for delete mode)
                             if mode == 'delete':
@@ -692,10 +610,7 @@ async def resume_work_page() -> None:
     with ui.column().classes('pdc-container'):
         # Logo and Header
         ui.html(
-            '<img src="/static/UTL.png" '
-            'alt="University of Toronto Libraries Logo" '
-            'class="pdc-logo" '
-            'style="height: 60px; width: auto; margin: 8px;">',
+            '<img src="/static/UTL.png" alt="University of Toronto Libraries Logo" class="utl-logo">',
             sanitize=False,
         )
         ui.label('Resume Project').classes('pdc-header')
@@ -726,10 +641,7 @@ async def delete_project_page() -> None:
     with container:
         # Logo and Header
         ui.html(
-            '<img src="/static/UTL.png" '
-            'alt="University of Toronto Libraries Logo" '
-            'class="pdc-logo" '
-            'style="height: 60px; width: auto; margin: 8px;">',
+            '<img src="/static/UTL.png" alt="University of Toronto Libraries Logo" class="utl-logo">',
             sanitize=False,
         )
         ui.label('Delete Project').classes('pdc-header')
@@ -809,13 +721,9 @@ async def checklist_page(ticket_number: str) -> None:
     with ui.column().classes('pdc-container'):
         # Logo
         ui.html(
-            '<img src="/static/UTL.png" '
-            'alt="University of Toronto Libraries Logo" '
-            'class="pdc-logo" '
-            'style="height: 60px; width: auto; margin: 8px;">',
+            '<img src="/static/UTL.png" alt="University of Toronto Libraries Logo" class="utl-logo">',
             sanitize=False,
         )
-
         # Header, with dynamic checklist type
         checklist_name = f'{checklist_type.title()}-Level ' if checklist_type else ''
         ui.label(f'{checklist_name}Curation Checklist').classes('pdc-header')
@@ -979,7 +887,7 @@ async def render_checklist_table(  # noqa: PLR0913, C901, PLR0917
                 'Time Spent',
             ]:
                 with ui.element('th'):
-                    ui.html(header, sanitize=False)
+                    ui.markdown(header)
 
         # Table Body
         with ui.element('tbody'):
@@ -989,13 +897,13 @@ async def render_checklist_table(  # noqa: PLR0913, C901, PLR0917
                 if item.section != current_section:
                     current_section = item.section
                     with ui.element('tr'), ui.element('td').props('colspan=7').classes('pdc-section-header'):
-                        ui.html(item.section, sanitize=False)
+                        ui.label(item.section)
 
                 # Item row
                 with ui.element('tr').props(f'data-item-id="{item.id}"'):
                     # ID
                     with ui.element('td').classes('pdc-item-id'):
-                        ui.html(item.id, sanitize=False)
+                        ui.label(item.id)
 
                     # Action & Instructions
                     with ui.element('td').classes('details-cell'):
@@ -1003,7 +911,7 @@ async def render_checklist_table(  # noqa: PLR0913, C901, PLR0917
                             ui.markdown(item.action)
                         if item.instructions:
                             with ui.element('div').classes('pdc-instructions-header'):
-                                ui.html('Guidance:', sanitize=False)
+                                ui.markdown('**Guidance**')
                             ui.markdown(item.instructions).classes('pdc-instructions')
 
                     # Information Location
@@ -1016,32 +924,59 @@ async def render_checklist_table(  # noqa: PLR0913, C901, PLR0917
                         if item_check_type:
                             create_check_type_badge(item_check_type)
 
-                        # 2. Show tool execution
-                        tool_explanation = getattr(item, 'tool_explanation', None)
-                        if tool_explanation:
-                            with ui.element('div').classes('pdc-tool-execution'):
-                                ui.markdown(f'**Tool Used:** {tool_explanation}')
-
-                        # 3. Render automated check results if applicable
+                        # 2. Show tool execution and results - combined section
                         automated_check_ids = getattr(item, 'automated_check_ids', [])
-                        if automated_check_ids:
-                            for ac_id in automated_check_ids:
-                                result: dict | None = duckdb_instance.sql_read_row(
-                                    DuckDBmodels(ticket_number).check_results(),
-                                    'check_id',
-                                    ac_id,
-                                )
-                                # Render the 'results' item, if it exists
-                                if result and result.get('results') and len(result['results']) > 0:
-                                    # Use the scrollable container class from nicegui_styles.py
-                                    # Only render the grey scrollable box if there are results
+                        tool_explanation = getattr(item, 'tool_explanation', None)
+
+                        # Show for Automated checks or when check IDs exist
+                        if item_check_type == 'Automated' or automated_check_ids:
+                            with ui.element('div').classes('pdc-tool-execution'):
+                                # Collect check info
+                                checks_info = []
+
+                                if automated_check_ids:
+                                    checks_info = duckdb_instance.sql_read_with_in_filter(
+                                        DuckDBmodels(ticket_number).check_results(),
+                                        'check_id',
+                                        automated_check_ids,
+                                    )
+
+                                # Display Tool Checks header with check names
+                                with ui.element('div').classes('pdc-instructions-header'):
+                                    ui.markdown('**Tool Checks:**')
+                                if checks_info:
+                                    check_names = [
+                                        f'- {info["check_name"]}' for info in checks_info if info.get('check_name')
+                                    ]
+                                    check_list = '\n'.join(check_names)
+                                    ui.markdown(check_list).classes('pdc-static-curator-check-item')
+                                elif tool_explanation:
+                                    ui.markdown(tool_explanation).classes('pdc-static-curator-check-item')
+                                else:
+                                    ui.markdown('*No automated checks configured*').classes(
+                                        'pdc-static-curator-check-item'
+                                    )
+
+                            # 3. Render actual check results
+                            if checks_info:
+                                results_displayed = False
+                                for result in checks_info:
+                                    if result and result.get('results') and len(result['results']) > 0:
+                                        with ui.element('div').classes('pdc-dynamic-check-results'):
+                                            render_check_results(result)
+                                        results_displayed = True
+
+                                # Show "no applicable result" if checks exist but no results
+                                if not results_displayed:
                                     with ui.element('div').classes('pdc-dynamic-check-results'):
-                                        render_check_results(result['results'], result['unit'], ac_id)
+                                        ui.markdown('*No applicable results*')
 
                         # 4. Finally, show any manually entered information location
-                        information_location = getattr(item, 'information_location', None)
-                        if information_location:
-                            ui.markdown(information_location).classes('pdc-static-info-location')
+                        curator_check_item = getattr(item, 'curator_check_item', None)
+                        if curator_check_item:
+                            with ui.element('div').classes('pdc-instructions-header'):
+                                ui.markdown('**Curator Checks:**')
+                            ui.markdown(curator_check_item).classes('pdc-static-curator-check-item')
                     # Status
                     with ui.element('td'):
                         create_status_select(
@@ -1090,18 +1025,20 @@ async def render_checklist_table(  # noqa: PLR0913, C901, PLR0917
                         create_timer_callback(item.id, time_input)
 
 
-def render_check_results(results, result_name: str, check_id: str) -> None:
+def render_check_results(results: dict) -> None:
     """Render check results based on their type (list, dict, or other).
 
     Args:
-        results (Any): The results data to render (can be list, dict, or other types).
-        result_name (str): The name of the result to display as a sub-label.
-        check_id (str): The check identifier to display as a label.
+        results (dict): The results data to render (can be list, dict, or other types).
 
     """
+    check_id = results.get('check_id', 'Unknown Check ID')
+    result_name = results.get('unit', 'result')
+    results = results.get('results', {})
+
     # Use the pdc-check-result class from nicegui_styles.py instead of inline styles
     with ui.element('div').classes('pdc-check-result'):
-        # Header with check ID - using pdc-static-info-location class
+        # Header with check ID - using pdc-static-curator-check-item class
         ui.label(f'{check_id}').classes('pdc-check-result-header')
 
         if isinstance(results, list):
@@ -1114,10 +1051,10 @@ def render_check_results(results, result_name: str, check_id: str) -> None:
                     with ui.element('li').classes('result-item'):
                         if isinstance(item, dict):
                             # If list contains dicts, render key-value pairs
-                            ui.html(
-                                '<br>'.join([f'<strong>{k}:</strong> {v}' for k, v in item.items()]),
-                                sanitize=False,
-                            )
+                            for k, v in item.items():
+                                with ui.element('div'):
+                                    ui.markdown(f'**{k}:** ')
+                                    ui.label(str(v)).style('display: inline;')
                         else:
                             ui.label(str(item))
 
@@ -1129,7 +1066,7 @@ def render_check_results(results, result_name: str, check_id: str) -> None:
             with ui.element('ol').classes('pdc-check-details-list'):
                 for key, value in results.items():
                     with ui.element('li').classes('result-item'):
-                        ui.html(f'<strong>{key}:</strong> {value}', sanitize=False)
+                        ui.markdown(f'**{key}:** {value}')
 
         else:
             # Render as plain text for other types

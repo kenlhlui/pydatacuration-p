@@ -29,3 +29,19 @@ docker-build-and-run *ARGS:
     UID=$(id -u) GID=$(id -g) docker compose down
     UID=$(id -u) GID=$(id -g) docker compose build
     UID=$(id -u) GID=$(id -g) docker compose up --force-recreate
+
+
+# Development run (with hot-reload, no docker, starts in 8080 (default) )
+dev-run *ARGS:
+    @if [ -d ./workdir ] && [ "{{ARGS}}" != "-f" ]; then \
+        read -p "Remove ./workdir? [y/N] " ans; \
+        case "$$ans" in [Yy]*) ;; *) echo "Aborted."; exit 1 ;; esac; \
+    fi
+    @if [ -d ./workdir ]; then rm -rf ./workdir; fi
+    @mkdir -p ./workdir/db
+    @if [ "{{ARGS}}" != "-f" ]; then \
+        read -p "This will stop/remove containers and rebuild. Continue? [y/N] " ans; \
+        case "$$ans" in [Yy]*) ;; *) echo "Aborted."; exit 1 ;; esac; \
+    fi
+    uv sync
+    uv run app.py

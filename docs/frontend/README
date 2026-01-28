@@ -1,8 +1,13 @@
 # To launch the new frontend (Web UI)
-Run the following to launch the Web UI to launch the app in localhost:9001
+Run the following to launch the Web UI to launch the app in localhost:8080
 
 ```bash
-uvicorn app:app --reload --host 0.0.0.0 --port 9001
+uv run app.py
+```
+Or via Just:
+
+```bash
+just dev-run
 ```
 
 # Dev settings in .env file
@@ -18,6 +23,6 @@ CHECK_LIST =  'high'
 COLLECTION_ALIAS = 'toronto'
 ```
 
-You can then load `http://localhost:9005` in your web browser to access the Web UI for curating new datasets.
+You can then load `http://localhost:9005` (the defined port in docker-compose.yml) in your web browser to access the Web UI for curating new datasets.
 
 These will prefill the respective fields in the new dataset form when you launch the Web UI.

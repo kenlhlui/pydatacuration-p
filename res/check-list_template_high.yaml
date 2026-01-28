@@ -8,9 +8,7 @@ checklist:
     priority: "info"
     section: "1. Structure of deposit"
     automated_check_ids: ["author_dataverse_history"]
-    tool_explanation: |
-      **Tool explanation**: This line generates before the python check result is out.
-    information_location: "Author metadata, dataverse collection history"
+    curator_check_item: "Author metadata, dataverse collection history"
     check_type: "Fully-automated"
 
   - id: "1.2"
@@ -25,7 +23,10 @@ checklist:
 
     priority: "info"
     section: "1. Structure of deposit"
-    information_location: "Dataverse collection structure, dataset relationships"
+    curator_check_item: |
+      - Collection name
+      - Collection structure
+      - Dataset relationships
     check_type: "Manual"
 
   - id: "2.1"
@@ -38,7 +39,7 @@ checklist:
     information: |
       - If the file cannot be opened, flag it for the depositor to check.
       - If the file is not supported, flag it for the depositor to check.
-    information_location: "File accessibility report, unsupported files list"
+    curator_check_item: "File accessibility report, unsupported files list"
     check_type: "Semi-automated"
 
   - id: "2.2"
@@ -47,7 +48,7 @@ checklist:
     priority: "recommended"
     section: "2. Files"
     automated_check_ids: ["filename_special_chars"]
-    information_location: "Filename special characters report"
+    curator_check_item: "Filename special characters report"
     check_type: "Fully-automated"
 
   - id: "2.3"
@@ -57,7 +58,7 @@ checklist:
     priority: "required"
     section: "2. Files"
     automated_check_ids: ["missing_file_extensions"]
-    information_location: "Missing file extensions report"
+    curator_check_item: "Missing file extensions report"
     check_type: "Semi-automated"
 
   - id: "2.4"
@@ -66,7 +67,7 @@ checklist:
     priority: "info"
     section: "2. Files"
     automated_check_ids: ["uncommon_file_formats"]
-    information_location: "Uncommon file formats report"
+    curator_check_item: "Uncommon file formats report"
     check_type: "Fully-automated"
 
   - id: "3.1"
@@ -76,7 +77,7 @@ checklist:
     priority: "required"
     section: "3. Documentation"
     automated_check_ids: ["readme_files"]
-    information_location: "README files report, ds_tree.txt"
+    curator_check_item: "README files report, ds_tree.txt"
     check_type: "Fully-automated"
 
   - id: "3.2"
@@ -86,7 +87,7 @@ checklist:
       - If the files are not listed in the README, we can generate a file tree structure & pass it to the depositors to include in their README, if applicable.
     priority: "required"
     section: "3. Documentation"
-    information_location: "README file, file tree structure comparison"
+    curator_check_item: "README file, file tree structure comparison"
     check_type: "Semi-automated"
 
   - id: "3.3"
@@ -95,7 +96,7 @@ checklist:
       Review README, documentation, and data files, to see if there is anything explaining variable headings etc.
     priority: "required"
     section: "3. Documentation"
-    information_location: "README file, data file headers, documentation files"
+    curator_check_item: "README file, data file headers, documentation files"
     check_type: "Manual"
 
   - id: "4.1"
@@ -105,7 +106,7 @@ checklist:
     priority: "required"
     section: "4. Metadata"
     automated_check_ids: ["potential_typos"]
-    information_location: |
+    curator_check_item: |
       Only checking the following fields:
 
       1. Title
@@ -124,7 +125,7 @@ checklist:
 
     priority: "required"
     section: "4. Metadata"
-    information_location: |
+    curator_check_item: |
       Review the following fields to ensure there is a valid entry and flag any issues:
 
       1. Title
@@ -141,7 +142,7 @@ checklist:
     priority: "required"
     section: "4. Metadata"
     automated_check_ids: ["authors_missing_affiliation"]
-    information_location: "Authors missing affiliation report"
+    curator_check_item: "Authors missing affiliation report"
     check_type: "Fully-automated"
 
   - id: "4.4"
@@ -153,7 +154,7 @@ checklist:
     section: "4. Metadata"
     automated_check_ids:
       ["authors_missing_identifier", "authors_missing_scheme"]
-    information_location: "Author metadata, researcher ID fields"
+    curator_check_item: "Author metadata, researcher ID fields"
     check_type: "Fully-automated"
 
   - id: "4.5"
@@ -167,7 +168,7 @@ checklist:
 
     priority: "recommended"
     section: "4. Metadata"
-    information_location: "Description, README file, metadata field mappings"
+    curator_check_item: "Description, README file, metadata field mappings"
     check_type: "Manual"
 
   - id: "4.6"
@@ -176,7 +177,7 @@ checklist:
       Review metadata and flag acronyms/terms that may need to be described.
     priority: "recommended"
     section: "4. Metadata"
-    information_location: "Metadata fields, acronyms and terms usage"
+    curator_check_item: "Metadata fields, acronyms and terms usage"
     check_type: "Manual"
 
   - id: "4.7"
@@ -195,7 +196,7 @@ checklist:
       - Other relevant information
     priority: "recommended"
     section: "4. Metadata"
-    information_location: "Dataset description field"
+    curator_check_item: "Dataset description field"
     check_type: "Manual"
 
   - id: "4.8"
@@ -206,7 +207,7 @@ checklist:
     priority: "recommended"
     section: "4. Metadata"
     automated_check_ids: ["keywords_existence"]
-    information_location: "Keywords field, controlled vocabulary references"
+    curator_check_item: "Keywords field, controlled vocabulary references"
     check_type: "Fully-automated"
 
   - id: "4.9"
@@ -218,7 +219,7 @@ checklist:
         - Check whether a PID (such as a DOI) is included.
     priority: "recommended"
     section: "4. Metadata"
-    information_location: "Title, metadata publication fields, DOI/PID references"
+    curator_check_item: "Title, metadata publication fields, DOI/PID references"
     check_type: "Manual"
 
   - id: "4.10"
@@ -227,7 +228,7 @@ checklist:
       - Does the title, description or notes indicate there is a related dataset that should be included in the metadata?
     priority: "recommended"
     section: "4. Metadata"
-    information_location: "Title, description, notes fields for related datasets"
+    curator_check_item: "Title, description, notes fields for related datasets"
     check_type: "Manual"
 
   - id: "5.1"
@@ -244,7 +245,7 @@ checklist:
             - Any other information that can be used to identify an individual.
     priority: "required"
     section: "5.0 Sensitive data and IP"
-    information_location: "File names, documentation, metadata description/notes/access fields"
+    curator_check_item: "File names, documentation, metadata description/notes/access fields"
     check_type: "Manual"
 
   - id: "5.2"
@@ -253,7 +254,7 @@ checklist:
       - If something is flagged in the sensitive data review (see question above), check the intake form to confirm information about their REB status.
     priority: "required"
     section: "5.0 Sensitive data and IP"
-    information_location: "Intake form, REB approval documentation"
+    curator_check_item: "Intake form, REB approval documentation"
     check_type: "Manual"
 
   - id: "5.3"
@@ -264,7 +265,7 @@ checklist:
     priority: "required"
     section: "5.0 Sensitive data and IP"
     automated_check_ids: ["termsOfUse", "license"]
-    information_location: "License field, CC0 confirmation, restricted files list"
+    curator_check_item: "License field, CC0 confirmation, restricted files list"
     check_type: "Semi-automated"
 
   - id: "5.4b"
@@ -275,7 +276,7 @@ checklist:
     priority: "required"
     section: "5.0 Sensitive data and IP"
     automated_check_ids: ["restricted_files", "termsOfAccess"]
-    information_location: "Terms of Access field, restricted files status"
+    curator_check_item: "Terms of Access field, restricted files status"
     check_type: "Semi-automated"
 
   - id: "5.5"
@@ -284,7 +285,7 @@ checklist:
       - Review the description, documentation, and names of files to see if there are any that stand out as possible third-party data sources.
     priority: "required"
     section: "5.0 Sensitive data and IP"
-    information_location: "Description, documentation, file names for third-party sources"
+    curator_check_item: "Description, documentation, file names for third-party sources"
     check_type: "Manual"
 
   - id: "6.1"
@@ -293,7 +294,7 @@ checklist:
       - Review the description, documentation, and names of files to see if there are any that stand out as possible third-party data sources.
     priority: "required"
     section: "6.0 Additional comments"
-    information_location: "General review of all components"
+    curator_check_item: "General review of all components"
     check_type: "Manual"
 
   - id: "6.2"
@@ -302,5 +303,5 @@ checklist:
       - Review the description, documentation, and names of files to see if there are any that stand out as possible third-party data sources.
     priority: "recommended"
     section: "6.0 Additional comments"
-    information_location: "General review of all components"
+    curator_check_item: "General review of all components"
     check_type: "Manual"

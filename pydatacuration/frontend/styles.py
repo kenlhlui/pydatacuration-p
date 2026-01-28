@@ -18,18 +18,48 @@ PYDATACURATION_CSS = """
 /* ========================================================================
    Base Styles
    ======================================================================== */
+* {
+    box-sizing: border-box;
+}
+
+html {
+    overflow-x: hidden;
+    width: 100%;
+}
+
 body {
     font-family: Arial, sans-serif;
     margin: 20px;
     background-color: #f5f5f5;
     line-height: 1.6;
+    overflow-x: hidden;
+    max-width: 100vw;
+    box-sizing: border-box;
 }
 
 /* ========================================================================
    Container & Layout
    ======================================================================== */
 .pdc-container {
-    max-width: 1600px;
+    max-width: 85%;
+    width: 100%;
+    min-width: 320px;
+    margin: 0 auto;
+    background-color: white;
+    padding: 30px;
+    border-radius: 8px;
+    box-shadow: 0 2px 10px rgba(0,0,0,0.1);
+    box-sizing: border-box;
+    overflow-x: auto;
+}
+
+.pdc-container > * {
+    width: 100%;
+    box-sizing: border-box;
+}
+
+.pdc-container-narrow {
+    max-width: 50%;
     width: 100%;
     margin: 0 auto;
     background-color: white;
@@ -37,9 +67,10 @@ body {
     border-radius: 8px;
     box-shadow: 0 2px 10px rgba(0,0,0,0.1);
     box-sizing: border-box;
+    overflow-x: auto;
 }
 
-.pdc-container > * {
+.pdc-container-narrow > * {
     width: 100%;
     box-sizing: border-box;
 }
@@ -60,12 +91,16 @@ body {
     padding: 25px;
     border-radius: 8px;
     margin-bottom: 30px;
+    max-width: 100%;
+    box-sizing: border-box;
 }
 
 .pdc-info-grid {
     display: grid;
     grid-template-columns: 1fr 1fr;
     gap: 12px 40px;
+    max-width: 100%;
+    box-sizing: border-box;
 }
 
 .pdc-info-item {
@@ -208,6 +243,14 @@ tr.row-status-NA {
     width: 100%;
     border-collapse: collapse;
     margin-bottom: 30px;
+    table-layout: auto;
+}
+
+/* Prevent table from forcing horizontal scroll */
+.pdc-checklist-table td,
+.pdc-checklist-table th {
+    word-wrap: break-word;
+    word-break: break-word;
 }
 
 .pdc-checklist-table th,
@@ -298,14 +341,14 @@ tr.row-status-NA {
     background-color: #ffffff;
 }
 
-.pdc-static-info-location {
+.pdc-static-curator-check-item {
     margin-top: 0px;
     font-size: 12px;
     color: #000000;
     display: block;
 }
 
-.pdc-static-info-location:empty {
+.pdc-static-curator-check-item:empty {
     display: none;
 }
 
@@ -365,7 +408,7 @@ tr.row-status-NA {
 .pdc-comments-input {
     width: 100%;
     min-height: 80px;
-    min-width: 400px;
+    min-width: 200px;
     max-width: 100%;
     padding: 10px;
     border: 1px solid #ddd;
@@ -519,19 +562,22 @@ select.checklist-medium {
     padding: 15px;  /* Reduced from 20px */
     border-radius: 5px;
     width: 100%;
+    max-width: 100%;
     box-sizing: border-box;
+    margin-bottom: 20px;
 }
 
-.pdc-form-section h3 {
-    margin-top: 0;
-    margin-bottom: 12px;  /* Reduced from default */
-    color: #2c3e50;
-    font-size: 1.1rem;  /* Slightly smaller */
+.pdc-form-section-header {
+    font-size: 1.125rem; /* text-lg */
+    font-weight: 600; /* font-semibold */
+    color: #374151; /* text-gray-700 */
+    margin-bottom: 12px;
 }
 
 .pdc-form-group {
     margin-bottom: 12px;  /* Reduced from 20px */
     width: 100%;
+    max-width: 100%;
     box-sizing: border-box;
 }
 
@@ -544,7 +590,6 @@ select.checklist-medium {
 
 .pdc-form-input {
     width: 100% !important;
-    min-width: 100% !important;
     padding: 8px;  /* Reduced from 10px */
     border: 1px solid #ddd;
     border-radius: 4px;
@@ -637,18 +682,23 @@ select.checklist-medium {
 .pdc-form-input .q-field,
 .pdc-form-input.q-field {
     width: 100% !important;
-    min-width: 100% !important;
+    max-width: 100% !important;
+    box-sizing: border-box !important;
 }
 
 .pdc-form-input .q-field__control,
 .pdc-form-input.q-field .q-field__control {
     width: 100% !important;
-    background-color: white !important;  /* Force white background */
+    max-width: 100% !important;
+    background-color: white !important;
+    box-sizing: border-box !important;
 }
 
 .pdc-form-group .q-field,
 .pdc-form-group .q-input {
     width: 100% !important;
+    max-width: 100% !important;
+    box-sizing: border-box !important;
 }
 
 /* Force white background on all input controls in form groups */
@@ -659,76 +709,48 @@ select.checklist-medium {
     background-color: white !important;
     border: 1px solid #ddd !important;
     border-radius: 4px !important;
-    box-shadow: none !important;  /* Remove inner shadow/border */
+    box-shadow: none !important;
+    box-sizing: border-box !important;
+    max-width: 100% !important;
 }
 
 /* Reduce padding on Quasar fields */
 .pdc-form-group .q-field__control {
     padding: 0 !important;
-    min-height: 40px !important;  /* Slightly taller for better UX */
+    min-height: 40px !important;
+    box-sizing: border-box !important;
 }
 
 /* For text inputs only - not select dropdowns */
 .pdc-form-group .q-input .q-field__control {
-    height: 40px !important;  /* Fixed height only for text inputs */
+    height: 40px !important;
 }
 
 .pdc-form-group .q-field__native {
     padding: 8px !important;
+    box-sizing: border-box !important;
 }
 
 /* Remove bottom border line from Quasar inputs */
 .pdc-form-group .q-field__control:before,
 .pdc-form-group .q-field__control:after {
-    display: none !important;  /* Remove the weird bottom line */
+    display: none !important;
 }
 
 .pdc-form-group .q-field__bottom {
-    display: none !important;  /* Hide hint/error area */
+    display: none !important;
 }
 
 /* Remove inner border/shadow from Quasar components */
 .pdc-form-group .q-field__control-container {
     border: none !important;
+    box-sizing: border-box !important;
+    max-width: 100% !important;
 }
 
 .pdc-form-group .q-field__marginal {
     height: auto !important;
-}
-
-/* Override NiceGUI's default card styling */
-.q-card.pdc-card {
-    background-color: #ecf0f1;
-    padding: 20px;
-    border-radius: 8px;
-    margin-bottom: 20px;
-}
-
-/* Override NiceGUI's select styling for status */
-.q-select.status-P .q-field__control {
-    background-color: #d4edda !important;
-    color: #155724 !important;
-}
-
-.q-select.status-F .q-field__control {
-    background-color: #f8d7da !important;
-    color: #721c24 !important;
-}
-
-.q-select.status-TBD .q-field__control {
-    background-color: #fff3cd !important;
-    color: #856404 !important;
-}
-
-.q-select.status-NA .q-field__control {
-    background-color: #e2e3e5 !important;
-    color: #383d41 !important;
-}
-
-/* Override NiceGUI input focus colors */
-.q-field--focused .q-field__control {
-    border-color: #3498db !important;
-    box-shadow: 0 0 0 2px rgba(52, 152, 219, 0.2) !important;
+    max-width: 100% !important;
 }
 
 /* ========================================================================
@@ -897,7 +919,110 @@ select.checklist-medium {
     padding: 15px;
     margin-bottom: 20px;
 }
+
+.utl-logo {
+    height: 60px;
+    width: auto;
+    margin: 8px 0;
+    display: block;
+}
+
+/* ========================================================================
+   Global Link Behavior - Open external links in new tab
+   ======================================================================== */
+/* This applies to markdown-rendered links and other content */
+a[href^="http"] {
+    /* External links handled via JavaScript for target and rel attributes */
+}
+
 </style>
+"""
+
+MAIN_PAGE_HEAD_CSS: str = """
+<style>
+        /* Center everything on the page */
+        .nicegui-content {
+            display: flex !important;
+            align-items: center !important;
+            justify-content: center !important;
+            min-height: 100vh !important;
+            padding: 20px !important;
+        }
+        .main-container {
+            max-width: 1000px;
+            width: 90%;
+            background-color: white;
+            padding: 40px;
+            border-radius: 12px;
+            box-shadow: 0 10px 30px rgba(0,0,0,0.2);
+            text-align: center;
+            align-items: center;
+        }
+        .main-container > * {
+            width: 100%;
+        }
+        body {
+            background: #1E3765 !important;
+            min-height: 100vh;
+        }
+        .option-card {
+            background-color: #f8f9fa;
+            border: 2px solid #e9ecef;
+            border-radius: 8px;
+            padding: 35px;
+            margin: 0;
+            cursor: pointer;
+            transition: all 0.3s ease;
+            height: 100%;
+            display: flex;
+            flex-direction: column;
+            justify-content: center;
+        }
+        .option-card:hover {
+            border-color: #3498db;
+            background-color: #ebf3fd;
+            transform: translateY(-2px);
+            box-shadow: 0 5px 15px rgba(52, 152, 219, 0.2);
+        }
+        .option-title {
+            font-size: 1.4rem;
+            font-weight: 600;
+            color: #2c3e50;
+            margin-bottom: 12px;
+        }
+        .option-description {
+            color: #6c757d;
+            font-size: 1rem;
+        }
+        .icon {
+            font-size: 2.5rem;
+            margin-bottom: 15px;
+        }
+        .options-grid {
+            display: grid;
+            grid-template-columns: 1fr 1fr;
+            gap: 25px;
+            margin-bottom: 25px;
+        }
+        .resume-container {
+            display: flex;
+            justify-content: center;
+            width: 100%;
+            margin-top: 0;
+        }
+        .resume-card {
+            width: 70%;
+            max-width: 600px;
+        }
+        @media (max-width: 768px) {
+            .options-grid {
+                grid-template-columns: 1fr;
+            }
+            .resume-card {
+                width: 100%;
+            }
+        }
+    </style>
 """
 
 
@@ -959,13 +1084,41 @@ class PDCStyles:
 # ============================================================================
 
 
-def apply_pdc_styles():
-    """Apply PyDataCuration CSS to the current page"""
+def apply_pdc_styles() -> None:
+    """Apply PyDataCuration CSS to the current page and configure external links."""
     ui.add_head_html(PYDATACURATION_CSS)
 
+    # Add JavaScript to make all external links open in new tab
+    ui.add_body_html("""
+    <script>
+        // Make all external links open in new tab with security attributes
+        document.addEventListener('DOMContentLoaded', function() {
+            function updateExternalLinks() {
+                const links = document.querySelectorAll('a[href^="http"]');
+                links.forEach(link => {
+                    if (!link.hasAttribute('target')) {
+                        link.setAttribute('target', '_blank');
+                        link.setAttribute('rel', 'noopener noreferrer');
+                    }
+                });
+            }
 
-def create_info_grid(metadata: dict, columns: list[tuple[str, str]]):
-    """Create a standardized info grid matching your current design
+            // Run initially
+            updateExternalLinks();
+
+            // Re-run when content changes (for dynamically added content)
+            const observer = new MutationObserver(updateExternalLinks);
+            observer.observe(document.body, {
+                childList: true,
+                subtree: true
+            });
+        });
+    </script>
+    """)
+
+
+def create_info_grid(metadata: dict, columns: list[tuple[str, str]]) -> None:
+    """Create a standardized info grid matching your current design.
 
     Args:
         metadata: Dictionary of metadata values
@@ -981,8 +1134,13 @@ def create_info_grid(metadata: dict, columns: list[tuple[str, str]]):
                 ui.label(metadata.get(key, 'N/A')).classes('pdc-info-value')
 
 
-def create_priority_badge(priority: str):
-    """Create a priority badge with correct styling"""
+def create_priority_badge(priority: str) -> ui.label:
+    """Create a priority badge with correct styling.
+
+    Args:
+        priority: Priority value (Required, Recommended, Info)
+
+    """
     priority_map = {
         'required': ('Required', 'pdc-priority-required'),
         'recommended': ('Recommended', 'pdc-priority-recommended'),
@@ -1085,38 +1243,38 @@ def create_checklist_select(current_value: str, on_change=None):
 # Usage Example
 # ============================================================================
 
-if __name__ == '__main__':
-    """Example usage of the styling module"""
+# if __name__ == '__main__':
+#     """Example usage of the styling module"""
 
-    # Apply styles
-    apply_pdc_styles()
+#     # Apply styles
+#     apply_pdc_styles()
 
-    with ui.column().classes(PDCStyles.CONTAINER):
-        ui.label('PyDataCuration Tool').classes(PDCStyles.HEADER)
+#     with ui.column().classes(PDCStyles.CONTAINER):
+#         ui.label('PyDataCuration Tool').classes(PDCStyles.HEADER)
 
-        # Example info grid
-        metadata = {'ticket_number': 'TICKET-123', 'curator_name': 'John Doe', 'dataset_title': 'Sample Dataset'}
+#         # Example info grid
+#         metadata = {'ticket_number': 'TICKET-123', 'curator_name': 'John Doe', 'dataset_title': 'Sample Dataset'}
 
-        create_info_grid(
-            metadata,
-            [('ticket_number', 'Ticket Number'), ('curator_name', 'Curator Name'), ('dataset_title', 'Dataset Title')],
-        )
+#         create_info_grid(
+#             metadata,
+#             [('ticket_number', 'Ticket Number'), ('curator_name', 'Curator Name'), ('dataset_title', 'Dataset Title')],  # noqa: E501
+#         )
 
-        # Example status select
-        with ui.row():
-            ui.label('Status:')
-            create_status_select('ABC-001', 'P')
+#         # Example status select
+#         with ui.row():
+#             ui.label('Status:')
+#             create_status_select('ABC-001', 'P')
 
-        # Example priority badge
-        with ui.row():
-            ui.label('Priority:')
-            create_priority_badge('required')
+#         # Example priority badge
+#         with ui.row():
+#             ui.label('Priority:')
+#             create_priority_badge('required')
 
-        # Example buttons
-        with ui.row().classes('pdc-actions'):
-            ui.button('Primary Action').classes(PDCStyles.BTN_PRIMARY)
-            ui.button('Secondary').classes(PDCStyles.BTN_SECONDARY)
-            ui.button('Calculate').classes(PDCStyles.BTN_CALCULATE)
-            ui.button('Danger').classes(PDCStyles.BTN_DANGER)
+#         # Example buttons
+#         with ui.row().classes('pdc-actions'):
+#             ui.button('Primary Action').classes(PDCStyles.BTN_PRIMARY)
+#             ui.button('Secondary').classes(PDCStyles.BTN_SECONDARY)
+#             ui.button('Calculate').classes(PDCStyles.BTN_CALCULATE)
+#             ui.button('Danger').classes(PDCStyles.BTN_DANGER)
 
-    ui.run(title='PDC Styles Demo')
+#     ui.run(title='PDC Styles Demo')

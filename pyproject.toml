@@ -97,7 +97,7 @@ select = [
     "PTH", # flake8-use-pathlib
     "PL",  # Pylint
 ]
-ignore = ["RET504", "T201", "W505", "G004", "F401"]  # Ignore 'unnecessary-assign (RET504) rule'; 'Print (T201)'; W505 "doc-line-too-long"; G004 "logging-f-string"
+ignore = ["RET504", "T201", "W505", "G004"]  # Ignore 'unnecessary-assign (RET504) rule'; 'Print (T201)'; W505 "doc-line-too-long"; G004 "logging-f-string"
 
 [tool.ruff.lint.pydocstyle]
 convention = "google"
@@ -105,7 +105,7 @@ convention = "google"
 [tool.ruff.lint.isort]
 force-single-line = true
 lines-after-imports = 2
-known-first-party = ["my_package"]
+known-first-party = ["pydatacuration"]
 
 [tool.ruff.lint.flake8-quotes]
 docstring-quotes = "double"

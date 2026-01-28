@@ -79,8 +79,9 @@ class NiceGUIHelper:
                 status=item.get('status', ''),
                 comments=item.get('comments', ''),
                 time_spent=time_spent_display,
-                information_location=item.get('information_location', ''),
+                curator_check_item=item.get('curator_check_item', ''),
                 check_type=item.get('check_type', 'Manual'),  # Optional field for check type
+                tool_explanation=item.get('tool_explanation', ''),
             )
             items.append(checklist_item)
         return items
