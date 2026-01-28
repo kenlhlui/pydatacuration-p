@@ -248,16 +248,12 @@ class DuckDB:  # noqa: PLR0904
         check_results = {'check_results': self.sql_read_table_records(model_class, mode=mode)}
         return check_results
 
-    def read_checklist(self, mode: Literal['json', 'python'] | str = 'json') -> dict[str, Any]:
-        """Read `checklist` table.
-
-        Returns:
-            dict[str, Any]: Checklist dictionary
-
-        """
-        model_class = self.duckdb_models.checklist()
-        checklist = {'checklist': self.sql_read_table_records(model_class, mode=mode)}
-        return checklist
+    def read_checklist(self):
+        """Read checklist table, returning model instances."""
+        with self.sql_get_connection() as (session, engine):
+            checklist_model = self.duckdb_models.checklist()
+            rows = session.exec(select(checklist_model)).all()
+            return rows
 
     def read_schema_tables(self) -> list[str]:
         """Get the names of the tables inside a schema.

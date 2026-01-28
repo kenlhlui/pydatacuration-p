@@ -43,7 +43,7 @@ class NiceGUIHelper:
         # Timer tracking: {item_id: {'start_time': timestamp, 'elapsed': seconds}}
         self.timers: dict[str, dict] = {}
 
-    def get_checklist_items(self) -> list:
+    def get_checklist_items(self):  # FIXME add return type
         """Get all checklist items from the DuckDB database for the specified ticket.
 
         The checklist type is determined by what was stored in the database during setup.
@@ -52,39 +52,23 @@ class NiceGUIHelper:
             ticket_number (str): Ticket number to get checklist items for.
 
         Returns:
-            list: List of checklist items with their details.
+            Sequence[SQLModel]: List of checklist items with their details.
 
         """
-        duck_db_data = self.duckdb.read_checklist(mode='python')
-        items = []
-        for item in duck_db_data.get('checklist', []):
-            # Convert timedelta to MM:SS format for display
-            # ! Temp fix for time_spent being stored as string in older DBs
-            time_spent_value = item.get('time_spent', '')
-            if isinstance(time_spent_value, timedelta):
-                total_seconds = int(time_spent_value.total_seconds())
+        duck_db_data = self.duckdb.read_checklist()
+        logger.debug(f'Fetched {type(duck_db_data)} checklist items from DuckDB for ticket {self.ticket_number}')
+        # Change the timedelta to MM:SS format for each item to prevent JSON serialization issues
+        for item in duck_db_data:
+            time_spent = item.time_spent  # FIXME for the linting issue
+            if isinstance(time_spent, timedelta):
+                total_seconds = int(time_spent.total_seconds())
                 minutes = total_seconds // 60
                 seconds = total_seconds % 60
-                time_spent_display = f'{minutes:02d}:{seconds:02d}'
-            else:
-                time_spent_display = time_spent_value if time_spent_value else ''
+                item.time_spent = f'{minutes}:{seconds:02d}'
+            elif time_spent is None:
+                item.time_spent = ''
 
-            checklist_item = Checklist(
-                id=item['id'],
-                action=item.get('action', ''),
-                instructions=item.get('instructions', ''),
-                priority=item['priority'],
-                section=item.get('section', ''),
-                automated_check_ids=item.get('automated_check_ids', []),
-                status=item.get('status', ''),
-                comments=item.get('comments', ''),
-                time_spent=time_spent_display,
-                curator_check_item=item.get('curator_check_item', ''),
-                check_type=item.get('check_type', 'Manual'),  # Optional field for check type
-                tool_explanation=item.get('tool_explanation', ''),
-            )
-            items.append(checklist_item)
-        return items
+        return duck_db_data
 
     def handle_status_change(self, item_id: str, new_status: str) -> None:
         """Handle status change with auto-save."""
