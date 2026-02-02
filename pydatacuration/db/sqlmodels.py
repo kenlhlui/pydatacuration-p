@@ -78,9 +78,9 @@ class DuckDBmodels:
                 description='Path of the dataset in the repository',
             )
             checklist_type: str = Field(
-                default='high',
+                default='default',
                 sa_column=Column(String, nullable=False),
-                description='Type of checklist used (medium or high)',
+                description='Type of checklist used, defined by its suffix (e.g., "high" for "checklist_high.yaml"). checklist.yaml is considered "default".',  # noqa: E501
             )
             log_init_date: date = Field(
                 sa_column=Column(DATE, nullable=False, server_default=text('CURRENT_DATE')),
