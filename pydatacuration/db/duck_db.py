@@ -195,7 +195,6 @@ class DuckDB:  # noqa: PLR0904
                 logger.info(f'Wrote sample data into table: {sqlmodel.__tablename__}')
                 session.commit()
                 logger.info(f'Committed sample data to table: {sqlmodel.__tablename__}')
-                self.sql_update_project_metadata_timestamp()  # Update timestamps after write
         except Exception as e:
             logger.error(f'Error writing records to table {sqlmodel.__tablename__}: {e}')
 
