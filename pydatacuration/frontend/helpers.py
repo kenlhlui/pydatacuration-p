@@ -17,6 +17,7 @@ from pydatacuration.exporter import Exporter
 from pydatacuration.utils.custom_logging import logger
 from pydatacuration.utils.custom_logging import setup_logging
 from pydatacuration.utils.directory_manager import DirectoryManager
+from pydatacuration.utils.utils import discover_checklist_files
 
 
 setup_logging()
@@ -425,11 +426,17 @@ def priority_options() -> dict[str, str]:
 
 
 def checklist_options() -> dict[str, str]:
-    """Get checklist options for select input."""
-    return {
-        'high': 'High',
-        'medium': 'Medium',
-    }
+    """Get checklist options for select input by discovering available checklist files.
+
+    Returns:
+        dict[str, str]: Dictionary mapping checklist identifiers to display names.
+    """
+    # Get the res directory path (relative to the project root)
+    res_dir = Path(__file__).parent.parent.parent / 'res'  # FIXME: make the RES_DIR configurable, not relative
+
+    # Discover available checklist files
+    options = discover_checklist_files(res_dir)
+    return options
 
 
 def back_to_main_menu_button() -> None:

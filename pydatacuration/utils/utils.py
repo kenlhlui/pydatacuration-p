@@ -223,3 +223,79 @@ def parse_dataset_url(base_url: str | None, pid: str | None) -> str:
         return urljoin(base, api_path) + '?' + query
 
     return 'No URL'
+
+
+def discover_checklist_files(res_dir: Path) -> dict[str, str]:
+    """Discover available checklist files in the res directory.
+
+    Searches for checklist files matching these patterns:
+    - checklist-*.yaml or checklist-*.yml
+    - checklist.yaml or checklist.yml
+    - check-list_template_*.yaml (for backward compatibility)
+
+    Args:
+        res_dir (Path): Path to the res directory containing checklist files.
+
+    Returns:
+        dict[str, str]: Dictionary mapping checklist identifiers to display names.
+                        Example: {'high': 'High', 'medium': 'Medium', 'custom': 'Custom'}
+    """
+    checklist_options = {}
+
+    if not res_dir.exists():
+        logger.warning(f'Resource directory not found: {res_dir}')
+        return checklist_options
+
+    # Pattern 1: checklist-*.yaml or checklist-*.yml
+    for pattern in ['checklist-*.yaml', 'checklist-*.yml']:
+        for file_path in res_dir.glob(pattern):
+            # Extract the identifier from the filename (e.g., 'checklist-custom.yaml' -> 'custom')
+            identifier = file_path.stem.replace('checklist-', '')
+            display_name = identifier.replace('_', ' ').replace('-', ' ').title()
+            checklist_options[identifier] = display_name
+
+    # Pattern 2: checklist.yaml or checklist.yml
+    for extension in ['.yaml', '.yml']:
+        default_checklist = res_dir / f'checklist{extension}'
+        if default_checklist.exists():
+            checklist_options['default'] = 'Default'
+
+    logger.debug(f'Discovered checklist options: {checklist_options}')
+
+    return checklist_options
+
+
+def get_checklist_file_path(checklist_identifier: str, res_dir: Path) -> Path | None:
+    """Get the file path for a checklist identifier.
+
+    Args:
+        checklist_identifier (str): The checklist identifier (e.g., 'high', 'medium', 'custom').
+        res_dir (Path): Path to the res directory containing checklist files.
+
+    Returns:
+        Path | None: Path to the checklist file if found, None otherwise.
+    """
+    if not res_dir.exists():
+        logger.warning(f'Resource directory not found: {res_dir}')
+        return None
+
+    # Check for new naming patterns first
+    for extension in ['.yaml', '.yml']:
+        # Pattern 1: checklist-{identifier}.yaml
+        new_pattern_file = res_dir / f'checklist-{checklist_identifier}{extension}'
+        if new_pattern_file.exists():
+            return new_pattern_file
+
+        # Pattern 2: checklist.yaml (for 'default' identifier)
+        if checklist_identifier == 'default':
+            default_file = res_dir / f'checklist{extension}'
+            if default_file.exists():
+                return default_file
+
+    # Pattern 3: Backward compatibility with check-list_template_{identifier}.yaml
+    legacy_file = res_dir / f'check-list_template_{checklist_identifier}.yaml'
+    if legacy_file.exists():
+        return legacy_file
+
+    logger.warning(f'Checklist file not found for identifier: {checklist_identifier}')
+    return None

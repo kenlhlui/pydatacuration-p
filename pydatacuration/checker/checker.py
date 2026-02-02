@@ -18,6 +18,7 @@ from pydatacuration.httpx_client import HTTPXClient
 from pydatacuration.utils.unzip import Unzipper
 from pydatacuration.utils.utils import check_readme_file_existence
 from pydatacuration.utils.utils import compare_files_and_metadata
+from pydatacuration.utils.utils import get_checklist_file_path
 from pydatacuration.utils.utils import parse_dataset_url
 from pydatacuration.utils.utils import parse_file_list_metadata
 
@@ -734,17 +735,28 @@ class Checker:
     def write_checklist_to_duckdb(self, checklist_type: str = 'high'):
         """Write the checklist items to DuckDB.
 
+        Supports flexible checklist file naming:
+        - New pattern: checklist-{type}.yaml or checklist-{type}.yml
+        - Default: checklist.yaml or checklist.yml (when checklist_type='default')
+        - Legacy: check-list_template_{type}.yaml (for backward compatibility)
+
         Args:
-            checklist_type (str): Type of checklist to use ('medium' or 'high'). Defaults to 'high'.
+            checklist_type (str): Type of checklist to use (e.g., 'high', 'medium', 'default',
+                                 or any custom identifier). Defaults to 'high'.
         """
         try:
             self.logger.debug(f'Writing the {checklist_type} checklist to DuckDB...')
             checklist_schema = self.sqlmodels.checklist()
-            checklist_file: Path = RES_DIR.joinpath(f'check-list_template_{checklist_type}.yaml')
 
-            if not checklist_file.exists():
-                self.logger.error(f'Checklist file not found: {checklist_file}')
-                raise FileNotFoundError(f'Checklist file not found: {checklist_file}')
+            # Use the flexible file path function to find the checklist file
+            checklist_file: Path | None = get_checklist_file_path(checklist_type, RES_DIR)
+
+            if not checklist_file or not checklist_file.exists():
+                error_msg = f'Checklist file not found for type: {checklist_type}'
+                self.logger.error(error_msg)
+                raise FileNotFoundError(error_msg)
+
+            self.logger.debug(f'Using checklist file: {checklist_file}')
 
             with Path.open(checklist_file, 'r') as f:
                 checklist_data = yaml.safe_load(f)
