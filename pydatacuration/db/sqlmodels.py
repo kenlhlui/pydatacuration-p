@@ -92,9 +92,11 @@ class DuckDBmodels:
                 description='Date when the log was last updated',
             )
             last_modified_datetime: datetime = Field(
-                default=datetime.today(),
-                sa_column=Column(DATETIME, nullable=False),
-                description='Timestamp when the log was last modified',
+                default_factory=datetime.today,
+                nullable=False,
+                sa_type=DATETIME,
+                sa_column_kwargs={'onupdate': lambda: datetime.today()},
+                description='Last modified datetime',
             )
 
         return ProjectMetadata
@@ -142,8 +144,10 @@ class DuckDBmodels:
                 sa_column=Column(Interval, nullable=True), description='Time spent on this item'
             )
             last_modified_datetime: datetime = Field(
-                default=datetime.today(),
-                sa_column=Column(DATETIME, nullable=False),
+                default_factory=datetime.today,
+                nullable=False,
+                sa_type=DATETIME,
+                sa_column_kwargs={'onupdate': lambda: datetime.today()},
                 description='Last modified datetime',
             )
 
@@ -189,8 +193,10 @@ class DuckDBmodels:
                 sa_column=Column(JSON, nullable=False), description='(Nested) List of check results'
             )  # This support writing a list[str] and list[dict] to duckdb # noqa
             last_modified_datetime: datetime = Field(
-                default=datetime.today(),
-                sa_column=Column(DATETIME, nullable=False),
+                default_factory=datetime.today,
+                nullable=False,
+                sa_type=DATETIME,
+                sa_column_kwargs={'onupdate': lambda: datetime.today()},
                 description='Last modified datetime',
             )
 

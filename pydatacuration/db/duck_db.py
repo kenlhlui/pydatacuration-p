@@ -358,6 +358,8 @@ class DuckDB:  # noqa: PLR0904
                 session.commit()
 
                 logger.info(f'Successfully updated checklist item {item_id}')
+
+                self.sql_update_project_metadata_timestamp()  # Update timestamps after checklist update
                 return True
 
         except Exception as e:
@@ -418,3 +420,19 @@ class DuckDB:  # noqa: PLR0904
         except Exception as e:
             logger.error(f'Error reading with IN filter from {sqlmodel.__tablename__}: {e}')
             return []
+
+    def sql_update_project_metadata_timestamp(self) -> None:
+        """Update the project_metadata last modified timestamps."""
+        try:
+            with self.sql_get_connection() as (session, engine):
+                project_metadata_model = self.duckdb_models.project_metadata_record()
+                existing_record = session.exec(select(project_metadata_model)).first()
+
+                if existing_record:
+                    existing_record.log_last_update_date = datetime.today()
+                    existing_record.last_modified_datetime = datetime.now()
+                    session.add(existing_record)
+                    session.commit()
+                    logger.debug(f'Updated project_metadata timestamps for schema {self.schema_name}')
+        except Exception as e:
+            logger.error(f'Error updating project_metadata timestamps: {e}')
