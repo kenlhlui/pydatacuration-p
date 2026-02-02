@@ -36,7 +36,7 @@ class DuckDB:  # noqa: PLR0904
         self.schema_name = schema_name
         self.db_file = db_file
         self.duckdb_models = DuckDBmodels(schema_name)
-        self.system_schemas = {'system.information_schema', 'system.main', 'temp.main', 'duckdb.main'}
+        self.system_schemas = {'system.information_schema', 'system.main', 'temp.main', 'db.main'}
 
     @contextmanager
     def get_connection(self):
