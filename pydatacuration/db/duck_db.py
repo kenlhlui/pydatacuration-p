@@ -295,7 +295,6 @@ class DuckDB:  # noqa: PLR0904
                 all_schemas = inspector.get_schema_names()
                 # Filter out system schemas
                 user_schemas = [schema for schema in all_schemas if schema not in self.system_schemas]
-                logger.debug(f'Found user schemas: {user_schemas}')
                 return user_schemas
         except Exception as e:
             logger.error(f'Error fetching schema names: {e}')
