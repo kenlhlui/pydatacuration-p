@@ -10,12 +10,16 @@ from pydatacuration.checklist.checklist_model import ChecklistYAML
 
 def validate_checklist_yaml(yaml_path: str | Path) -> ChecklistYAML:
     """Load and validate a checklist YAML file."""
-    with Path(yaml_path).open(encoding='utf-8') as f:
-        data = yaml.safe_load(f)
+    try:
+        with Path(yaml_path).open(encoding='utf-8') as f:
+            data = yaml.safe_load(f)
 
-    # This will raise ValidationError if the YAML doesn't match the schema
-    logger.debug(f'Validating checklist YAML file: {yaml_path}')
-    return ChecklistYAML(**data)
+        # This will raise ValidationError if the YAML doesn't match the schema
+        logger.debug(f'Validating checklist YAML file: {yaml_path}')
+        return ChecklistYAML(**data)
+    except yaml.YAMLError as e:
+        logger.error(f'Error validating checklist YAML file: {yaml_path} - {e}')
+        raise
 
 
 def get_checklist_file_path(checklist_identifier: str, res_dir: Path) -> Path | None:
