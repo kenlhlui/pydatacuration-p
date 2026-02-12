@@ -45,3 +45,11 @@ dev-run *ARGS:
     fi
     uv sync
     uv run app.py
+
+# Run dataverse in docker
+start-dataverse:
+    cd ./dataverse && docker compose up -d
+
+# Stop dataverse in docker and remove data
+stop-dataverse:
+    cd ./dataverse && docker compose down && rm -rf ./dataverse/data
