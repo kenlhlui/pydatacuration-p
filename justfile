@@ -1,6 +1,7 @@
 
 #!/usr/bin/env -S just --justfile
 
+
 # Run coverage for tests
 
 run-tests:
@@ -55,5 +56,16 @@ stop-dataverse:
     cd ./dataverse && docker compose down && sudo rm -rf ./data
 
 # Get API_TOKEN from dataverse container return as a string (without newline)
-get-api-token:
-    docker exec postgres_dataverse psql -U dataverse -t -A -c "SELECT t.tokenstring FROM apitoken t JOIN authenticateduser u ON t.authenticateduser_id = u.id WHERE u.superuser = true LIMIT 1;"
+show-api-token:  # The @ prefix suppresses echoing that specific command.
+    @docker exec postgres_dataverse psql -U dataverse -t -A -c "SELECT t.tokenstring FROM apitoken t JOIN authenticateduser u ON t.authenticateduser_id = u.id WHERE u.superuser = true LIMIT 1;"
+
+dvconfig:
+    #!/usr/bin/env bash  
+    # The line above is needed to ensure the script runs with bash, which supports certain features that may not be available in other shells.
+    API_TOKEN=$(just show-api-token)
+    cd ./dataverse/dataverse-sample-data
+    rm -rf dvconfig.py
+    cp dvconfig.py.sample dvconfig.py
+    sed -i "s|api_token = ''|api_token = '$API_TOKEN'|" dvconfig.py
+    echo "API token has been set in dvconfig.py"
+
