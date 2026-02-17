@@ -1,0 +1,28 @@
+{
+    "id": 41139,
+    "alias": "toronto",
+    "name": "U of T Dataverse",
+    "affiliation": "University of Toronto",
+    "permissionRoot": true,
+    "dataverseContacts": [
+    {
+      "contactEmail": "rdm@utoronto.ca"
+    }
+    ],
+    "description": "<b>U of T Dataverse</b> in Borealis is a research data repository for our faculty, students, and staff. Files are held in a secure environment on Canadian servers. Researchers can choose to make content available publicly, to specific individuals, or to restrict access.\n<br><br>For more information and FAQs, visit our guide <a href=\"https://guides.library.utoronto.ca/u-t-dataverse\" rel=\"nofollow\" target=\"_blank\"><b>U of T Dataverse in Borealis: Depositing Research Data</b></a>.\n<br><br> Need assistance? Contact us at <a href=\"mailto:rdm@utoronto.ca\" rel=\"nofollow\" target=\"_blank\">rdm@utoronto.ca</a>",
+    "dataverseType": "ORGANIZATIONS_INSTITUTIONS",
+    "isMetadataBlockRoot": false,
+    "isFacetRoot": false,
+    "ownerId": 1,
+    "creationDate": "2016-09-30T21:12:34Z",
+    "theme": {
+        "id": 15,
+        "logo": "university-of-toronto-dataverse-logo-blue-.png",
+        "linkColor": "1e3765",
+        "textColor": "888888",
+        "backgroundColor": "ffffff",
+        "logoBackgroundColor": "ffffff"
+    },
+    "effectiveRequiresFilesToPublishDataset": false,
+    "isReleased": true
+}
