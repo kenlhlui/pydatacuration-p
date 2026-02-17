@@ -88,3 +88,9 @@ upload-files-to-toronto:
     cd ./dataverse/dataverse-sample-data && \
     uv venv --clear && uv pip install -r requirements.txt && \
     uv run upload_files.py
+
+get-api-token:
+    just dvconfig
+    cd ./dataverse/dataverse-sample-data && \
+    uv venv --clear && uv pip install -r requirements.txt && \
+    uv run get_api_token.py
