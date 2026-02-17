@@ -72,6 +72,7 @@ dvconfig:
     echo "API token has been set in dvconfig.py"
 
 publish-sample-dataverse:
+    just dvconfig
     cd ./dataverse/dataverse-sample-data && \
     uv venv --clear && uv pip install -r requirements.txt && \
     uv run create_dataverse.py
