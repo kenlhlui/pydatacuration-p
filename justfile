@@ -47,6 +47,8 @@ dev-run *ARGS:
     uv sync
     uv run app.py
 
+### Dataverse-specific commands ###
+
 # Run dataverse in docker
 start-dataverse:
     cd ./dataverse && docker compose up -d
@@ -69,3 +71,7 @@ dvconfig:
     sed -i "s|api_token = ''|api_token = '$API_TOKEN'|" dvconfig.py
     echo "API token has been set in dvconfig.py"
 
+publish-sample-dataverse:
+    cd ./dataverse/dataverse-sample-data && \
+    uv venv --clear && uv pip install -r requirements.txt && \
+    uv run create_dataverse.py
