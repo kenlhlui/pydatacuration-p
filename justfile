@@ -52,4 +52,8 @@ start-dataverse:
 
 # Stop dataverse in docker and remove data
 stop-dataverse:
-    cd ./dataverse && docker compose down && rm -rf ./dataverse/data
+    cd ./dataverse && docker compose down && sudo rm -rf ./data
+
+# Get API_TOKEN from dataverse container return as a string (without newline)
+get-api-token:
+    docker exec postgres_dataverse psql -U dataverse -t -A -c "SELECT t.tokenstring FROM apitoken t JOIN authenticateduser u ON t.authenticateduser_id = u.id WHERE u.superuser = true LIMIT 1;"
