@@ -28,15 +28,20 @@ just stop-dataverse
 
 ## Getting the API token
 
-After starting the dataverse instance, to get the api token, you can run the following command:
+After starting the dataverse instance, to get the api token , you can run the following command:
 
 ```bash
 docker exec postgres_dataverse psql -U dataverse -t -A -c "SELECT t.tokenstring FROM apitoken t JOIN authenticateduser u ON t.authenticateduser_id = u.id WHERE u.superuser = true LIMIT 1;"
 ```
 It will get the api token for the superuser, which can be used for testing purposes.
 
-To verify the api token is working,
+Wait a few minutes for the dataverse instance to be fully up and running before trying to get the api token, otherwise you might get an error that the database is not ready.
 
-```
-curl -s "http://localhost:8080/api/users/:me" -H "X-Dataverse-key: f59f5dff-fc4c-422c-9302-76f80dbbe9ef"
+To verify the api token is working, you can run the following command to get the user information:
+
+```bash
+API_TOKEN=$(docker exec postgres_dataverse psql -U dataverse -t -A -c "SELECT t.tokenstring FROM apitoken t JOIN authenticateduser u ON t.authenticateduser_id = u.id WHERE u.superuser = true LIMIT 1;")
+
+
+curl -s "http://localhost:8080/api/users/:me" -H "X-Dataverse-key: $API_TOKEN" | jq
 ```
