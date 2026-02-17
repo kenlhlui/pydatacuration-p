@@ -76,3 +76,11 @@ publish-sample-dataverse:
     cd ./dataverse/dataverse-sample-data && \
     uv venv --clear && uv pip install -r requirements.txt && \
     uv run create_dataverse.py
+
+publish-sample-dataset_toronto:
+    API_TOKEN=$(just show-api-token) && \
+    SERVER_URL=${SERVER_URL:-'http://localhost:8080'} && \
+    DATAVERSE_ID='toronto' && \
+    PERSISTENT_IDENTIFIER='doi:10.80240/FK2/FCZB4A' && \
+    curl -H "X-Dataverse-key:$API_TOKEN" -X POST "$SERVER_URL/api/dataverses/$DATAVERSE_ID/datasets/:import?pid=$PERSISTENT_IDENTIFIER&release=false" --upload-file ./dataverse/dataverse-sample-data/data/dataverses/toronto/dataset/toronto.json
+    
