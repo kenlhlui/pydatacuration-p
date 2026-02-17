@@ -82,3 +82,9 @@ publish-sample-dataset_toronto:
     cd ./dataverse/dataverse-sample-data && \
     uv venv --clear && uv pip install -r requirements.txt && \
     uv run create_dataset.py
+
+upload-files-to-toronto:
+    just dvconfig
+    cd ./dataverse/dataverse-sample-data && \
+    uv venv --clear && uv pip install -r requirements.txt && \
+    uv run upload_files.py
