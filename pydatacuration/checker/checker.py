@@ -41,7 +41,7 @@ class Checker:
         collection_alias: str | None = None,
         curator_name: str | None = None,
         curator_email: str | None = None,
-        checklist_type: str = 'high',
+        checklist_type: str = 'default',
     ) -> None:
         """Initialize the Checker class.
 
@@ -56,7 +56,7 @@ class Checker:
             collection_alias (str | None): The collection alias for the author name to be searched.
             curator_name (str | None): The name of the data curator.
             curator_email (str | None): The email of the data curator.
-            checklist_type (str): The type of checklist to use ('high' or 'medium').
+            checklist_type (str): The type of checklist to use.
         """
         self.base_url = base_url
         self.api_token = api_token
@@ -732,7 +732,7 @@ class Checker:
             self.logger.error(f'Failed to write to DuckDB: {e}')
 
     # Note: maybe to migrate this to main.py
-    def write_checklist_to_duckdb(self, checklist_type: str = 'high'):
+    def write_checklist_to_duckdb(self, checklist_type: str = 'default'):
         """Write the checklist items to DuckDB.
 
         Supports flexible checklist file naming:
@@ -741,8 +741,7 @@ class Checker:
         - Legacy: check-list_template_{type}.yaml (for backward compatibility)
 
         Args:
-            checklist_type (str): Type of checklist to use (e.g., 'high', 'medium', 'default',
-                                 or any custom identifier). Defaults to 'high'.
+            checklist_type (str): Type of checklist to use. Default is 'default'
         """
         try:
             self.logger.debug(f'Writing the {checklist_type} checklist to DuckDB...')
