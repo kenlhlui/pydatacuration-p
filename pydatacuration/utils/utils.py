@@ -15,6 +15,7 @@ import typer
 from loguru import logger
 from tenacity import RetryError
 
+from pydatacuration.checklist.utils import validate_checklist_yaml
 from pydatacuration.exceptions import DatasetAccessError
 from pydatacuration.exceptions import DatasetNotFoundError
 from pydatacuration.exceptions import DatasetUnauthorizedError
@@ -249,7 +250,11 @@ def discover_checklist_files(res_dir: Path) -> dict[str, str]:
     # Pattern 1: checklist-*.yaml or checklist-*.yml
     for pattern in ['checklist-*.yaml', 'checklist-*.yml']:
         for file_path in res_dir.glob(pattern):
-            # Extract the identifier from the filename (e.g., 'checklist-custom.yaml' -> 'custom')
+            try:
+                validate_checklist_yaml(file_path)
+            except Exception:
+                logger.warning(f'Skipping invalid checklist file: {file_path}')
+                continue
             identifier = file_path.stem.replace('checklist-', '')
             display_name = identifier.replace('_', ' ').replace('-', ' ').title()
             checklist_options[identifier] = display_name
@@ -258,6 +263,11 @@ def discover_checklist_files(res_dir: Path) -> dict[str, str]:
     for extension in ['.yaml', '.yml']:
         default_checklist = res_dir / f'checklist{extension}'
         if default_checklist.exists():
+            try:
+                validate_checklist_yaml(default_checklist)
+            except Exception:
+                logger.warning(f'Skipping invalid checklist file: {default_checklist}')
+                continue
             checklist_options['default'] = 'Default'
 
     logger.debug(f'Discovered checklist options: {checklist_options}')

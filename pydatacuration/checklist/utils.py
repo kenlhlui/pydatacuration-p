@@ -4,6 +4,7 @@ from pathlib import Path
 
 import yaml
 from loguru import logger
+from pydantic import ValidationError
 
 from pydatacuration.checklist.checklist_model import ChecklistYAML
 
@@ -14,10 +15,9 @@ def validate_checklist_yaml(yaml_path: str | Path) -> ChecklistYAML:
         with Path(yaml_path).open(encoding='utf-8') as f:
             data = yaml.safe_load(f)
 
-        # This will raise ValidationError if the YAML doesn't match the schema
         logger.debug(f'Validating checklist YAML file: {yaml_path}')
         return ChecklistYAML(**data)
-    except yaml.YAMLError as e:
+    except (yaml.YAMLError, ValidationError) as e:
         logger.error(f'Error validating checklist YAML file: {yaml_path} - {e}')
         raise
 
@@ -41,14 +41,12 @@ def get_checklist_file_path(checklist_identifier: str, res_dir: Path) -> Path | 
         # Pattern 1: checklist-{identifier}.yaml
         new_pattern_file = res_dir / f'checklist-{checklist_identifier}{extension}'
         if new_pattern_file.exists():
-            validate_checklist_yaml(new_pattern_file)
             return new_pattern_file
 
         # Pattern 2: checklist.yaml (for 'default' identifier)
         if checklist_identifier == 'default':
             default_file = res_dir / f'checklist{extension}'
             if default_file.exists():
-                validate_checklist_yaml(default_file)
                 return default_file
 
     logger.warning(f'Checklist file not found for identifier: {checklist_identifier}')
