@@ -1,4 +1,8 @@
 # Introduction
+
+> [!WARNING]  
+> This is a modified version of the official Dataverse compose file, and is intended for testing purposes only. IT IS NOT FOR PRODUCTION USE.
+
 This folder contains the modified compose file for running a local Dataverse instance for testing purposes. It is based on the official Dataverse compose file, but with some modifications to make it work with our setup.
 
 The official guide is available at: https://borealisdata.ca/guides/en/latest/container/index.html

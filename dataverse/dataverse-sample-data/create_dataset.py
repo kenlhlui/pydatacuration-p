@@ -33,10 +33,7 @@ print(resp)
 # Upload the data files
 dataset_pid = resp.json()['data']['persistentId']
 
-# Get the list of file paths from the files directory
-
-files_dir = Path('./dataverse/dataverse-sample-data/data/dataverses/toronto/datasets/toronto/files')
-
+# Add the files to the dataset and get the list of file paths to upload
 files = [*dv.add_directory(Path('./data/dataverses/toronto/datasets/toronto/files'))]
 
 # Create the DVUploader instance and upload the files
