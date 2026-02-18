@@ -94,3 +94,20 @@ get-api-token:
     cd ./dataverse/dataverse-sample-data && \
     uv venv --clear && uv pip install -r requirements.txt && \
     uv run get_api_token.py
+
+publish:
+    #!/usr/bin/env bash
+    echo "Waiting for Dataverse API to be ready..."
+    while true; do
+        API_TOKEN=$(docker exec postgres_dataverse psql -U dataverse -t -A -c "SELECT t.tokenstring FROM apitoken t JOIN authenticateduser u ON t.authenticateduser_id = u.id WHERE u.superuser = true LIMIT 1;" 2>/dev/null)
+        if [ -n "$API_TOKEN" ] && curl -sf "http://localhost:8080/api/users/:me" -H "X-Dataverse-key: $API_TOKEN" | grep -q '"status":"OK"'; then
+            echo "Dataverse is ready!"
+            echo "Wait additional 5 seconds to ensure all services are up..."
+            sleep 5
+            break
+        fi
+        echo "Not ready yet, retrying in 5 seconds..."
+        sleep 5
+    done
+    just publish-sample-dataverse
+    just publish-sample-dataset_toronto
