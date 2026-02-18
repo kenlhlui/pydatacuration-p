@@ -11,6 +11,7 @@ from pydatacuration.checker.file_name_checker import FileNameFormatChecker
 from pydatacuration.checker.files_open_checker import FilesOpener
 from pydatacuration.checker.metadata_checker import MetadataChecker
 from pydatacuration.checker.spell_checker import SpellCheckerCustomized
+from pydatacuration.checklist.utils import get_checklist_file_path
 from pydatacuration.checksum import Checksum
 from pydatacuration.db.duck_db import DuckDB
 from pydatacuration.db.sqlmodels import DuckDBmodels
@@ -40,7 +41,7 @@ class Checker:
         collection_alias: str | None = None,
         curator_name: str | None = None,
         curator_email: str | None = None,
-        checklist_type: str = 'high',
+        checklist_type: str = 'default',
     ) -> None:
         """Initialize the Checker class.
 
@@ -55,7 +56,7 @@ class Checker:
             collection_alias (str | None): The collection alias for the author name to be searched.
             curator_name (str | None): The name of the data curator.
             curator_email (str | None): The email of the data curator.
-            checklist_type (str): The type of checklist to use ('high' or 'medium').
+            checklist_type (str): The type of checklist to use.
         """
         self.base_url = base_url
         self.api_token = api_token
@@ -731,20 +732,30 @@ class Checker:
             self.logger.error(f'Failed to write to DuckDB: {e}')
 
     # Note: maybe to migrate this to main.py
-    def write_checklist_to_duckdb(self, checklist_type: str = 'high'):
+    def write_checklist_to_duckdb(self, checklist_type: str = 'default'):
         """Write the checklist items to DuckDB.
 
+        Supports flexible checklist file naming:
+        - New pattern: checklist-{type}.yaml or checklist-{type}.yml
+        - Default: checklist.yaml or checklist.yml (when checklist_type='default')
+        - Legacy: check-list_template_{type}.yaml (for backward compatibility)
+
         Args:
-            checklist_type (str): Type of checklist to use ('medium' or 'high'). Defaults to 'high'.
+            checklist_type (str): Type of checklist to use. Default is 'default'
         """
         try:
             self.logger.debug(f'Writing the {checklist_type} checklist to DuckDB...')
             checklist_schema = self.sqlmodels.checklist()
-            checklist_file: Path = RES_DIR.joinpath(f'check-list_template_{checklist_type}.yaml')
 
-            if not checklist_file.exists():
-                self.logger.error(f'Checklist file not found: {checklist_file}')
-                raise FileNotFoundError(f'Checklist file not found: {checklist_file}')
+            # Use the flexible file path function to find the checklist file
+            checklist_file: Path | None = get_checklist_file_path(checklist_type, RES_DIR)
+
+            if not checklist_file or not checklist_file.exists():
+                error_msg = f'Checklist file not found for type: {checklist_type}'
+                self.logger.error(error_msg)
+                raise FileNotFoundError(error_msg)
+
+            self.logger.debug(f'Using checklist file: {checklist_file}')
 
             with Path.open(checklist_file, 'r') as f:
                 checklist_data = yaml.safe_load(f)
