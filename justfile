@@ -74,32 +74,21 @@ dvconfig:
 publish-sample-dataverse:
     just dvconfig
     cd ./dataverse/dataverse-sample-data && \
+    pwd && \
     uv venv --clear && uv pip install -r requirements.txt && \
-    uv run create_dataverse.py
+    .venv/bin/python create_dataverse.py
 
-publish-sample-dataset_toronto:
+publish-sample-dataset:
     just dvconfig
     cd ./dataverse/dataverse-sample-data && \
     uv venv --clear && uv pip install -r requirements.txt && \
-    uv run create_dataset.py
-
-upload-files-to-toronto:
-    just dvconfig
-    cd ./dataverse/dataverse-sample-data && \
-    uv venv --clear && uv pip install -r requirements.txt && \
-    uv run upload_files.py
-
-get-api-token:
-    just dvconfig
-    cd ./dataverse/dataverse-sample-data && \
-    uv venv --clear && uv pip install -r requirements.txt && \
-    uv run get_api_token.py
+    .venv/bin/python create_dataset.py
 
 publish:
     #!/usr/bin/env bash
     echo "Waiting for Dataverse API to be ready..."
     while true; do
-        API_TOKEN=$(docker exec postgres_dataverse psql -U dataverse -t -A -c "SELECT t.tokenstring FROM apitoken t JOIN authenticateduser u ON t.authenticateduser_id = u.id WHERE u.superuser = true LIMIT 1;" 2>/dev/null)
+        API_TOKEN=$(just show-api-token)
         if [ -n "$API_TOKEN" ] && curl -sf "http://localhost:8080/api/users/:me" -H "X-Dataverse-key: $API_TOKEN" | grep -q '"status":"OK"'; then
             echo "Dataverse is ready!"
             echo "Wait additional 5 seconds to ensure all services are up..."
@@ -110,4 +99,4 @@ publish:
         sleep 5
     done
     just publish-sample-dataverse
-    just publish-sample-dataset_toronto
+    just publish-sample-dataset

@@ -1,19 +1,26 @@
 import json
 
 import dvconfig
-from pyDataverse.api import Api
+from pyDataverse.api import NativeApi
 
 
 base_url = dvconfig.base_url
 api_token = dvconfig.api_token
-api = Api(base_url, api_token)
-print(api.status)
+
+
+# Create the API client
+native_api = NativeApi(base_url, api_token)
 dv_json = 'data/dataverses/toronto/toronto.json'
+
+
+# Load the dataverse metadata from the JSON file
 with open(dv_json) as f:
     metadata = json.load(f)
-print(metadata)
-# FIXME: Why is "identifier" required?
-identifier = metadata['alias']
+
+
+# The parent dataverse alias where the new dataverse will be. By default, it's the root dataverse.
 parentdv = ':root'
-resp = api.create_dataverse(identifier, json.dumps(metadata), parent=parentdv)
+
+# Create the dataverse
+resp = native_api.create_dataverse(parent=parentdv, metadata=json.dumps(metadata))
 print(resp)
