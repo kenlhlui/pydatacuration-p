@@ -51,11 +51,5 @@ def get_checklist_file_path(checklist_identifier: str, res_dir: Path) -> Path | 
                 validate_checklist_yaml(default_file)
                 return default_file
 
-    # Pattern 3: Backward compatibility with check-list_template_{identifier}.yaml
-    legacy_file = res_dir / f'check-list_template_{checklist_identifier}.yaml'
-    if legacy_file.exists():
-        validate_checklist_yaml(legacy_file)
-        return legacy_file
-
     logger.warning(f'Checklist file not found for identifier: {checklist_identifier}')
     return None
