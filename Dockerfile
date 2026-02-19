@@ -37,7 +37,7 @@ COPY --chown=app:app pyproject.toml pyproject.toml
 
 # Create virtual environment and install dependencies as the app user
 RUN uv venv --relocatable && \
-    uv sync --frozen --no-install-project --no-dev --no-editable
+    uv sync --frozen --no-install-project --no-dev --no-editable --extra postgresql
 
 # Copy the rest of your app
 COPY --chown=app:app app.py /app/

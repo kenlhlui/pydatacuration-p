@@ -11,8 +11,9 @@ from nicegui import app
 from nicegui import ui
 from sqlmodel import SQLModel
 
-from pydatacuration.db.duck_db import DuckDB
-from pydatacuration.db.sqlmodels import DuckDBmodels
+from pydatacuration.db import DatabaseBackend
+from pydatacuration.db import DBModels
+from pydatacuration.db import get_database
 from pydatacuration.exporter import Exporter
 from pydatacuration.utils.custom_logging import logger
 from pydatacuration.utils.custom_logging import setup_logging
@@ -24,21 +25,21 @@ setup_logging()
 
 # Type alias for checklist items - uses dummy schema for type hints only
 # The actual schema name will be provided at runtime
-Checklist: type[SQLModel] = DuckDBmodels('_type_hints_').checklist()
+Checklist: type[SQLModel] = DBModels('_type_hints_').checklist()
 
 
 class NiceGUIHelper:
     """Helper class for NiceGUI components."""
 
-    def __init__(self, duckdb: DuckDB, ticket_number: str, refresh_callback: Callable | None = None) -> None:
+    def __init__(self, duckdb: DatabaseBackend, ticket_number: str, refresh_callback: Callable | None = None) -> None:
         """Initialize NiceGUIHelper.
 
         Args:
-            duckdb (DuckDB): Instance of DuckDB.
+            duckdb (DatabaseBackend): Database backend instance.
             ticket_number (str): Ticket number to work with.
             refresh_callback: Optional callback function to refresh the UI after updates.
         """
-        self.duckdb: DuckDB = duckdb
+        self.duckdb: DatabaseBackend = duckdb
         self.ticket_number: str = ticket_number
         self.refresh_callback = refresh_callback
         # Timer tracking: {item_id: {'start_time': timestamp, 'elapsed': seconds}}
@@ -268,7 +269,7 @@ class NiceGUIHelper:
 
     @staticmethod
     def get_all_schemas(main_dir: Path) -> list[dict]:
-        """Get all available schemas (projects) from DuckDB.
+        """Get all available schemas (projects) from the database.
 
         Returns:
             list[dict]: List of schemas with metadata
@@ -280,17 +281,17 @@ class NiceGUIHelper:
             if not db_file.exists():
                 return []
 
-            # Create a DuckDB instance to get schemas names for further querying
-            duck_db = DuckDB(schema_name='_system_query_', db_file=db_file)
-            schema_names = duck_db.get_all_schema_names()
+            # Create a database backend instance to get schema names for further querying
+            db = get_database(schema_name='_system_query_', db_file=db_file)
+            schema_names = db.get_all_schema_names()
 
             # Get additional project metadata for each schema
             project_metadata_schema = []
             for schema_name in schema_names:
                 try:
                     # Try to get project metadata for last modified date
-                    schema_duck_db = DuckDB(schema_name=schema_name, db_file=db_file)
-                    project_metadata_record: dict[str, Any] = schema_duck_db.read_project_metadata_record(mode='python')
+                    schema_db = get_database(schema_name=schema_name, db_file=db_file)
+                    project_metadata_record: dict[str, Any] = schema_db.read_project_metadata_record(mode='python')
 
                     # Turn the last_modified_datetime into a YYYY-MM-DD HH:MM:SS format
                     last_modified_dt = project_metadata_record.get('last_modified_datetime')
@@ -337,7 +338,7 @@ class NiceGUIHelper:
         schema_name_pruned = schema_name.replace('duckdb.', '').replace('"', '')
 
         def delete_schema(schema_name_pruned: str) -> tuple[bool, str]:
-            """Delete a specific schema from DuckDB.
+            """Delete a specific schema from the database.
 
             Args:
                 schema_name_pruned (str): Name of the schema to delete (without duckdb. prefix)
@@ -352,11 +353,11 @@ class NiceGUIHelper:
                 if not db_file.exists():
                     return False, 'Database file not found'
 
-                # Create a DuckDB instance to delete the schema
-                duck_db = DuckDB(schema_name='_system_query_', db_file=db_file)
+                # Create a database backend instance to delete the schema
+                db = get_database(schema_name='_system_query_', db_file=db_file)
 
                 # Delete the schema
-                duck_db.sql_drop_schema(schema_name_pruned)
+                db.drop_schema(schema_name_pruned)
 
                 return True, f'Schema {schema_name_pruned} deleted successfully'
 
@@ -382,7 +383,7 @@ class NiceGUIHelper:
 
     @staticmethod
     def export_word_button(
-        duckdb: DuckDB, dir_manager: DirectoryManager, word_template_name: str | None = None
+        duckdb: DatabaseBackend, dir_manager: DirectoryManager, word_template_name: str | None = None
     ) -> None:
         """Save curation report to Word."""
         exporter = Exporter(duckdb, dir_manager)
@@ -391,7 +392,7 @@ class NiceGUIHelper:
         ui.notify('Curation report saved successfully!', type='positive')
 
     @staticmethod
-    def export_yaml_button(duckdb: DuckDB, dir_manager: DirectoryManager) -> None:
+    def export_yaml_button(duckdb: DatabaseBackend, dir_manager: DirectoryManager) -> None:
         """Export YAML file from the project directory."""
         exporter = Exporter(duckdb, dir_manager)
         exporter.export_yaml()

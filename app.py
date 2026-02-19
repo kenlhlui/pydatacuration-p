@@ -20,8 +20,8 @@ from nicegui import ui
 from nicegui.elements.input import Input
 from sqlmodel import SQLModel
 
-from pydatacuration.db.duck_db import DuckDB
-from pydatacuration.db.sqlmodels import DuckDBmodels
+from pydatacuration.db import DatabaseBackend
+from pydatacuration.db import get_database
 from pydatacuration.frontend.helpers import NiceGUIHelper
 from pydatacuration.frontend.helpers import back_to_main_menu_button
 from pydatacuration.frontend.helpers import priority_options
@@ -705,7 +705,7 @@ async def checklist_page(ticket_number: str) -> None:
 
     # Initialize the duckdb connection for this ticket number
     dir_manager = DirectoryManager(ticket_number, MAIN_DIR, RES_DIR)
-    duck_db = DuckDB(schema_name=ticket_number, db_file=dir_manager.db_path)
+    duck_db = get_database(schema_name=ticket_number, db_file=dir_manager.db_path)
     helpers = NiceGUIHelper(duck_db, ticket_number)
 
     # Load metadata from database
@@ -842,7 +842,7 @@ async def checklist_page(ticket_number: str) -> None:
 
 
 async def render_checklist_table(  # noqa: PLR0913, C901, PLR0917
-    duckdb_instance: DuckDB,
+    duckdb_instance: DatabaseBackend,
     checklist_items: list,
     check_results: dict[str, str],
     ticket_number: str,
@@ -853,7 +853,7 @@ async def render_checklist_table(  # noqa: PLR0913, C901, PLR0917
     """Render checklist table with exact styling.
 
     Args:
-        duckdb_instance: DuckDB instance
+        duckdb_instance: DatabaseBackend instance
         checklist_items: List of checklist items
         check_results: Dictionary of check results
         ticket_number: Ticket number
@@ -933,7 +933,7 @@ async def render_checklist_table(  # noqa: PLR0913, C901, PLR0917
 
                                 if automated_check_ids:
                                     checks_info = duckdb_instance.sql_read_with_in_filter(
-                                        DuckDBmodels(ticket_number).check_results(),
+                                        duckdb_instance.models.check_results(),
                                         'check_id',
                                         automated_check_ids,
                                     )

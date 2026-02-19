@@ -7,8 +7,7 @@ import yaml
 from docxtpl import DocxTemplate
 from sqlmodel import SQLModel
 
-from pydatacuration.db.duck_db import DuckDB
-from pydatacuration.db.sqlmodels import DuckDBmodels
+from pydatacuration.db.base import DatabaseBackend
 from pydatacuration.utils.custom_logging import logger
 from pydatacuration.utils.directory_manager import DirectoryManager
 
@@ -16,8 +15,8 @@ from pydatacuration.utils.directory_manager import DirectoryManager
 class Exporter:
     """Class for exporting data to YAML and word formats."""
 
-    def __init__(self, duckdb: DuckDB, dir_manager: DirectoryManager, res_dir: Path | None = None) -> None:
-        """Initialize the Exports class with DuckDB and DirectoryManager instances."""
+    def __init__(self, duckdb: DatabaseBackend, dir_manager: DirectoryManager, res_dir: Path | None = None) -> None:
+        """Initialize the Exports class with a database backend and DirectoryManager instances."""
         self.duckdb = duckdb
         self.dir_manager = dir_manager
         self.res_dir = res_dir if res_dir is not None else Path.cwd() / 'res'
@@ -33,8 +32,8 @@ class Exporter:
             # Unpack the automated check results to the checklist item
             if row_dict.get('automated_check_ids') and row_dict.get('automated_check_ids') != []:
                 for check_id in row_dict['automated_check_ids']:
-                    result = self.duckdb.sql_read_row(
-                        DuckDBmodels(self.duckdb.schema_name).check_results(), 'check_id', check_id
+                    result = self.duckdb.read_row(
+                        self.duckdb.models.check_results(), 'check_id', check_id
                     )
                     if result:
                         check_name = result.get('check_name', '')

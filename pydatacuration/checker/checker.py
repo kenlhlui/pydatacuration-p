@@ -13,8 +13,7 @@ from pydatacuration.checker.metadata_checker import MetadataChecker
 from pydatacuration.checker.spell_checker import SpellCheckerCustomized
 from pydatacuration.checklist.utils import get_checklist_file_path
 from pydatacuration.checksum import Checksum
-from pydatacuration.db.duck_db import DuckDB
-from pydatacuration.db.sqlmodels import DuckDBmodels
+from pydatacuration.db.base import DatabaseBackend
 from pydatacuration.httpx_client import HTTPXClient
 from pydatacuration.utils.unzip import Unzipper
 from pydatacuration.utils.utils import check_readme_file_existence
@@ -37,7 +36,7 @@ class Checker:
         dv_tree: dict,
         workdir: Path,
         check_zip: bool,
-        duckdb_instance: DuckDB,
+        duckdb_instance: DatabaseBackend,
         collection_alias: str | None = None,
         curator_name: str | None = None,
         curator_email: str | None = None,
@@ -52,7 +51,7 @@ class Checker:
             dv_tree (dict): The Dataverse tree metadata.
             workdir (Path): The working directory.
             check_zip (bool): Whether to check zip files.
-            duckdb_instance (DuckDB): An instance of the DuckDB class for database operations.
+            duckdb_instance (DatabaseBackend): A database backend instance for database operations.
             collection_alias (str | None): The collection alias for the author name to be searched.
             curator_name (str | None): The name of the data curator.
             curator_email (str | None): The email of the data curator.
@@ -66,7 +65,7 @@ class Checker:
         self.check_zip = check_zip
         self.collection_alias = collection_alias
         self.duckdb_instance = duckdb_instance
-        self.sqlmodels = DuckDBmodels(self.duckdb_instance.schema_name)
+        self.sqlmodels = self.duckdb_instance.models
         self.curator_name = curator_name
         self.curator_email = curator_email
         self.checklist_type = checklist_type

@@ -13,6 +13,9 @@ services:
     volumes:
       - ./new_dir:/app/workdir  # Configure the path on the left side of colon to your desired host directory
       - ./res:/app/res  # Configure the path for the res directory
+    depends_on:
+      postgres:
+        condition: service_started
     restart: unless-stopped
 
   # NEED TO SET UP .env VARIABLES FOR POSTGRES IF USING THIS IN PRODUCTION
