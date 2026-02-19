@@ -1,0 +1,211 @@
+{
+        "datasetVersion": {
+            "id": 8605,
+            "datasetId": 49504,
+            "datasetPersistentId": "doi:10.80240/FK2/FCZB4A",
+            "datasetType": "dataset",
+            "storageIdentifier": "s3://10.80240/FK2/FCZB4A",
+            "internalVersionNumber": 82,
+            "versionState": "DRAFT",
+            "latestVersionPublishingState": "DRAFT",
+            "deaccessionLink": "",
+            "UNF": "UNF:6:psLQjMqLPZMi4SymBsfUnA==",
+            "lastUpdateTime": "2026-02-05T18:16:12Z",
+            "createTime": "2024-10-29T20:33:10Z",
+            "termsOfUse": "New term of use ",
+            "termsOfAccess": "New Terms of access",
+            "dataAccessPlace": "New data access content",
+            "fileAccessRequest": true,
+            "metadataBlocks": {
+                "citation": {
+                    "displayName": "Citation Metadata",
+                    "name": "citation",
+                    "fields": [
+                        {
+                            "typeName": "title",
+                            "multiple": false,
+                            "typeClass": "primitive",
+                            "value": "Test dataset for data curation serivce"
+                        },
+                        {
+                            "typeName": "subtitle",
+                            "multiple": false,
+                            "typeClass": "primitive",
+                            "value": "Testing"
+                        },
+                        {
+                            "typeName": "alternativeTitle",
+                            "multiple": true,
+                            "typeClass": "primitive",
+                            "value": [
+                                "testing 1"
+                            ]
+                        },
+                        {
+                            "typeName": "author",
+                            "multiple": true,
+                            "typeClass": "compound",
+                            "value": [
+                                {
+                                    "authorName": {
+                                        "typeName": "authorName",
+                                        "multiple": false,
+                                        "typeClass": "primitive",
+                                        "value": "Lui, Ken"
+                                    },
+                                    "authorIdentifierScheme": {
+                                        "typeName": "authorIdentifierScheme",
+                                        "multiple": false,
+                                        "typeClass": "controlledVocabulary",
+                                        "value": "ORCID"
+                                    }
+                                },
+                                {
+                                    "authorName": {
+                                        "typeName": "authorName",
+                                        "multiple": false,
+                                        "typeClass": "primitive",
+                                        "value": "Another, Author"
+                                    },
+                                    "authorIdentifierScheme": {
+                                        "typeName": "authorIdentifierScheme",
+                                        "multiple": false,
+                                        "typeClass": "controlledVocabulary",
+                                        "value": "ORCID"
+                                    },
+                                    "authorIdentifier": {
+                                        "typeName": "authorIdentifier",
+                                        "multiple": false,
+                                        "typeClass": "primitive",
+                                        "value": "11212131123"
+                                    }
+                                }
+                            ]
+                        },
+                        {
+                            "typeName": "datasetContact",
+                            "multiple": true,
+                            "typeClass": "compound",
+                            "value": [
+                                {
+                                    "datasetContactName": {
+                                        "typeName": "datasetContactName",
+                                        "multiple": false,
+                                        "typeClass": "primitive",
+                                        "value": "Lui, Ken"
+                                    },
+                                    "datasetContactAffiliation": {
+                                        "typeName": "datasetContactAffiliation",
+                                        "multiple": false,
+                                        "typeClass": "primitive",
+                                        "value": "University of Toronto"
+                                    },
+                                    "datasetContactEmail": {
+                                    "typeName": "datasetContactEmail",
+                                    "multiple": false,
+                                    "value": "aprof@mailinator.com",
+                                    "typeClass": "primitive"
+                                    }
+                                }
+                            ]
+                        },
+                        {
+                            "typeName": "dsDescription",
+                            "multiple": true,
+                            "typeClass": "compound",
+                            "value": [
+                                {
+                                    "dsDescriptionValue": {
+                                        "typeName": "dsDescriptionValue",
+                                        "multiple": false,
+                                        "typeClass": "primitive",
+                                        "value": "This dataset contains files that are corrupted.\n\nHere is a obviouss spelling error\n\nbut Obviouss  capital letter is not checked."
+                                    }
+                                },
+                                {
+                                    "dsDescriptionValue": {
+                                        "typeName": "dsDescriptionValue",
+                                        "multiple": false,
+                                        "typeClass": "primitive",
+                                        "value": "This is an additional comment.\nAnotherrr typoo here"
+                                    }
+                                },
+                                {
+                                    "dsDescriptionValue": {
+                                        "typeName": "dsDescriptionValue",
+                                        "multiple": false,
+                                        "typeClass": "primitive",
+                                        "value": "\"Hoopee\" hope this typo is now shown, as un-expected"
+                                    }
+                                }
+                            ]
+                        },
+                        {
+                            "typeName": "subject",
+                            "multiple": true,
+                            "typeClass": "controlledVocabulary",
+                            "value": [
+                                "Agricultural Sciences"
+                            ]
+                        },
+                        {
+                            "typeName": "keyword",
+                            "multiple": true,
+                            "typeClass": "compound",
+                            "value": [
+                                {
+                                    "keywordValue": {
+                                        "typeName": "keywordValue",
+                                        "multiple": false,
+                                        "typeClass": "primitive",
+                                        "value": "Test"
+                                    }
+                                },
+                                {
+                                    "keywordValue": {
+                                        "typeName": "keywordValue",
+                                        "multiple": false,
+                                        "typeClass": "primitive",
+                                        "value": "test"
+                                    }
+                                }
+                            ]
+                        },
+                        {
+                            "typeName": "notesText",
+                            "multiple": false,
+                            "typeClass": "primitive",
+                            "value": "This is a note.\n\nThis is a notee with 'notee' as a wrong word."
+                        },
+                        {
+                            "typeName": "depositor",
+                            "multiple": false,
+                            "typeClass": "primitive",
+                            "value": "Lui, Ken"
+                        },
+                        {
+                            "typeName": "dateOfDeposit",
+                            "multiple": false,
+                            "typeClass": "primitive",
+                            "value": "2024-10-29"
+                        }
+                    ]
+                },
+                "geospatial": {
+                    "displayName": "Geospatial Metadata",
+                    "name": "geospatial",
+                    "fields": []
+                },
+                "journal": {
+                    "displayName": "Journal Metadata",
+                    "name": "journal",
+                    "fields": []
+                },
+                "3dobjects": {
+                    "displayName": "3D Objects Metadata",
+                    "name": "3dobjects",
+                    "fields": []
+                }
+            }
+        }
+    }

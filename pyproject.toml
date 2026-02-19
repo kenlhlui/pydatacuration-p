@@ -15,7 +15,7 @@ dependencies = [
     "jinja2>=3.1.4,<4",
     "jmespath>=1.0.1,<2",
     "pyspellchecker>=0.8.1,<0.9",
-    "pillow>=11.0.0,<12",
+    "pillow>=11.0.0,<13",
     "netcdf4>=1.7.2,<2",
     "chardet>=5.2.0,<6",
     "openpyxl>=3.1.5,<4",
@@ -39,7 +39,7 @@ dependencies = [
     "sqlmodel>=0.0.24",
     "duckdb-engine>=0.17.0",
     "deptry>=0.23.1",
-    "nicegui==3.5.0",
+    "nicegui==3.7.0",
     "html-sanitizer>=2.6.0",
     "typer==0.21.1",
     "pydantic>=2",
@@ -48,7 +48,7 @@ dependencies = [
 [dependency-groups]
 dev = [
     "coverage>=7.13.0",
-    "ipykernel>=6.29.5,<7",
+    "ipykernel>=6.29.5,<8",
     "pytest>=9.0.2",
 ]
 

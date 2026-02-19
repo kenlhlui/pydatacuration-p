@@ -1,6 +1,7 @@
 
 #!/usr/bin/env -S just --justfile
 
+
 # Run coverage for tests
 
 run-tests:
@@ -45,3 +46,57 @@ dev-run *ARGS:
     fi
     uv sync
     uv run app.py
+
+### Dataverse-specific commands ###
+
+# Run dataverse in docker
+start-dataverse:
+    cd ./dataverse && docker compose up -d
+
+# Stop dataverse in docker and remove data
+stop-dataverse:
+    cd ./dataverse && docker compose down && sudo rm -rf ./data
+
+# Get API_TOKEN from dataverse container return as a string (without newline)
+show-api-token:  # The @ prefix suppresses echoing that specific command.
+    @docker exec postgres_dataverse psql -U dataverse -t -A -c "SELECT t.tokenstring FROM apitoken t JOIN authenticateduser u ON t.authenticateduser_id = u.id WHERE u.superuser = true LIMIT 1;"
+
+dvconfig:
+    #!/usr/bin/env bash  
+    # The line above is needed to ensure the script runs with bash, which supports certain features that may not be available in other shells.
+    API_TOKEN=$(just show-api-token)
+    cd ./dataverse/dataverse-sample-data
+    rm -rf dvconfig.py
+    cp dvconfig.py.sample dvconfig.py
+    sed -i "s|api_token = ''|api_token = '$API_TOKEN'|" dvconfig.py
+    echo "API token has been set in dvconfig.py"
+
+publish-sample-dataverse:
+    just dvconfig
+    cd ./dataverse/dataverse-sample-data && \
+    pwd && \
+    uv venv --clear && uv pip install -r requirements.txt && \
+    .venv/bin/python create_dataverse.py
+
+publish-sample-dataset:
+    just dvconfig
+    cd ./dataverse/dataverse-sample-data && \
+    uv venv --clear && uv pip install -r requirements.txt && \
+    .venv/bin/python create_dataset.py
+
+publish:
+    #!/usr/bin/env bash
+    echo "Waiting for Dataverse API to be ready..."
+    while true; do
+        API_TOKEN=$(just show-api-token)
+        if [ -n "$API_TOKEN" ] && curl -sf "http://localhost:8080/api/users/:me" -H "X-Dataverse-key: $API_TOKEN" | grep -q '"status":"OK"'; then
+            echo "Dataverse is ready!"
+            echo "Wait additional 5 seconds to ensure all services are up..."
+            sleep 5
+            break
+        fi
+        echo "Not ready yet, retrying in 5 seconds..."
+        sleep 5
+    done
+    just publish-sample-dataverse
+    just publish-sample-dataset
