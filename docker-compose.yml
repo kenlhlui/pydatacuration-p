@@ -35,7 +35,6 @@ services:
   pgadmin:
     container_name: pgadmin
     image: dpage/pgadmin4:latest
-    user: "${UID:-1000}:${GID:-1000}"
     environment:
       - TZ=${TIMEZONE:-America/Toronto}
       - PGADMIN_DEFAULT_EMAIL=${PGADMIN_MAIL:-curation@example.com}
