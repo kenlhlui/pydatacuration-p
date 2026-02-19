@@ -21,6 +21,7 @@ services:
   postgres:
     container_name: postgres
     image: postgres:18-alpine
+    user: "${UID:-1000}:${GID:-1000}"
     environment:
       - TZ=${TIMEZONE:-America/Toronto}
       - POSTGRES_USER=${POSTGRES_USER:-curation}
@@ -30,9 +31,11 @@ services:
       - "5432:5432"
     restart: always
 
+  # Web-based database management tool, optional if you prefer using command line or other tools to manage your database
   pgadmin:
     container_name: pgadmin
     image: dpage/pgadmin4:latest
+    user: "${UID:-1000}:${GID:-1000}"
     environment:
       - TZ=${TIMEZONE:-America/Toronto}
       - PGADMIN_DEFAULT_EMAIL=${PGADMIN_MAIL:-curation@example.com}
@@ -40,5 +43,5 @@ services:
     ports:
       - "5050:80"
     volumes:
-      - ./dev/servers.json:/pgadmin4/servers.json  # For dev only, remove this line in production
+      - ./pgadmin/servers.json:/pgadmin4/servers.json  # For dev only, remove this line in production
     restart: always
