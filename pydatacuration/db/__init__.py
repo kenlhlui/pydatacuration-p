@@ -35,6 +35,7 @@ from pydatacuration.db.sqlmodels import DBModels
 from pydatacuration.db.sqlmodels import DuckDBmodels  # backward-compat re-export
 from pydatacuration.utils.custom_logging import logger
 
+
 # Re-export key symbols for convenient imports
 __all__ = [
     'BackendType',

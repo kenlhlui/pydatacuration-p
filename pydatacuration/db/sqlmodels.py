@@ -23,6 +23,7 @@ from sqlmodel import SQLModel as BaseSQLModel
 from sqlmodel import String
 from sqlmodel import text
 
+
 # Backend type literal used throughout the db package
 BackendType = Literal['duckdb', 'postgresql']
 

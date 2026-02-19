@@ -32,9 +32,7 @@ class Exporter:
             # Unpack the automated check results to the checklist item
             if row_dict.get('automated_check_ids') and row_dict.get('automated_check_ids') != []:
                 for check_id in row_dict['automated_check_ids']:
-                    result = self.duckdb.read_row(
-                        self.duckdb.models.check_results(), 'check_id', check_id
-                    )
+                    result = self.duckdb.read_row(self.duckdb.models.check_results(), 'check_id', check_id)
                     if result:
                         check_name = result.get('check_name', '')
                         row_dict.setdefault('automated_check_results', {})[check_name] = result.get('results')

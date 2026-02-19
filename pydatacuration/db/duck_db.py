@@ -5,7 +5,6 @@ from contextlib import contextmanager
 from pathlib import Path
 
 from sqlmodel import Session
-from sqlmodel import SQLModel
 from sqlmodel import create_engine
 from sqlmodel import text
 
@@ -21,12 +20,14 @@ class DuckDBBackend(DatabaseBackend):
     All operations go through SQLAlchemy/SQLModel via the ``duckdb-engine`` driver.
     """
 
-    _SYSTEM_SCHEMAS: set[str] = frozenset({
-        'system.information_schema',
-        'system.main',
-        'temp.main',
-        'db.main',
-    })
+    _SYSTEM_SCHEMAS: set[str] = frozenset(
+        {
+            'system.information_schema',
+            'system.main',
+            'temp.main',
+            'db.main',
+        }
+    )
 
     def __init__(self, schema_name: str, db_file: Path) -> None:
         """Initialize the DuckDB backend.

@@ -118,9 +118,7 @@ class PostgreSQLBackend(DatabaseBackend):
 
     def create_database(self) -> None:  # noqa: PLR6301
         """No-op for PostgreSQL — the database is created externally (e.g., via Docker/admin)."""
-        logger.info(
-            'PostgreSQL database already exists (managed externally). Skipping create_database().'
-        )
+        logger.info('PostgreSQL database already exists (managed externally). Skipping create_database().')
 
     # ------------------------------------------------------------------
     # Backward-compatible aliases for old connection method names
