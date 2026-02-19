@@ -80,7 +80,7 @@ class PostgreSQLBackend(DatabaseBackend):
         Yields:
             tuple[Session, Engine]: A session and engine for read-write operations.
         """
-        session = Session(self._engine)
+        session = Session(self._engine, expire_on_commit=False)
         try:
             yield session, self._engine
         finally:
@@ -96,7 +96,7 @@ class PostgreSQLBackend(DatabaseBackend):
         Yields:
             tuple[Session, Engine]: A session and engine for read-only operations.
         """
-        session = Session(self._engine)
+        session = Session(self._engine, expire_on_commit=False)
         try:
             yield session, self._engine
         finally:

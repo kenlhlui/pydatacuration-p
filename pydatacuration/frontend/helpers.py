@@ -275,11 +275,17 @@ class NiceGUIHelper:
             list[dict]: List of schemas with metadata
         """
         try:
-            db_dir = Path(main_dir) / 'db'
-            db_file = db_dir / DirectoryManager.DB_FILE_NAME
+            from pydatacuration.db import get_backend_type
 
-            if not db_file.exists():
-                return []
+            backend = get_backend_type()
+
+            # For DuckDB, we need the file to exist
+            db_file: Path | None = None
+            if backend == 'duckdb':
+                db_dir = Path(main_dir) / 'db'
+                db_file = db_dir / DirectoryManager.DB_FILE_NAME
+                if not db_file.exists():
+                    return []
 
             # Create a database backend instance to get schema names for further querying
             db = get_database(schema_name='_system_query_', db_file=db_file)
@@ -347,11 +353,16 @@ class NiceGUIHelper:
                 tuple[bool, str]: Success status and message
             """
             try:
-                db_dir = Path(main_dir) / DirectoryManager.DB_SUBDIR
-                db_file = db_dir / DirectoryManager.DB_FILE_NAME
+                from pydatacuration.db import get_backend_type
 
-                if not db_file.exists():
-                    return False, 'Database file not found'
+                backend = get_backend_type()
+
+                db_file: Path | None = None
+                if backend == 'duckdb':
+                    db_dir = Path(main_dir) / DirectoryManager.DB_SUBDIR
+                    db_file = db_dir / DirectoryManager.DB_FILE_NAME
+                    if not db_file.exists():
+                        return False, 'Database file not found'
 
                 # Create a database backend instance to delete the schema
                 db = get_database(schema_name='_system_query_', db_file=db_file)

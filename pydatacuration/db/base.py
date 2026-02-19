@@ -193,7 +193,6 @@ class DatabaseBackend(ABC):  # noqa: PLR0904
         """
         try:
             with self.get_readonly_connection() as (session, _engine):
-                SQLModel.metadata.clear()
                 result: ScalarResult[SQLModel] = session.exec(select(model))
                 rows = result.all()
                 if rows:
@@ -202,7 +201,7 @@ class DatabaseBackend(ABC):  # noqa: PLR0904
             logger.error(f'Error fetching records from table: {e}')
 
         empty_instance = model()
-        return empty_instance.model_dump(mode='json')
+        return [empty_instance.model_dump(mode='json')]
 
     def read_project_metadata_record(self, mode: Literal['json', 'python'] | str = 'json') -> dict[str, Any]:
         """Read project metadata record.
@@ -228,11 +227,23 @@ class DatabaseBackend(ABC):  # noqa: PLR0904
         return {'check_results': self.read_table_records(model_class, mode=mode)}
 
     def read_checklist(self):
-        """Read checklist table, returning model instances."""
-        with self.get_connection() as (session, _engine):
-            checklist_model = self.models.checklist()
-            rows = session.exec(select(checklist_model)).all()
-            return rows
+        """Read checklist table, returning model instances.
+
+        Objects are expunged from the session so they remain usable after
+        the connection context manager closes (important for PostgreSQL
+        where detached objects lose attribute access).
+        """
+        try:
+            with self.get_connection() as (session, _engine):
+                checklist_model = self.models.checklist()
+                rows = session.exec(select(checklist_model).order_by(checklist_model.id)).all()
+                # Expunge objects so they survive session close
+                for row in rows:
+                    session.expunge(row)
+                return rows
+        except Exception as e:
+            logger.error(f'Error reading checklist: {e}')
+            return []
 
     def read_schema_tables(self) -> list[str]:
         """Get the names of the tables inside the current schema.
@@ -334,8 +345,10 @@ class DatabaseBackend(ABC):  # noqa: PLR0904
 
                 logger.info(f'Successfully updated checklist item {item_id}')
 
-                self.update_project_metadata_timestamp()
-                return True
+            # Update metadata timestamp OUTSIDE the connection context
+            # to avoid holding two connections simultaneously (important for PostgreSQL pool)
+            self.update_project_metadata_timestamp()
+            return True
 
         except Exception as e:
             logger.error(f'Error updating checklist item {item_id}: {e}')
