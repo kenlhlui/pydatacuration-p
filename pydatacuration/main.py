@@ -171,10 +171,6 @@ def get_db(schema_name: str, db_file: Path) -> DatabaseBackend:
     return get_database(schema_name=schema_name, db_file=db_file)
 
 
-# Backward-compatible alias
-get_duck = get_db
-
-
 @app.command()
 def init(
     ctx: typer.Context,
