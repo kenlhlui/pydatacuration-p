@@ -82,21 +82,7 @@ class PostgreSQLBackend(DatabaseBackend):
         finally:
             session.close()
 
-    @contextmanager
-    def get_readonly_connection(self) -> Generator[tuple[Session, Any], None, None]:
-        """Get a read-only SQLAlchemy Session + Engine.
-
-        For PostgreSQL, we use the same engine (PostgreSQL handles concurrent
-        reads natively). The session is opened in a non-committing mode.
-
-        Yields:
-            tuple[Session, Engine]: A session and engine for read-only operations.
-        """
-        session = Session(self._engine, expire_on_commit=False)
-        try:
-            yield session, self._engine
-        finally:
-            session.close()
+    get_readonly_connection = get_connection  # For PostgreSQL, we use the same engine (PostgreSQL handles concurrent reads natively). This is for compatibility with duckdb in the base.py.  # noqa: E501
 
     # ------------------------------------------------------------------
     # Backend-specific operations
