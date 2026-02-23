@@ -695,8 +695,8 @@ class Checker:
             logger.error(f'Failed to write keywords to database: {e}')
 
     # The below writes the to the database database
-    def write_project_metadata_to_duckdb(self) -> None:
-        """Write the project metadata to the database database."""
+    def write_project_metadata_db(self) -> None:
+        """Write the project metadata to the database."""
         project_metadata_schema = self.sqlmodels.project_metadata_record()
 
         # Check if record already exists
@@ -730,7 +730,7 @@ class Checker:
             self.logger.error(f'Failed to write to database: {e}')
 
     # Note: maybe to migrate this to main.py
-    def write_checklist_to_duckdb(self, checklist_type: str = 'default'):
+    def write_checklist_db(self, checklist_type: str = 'default') -> None:
         """Write the checklist items to database.
 
         Supports flexible checklist file naming:
@@ -791,6 +791,6 @@ class Checker:
         self.check_terms_of_access()
         self.check_keywords()
         self.check_license()
-        self.write_project_metadata_to_duckdb()
+        self.write_project_metadata_db()
         # Write the checklist to database using the configured checklist type
-        self.write_checklist_to_duckdb(self.checklist_type)
+        self.write_checklist_db(self.checklist_type)
