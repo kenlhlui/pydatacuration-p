@@ -20,7 +20,7 @@ class DuckDBBackend(DatabaseBackend):
     All operations go through SQLAlchemy/SQLModel via the ``duckdb-engine`` driver.
     """
 
-    _SYSTEM_SCHEMAS: set[str] = frozenset(
+    _SYSTEM_SCHEMAS: frozenset[str] = frozenset(
         {
             'system.information_schema',
             'system.main',
@@ -50,7 +50,7 @@ class DuckDBBackend(DatabaseBackend):
         return self._db_models
 
     @property
-    def system_schemas(self) -> set[str]:
+    def system_schemas(self) -> frozenset[str]:
         """DuckDB-specific system schemas."""
         return self._SYSTEM_SCHEMAS
 

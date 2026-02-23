@@ -20,12 +20,14 @@ class PostgreSQLBackend(DatabaseBackend):
     Schemas are used per project/ticket, same as the DuckDB backend.
     """
 
-    _SYSTEM_SCHEMAS: set[str] = {
-        'pg_catalog',
-        'information_schema',
-        'public',
-        'pg_toast',
-    }
+    _SYSTEM_SCHEMAS: frozenset[str] = frozenset(
+        {
+            'pg_catalog',
+            'information_schema',
+            'public',
+            'pg_toast',
+        }
+    )
 
     def __init__(self, schema_name: str, database_url: str) -> None:
         """Initialize the PostgreSQL backend.
@@ -59,7 +61,7 @@ class PostgreSQLBackend(DatabaseBackend):
         return self._db_models
 
     @property
-    def system_schemas(self) -> set[str]:
+    def system_schemas(self) -> frozenset[str]:
         """PostgreSQL-specific system schemas."""
         return self._SYSTEM_SCHEMAS
 
