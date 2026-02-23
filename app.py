@@ -932,7 +932,7 @@ async def render_checklist_table(  # noqa: PLR0913, C901, PLR0917
                                 checks_info = []
 
                                 if automated_check_ids:
-                                    checks_info = duckdb_instance.sql_read_with_in_filter(
+                                    checks_info = duckdb_instance.read_with_in_filter(
                                         duckdb_instance.models.check_results(),
                                         'check_id',
                                         automated_check_ids,

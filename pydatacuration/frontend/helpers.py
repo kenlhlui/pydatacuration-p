@@ -74,7 +74,7 @@ class NiceGUIHelper:
 
     def handle_status_change(self, item_id: str, new_status: str) -> None:
         """Handle status change with auto-save."""
-        self.duckdb.sql_update_checklist_item(item_id=item_id, status=new_status)
+        self.duckdb.update_checklist_item(item_id=item_id, status=new_status)
         ui.notify(f'Status updated for {item_id}', type='positive', position='top-right', close_button=True)
         if self.refresh_callback:
             # Schedule the async callback to run
@@ -82,7 +82,7 @@ class NiceGUIHelper:
 
     def handle_comments_change(self, item_id: str, new_comments: str) -> None:
         """Handle comments change."""
-        self.duckdb.sql_update_checklist_item(item_id=item_id, comments=new_comments)
+        self.duckdb.update_checklist_item(item_id=item_id, comments=new_comments)
         ui.notify(f'Comments updated for {item_id}', type='positive', position='top-right', close_button=True)
         if self.refresh_callback:
             # Schedule the async callback to run
@@ -97,7 +97,7 @@ class NiceGUIHelper:
             minutes = int(parts[0])
             seconds = int(parts[1])
             time_spent_delta: timedelta = timedelta(minutes=minutes, seconds=seconds)
-            self.duckdb.sql_update_checklist_item(item_id=item_id, time_spent=time_spent_delta)
+            self.duckdb.update_checklist_item(item_id=item_id, time_spent=time_spent_delta)
             ui.notify(f'Time updated for {item_id}', type='positive', position='top-right', close_button=True)
             if self.refresh_callback:
                 # Schedule the async callback to run
@@ -204,7 +204,7 @@ class NiceGUIHelper:
 
         # Save to database as timedelta
         time_delta = timedelta(seconds=elapsed_seconds)
-        self.duckdb.sql_update_checklist_item(item_id=item_id, time_spent=time_delta)
+        self.duckdb.update_checklist_item(item_id=item_id, time_spent=time_delta)
 
         # Remove from active timers
         del self.timers[item_id]
