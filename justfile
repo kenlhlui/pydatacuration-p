@@ -40,7 +40,7 @@ docker-build-and-run *ARGS:
 # Local Development
 # ─────────────────────────────────────────────────────────
 
-# Run the app locally with hot-reload on port 8080 (pass `-f` to skip prompts)
+# Run the app locally with hot-reload on port 9005 (pass `-f` to skip prompts)
 dev-run *ARGS:
     @if [ -d ./workdir ] && [ "{{ARGS}}" != "-f" ]; then \
         read -p "Remove ./workdir? [y/N] " ans; \
@@ -120,7 +120,7 @@ publish:
     echo "Waiting for Dataverse API to be ready..."
     while true; do
         API_TOKEN=$(just show-api-token)
-        if [ -n "$API_TOKEN" ] && curl -sf "http://localhost:8080/api/users/:me" -H "X-Dataverse-key: $API_TOKEN" | grep -q '"status":"OK"'; then
+        if [ -n "$API_TOKEN" ] && curl -sf "http://localhost:9005/api/users/:me" -H "X-Dataverse-key: $API_TOKEN" | grep -q '"status":"OK"'; then
             echo "Dataverse is ready!"
             echo "Wait additional 5 seconds to ensure all services are up..."
             sleep 5

@@ -260,7 +260,7 @@ pip install nicegui pyyaml
 # Run the POC
 python nicegui_poc.py
 
-# Open browser to http://localhost:8080
+# Open browser to http://localhost:9005
 ```
 
 The POC demonstrates:

@@ -1105,4 +1105,4 @@ else:
 # ============================================================================
 
 if __name__ in {'__main__', '__mp_main__'}:
-    ui.run(title='PyDataCuration - Styled POC', favicon='🔬', port=8080, storage_secret=str(os.urandom(16)))
+    ui.run(title='PyDataCuration', favicon='🔬', port=9005, storage_secret=str(os.urandom(16)))

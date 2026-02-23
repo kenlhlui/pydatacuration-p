@@ -6,7 +6,7 @@ services:
     userns_mode: keep-id
     user: "${UID:-1000}:${GID:-1000}"
     ports:
-      - "9005:8080"
+      - "9005:9005"
     env_file:
       - ./.env # Configure the path to your .env file if it's located elsewhere
     volumes:

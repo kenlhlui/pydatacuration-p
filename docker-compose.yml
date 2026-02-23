@@ -5,7 +5,7 @@ services:
     container_name: data-curation-tool
     user: "${UID:-1000}:${GID:-1000}"
     ports:
-      - "9005:8080"
+      - "9005:9005"
     environment:
       - TZ=${TIMEZONE:-America/Toronto}  # Set your desired with tz database time zones
     env_file:
