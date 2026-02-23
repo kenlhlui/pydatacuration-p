@@ -49,8 +49,8 @@ dev-run *ARGS:
 
 # Clean up
 clean:
-    rm -rf ./workdir
-    rm -rf ./new_dir
+    sudo rm -rf ./workdir
+    sudo rm -rf ./new_dir
 
 ### Dataverse-specific commands ###
 
