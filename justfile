@@ -20,21 +20,30 @@ run-tests-with-report-html:
 # Docker
 # ─────────────────────────────────────────────────────────
 
-# Rebuild and run containers (pass `-f` to skip all confirmation prompts)
+# Rebuild and run containers
+# Optionally pass a profile name and/or `-f` to skip confirmation prompts (order-independent).
+# Example: just docker-build-and-run postgres -f
 docker-build-and-run *ARGS:
-    @if [ -d ./new_dir ] && [ "{{ARGS}}" != "-f" ]; then \
-        read -p "Remove ./new_dir? [y/N] " ans; \
-        case "$$ans" in [Yy]*) ;; *) echo "Aborted."; exit 1 ;; esac; \
+    #!/usr/bin/env bash
+    set -euo pipefail
+    FORCE=0; PROFILE=""
+    for arg in {{ARGS}}; do
+        [[ "$arg" == "-f" ]] && FORCE=1 || PROFILE="$arg"
+    done
+    if [ -d ./new_dir ] && [ "$FORCE" -eq 0 ]; then
+        read -p "Remove ./new_dir? [y/N] " ans
+        case "$ans" in [Yy]*) ;; *) echo "Aborted."; exit 1 ;; esac
     fi
-    @if [ -d ./new_dir ]; then rm -rf ./new_dir; fi
-    @mkdir -p ./new_dir/db
-    @if [ "{{ARGS}}" != "-f" ]; then \
-        read -p "This will stop/remove containers and rebuild. Continue? [y/N] " ans; \
-        case "$$ans" in [Yy]*) ;; *) echo "Aborted."; exit 1 ;; esac; \
+    [ -d ./new_dir ] && rm -rf ./new_dir
+    mkdir -p ./new_dir/db
+    if [ "$FORCE" -eq 0 ]; then
+        read -p "This will stop/remove containers and rebuild. Continue? [y/N] " ans
+        case "$ans" in [Yy]*) ;; *) echo "Aborted."; exit 1 ;; esac
     fi
-    UID=$(id -u) GID=$(id -g) docker compose down
-    UID=$(id -u) GID=$(id -g) docker compose build
-    UID=$(id -u) GID=$(id -g) docker compose up --force-recreate
+    _UID=$(id -u); _GID=$(id -g)
+    env UID=$_UID GID=$_GID COMPOSE_PROFILES="$PROFILE" docker compose down
+    env UID=$_UID GID=$_GID COMPOSE_PROFILES="$PROFILE" docker compose build
+    env UID=$_UID GID=$_GID COMPOSE_PROFILES="$PROFILE" docker compose up --force-recreate
 
 # ─────────────────────────────────────────────────────────
 # Local Development
