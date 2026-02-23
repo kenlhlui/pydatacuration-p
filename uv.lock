@@ -1458,6 +1458,7 @@ dependencies = [
     { name = "orjson" },
     { name = "pandas", extra = ["excel"] },
     { name = "pillow" },
+    { name = "psycopg", extra = ["binary"] },
     { name = "py7zr" },
     { name = "pydantic" },
     { name = "pypdf" },
@@ -1475,11 +1476,6 @@ dependencies = [
     { name = "trogon" },
     { name = "typer" },
     { name = "uvicorn" },
-]
-
-[package.optional-dependencies]
-postgresql = [
-    { name = "psycopg", extra = ["binary"] },
 ]
 
 [package.dev-dependencies]
@@ -1510,7 +1506,7 @@ requires-dist = [
     { name = "orjson", specifier = ">=3.10.7,<4" },
     { name = "pandas", extras = ["excel"], specifier = ">=2.2.3,<3" },
     { name = "pillow", specifier = ">=11.0.0,<13" },
-    { name = "psycopg", extras = ["binary"], marker = "extra == 'postgresql'", specifier = ">=3.1" },
+    { name = "psycopg", extras = ["binary"], specifier = ">=3.3.3" },
     { name = "py7zr", specifier = ">=0.22.0,<1.2" },
     { name = "pydantic", specifier = ">=2" },
     { name = "pypdf", specifier = ">=5.1.0,<7" },
