@@ -1,21 +1,26 @@
 
 #!/usr/bin/env -S just --justfile
 
+# ─────────────────────────────────────────────────────────
+# Testing & Coverage
+# ─────────────────────────────────────────────────────────
 
-# Run coverage for tests
-
+# Sync dev dependencies, install package in editable mode, and run tests with coverage
 run-tests:
     uv sync --dev
     uv pip install -e .
     coverage run -m pytest -v
 
-# Run test with coverage report (HTML)
+# Run tests and generate an HTML coverage report (opens in htmlcov/)
 run-tests-with-report-html:
     just run-tests
     coverage html
 
+# ─────────────────────────────────────────────────────────
+# Docker
+# ─────────────────────────────────────────────────────────
 
-# Remove new_dir (with confirmation), recreate it, then rebuild and run containers
+# Rebuild and run containers (pass `-f` to skip all confirmation prompts)
 docker-build-and-run *ARGS:
     @if [ -d ./new_dir ] && [ "{{ARGS}}" != "-f" ]; then \
         read -p "Remove ./new_dir? [y/N] " ans; \
@@ -31,8 +36,11 @@ docker-build-and-run *ARGS:
     UID=$(id -u) GID=$(id -g) docker compose build
     UID=$(id -u) GID=$(id -g) docker compose up --force-recreate
 
+# ─────────────────────────────────────────────────────────
+# Local Development
+# ─────────────────────────────────────────────────────────
 
-# Development run (with hot-reload, no docker, starts in 8080 (default) )
+# Run the app locally with hot-reload on port 8080 (pass `-f` to skip prompts)
 dev-run *ARGS:
     @if [ -d ./workdir ] && [ "{{ARGS}}" != "-f" ]; then \
         read -p "Remove ./workdir? [y/N] " ans; \
@@ -47,28 +55,39 @@ dev-run *ARGS:
     uv sync
     uv run app.py
 
-# Clean up
+# ─────────────────────────────────────────────────────────
+# Cleanup
+# ─────────────────────────────────────────────────────────
+
+# Remove all generated working directories (workdir, new_dir, pgadmin)
 clean:
     sudo rm -rf ./workdir
     sudo rm -rf ./new_dir
+    sudo rm -rf ./pgadmin
 
-### Dataverse-specific commands ###
+# ─────────────────────────────────────────────────────────
+# Dataverse — Lifecycle
+# ─────────────────────────────────────────────────────────
 
-# Run dataverse in docker
+# Start the Dataverse stack in detached mode
 start-dataverse:
     cd ./dataverse && docker compose up -d
 
-# Stop dataverse in docker and remove data
+# Stop the Dataverse stack and purge its persistent data
 stop-dataverse:
     cd ./dataverse && docker compose down && sudo rm -rf ./data
 
-# Get API_TOKEN from dataverse container return as a string (without newline)
-show-api-token:  # The @ prefix suppresses echoing that specific command.
+# ─────────────────────────────────────────────────────────
+# Dataverse — Configuration & Auth
+# ─────────────────────────────────────────────────────────
+
+# Retrieve the superuser API token from the Dataverse database
+show-api-token:
     @docker exec postgres_dataverse psql -U dataverse -t -A -c "SELECT t.tokenstring FROM apitoken t JOIN authenticateduser u ON t.authenticateduser_id = u.id WHERE u.superuser = true LIMIT 1;"
 
+# Generate dvconfig.py with the current API token baked in
 dvconfig:
-    #!/usr/bin/env bash  
-    # The line above is needed to ensure the script runs with bash, which supports certain features that may not be available in other shells.
+    #!/usr/bin/env bash
     API_TOKEN=$(just show-api-token)
     cd ./dataverse/dataverse-sample-data
     rm -rf dvconfig.py
@@ -76,6 +95,11 @@ dvconfig:
     sed -i "s|api_token = ''|api_token = '$API_TOKEN'|" dvconfig.py
     echo "API token has been set in dvconfig.py"
 
+# ─────────────────────────────────────────────────────────
+# Dataverse — Sample Data Publishing
+# ─────────────────────────────────────────────────────────
+
+# Create and publish a sample Dataverse collection
 publish-sample-dataverse:
     just dvconfig
     cd ./dataverse/dataverse-sample-data && \
@@ -83,12 +107,14 @@ publish-sample-dataverse:
     uv venv --clear && uv pip install -r requirements.txt && \
     .venv/bin/python create_dataverse.py
 
+# Create and publish a sample dataset within the Dataverse collection
 publish-sample-dataset:
     just dvconfig
     cd ./dataverse/dataverse-sample-data && \
     uv venv --clear && uv pip install -r requirements.txt && \
     .venv/bin/python create_dataset.py
 
+# Wait for the Dataverse API, then publish both sample dataverse and dataset
 publish:
     #!/usr/bin/env bash
     echo "Waiting for Dataverse API to be ready..."
