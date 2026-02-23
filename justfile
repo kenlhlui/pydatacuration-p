@@ -47,6 +47,11 @@ dev-run *ARGS:
     uv sync
     uv run app.py
 
+# Clean up
+clean:
+    rm -rf ./workdir
+    rm -rf ./new_dir
+
 ### Dataverse-specific commands ###
 
 # Run dataverse in docker
