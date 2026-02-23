@@ -734,9 +734,8 @@ class Checker:
         """Write the checklist items to database.
 
         Supports flexible checklist file naming:
-        - New pattern: checklist-{type}.yaml or checklist-{type}.yml
+        - Checklist with types: checklist-{type}.yaml or checklist-{type}.yml
         - Default: checklist.yaml or checklist.yml (when checklist_type='default')
-        - Legacy: check-list_template_{type}.yaml (for backward compatibility)
 
         Args:
             checklist_type (str): Type of checklist to use. Default is 'default'

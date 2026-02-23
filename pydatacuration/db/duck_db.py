@@ -54,12 +54,6 @@ class DuckDBBackend(DatabaseBackend):
         """DuckDB-specific system schemas."""
         return self._SYSTEM_SCHEMAS
 
-    # Backward-compatible alias used by existing consumers
-    @property
-    def duckdb_models(self) -> DBModels:
-        """Backward-compatible alias for ``models``."""
-        return self._db_models
-
     # ------------------------------------------------------------------
     # Connection context managers (SQLAlchemy only — no raw duckdb.connect)
     # ------------------------------------------------------------------
@@ -124,23 +118,3 @@ class DuckDBBackend(DatabaseBackend):
             logger.info(f'Created database at {self.db_file}')
         except Exception as e:
             logger.error(f'Error creating database at {self.db_file}: {e}')
-
-    # ------------------------------------------------------------------
-    # Backward-compatible aliases for old connection method names
-    # ------------------------------------------------------------------
-
-    @contextmanager
-    def sql_get_connection(self):
-        """Backward-compatible alias for ``get_connection``."""
-        with self.get_connection() as (session, engine):
-            yield session, engine
-
-    @contextmanager
-    def sql_get_readonly_connection(self):
-        """Backward-compatible alias for ``get_readonly_connection``."""
-        with self.get_readonly_connection() as (session, engine):
-            yield session, engine
-
-
-# Backward-compatible alias so ``from pydatacuration.db.duck_db import DuckDB`` keeps working
-DuckDB = DuckDBBackend

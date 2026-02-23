@@ -32,7 +32,6 @@ from typing import Literal
 from pydatacuration.db.base import DatabaseBackend
 from pydatacuration.db.sqlmodels import BackendType
 from pydatacuration.db.sqlmodels import DBModels
-from pydatacuration.db.sqlmodels import DuckDBmodels  # backward-compat re-export
 from pydatacuration.utils.custom_logging import logger
 
 
@@ -41,7 +40,6 @@ __all__ = [
     'BackendType',
     'DBModels',
     'DatabaseBackend',
-    'DuckDBmodels',
     'get_backend_type',
     'get_database',
     'get_database_url',

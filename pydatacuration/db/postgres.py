@@ -63,12 +63,6 @@ class PostgreSQLBackend(DatabaseBackend):
         """PostgreSQL-specific system schemas."""
         return self._SYSTEM_SCHEMAS
 
-    # Backward-compatible alias used by existing consumers
-    @property
-    def duckdb_models(self) -> DBModels:
-        """Backward-compatible alias for ``models``."""
-        return self._db_models
-
     # ------------------------------------------------------------------
     # Connection context managers
     # ------------------------------------------------------------------
@@ -119,24 +113,3 @@ class PostgreSQLBackend(DatabaseBackend):
     def create_database(self) -> None:  # noqa: PLR6301
         """No-op for PostgreSQL — the database is created externally (e.g., via Docker/admin)."""
         logger.info('PostgreSQL database already exists (managed externally). Skipping create_database().')
-
-    # ------------------------------------------------------------------
-    # Backward-compatible aliases for old connection method names
-    # ------------------------------------------------------------------
-
-    @contextmanager
-    def sql_get_connection(self) -> Generator[tuple[Session, Any], None, None]:
-        """Backward-compatible alias for ``get_connection``."""
-        with self.get_connection() as (session, engine):
-            yield session, engine
-
-    @contextmanager
-    def sql_get_readonly_connection(self) -> Generator[tuple[Session, Any], None, None]:
-        """Backward-compatible alias for ``get_readonly_connection``."""
-        with self.get_readonly_connection() as (session, engine):
-            yield session, engine
-
-    def dispose(self) -> None:
-        """Dispose the connection pool. Call on application shutdown."""
-        self._engine.dispose()
-        logger.info('PostgreSQL connection pool disposed.')

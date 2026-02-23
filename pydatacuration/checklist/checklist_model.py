@@ -39,24 +39,3 @@ class ChecklistYAML(BaseModel):
     """Model for validating the entire YAML file structure."""
 
     checklist: list[ChecklistYAMLItem]
-
-
-# # Convert from YAML model to SQLModel when inserting to DB
-# def yaml_item_to_db_checklist(yaml_item: ChecklistYAMLItem, schema_name: str) -> 'Checklist':
-#     """Convert a validated YAML item to a Checklist SQLModel instance."""
-#     ChecklistModel = DuckDBmodels(schema_name).checklist()
-#     return ChecklistModel(
-#         id=yaml_item.id,
-#         action=yaml_item.action,
-#         instructions=yaml_item.instructions,
-#         priority=yaml_item.priority,
-#         section=yaml_item.section,
-#         automated_check_ids=yaml_item.automated_check_ids,
-#         tool_explanation=yaml_item.tool_explanation,
-#         curator_check_item=yaml_item.curator_check_item,
-#         check_type=yaml_item.check_type,
-#         # Runtime fields get default values or are set later
-#         status=None,
-#         comments=None,
-#         time_spent=None,
-#     )

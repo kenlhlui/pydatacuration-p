@@ -232,7 +232,6 @@ def discover_checklist_files(res_dir: Path) -> dict[str, str]:
     Searches for checklist files matching these patterns:
     - checklist-*.yaml or checklist-*.yml
     - checklist.yaml or checklist.yml
-    - check-list_template_*.yaml (for backward compatibility)
 
     Args:
         res_dir (Path): Path to the res directory containing checklist files.

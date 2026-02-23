@@ -1,7 +1,6 @@
 """Module for SQLmodels — backend-aware table definitions.
 
 Supports both DuckDB and PostgreSQL column types through the ``backend`` parameter.
-The legacy ``DuckDBmodels`` alias is preserved for backward compatibility.
 """
 
 from datetime import date
@@ -249,7 +248,3 @@ class DBModels:
             )
 
         return CheckResult
-
-
-# Backward-compatible alias so existing imports keep working
-DuckDBmodels = DBModels
