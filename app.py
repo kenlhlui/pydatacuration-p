@@ -842,7 +842,7 @@ async def checklist_page(ticket_number: str) -> None:
 
 
 async def render_checklist_table(  # noqa: PLR0913, C901, PLR0917
-    duckdb_instance: DatabaseBackend,
+    db_instance: DatabaseBackend,
     checklist_items: list,
     check_results: dict[str, str],
     ticket_number: str,
@@ -853,7 +853,7 @@ async def render_checklist_table(  # noqa: PLR0913, C901, PLR0917
     """Render checklist table with exact styling.
 
     Args:
-        duckdb_instance: DatabaseBackend instance
+        db_instance: DatabaseBackend instance
         checklist_items: List of checklist items
         check_results: Dictionary of check results
         ticket_number: Ticket number
@@ -862,7 +862,7 @@ async def render_checklist_table(  # noqa: PLR0913, C901, PLR0917
         refresh_callback: Optional callback function to refresh the UI after updates
     """
     # Internal helper functions for creating UI components
-    helpers = NiceGUIHelper(duckdb_instance, ticket_number, refresh_callback)
+    helpers = NiceGUIHelper(db_instance, ticket_number, refresh_callback)
 
     # Apply filters to checklist items
     filtered_items = checklist_items
@@ -932,8 +932,8 @@ async def render_checklist_table(  # noqa: PLR0913, C901, PLR0917
                                 checks_info = []
 
                                 if automated_check_ids:
-                                    checks_info = duckdb_instance.read_with_in_filter(
-                                        duckdb_instance.models.check_results(),
+                                    checks_info = db_instance.read_with_in_filter(
+                                        db_instance.models.check_results(),
                                         'check_id',
                                         automated_check_ids,
                                     )
