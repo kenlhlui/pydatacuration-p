@@ -394,18 +394,18 @@ class NiceGUIHelper:
 
     @staticmethod
     def export_word_button(
-        duckdb: DatabaseBackend, dir_manager: DirectoryManager, word_template_name: str | None = None
+        db: DatabaseBackend, dir_manager: DirectoryManager, word_template_name: str | None = None
     ) -> None:
         """Save curation report to Word."""
-        exporter = Exporter(duckdb, dir_manager)
+        exporter = Exporter(db, dir_manager)
         exporter.export_word(word_template_name=word_template_name)
 
         ui.notify('Curation report saved successfully!', type='positive')
 
     @staticmethod
-    def export_yaml_button(duckdb: DatabaseBackend, dir_manager: DirectoryManager) -> None:
+    def export_yaml_button(db: DatabaseBackend, dir_manager: DirectoryManager) -> None:
         """Export YAML file from the project directory."""
-        exporter = Exporter(duckdb, dir_manager)
+        exporter = Exporter(db, dir_manager)
         exporter.export_yaml()
 
         ui.notify('YAML exported successfully!', type='positive')
