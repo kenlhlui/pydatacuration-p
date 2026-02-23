@@ -705,15 +705,15 @@ async def checklist_page(ticket_number: str) -> None:
 
     # Initialize the duckdb connection for this ticket number
     dir_manager = DirectoryManager(ticket_number, MAIN_DIR, RES_DIR)
-    duck_db = get_database(schema_name=ticket_number, db_file=dir_manager.db_path)
-    helpers = NiceGUIHelper(duck_db, ticket_number)
+    db = get_database(schema_name=ticket_number, db_file=dir_manager.db_path)
+    helpers = NiceGUIHelper(db, ticket_number)
 
     # Load metadata from database
-    project_metadata = duck_db.read_project_metadata_record()
+    project_metadata = db.read_project_metadata_record()
     checklist_type: str | None = project_metadata.get('checklist_type')
 
     # Load checklist results from database
-    check_results = duck_db.read_check_results()
+    check_results = db.read_check_results()
 
     with ui.column().classes('pdc-container'):
         # Logo
@@ -808,7 +808,7 @@ async def checklist_page(ticket_number: str) -> None:
             table_container.clear()
             with table_container:
                 await render_checklist_table(
-                    duck_db,
+                    db,
                     fresh_items,
                     check_results,
                     ticket_number,
@@ -827,14 +827,14 @@ async def checklist_page(ticket_number: str) -> None:
         # Action Buttons
         with ui.element('div').classes('pdc-actions'):
             ui.button(
-                'Save Curation Log (Word)', on_click=lambda: NiceGUIHelper.export_word_button(duck_db, dir_manager)
+                'Save Curation Log (Word)', on_click=lambda: NiceGUIHelper.export_word_button(db, dir_manager)
             ).classes('pdc-btn pdc-btn-primary')
 
             ui.button('Calculate Time Spent', on_click=helpers.calculate_total_time).classes(
                 'pdc-btn pdc-btn-calculate'
             )
 
-            ui.button('Export YAML', on_click=lambda: NiceGUIHelper.export_yaml_button(duck_db, dir_manager)).classes(
+            ui.button('Export YAML', on_click=lambda: NiceGUIHelper.export_yaml_button(db, dir_manager)).classes(
                 'pdc-btn pdc-btn-secondary'
             )
 

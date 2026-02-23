@@ -31,21 +31,21 @@ Checklist: type[SQLModel] = DBModels('_type_hints_').checklist()
 class NiceGUIHelper:
     """Helper class for NiceGUI components."""
 
-    def __init__(self, duckdb: DatabaseBackend, ticket_number: str, refresh_callback: Callable | None = None) -> None:
+    def __init__(self, db: DatabaseBackend, ticket_number: str, refresh_callback: Callable | None = None) -> None:
         """Initialize NiceGUIHelper.
 
         Args:
-            duckdb (DatabaseBackend): Database backend instance.
+            db (DatabaseBackend): Database backend instance.
             ticket_number (str): Ticket number to work with.
             refresh_callback: Optional callback function to refresh the UI after updates.
         """
-        self.duckdb: DatabaseBackend = duckdb
+        self.db: DatabaseBackend = db
         self.ticket_number: str = ticket_number
         self.refresh_callback = refresh_callback
         # Timer tracking: {item_id: {'start_time': timestamp, 'elapsed': seconds}}
         self.timers: dict[str, dict] = {}
 
-    def get_checklist_items(self):  # FIXME add return type
+    def get_checklist_items(self) -> list[SQLModel]:
         """Get all checklist items from the DuckDB database for the specified ticket.
 
         The checklist type is determined by what was stored in the database during setup.
@@ -57,11 +57,11 @@ class NiceGUIHelper:
             Sequence[SQLModel]: List of checklist items with their details.
 
         """
-        duck_db_data = self.duckdb.read_checklist()
+        checklist_items = self.db.read_checklist()
 
         # Change the timedelta to MM:SS format for each item to prevent JSON serialization issues
-        for item in duck_db_data:
-            time_spent = item.time_spent  # FIXME for the linting issue
+        for item in checklist_items:
+            time_spent = item.time_spent
             if isinstance(time_spent, timedelta):
                 total_seconds = int(time_spent.total_seconds())
                 minutes = total_seconds // 60
@@ -70,11 +70,11 @@ class NiceGUIHelper:
             elif time_spent is None:
                 item.time_spent = ''
 
-        return duck_db_data
+        return checklist_items
 
     def handle_status_change(self, item_id: str, new_status: str) -> None:
         """Handle status change with auto-save."""
-        self.duckdb.update_checklist_item(item_id=item_id, status=new_status)
+        self.db.update_checklist_item(item_id=item_id, status=new_status)
         ui.notify(f'Status updated for {item_id}', type='positive', position='top-right', close_button=True)
         if self.refresh_callback:
             # Schedule the async callback to run
@@ -82,7 +82,7 @@ class NiceGUIHelper:
 
     def handle_comments_change(self, item_id: str, new_comments: str) -> None:
         """Handle comments change."""
-        self.duckdb.update_checklist_item(item_id=item_id, comments=new_comments)
+        self.db.update_checklist_item(item_id=item_id, comments=new_comments)
         ui.notify(f'Comments updated for {item_id}', type='positive', position='top-right', close_button=True)
         if self.refresh_callback:
             # Schedule the async callback to run
@@ -97,7 +97,7 @@ class NiceGUIHelper:
             minutes = int(parts[0])
             seconds = int(parts[1])
             time_spent_delta: timedelta = timedelta(minutes=minutes, seconds=seconds)
-            self.duckdb.update_checklist_item(item_id=item_id, time_spent=time_spent_delta)
+            self.db.update_checklist_item(item_id=item_id, time_spent=time_spent_delta)
             ui.notify(f'Time updated for {item_id}', type='positive', position='top-right', close_button=True)
             if self.refresh_callback:
                 # Schedule the async callback to run
@@ -204,7 +204,7 @@ class NiceGUIHelper:
 
         # Save to database as timedelta
         time_delta = timedelta(seconds=elapsed_seconds)
-        self.duckdb.update_checklist_item(item_id=item_id, time_spent=time_delta)
+        self.db.update_checklist_item(item_id=item_id, time_spent=time_delta)
 
         # Remove from active timers
         del self.timers[item_id]
