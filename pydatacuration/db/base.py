@@ -137,7 +137,7 @@ class DatabaseBackend(ABC):  # noqa: PLR0904
         """
         try:
             with self.get_readonly_connection() as (session, _engine):
-                result = session.execute(text(f'SELECT COUNT(*) FROM "{self.schema_name}".{table_name}')).fetchone()
+                result = session.execute(text(f'SELECT COUNT(*) FROM "{self.schema_name}"."{table_name}"')).fetchone()
                 logger.info(f'Query result for existing records in table {table_name}: {result}')
                 if result and result[0] > 0:
                     logger.info(f'Found existing record in "{self.schema_name}".{table_name}')
