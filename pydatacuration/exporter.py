@@ -15,16 +15,16 @@ from pydatacuration.utils.directory_manager import DirectoryManager
 class Exporter:
     """Class for exporting data to YAML and word formats."""
 
-    def __init__(self, duckdb: DatabaseBackend, dir_manager: DirectoryManager, res_dir: Path | None = None) -> None:
+    def __init__(self, db: DatabaseBackend, dir_manager: DirectoryManager, res_dir: Path | None = None) -> None:
         """Initialize the Exports class with a database backend and DirectoryManager instances."""
-        self.duckdb = duckdb
+        self.db = db
         self.dir_manager = dir_manager
         self.res_dir = res_dir if res_dir is not None else Path.cwd() / 'res'
 
     def generate_yaml(self) -> dict[str, Any]:
         """Generate YAML data by reading the database."""
-        project_metadata = self.duckdb.read_project_metadata_record()
-        checklist: list[SQLModel] = self.duckdb.read_checklist()
+        project_metadata = self.db.read_project_metadata_record()
+        checklist: list[SQLModel] = self.db.read_checklist()
 
         # Merge checklist results into checklist
         for row in checklist:
@@ -32,7 +32,7 @@ class Exporter:
             # Unpack the automated check results to the checklist item
             if row_dict.get('automated_check_ids') and row_dict.get('automated_check_ids') != []:
                 for check_id in row_dict['automated_check_ids']:
-                    result = self.duckdb.read_row(self.duckdb.models.check_results(), 'check_id', check_id)
+                    result = self.db.read_row(self.db.models.check_results(), 'check_id', check_id)
                     if result:
                         check_name = result.get('check_name', '')
                         row_dict.setdefault('automated_check_results', {})[check_name] = result.get('results')

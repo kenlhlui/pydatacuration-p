@@ -703,7 +703,7 @@ async def checklist_page(ticket_number: str) -> None:
     """Checklist page with exact styling match."""
     apply_pdc_styles()
 
-    # Initialize the duckdb connection for this ticket number
+    # Initialize the db connection for this ticket number
     dir_manager = DirectoryManager(ticket_number, MAIN_DIR, RES_DIR)
     db = get_database(schema_name=ticket_number, db_file=dir_manager.db_path)
     helpers = NiceGUIHelper(db, ticket_number)

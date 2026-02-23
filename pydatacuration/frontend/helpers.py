@@ -46,7 +46,7 @@ class NiceGUIHelper:
         self.timers: dict[str, dict] = {}
 
     def get_checklist_items(self) -> list[SQLModel]:
-        """Get all checklist items from the DuckDB database for the specified ticket.
+        """Get all checklist items from the database database for the specified ticket.
 
         The checklist type is determined by what was stored in the database during setup.
 

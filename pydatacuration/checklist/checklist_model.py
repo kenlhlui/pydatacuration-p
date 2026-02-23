@@ -4,12 +4,6 @@ from pydantic import BaseModel
 from pydantic import field_validator
 
 
-# from pydatacuration.db.sqlmodels import DuckDBmodels
-
-
-# Checklist = DuckDBmodels.checklist
-
-
 class ChecklistYAMLItem(BaseModel):
     """Model for validating checklist items from YAML files."""
 

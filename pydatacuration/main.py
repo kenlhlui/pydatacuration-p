@@ -163,7 +163,7 @@ def get_db(schema_name: str, db_file: Path) -> DatabaseBackend:
 
     Args:
         schema_name (str): Schema (ticket) name.
-        db_file (Path): DB file path (used by DuckDB backend).
+        db_file (Path): DB file path (used by DuckDB backend only).
 
     Returns:
         DatabaseBackend: Backend instance.
@@ -181,7 +181,7 @@ def init(
     ticket_number: str = TyperOptions.ticket_number_option,
     force_del: bool = TyperOptions.force_del_option,
 ) -> None:
-    """Prepare working directory and DuckDB schema.
+    """Prepare working directory and database schema.
 
     Args:
         ctx (typer.Context): Typer context (provides main_dir).
@@ -278,7 +278,7 @@ def check(
         checklist (str): Type of checklist to use (high or medium).
 
     Returns:
-        None: Writes check results to DuckDB and logs.
+        None: Writes check results to database and logs.
     """
     dirs: directory_manager.DirectoryManager = get_dirs(ticket_number, ctx.obj.main_dir)
     db = get_db(schema_name=dirs.ticket_number, db_file=dirs.db_path)
