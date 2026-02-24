@@ -4,14 +4,12 @@ A containerized data curation tool for Dataverse repositories with web interface
 
 <img src="docs/full-tool-demo.gif" alt="The full curation tool demo" width="70%" height="70%">
 
-## 🚀 Quick Start with Docker🐋/Podman🦭 (Recommended)
+## 🚀 Quick Start with Docker🐋 (Recommended)
 
 ### Prerequisites
 - **Docker** and **Docker Compose** installed
   - 👉 [Get Docker](https://www.docker.com/get-started)
   - Note: Docker Desktop includes Docker Compose by default
-- **Alternative**: **Podman** and **podman-compose**
-  - 👉 [Installation instructions](https://github.com/containers/podman-compose)
 
 ### ⚙️ Setup & Run
 Refer to the [Container Guide](docs/container/README.md) for detailed setup instructions.
