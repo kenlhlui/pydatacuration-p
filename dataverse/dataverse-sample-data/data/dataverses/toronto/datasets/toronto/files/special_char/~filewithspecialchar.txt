@@ -1,0 +1,1 @@
+~filewithspecialchar.txt

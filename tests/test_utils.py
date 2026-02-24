@@ -5,9 +5,7 @@ from pathlib import Path
 import orjson
 import pytest
 import typer
-from loguru import logger
 
-from pydatacuration.utils import check_ds_read_access
 from pydatacuration.utils import check_readme_file_existence
 from pydatacuration.utils import check_ticket_num_input
 from pydatacuration.utils import compare_files_and_metadata
@@ -319,9 +317,9 @@ def test_orjson_export_invalid_path():
             'https://dataverse.example.com/dataset.xhtml?persistentId=doi%3A10.5678%2Ftest',
         ),
         (
-            'http://localhost:8080',
+            'http://localhost:9005',
             'hdl:12345/ABC',
-            'http://localhost:8080/dataset.xhtml?persistentId=hdl%3A12345%2FABC',
+            'http://localhost:9005/dataset.xhtml?persistentId=hdl%3A12345%2FABC',
         ),
         (
             'https://demo.dataverse.org/',
