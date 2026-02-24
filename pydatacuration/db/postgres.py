@@ -79,6 +79,9 @@ class PostgreSQLBackend(DatabaseBackend):
         session = Session(self._engine, expire_on_commit=False)
         try:
             yield session, self._engine
+        except Exception:
+            session.rollback()
+            raise
         finally:
             session.close()
 
