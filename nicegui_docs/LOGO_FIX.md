@@ -35,16 +35,16 @@ ui.html(
 3. **Check the console output:**
    ```
    ✓ Static files mounted: /path/to/pydatacuration/frontend
-   NiceGUI ready to go on http://localhost:8080
+   NiceGUI ready to go on http://localhost:9005
    ```
 
 4. **Open browser:**
-   - Visit: http://127.0.0.1:8080
+   - Visit: http://127.0.0.1:9005
    - Logo should appear at the top
 
 5. **If still not showing, test direct access:**
    ```bash
-   curl http://127.0.0.1:8080/static/UTL.png | file -
+   curl http://127.0.0.1:9005/static/UTL.png | file -
    ```
    Should output: `PNG image data, 793 x 178...`
 
@@ -57,7 +57,7 @@ ui.html(
 
 - [x] Static files mounted at module level (before `ui.run()`)
 - [x] Console shows: `✓ Static files mounted`
-- [x] File accessible: `curl http://127.0.0.1:8080/static/UTL.png` works
+- [x] File accessible: `curl http://127.0.0.1:9005/static/UTL.png` works
 - [x] Using `ui.html()` instead of `ui.image()`
 - [x] Logo has proper size: `height: 60px; width: auto`
 - [x] CSS class applied: `class="pdc-logo"`
@@ -94,7 +94,7 @@ Try using an absolute path:
 
 ```python
 ui.html(
-    f'<img src="http://127.0.0.1:8080/static/UTL.png" '
+    f'<img src="http://127.0.0.1:9005/static/UTL.png" '
     'alt="Logo" class="pdc-logo" '
     'style="height: 60px; width: auto;">'
 )

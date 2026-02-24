@@ -48,4 +48,4 @@ CMD ["uv", "run", "app.py"]
 
 # Health check
 HEALTHCHECK --interval=30s --timeout=5s --start-period=5s --retries=3 \
-  CMD wget -q -O /dev/null http://localhost:8080/health || exit 1
+  CMD wget -q -O /dev/null http://localhost:9005/health || exit 1
