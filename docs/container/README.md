@@ -38,6 +38,45 @@ instructions](https://github.com/containers/podman-compose)
 3.  Make sure the environment variables match your setup before
     proceeding.
 
+### Database Backend
+
+The tool supports two database backends: **DuckDB** (default, file-based) and **PostgreSQL**
+(server-based). Configure which one to use via the `.env` file.
+
+#### DuckDB (Default)
+
+No additional configuration is required. DuckDB stores data in local files inside the
+`workdir` volume. This is the recommended option for simple setups.
+
+```dotenv
+# DB_BACKEND defaults to duckdb — no entry needed, or set explicitly:
+DB_BACKEND=duckdb
+```
+
+#### PostgreSQL
+
+To use PostgreSQL, set `DB_BACKEND=postgresql` and provide the connection details.
+When running with **Docker Compose**, a PostgreSQL service is available via the
+`postgres` profile (see [Running with Docker Compose](#running-with-docker-compose)).
+
+```dotenv
+DB_BACKEND=postgresql
+
+# Option A — single connection URL (takes priority over individual variables below)
+DATABASE_URL=postgresql+psycopg://curation:curation@postgres:5432/curation
+
+# Option B — individual connection parameters
+POSTGRES_USER=curation
+POSTGRES_PASSWORD=curation
+POSTGRES_HOST=postgres   # use 'localhost' if connecting to an external instance
+POSTGRES_PORT=5432
+POSTGRES_DB=curation
+```
+
+> **Note:** When using Docker Compose with the built-in `postgres` service, set
+> `POSTGRES_HOST=postgres` (the service name). If you connect to an external
+> PostgreSQL instance, replace it with the appropriate hostname or IP address.
+
 ### `docker-compose.yml`/`podman-compose.yml` File
 
 1. You might change the `docker-compose.yml` or the `podman-compose.yml` file to adjust volume
@@ -94,6 +133,16 @@ instructions](https://github.com/containers/podman-compose)
     ``` bash
     docker compose up -d
     ```
+
+    To also start the bundled **PostgreSQL** and **pgAdmin** services (required when
+    `DB_BACKEND=postgresql` is set), add the `--profile postgres` flag:
+
+    ``` bash
+    docker compose --profile postgres up -d
+    ```
+
+    pgAdmin will be available at `http://localhost:5050` (default credentials:
+    `curation@example.com` / `curation`).
 
 5.  To stop the container:
 
