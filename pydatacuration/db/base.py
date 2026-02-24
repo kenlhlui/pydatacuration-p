@@ -109,6 +109,7 @@ class DatabaseBackend(ABC):  # noqa: PLR0904
         except Exception as e:
             logger.error(f'Error merging records to table {sqlmodel.__tablename__}: {e}')
 
+    # Question: This function is not used anywhere. Do we want to keep it?
     def write_records_to_table(self, sqlmodel: type[SQLModel]) -> None:
         """Write (insert) records into a table.
 

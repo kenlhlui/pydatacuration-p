@@ -99,5 +99,7 @@ class PostgreSQLBackend(DatabaseBackend):
             logger.error(f'Error creating schema {self.schema_name}: {e}')
 
     def create_database(self) -> None:  # noqa: PLR6301
-        """No-op for PostgreSQL — the database is created externally (e.g., via Docker/admin)."""
-        logger.info('PostgreSQL database already exists (managed externally). Skipping create_database().')
+        """No-op for PostgreSQL — the database is created externally (e.g., via Docker/admin).
+
+        This is for compatibility with duckdb in the base.py.
+        """
