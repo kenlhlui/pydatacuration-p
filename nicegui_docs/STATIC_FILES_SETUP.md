@@ -72,12 +72,12 @@ Now accessible as:
    - If you see `⚠ Warning: Static directory not found` → Path issue
 
 3. **Test in browser:**
-   - Go to: http://127.0.0.1:8080
+   - Go to: http://127.0.0.1:9005
    - Logo should display at the top
    - Check browser console (F12) for 404 errors
 
 4. **Direct access test:**
-   - Visit: http://127.0.0.1:8080/static/UTL.png
+   - Visit: http://127.0.0.1:9005/static/UTL.png
    - Should display the logo image directly
 
 ## Troubleshooting

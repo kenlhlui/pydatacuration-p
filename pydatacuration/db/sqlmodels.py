@@ -1,9 +1,13 @@
-"""Module for SQLmodels."""
+"""Module for SQLmodels — backend-aware table definitions.
+
+Supports both DuckDB and PostgreSQL column types through the ``backend`` parameter.
+"""
 
 from datetime import date
 from datetime import datetime
 from datetime import timedelta
 from typing import Any
+from typing import Literal
 
 from pydantic import field_serializer
 from sqlalchemy import Column
@@ -19,17 +23,53 @@ from sqlmodel import String
 from sqlmodel import text
 
 
-# NOTE: The description field does not write into DuckDB; it's just for documentation purposes in this python file.
-class DuckDBmodels:
-    """SQLmodels implementation for writing to DuckDB."""
+# Backend type literal used throughout the db package
+BackendType = Literal['duckdb', 'postgresql']
 
-    def __init__(self, schema_name: str) -> None:
-        """Initialize DuckDBmodels with the specified schema name.
+
+def _json_column_type(backend: BackendType):
+    """Return the appropriate JSON column type for the backend.
+
+    PostgreSQL benefits from JSONB (indexed, faster queries).
+    DuckDB uses plain JSON.
+    """
+    if backend == 'postgresql':
+        from sqlalchemy.dialects.postgresql import JSONB
+
+        return JSONB
+    return JSON
+
+
+def _datetime_column_type(backend: BackendType):
+    """Return the appropriate datetime column type for the backend.
+
+    PostgreSQL uses TIMESTAMP; DuckDB uses DATETIME.
+    """
+    if backend == 'postgresql':
+        from sqlalchemy import TIMESTAMP
+
+        return TIMESTAMP
+    return DATETIME
+
+
+# NOTE: The description field does not write into the database; it's just for documentation purposes in this python file.
+class DBModels:
+    """SQLModels implementation for writing to DuckDB or PostgreSQL.
+
+    Args:
+        schema_name: The schema name for table placement.
+        backend: The database backend type ('duckdb' or 'postgresql').
+    """
+
+    def __init__(self, schema_name: str, backend: BackendType = 'duckdb') -> None:
+        """Initialize DBModels with the specified schema name and backend.
 
         Args:
-            schema_name (str): The name of the schema to use for the DuckDB tables.
+            schema_name (str): The name of the schema to use for the tables.
+            backend (BackendType): The database backend ('duckdb' or 'postgresql').
         """
         self.schema_name = schema_name
+        self.backend = backend
 
     def project_metadata_record(self) -> type[SQLModel]:
         """Create a ProjectMetadata table class with the specified schema.
@@ -37,6 +77,8 @@ class DuckDBmodels:
         Returns:
             type[SQLModel]: The ProjectMetadata class with the specified schema.
         """
+        dt_type = _datetime_column_type(self.backend)
+
         # Only clear if table already exists in metadata
         table_key = f'{self.schema_name}.project_metadata'
         if table_key in BaseSQLModel.metadata.tables:
@@ -94,7 +136,7 @@ class DuckDBmodels:
             last_modified_datetime: datetime = Field(
                 default_factory=datetime.today,
                 nullable=False,
-                sa_type=DATETIME,
+                sa_type=dt_type,
                 sa_column_kwargs={'onupdate': lambda: datetime.today()},
                 description='Last modified datetime',
             )
@@ -107,8 +149,10 @@ class DuckDBmodels:
         Returns:
             type[SQLModel]: The Checklist class with the specified schema.
         """
-        # Clear metadata to avoid "already defined" errors in long-running processes
+        json_type = _json_column_type(self.backend)
+        dt_type = _datetime_column_type(self.backend)
 
+        # Clear metadata to avoid "already defined" errors in long-running processes
         table_key = f'{self.schema_name}.checklist'
         if table_key in BaseSQLModel.metadata.tables:
             BaseSQLModel.metadata.remove(BaseSQLModel.metadata.tables[table_key])
@@ -127,7 +171,7 @@ class DuckDBmodels:
             priority: str = Field(sa_column=Column(String, nullable=True), description='Checklist priority')
             section: str = Field(sa_column=Column(String, nullable=True), description='Checklist section')
             automated_check_ids: list[str] = Field(
-                sa_column=Column(JSON, nullable=True), description='List of automated check IDs'
+                sa_column=Column(json_type, nullable=True), description='List of automated check IDs'
             )
             tool_explanation: str = Field(
                 sa_column=Column(String, nullable=True),
@@ -146,7 +190,7 @@ class DuckDBmodels:
             last_modified_datetime: datetime = Field(
                 default_factory=datetime.today,
                 nullable=False,
-                sa_type=DATETIME,
+                sa_type=dt_type,
                 sa_column_kwargs={'onupdate': lambda: datetime.today()},
                 description='Last modified datetime',
             )
@@ -164,11 +208,14 @@ class DuckDBmodels:
         return Checklist
 
     def check_results(self) -> type[SQLModel]:
-        """Check the result list for the specified schema.
+        """Create a CheckResult table class with the specified schema.
 
         Returns:
             type[SQLModel]: The CheckResult class with the specified schema.
         """
+        json_type = _json_column_type(self.backend)
+        dt_type = _datetime_column_type(self.backend)
+
         # Clear metadata to avoid "already defined" errors in long-running processes
         table_key = f'{self.schema_name}.check_results'
         if table_key in BaseSQLModel.metadata.tables:
@@ -190,12 +237,12 @@ class DuckDBmodels:
             )
             unit: str = Field(sa_column=Column(String, nullable=False), description='Unit of each result item')
             results: list[str] | list[dict] = Field(
-                sa_column=Column(JSON, nullable=False), description='(Nested) List of check results'
-            )  # This support writing a list[str] and list[dict] to duckdb # noqa
+                sa_column=Column(json_type, nullable=False), description='(Nested) List of check results'
+            )
             last_modified_datetime: datetime = Field(
                 default_factory=datetime.today,
                 nullable=False,
-                sa_type=DATETIME,
+                sa_type=dt_type,
                 sa_column_kwargs={'onupdate': lambda: datetime.today()},
                 description='Last modified datetime',
             )

@@ -133,7 +133,7 @@ ui.select(options=[...]).classes('w-full').style('width: 100%')
 
 After applying the fix:
 1. Restart your NiceGUI app: `python nicegui_poc_styled.py`
-2. Open http://localhost:8080
+2. Open http://localhost:9005
 3. Input boxes should now fill the full width of their containers
 4. Test on different screen sizes to ensure responsiveness
 

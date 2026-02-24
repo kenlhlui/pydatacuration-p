@@ -196,4 +196,7 @@ temp.ipynb
 /dataverse/data
 
 # Contains API token, should not be committed
-dataverse/dataverse-sample-data/dvconfig.py  
+dataverse/dataverse-sample-data/dvconfig.py
+
+# pgadmin folders
+pgadmin/

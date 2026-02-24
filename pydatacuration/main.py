@@ -13,7 +13,8 @@ from rich.progress import Progress
 from rich.progress import SpinnerColumn
 from trogon.typer import init_tui
 
-from pydatacuration.db import duck_db
+from pydatacuration.db import DatabaseBackend
+from pydatacuration.db import get_database
 from pydatacuration.utils import directory_manager
 from pydatacuration.utils import utils
 from pydatacuration.utils.custom_logging import add_cli_run_logging
@@ -157,17 +158,17 @@ def get_dirs(ticket_number: str, main_dir: Path) -> directory_manager.DirectoryM
     return directory_manager.DirectoryManager(ticket_number, str(main_dir))
 
 
-def get_duck(schema_name: str, db_file: Path) -> duck_db.DuckDB:
-    """Instantiate DuckDB wrapper.
+def get_db(schema_name: str, db_file: Path) -> DatabaseBackend:
+    """Instantiate database backend via factory.
 
     Args:
         schema_name (str): Schema (ticket) name.
-        db_file (Path): DB file path.
+        db_file (Path): DB file path (used by DuckDB backend only).
 
     Returns:
-        duck_db.DuckDB: DuckDB instance.
+        DatabaseBackend: Backend instance.
     """
-    return duck_db.DuckDB(schema_name=schema_name, db_file=db_file)
+    return get_database(schema_name=schema_name, db_file=db_file)
 
 
 @app.command()
@@ -176,7 +177,7 @@ def init(
     ticket_number: str = TyperOptions.ticket_number_option,
     force_del: bool = TyperOptions.force_del_option,
 ) -> None:
-    """Prepare working directory and DuckDB schema.
+    """Prepare working directory and database schema.
 
     Args:
         ctx (typer.Context): Typer context (provides main_dir).
@@ -197,10 +198,10 @@ def init(
     dirs.make_dirs()
     add_cli_run_logging(dirs.log_files_dir)
 
-    duck = get_duck(schema_name=dirs.ticket_number, db_file=dirs.db_path)
-    duck.create_database()
-    duck.sql_drop_schema(ticket_number)
-    duck.create_schema()
+    db = get_db(schema_name=dirs.ticket_number, db_file=dirs.db_path)
+    db.create_database()
+    db.drop_schema(ticket_number)
+    db.create_schema()
     logger.info(f'Initialized working area at {workdir_path}')
 
 
@@ -273,10 +274,10 @@ def check(
         checklist (str): Type of checklist to use (high or medium).
 
     Returns:
-        None: Writes check results to DuckDB and logs.
+        None: Writes check results to database and logs.
     """
     dirs: directory_manager.DirectoryManager = get_dirs(ticket_number, ctx.obj.main_dir)
-    duck = get_duck(schema_name=dirs.ticket_number, db_file=dirs.db_path)
+    db = get_db(schema_name=dirs.ticket_number, db_file=dirs.db_path)
 
     add_cli_run_logging(dirs.log_files_dir)
 
@@ -297,7 +298,7 @@ def check(
         dv_tree,
         dirs.project_dir,
         check_zip,
-        duck,
+        db,
         collection_alias,
         curator_name,
         curator_email,

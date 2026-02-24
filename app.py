@@ -20,8 +20,8 @@ from nicegui import ui
 from nicegui.elements.input import Input
 from sqlmodel import SQLModel
 
-from pydatacuration.db.duck_db import DuckDB
-from pydatacuration.db.sqlmodels import DuckDBmodels
+from pydatacuration.db import DatabaseBackend
+from pydatacuration.db import get_database
 from pydatacuration.frontend.helpers import NiceGUIHelper
 from pydatacuration.frontend.helpers import back_to_main_menu_button
 from pydatacuration.frontend.helpers import priority_options
@@ -703,17 +703,17 @@ async def checklist_page(ticket_number: str) -> None:
     """Checklist page with exact styling match."""
     apply_pdc_styles()
 
-    # Initialize the duckdb connection for this ticket number
+    # Initialize the db connection for this ticket number
     dir_manager = DirectoryManager(ticket_number, MAIN_DIR, RES_DIR)
-    duck_db = DuckDB(schema_name=ticket_number, db_file=dir_manager.db_path)
-    helpers = NiceGUIHelper(duck_db, ticket_number)
+    db = get_database(schema_name=ticket_number, db_file=dir_manager.db_path)
+    helpers = NiceGUIHelper(db, ticket_number)
 
     # Load metadata from database
-    project_metadata = duck_db.read_project_metadata_record()
+    project_metadata = db.read_project_metadata_record()
     checklist_type: str | None = project_metadata.get('checklist_type')
 
     # Load checklist results from database
-    check_results = duck_db.read_check_results()
+    check_results = db.read_check_results()
 
     with ui.column().classes('pdc-container'):
         # Logo
@@ -808,7 +808,7 @@ async def checklist_page(ticket_number: str) -> None:
             table_container.clear()
             with table_container:
                 await render_checklist_table(
-                    duck_db,
+                    db,
                     fresh_items,
                     check_results,
                     ticket_number,
@@ -827,14 +827,14 @@ async def checklist_page(ticket_number: str) -> None:
         # Action Buttons
         with ui.element('div').classes('pdc-actions'):
             ui.button(
-                'Save Curation Log (Word)', on_click=lambda: NiceGUIHelper.export_word_button(duck_db, dir_manager)
+                'Save Curation Log (Word)', on_click=lambda: NiceGUIHelper.export_word_button(db, dir_manager)
             ).classes('pdc-btn pdc-btn-primary')
 
             ui.button('Calculate Time Spent', on_click=helpers.calculate_total_time).classes(
                 'pdc-btn pdc-btn-calculate'
             )
 
-            ui.button('Export YAML', on_click=lambda: NiceGUIHelper.export_yaml_button(duck_db, dir_manager)).classes(
+            ui.button('Export YAML', on_click=lambda: NiceGUIHelper.export_yaml_button(db, dir_manager)).classes(
                 'pdc-btn pdc-btn-secondary'
             )
 
@@ -842,7 +842,7 @@ async def checklist_page(ticket_number: str) -> None:
 
 
 async def render_checklist_table(  # noqa: PLR0913, C901, PLR0917
-    duckdb_instance: DuckDB,
+    db_instance: DatabaseBackend,
     checklist_items: list,
     check_results: dict[str, str],
     ticket_number: str,
@@ -853,7 +853,7 @@ async def render_checklist_table(  # noqa: PLR0913, C901, PLR0917
     """Render checklist table with exact styling.
 
     Args:
-        duckdb_instance: DuckDB instance
+        db_instance: DatabaseBackend instance
         checklist_items: List of checklist items
         check_results: Dictionary of check results
         ticket_number: Ticket number
@@ -862,7 +862,7 @@ async def render_checklist_table(  # noqa: PLR0913, C901, PLR0917
         refresh_callback: Optional callback function to refresh the UI after updates
     """
     # Internal helper functions for creating UI components
-    helpers = NiceGUIHelper(duckdb_instance, ticket_number, refresh_callback)
+    helpers = NiceGUIHelper(db_instance, ticket_number, refresh_callback)
 
     # Apply filters to checklist items
     filtered_items = checklist_items
@@ -932,8 +932,8 @@ async def render_checklist_table(  # noqa: PLR0913, C901, PLR0917
                                 checks_info = []
 
                                 if automated_check_ids:
-                                    checks_info = duckdb_instance.sql_read_with_in_filter(
-                                        DuckDBmodels(ticket_number).check_results(),
+                                    checks_info = db_instance.read_with_in_filter(
+                                        db_instance.models.check_results(),
                                         'check_id',
                                         automated_check_ids,
                                     )
@@ -1105,4 +1105,4 @@ else:
 # ============================================================================
 
 if __name__ in {'__main__', '__mp_main__'}:
-    ui.run(title='PyDataCuration - Styled POC', favicon='🔬', port=8080, storage_secret=str(os.urandom(16)))
+    ui.run(title='PyDataCuration', favicon='🔬', port=9005, storage_secret=str(os.urandom(16)))

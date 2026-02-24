@@ -5,7 +5,7 @@ services:
     container_name: data-curation-tool
     user: "${UID:-1000}:${GID:-1000}"
     ports:
-      - "9005:8080"
+      - "9005:9005"
     environment:
       - TZ=${TIMEZONE:-America/Toronto}  # Set your desired with tz database time zones
     env_file:
@@ -14,3 +14,38 @@ services:
       - ./new_dir:/app/workdir  # Configure the path on the left side of colon to your desired host directory
       - ./res:/app/res  # Configure the path for the res directory
     restart: unless-stopped
+
+  # NEED TO SET UP .env VARIABLES FOR POSTGRES IF USING THIS IN PRODUCTION
+  # See https://github.com/docker/awesome-compose/tree/master/postgresql-pgadmin for more details
+  # Start with: docker compose --profile postgres up  (or: just docker-build-and-run profile=postgres)
+  postgres:
+    profiles: [postgres]
+    container_name: postgres
+    image: postgres:18-alpine
+    user: "${UID:-1000}:${GID:-1000}"
+    environment:
+      - TZ=${TIMEZONE:-America/Toronto}
+      - POSTGRES_USER=${POSTGRES_USER:-curation}
+      - POSTGRES_PASSWORD=${POSTGRES_PASSWORD:-curation}
+      - POSTGRES_DB=${POSTGRES_DB:-curation}
+    ports:
+      - "5432:5432"
+    restart: always
+
+  # Web-based database management tool, optional if you prefer using command line or other tools to manage your database
+  pgadmin:
+    profiles: [postgres]
+    container_name: pgadmin
+    depends_on:
+      postgres:
+        condition: service_started
+    image: dpage/pgadmin4:9
+    environment:
+      - TZ=${TIMEZONE:-America/Toronto}
+      - PGADMIN_DEFAULT_EMAIL=${PGADMIN_MAIL:-curation@example.com}
+      - PGADMIN_DEFAULT_PASSWORD=${PGADMIN_PW:-curation}
+    ports:
+      - "5050:80"
+    volumes:
+      - ./dev/servers.json:/pgadmin4/servers.json  # Configure the path on the left side of colon to your servers.json file for pgAdmin configuration
+    restart: always

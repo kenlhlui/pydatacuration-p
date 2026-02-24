@@ -17,7 +17,7 @@
 | `all`    | Run the full pipeline: init ➜ fetch ➜ check ➜ report.                                |
 | `check`  | Run curation checks on downloaded files/metadata.                                    |
 | `fetch`  | Download dataset files and metadata.                                                 |
-| `init`   | Prepare working directory and DuckDB schema.                                         |
+| `init`   | Prepare working directory and Database schema.                                         |
 | `report` | Generate artifacts (tree diagram, spreadsheets/docs) and optionally open the folder. |
 | `tui`    | Open Textual TUI.                                                                    |
 

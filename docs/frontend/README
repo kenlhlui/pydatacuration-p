@@ -1,5 +1,5 @@
-# To launch the new frontend (Web UI)
-Run the following to launch the Web UI to launch the app in localhost:8080
+# To launch the frontend (Web UI)
+Run the following to launch the Web UI to launch the app in localhost:9005
 
 ```bash
 uv run app.py
