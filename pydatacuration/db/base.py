@@ -8,7 +8,6 @@ from datetime import timedelta
 from typing import Any
 from typing import Literal
 
-from sqlalchemy import Inspector
 from sqlalchemy import ScalarResult
 from sqlmodel import SQLModel
 from sqlmodel import inspect
@@ -94,58 +93,6 @@ class DatabaseBackend(ABC):  # noqa: PLR0904
     def create_database(self) -> None:
         """Create or ensure the database exists."""
         ...
-
-    # ------------------------------------------------------------------
-    # Concrete shared methods (SQLAlchemy / SQLModel based)
-    # ------------------------------------------------------------------
-
-    def check_schema_exists(self, schema_name: str) -> bool:
-        """Check if a schema exists in the database.
-
-        Args:
-            schema_name (str): The name of the schema to check.
-
-        Returns:
-            bool: True if the schema exists, False otherwise.
-        """
-        try:
-            with self.get_readonly_connection() as (_session, _engine):
-                inspector: Inspector = inspect(_engine)
-
-                result = inspector.has_schema(schema_name)
-                logger.info(f'Schema {schema_name} exists (direct): {result}')
-
-                if not result:
-                    clean_name = schema_name.strip('"')
-                    if clean_name != schema_name:
-                        result = inspector.has_schema(clean_name)
-                        logger.info(f'Schema {clean_name} exists (unquoted): {result}')
-
-                return result
-        except Exception as e:
-            logger.error(f'Error checking schema {schema_name}: {e}')
-            return False
-
-    def check_table_has_records(self, table_name: str) -> bool:
-        """Check whether a table has any existing records.
-
-        Args:
-            table_name (str): The table name to check.
-
-        Returns:
-            bool: True if the table has records, False otherwise.
-        """
-        try:
-            with self.get_readonly_connection() as (session, _engine):
-                result = session.execute(text(f'SELECT COUNT(*) FROM "{self.schema_name}"."{table_name}"')).fetchone()
-                logger.info(f'Query result for existing records in table {table_name}: {result}')
-                if result and result[0] > 0:
-                    logger.info(f'Found existing record in "{self.schema_name}".{table_name}')
-                    return True
-            return False
-        except Exception as e:
-            logger.error(f'Error checking records in table {table_name}: {e}')
-            return False
 
     def merge_records_to_table(self, sqlmodel: type[SQLModel]) -> None:
         """Merge records into a table (upsert by primary key).

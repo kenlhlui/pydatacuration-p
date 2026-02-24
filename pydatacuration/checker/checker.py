@@ -706,12 +706,10 @@ class Checker:
             curator_email: str | None = self.curator_email
             dataset_title = self.ds_title if self.ds_title else 'No Title'
             dataset_pid = self.ds_metadata.get('data', {}).get('latestVersion', {}).get('datasetPersistentId', 'No ID')
-            # dataset_id = self.ds_metadata.get('data', {}).get('latestVersion', {}).get('id', 'No ID')
             datasetid = self.ds_metadata.get('data', {}).get('latestVersion', {}).get('datasetId', 'No ID')
             dataset_url = parse_dataset_url(self.base_url, dataset_pid)
             dataset_path = self.check_ds_tree_info()
 
-            # if not self.db_instance.check_table_has_records('project_metadata'):
             self.db_instance.merge_records_to_table(
                 project_metadata_schema(
                     curator_name=curator_name,
