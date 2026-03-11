@@ -2,9 +2,16 @@
 checklist:
   - id: "1.1"
     action: |
-      **History of previous deposits**: Has the depositor ever submitted a dataset in any dataverse collection?
+      **History of previous deposits**: Has the person submitting the dataset had previous curation reviews, or have they deposited other datasets in U of T Dataverse?
     instructions: |
-      - Confirm whether the listed dataverse collection refers to the same researcher/author
+      - An automated check will display if the person who submitted for review has gone through the curation review process before with any other dataset
+        - Can do a spot check on the tracking sheet to get an overview of the types of deposit issues that have occurred in previous deposits
+      - Refer to ‘Dataset Path’ in the dataset information box (above), if the dataset is part of a collection that indicates a research group, can also spot check previous deposits on the curation review tracking sheet 
+      - Should also double-check with the curation certification list to ensure we catch any errors between lists
+      - TEMPORARY: Right now a secondary automated check will display any other datasets which have the person who submitted for review listed as a ‘Depositor’. This is to try to give an understanding of how much experience they may have with Borealis in lieu of curation review history
+        - Note that the ‘Depositor’ field can be manually changed and that the ‘Depositor’
+        - The person who creates the deposit is not always the same person who populates the metadata, files, etc
+      - Consider information from the automated check, just situating information that may be helpful to know ahead of review, rather than a comprehensive understanding of the person’s deposit experience
     priority: "info"
     section: "1. Structure of deposit"
     automated_check_ids: ["depositor_history"]
@@ -12,14 +19,18 @@ checklist:
     check_type: "Fully-automated"
 
   - id: "1.2"
-    action: "If the dataset was deposited in a sub-dataverse collection, does it require its own dataverse collection?"
+    action: "**Collection structure**: If the dataset is deposited in a collection, does the collection structure seem appropriate?"
     instructions: |
-      If the depositor created a dataverse with one dataset:
-
-      - Confirm whether the dataset is related to other datasets in the same sub-collection.
-      - Is there another sub-dataverse collection it should be in?
-      - Review collection name - is it the same name as the dataset? Is it a research group? 
-      - Confirm with the depositor that they actually require a dataverse (e.g., will there be future deposits?)
+      - Review the collection name
+        - Is it descriptive and appropriate for the datasets contained within? (e.g research group, project)
+        - Is it the same name as the dataset?
+      - If the depositor created a dataverse with one dataset, confirm that they actually require a dataverse (e.g. will there be future deposits?) or if it should move to the institutional collection 
+      - Check if the dataset appears related to other datasets in the collection 
+      - Mark ‘Not Applicable’ if dataset deposited directly in institutional collection
+        - Can also spot check dataset relationship field to see if there appears to be another dataset or collection that should be considered for this deposit
+      - Automated check will display any dataset (and dataset path) for any of the authors on the dataset being reviewed
+        - Note that there is no author disambiguation
+        - Datasets listed may have different authorship structures - may consider looking at keywords, titles, or common authors across datasets to find outputs that might be related
 
     priority: "info"
     section: "1. Structure of deposit"
@@ -30,15 +41,18 @@ checklist:
     check_type: "Manual"
 
   - id: "2.1"
-    action: "Do all the files open properly?"
+    action: "**File integrity**:  Do the files open properly?"
     instructions: |
-      - For files that cannot be opened programmatically – if we have the program, open a minimum of 5 of each type of file.
+      - All files will be programmatically tested and files that open successfully will not be listed in automated check
+      - ‘Cannot_be_opened’: notes an error in opening supported file types - check issue manually
+        - Copy list into curator notes
+        - Test opening files, note any error message that may be helpful to understanding the issue in curator notes
+      - ‘Type_not_supported: notes files that cannot be opened programmatically
+        - Manually open a minimum of 5 of each file type if we have the program and note any opening errors (include file extension and include at least one example file name)
+        - Note any file extensions that were not checked (e.g. “File type: .bin was not reviewed”)
     priority: "required"
     section: "2. Files"
     automated_check_ids: ["file_accessibility", "unsupported_files"]
-    information: |
-      - If the file cannot be opened, flag it for the depositor to check.
-      - If the file is not supported, flag it for the depositor to check.
     curator_check_item: "File accessibility report, unsupported files list"
     check_type: "Semi-automated"
 
