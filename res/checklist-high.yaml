@@ -247,63 +247,124 @@ checklist:
     check_type: "Manual"
 
   - id: "4.6"
-    action: "Are all terms and acronyms defined?"
+    action: "**Acronyms and discipline or domain-specific terminology**: Have all terms and acronyms been clearly defined?"
     instructions: |
-      Review metadata and flag acronyms/terms that may need to be described.
+      - Review the metadata and flag any acronyms, abbreviations, or domain-specific terminology that might benefit from additional description
+        - Curator should take into account disciplinary norms or common acronyms that may be understood in the field and do bear comment (e.g. VHS does not need to be defined as Video Home System)
+      - Focus should be on the ‘Title’ and ‘Description’ of the dataset
     priority: "recommended"
     section: "4. Metadata"
-    curator_check_item: "Metadata fields, acronyms and terms usage"
+    curator_check_item: |
+      - Metadata fields
+      - Acronyms and abbreviations 
+      - Discipline or domain-specific terminology
     check_type: "Manual"
 
   - id: "4.7"
-    action: "Does the dataset description provide sufficient information?"
+    action: "**Dataset description**: Is the dataset description comprehensive and informative?"
     instructions: |
-      Still need to discover/formulate the best practices for writing dataset descriptions.
-
-      Some elements to look for may include:
-
-      - Dates of collection
-      - Geographical location
-      - Type of data
-      - Other dataset(s) used in creating the dataset
-      - Overview of the method of analysis
-      - Data processing tools used
-      - Other relevant information
+      - Evaluate whether the description includes key details relevant for the discipline, data type(s), and/or research method, such as:
+        - Overview of the method of analysis
+        - Overview of files and types of data
+        - Data processing tools used
+        - Relevant characteristics of the data, such as:
+          - Dates of collection
+          - Geographical location
+          - Experimental conditions
+          - etc.
+        - Other dataset(s) used in creating the dataset
+        - Other relevant information
+      - Recommendations should be limited to information needed to understand the data as appropriate for the field of research
+      - Curator may wish to check related publications to ensure description is suitable for the dataset and not just the article abstract (unless appropriate for dataset description)
     priority: "recommended"
     section: "4. Metadata"
-    curator_check_item: "Dataset description field"
+    curator_check_item: |
+      - Dataset description field
     check_type: "Manual"
 
   - id: "4.8"
-    action: "Does the dataset include keywords?"
+    action: "**Keywords**: Are appropriate keywords included with the dataset?"
     instructions: |
-      - If no/few keywords are included, recommend including some.
-      - Can also provide information about controlled vocabulary (in that specific field) if none is filled out.
+      - If keywords are present, Curator checks:
+        - Formatting (e.g. one keyword per entry, spaces between words, etc.)
+        - Appropriate choice for the dataset description and contents (e.g. ‘acoustic emission sensor’ and ‘physics’, instead of just ‘physics’)
+      - If keywords are absent or limited, Curator recommends:
+        - Addition of keywords or suggest keyword terms for review
+        - Any relevant controlled vocabularies/ontologies that may be useful for term generation
+      - Curator may also check related publication keywords if in a disciplinary index (e.g. INSPEC, PubMed, etc.)
     priority: "recommended"
     section: "4. Metadata"
     automated_check_ids: ["keywords_existence"]
-    curator_check_item: "Keywords field, controlled vocabulary references"
-    check_type: "Fully-automated"
+    curator_check_item: |
+      - Keywords field
+      - Controlled vocabulary/ontology from the relevant subject domain (if appropriate)
+
+    check_type: "Semi-automated"
 
   - id: "4.9"
-    action: "Does the dataset serve as Replication, Background, or Supporting data for a publication?"
+    action: "**Related Publication**: Is this dataset linked to a publication, or does the title/description indicate that the dataset is replication, background, or supporting data for a publication?"
     instructions: |
-      - If a suffix is used or the title suggests a publication, check the metadata for an associated publication.
-      - If metadata indicates a related publication or project:
-        - Suggest adding a corresponding suffix to the title. 
-        - Check whether a PID (such as a DOI) is included.
+      - If the publication is listed in ‘Related Publication’ field:
+        - Is the appropriate citation information present (e.g. title, author, date, link/PID)
+        - Does the link or persistent identifier work and link to the correct publication
+        - If multiple publications, ensure each citation is separate and not in one long text string 
+          - Note: must check ‘Citation Metadata’ under ‘Metadata’ tab for multiple publications as only first publication listed on landing page; check above for all
+      - If no publication is listed in the ‘Related Publication’ field:
+        - Check if the dataset title or description indicates related publication(s), if yes:
+          - Suggest adding citation(s) to the ‘Related Publication’ field
+          - If it indicates the dataset is replication data for a specific publication suggest adding appropriate suffix
+      - If a suffix such as replication, background, or supporting data is used in the dataset title:
+        - Ensure there is a citation in the ‘Related Publication’ field and that the publication title and dataset title (after suffix) match, for example:
+        - Publication title: Temperature measurements in Lake Superior
+        - Dataset title: Replication data for: Temperature measurements in Lake Superior
+
     priority: "recommended"
     section: "4. Metadata"
-    curator_check_item: "Title, metadata publication fields, DOI/PID references"
+    curator_check_item: |
+      - Related Publication field
+      - DOI/PID references
+      - Title/Description fields
     check_type: "Manual"
 
   - id: "4.10"
-    action: "Any related dataset?"
+    action: "**Related Dataset**:  Is this dataset linked to other datasets, or does the title/description indicate that the dataset is related to other datasets?"
     instructions: |
-      - Does the title, description or notes indicate there is a related dataset that should be included in the metadata?
+      - ‘Related Dataset’ field should be used for linkages to related data outputs or projects, both within or external to Borealis
+        - Note that third party data used in project should be linked in ‘Data Source’ (see 4.11)
+      - If there is a dataset listed in ‘Related Dataset’ field:
+        - Is the appropriate citation information present (e.g. title, author, date, link/PID)
+        - Does the link or persistent identifier work and link to the correct dataset
+        - If multiple datasets, ensure each citation is separate and not in one long text string 
+          - Note: must check ‘Citation Metadata’ under ‘Metadata’ tab for multiple related datasets as only first dataset listed on landing page; check above for all
+      - If there is not a dataset listed in ‘Related Dataset; field:
+        - Briefly review the dataset title, description, notes, and documentation to determine if there are any obvious related datasets that should be included
     priority: "recommended"
     section: "4. Metadata"
-    curator_check_item: "Title, description, notes fields for related datasets"
+    curator_check_item: |
+      - Related Dataset field
+      - Title
+      - Description field
+      - Notes field
+      - Dataset documentation
+    check_type: "Manual"
+
+  - id: "4.11"
+    action: "**Data Sources**: Is the dataset is comprised of, or includes, data from other sources?"
+    instructions: |
+      - Briefly review the dataset title, description, notes, and documentation to determine if any third party datasets were used in creating the data
+      - Check if all relevant citations are included in ‘Data Source’ field in ‘Citation Metadata’ under ‘Metadata’ tab
+        - Is the appropriate citation information present (e.g. title, author, date, link/PID)
+        - Does the link or persistent identifier work and link to the correct dataset
+        - If multiple sources, ensure each citation is separate and not in one long text string 
+      - Note that this information should also be included in the ‘Description’ field (see 4.7)
+    priority: "required"
+    section: "4. Metadata"
+    curator_check_item: |
+      - Data Source field
+      - Title
+      - Description field
+      - Notes field
+      - Dataset documentation
     check_type: "Manual"
 
   - id: "5.1"
