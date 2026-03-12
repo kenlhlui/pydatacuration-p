@@ -53,35 +53,61 @@ checklist:
     priority: "required"
     section: "2. Files"
     automated_check_ids: ["file_accessibility", "unsupported_files"]
-    curator_check_item: "File accessibility report, unsupported files list"
+    curator_check_item: |
+      - Opening errors
+      - Files flagged by the tool check
     check_type: "Semi-automated"
 
   - id: "2.2"
-    action: "Are all files free of the following special characters (<>:\\\"/\\|?*,@$~)?"
-    instructions: null
+    action: "**Special characters**: Do file names include special characters? i.e. >:\"/\\|?*,@$~)"
+    instructions: |
+      - Review special character inclusion, note any issues that may cause errors in opening or compiling 
+      - Note that some of these errors would be caught in 2.1 (special characters may be the reason behind a file opening error, e.g. ~ for .doc files)
     priority: "recommended"
     section: "2. Files"
     automated_check_ids: ["filename_special_chars"]
-    curator_check_item: "Filename special characters report"
+    # curator_check_item: "Filename special characters report"
     check_type: "Fully-automated"
 
   - id: "2.3"
-    action: "Do all the files contain file extensions?"
+    action: "**Common file formats**: Are all files in common formats?"
     instructions: |
-      - Not all the files require a file extension (e.g. a README file can either be 'README' or 'README.md'). Curator needs to check on a case-by-case basis.
+      - Automated check will identify files with uncommon formats
+        - As per common file formats list
+      - Note any uncommon formats that may benefit from an additional open format file format (if appropriate)
+        - E.g. a `.wpd` file may benefit from an additional file in `.pdf` format for preservation purposes
+      - For any files with uncommon formats, check if the deposit provides any information or software needed to open or work with the file
+        - Check Metadata fields:
+          - In the ‘Metadata’ tab, ‘Software’:
+            - ‘Name’
+            - ‘Version’
+          - Can also check ‘Description’ or ‘Notes’
+        - Check README or data documentation files
+      - Note comments may be more appropriate in other curation items:
+        - For metadata fields, include suggestions in <u>4.5</u>
+        - For README, include suggestions in <u>3.2</u>
+        - For data documentation, include suggestions in <u>3.3</u>
     priority: "required"
     section: "2. Files"
     automated_check_ids: ["missing_file_extensions"]
-    curator_check_item: "Missing file extensions report"
+    # curator_check_item: "Missing file extensions report"
     check_type: "Semi-automated"
 
   - id: "2.4"
-    action: "Do all files appear on the common file format list?"
-    instructions: "Python scripted."
+    action: "**File extensions**: Do all the file names contain the file extension?"
+    instructions: |
+      - Automated check will identify files that are missing an extension. 
+      - Files names in the file list should appear with the extension:
+          - Correct: “04_requirements.txt“
+          - Missing: “04_requirements”
+      - Exception: 
+          - READMEs do not require a file extension (e.g. a README file can either be 'README' or 'README.md' or “README.txt” and does not bear comment)
+      - For other flagged files researcher should clarify extension, curator needs to check on a case-by-case basis
     priority: "info"
     section: "2. Files"
     automated_check_ids: ["uncommon_file_formats"]
-    curator_check_item: "Uncommon file formats report"
+    curator_check_item: |
+      - Files flagged by the tool check
     check_type: "Fully-automated"
 
   - id: "3.1"
