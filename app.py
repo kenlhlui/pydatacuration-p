@@ -908,6 +908,7 @@ async def render_checklist_table(  # noqa: PLR0913, C901, PLR0917
                             ui.markdown(item.action)
                         if item.instructions:
                             with ui.element('div').classes('pdc-instructions-header'):
+                                ui.markdown('---')
                                 ui.markdown('**Guidance**')
                             ui.markdown(item.instructions).classes('pdc-instructions')
 
