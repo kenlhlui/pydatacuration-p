@@ -159,75 +159,91 @@ checklist:
     check_type: "Manual"
 
   - id: "4.1"
-    action: "Are there any typos in metadata fields?"
+    action: "**Typos in metadata fields**: Do any metadata fields contain typos?"
     instructions: |
-      Note that the automated process might flag wrongly (such as acronyms/specialized terms. Delete the items from the list accordingly.
+      - Automated check will identify potentially misspelled words (excluding words that are capitalized)
+      - Note that the tool check might flag some fields incorrectly (such as acronyms/specialized terms). Delete the items from the list accordingly.
+      - Curator should also note any apparent incorrect words (e.g. ‘their’ instead of ‘there’)
+      - Curator may use judgment to modify obvious errors directly in the system (e.g. ‘Unicorn of Toronto’ instead of ‘University of Toronto’ as affiliation)
+
     priority: "required"
     section: "4. Metadata"
     automated_check_ids: ["potential_typos"]
     curator_check_item: |
-      Only checking the following fields:
+      - Files flagged by the tool check
+      - Fields for:
+        - Title
+        - Subtitle
+        - Alternative Title
+        - Description
+        -Notes
 
-      1. Title
-      2. Subtitle
-      3. Alternative Title
-      4. Description
-      5. Notes
     check_type: "Semi-automated"
 
   - id: "4.2"
-    action: "Do the metadata fields contain a valid entry?"
+    action: "**Valid metadata entries**: Do the metadata fields have valid entries?"
     instructions: |
-      Note: Valid info means the information is relevant. Examples of items to flag:
-      Placeholders (Coming soon, etc.)
-      Wong filed (e.g. put author's name in the title)
+      - Review metadata fields noted to ensure complete and relevant information is contained  
+        - Examples of items to flag:
+          - Placeholders (e.g. TBD, coming soon, etc.)
+          - Incorrectly filled data (e.g. placing the author's name in the title)
+          - Blank entries
+          - Missing information (e.g. no affiliation listed)
 
     priority: "required"
     section: "4. Metadata"
     curator_check_item: |
-      Review the following fields to ensure there is a valid entry and flag any issues:
-
-      1. Title
-      2. Description
-      3. Subject
-      4. Author name & affiliation
+      - Fields for:
+        - Title
+        - Description
+        - Subject
+        - Author name & affiliation
     check_type: "Manual"
 
   - id: "4.3"
-    action: "Does at least one author affiliated with University of Toronto?"
+    action: "**Author affiliation**: Is at least one author affiliated with the University of Toronto?"
     instructions: |
-      - This will check either ‘uoft’, ‘u of t’ or ‘university of toronto’ is filled for the author affiliation (non-case sensitive)
+      - Tool will check that either ‘uoft’, ‘u of t’ or ‘university of toronto’ is contained in the Author Affiliation field (non-case sensitive)
+      - Also review any description to see if research is noted as under an organization other than U of T (e.g. description says ‘project for UHN’)
 
     priority: "required"
     section: "4. Metadata"
     automated_check_ids: ["authors_missing_affiliation"]
-    curator_check_item: "Authors missing affiliation report"
+    # curator_check_item: "Authors missing affiliation report"
     check_type: "Fully-automated"
 
   - id: "4.4"
-    action: "Does the dataset include a Researcher ID for each author?"
+    action: "**Researcher ID**: Does the dataset list a ‘Researcher ID’ for each author?"
     instructions: |
-      If no Researcher ID (such as ORCID, or other identifier) is listed, let them know they may want to include it
+      - Automated check will display missing identifiers in the ‘Author Affiliation’ field.  
+      - If flagged as missing, Curator should suggest adding Researcher ID(s), such as ORCID, or other identifiers if available. 
+        - This ensures their research data is properly credited, increases discoverability of their research output, and consolidates their research metrics.
 
     priority: "recommended"
     section: "4. Metadata"
     automated_check_ids:
       ["authors_missing_identifier", "authors_missing_scheme"]
-    curator_check_item: "Author metadata, researcher ID fields"
+    curator_check_item: |
+      - Inclusion of Researcher ID(s) if flagged in tool check
     check_type: "Fully-automated"
 
   - id: "4.5"
-    action: "Can any part of the deposit content be represented in a metadata field?"
+    action: "**Metadata opportunities**: Should any information contained in the deposit be captured in a metadata field?"
     instructions: |
-      - Read the description and README file and check them against metadata fields. For example, if a geographical location or data collection date/range is mentioned in the description, recommend filling in the relevant metadata fields
-
-      - You may reference the following documents to view the available metadata blocks:
-         - [Dataverse North Metadata Best Practices (PDF)](https://zenodo.org/records/5668945)
-         - [Borealis Metadata Fields UofT MDL (xlsx)](https://docs.google.com/spreadsheets/d/1XA9ImwdvN-LvZJDAq_mh4jzLXWfg6fD6/edit?usp=sharing&ouid=101747471886352747956&rtpof=true&sd=true)
+      - Review the description and README file and identify information that could be included in a metadata field. For example:
+        - e.g. if a geographical location or data collection date/range is mentioned in the description, can suggest population ‘geographic coverage’ metadata fields
+        - If the README indicates the software, can suggest adding to metadata fields for ‘software name’ and ‘version’
+      - Curator to determine appropriateness and volume of suggestions
+      - For reference on available metadata options, consult:
+        - <a href="https://zenodo.org/records/5668945" target="_blank">Dataverse North Metadata Best Practices (PDF)</a>
+        - <a href="https://docs.google.com/spreadsheets/d/1XA9ImwdvN-LvZJDAq_mh4jzLXWfg6fD6/edit?usp=sharing&ouid=101747471886352747956&rtpof=true&sd=true" target="_blank">Borealis Metadata Fields UofT MDL (xlsx)</a>
 
     priority: "recommended"
     section: "4. Metadata"
-    curator_check_item: "Description, README file, metadata field mappings"
+    curator_check_item: |
+      - Description
+      - README file
+      - Metadata field mappings
     check_type: "Manual"
 
   - id: "4.6"
