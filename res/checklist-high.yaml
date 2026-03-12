@@ -111,32 +111,51 @@ checklist:
     check_type: "Fully-automated"
 
   - id: "3.1"
-    action: "Does the dataset include a separate README file?"
+    action: "**README file existence**: Does the dataset include a separate README file?"
     instructions: |
-      - Read the `ds_tree.txt` file in the log_files folder to identify whether there is a README file, even if it is not named with 'README'.
+      - This review is for READMEs for the deposit; data documentation for specific data files will be reviewed in <u>3.3</u>
+      - Tool will identify any files with the string ‘README’ (not case sensitive)
+      - If no README is identified in automated check, review file list to see if there is a file with README contents under a different name (e.g. ‘read me.txt’, ‘data_info.doc’, ‘39u570.pdf’) or files tagged as documentation that may have README content
+      - Curator may suggest renaming README unless it appears to be a disciplinary practice to name otherwise
+      - Curator may suggest or add the ‘Documentation’ tag to relevant file(s)
+
     priority: "required"
     section: "3. Documentation"
     automated_check_ids: ["readme_files"]
-    curator_check_item: "README files report, ds_tree.txt"
-    check_type: "Fully-automated"
+    curator_check_item: "Files that may contain README information"
+    check_type: "Semi-automated"
 
   - id: "3.2"
-    action: "Does the README file contain correct and complete information about ‘Files and organization’?"
+    action: "**README file content**: Does the README file contain accurate and complete information about the files and their organization?"
     instructions: |
-      - Check whether the files listed in the README match the files listed in the deposit.
-      - If the files are not listed in the README, we can generate a file tree structure & pass it to the depositors to include in their README, if applicable.
+      - Review recommended README fields are present, Curator to determine if/what suggestions are important for the specific deposit
+        - Authors
+        - License
+        - Dataset information and DOI
+        - File information
+          - Check whether the files listed in the README match the files listed in the deposit.
+          - If the files are not listed in the README, Curator can copy the tree structure text (inside ds_tree.txt) from the curation log folder and provide it to the depositors for inclusion in their README, if applicable
+        - <a href="https://guides.library.utoronto.ca/ld.php?content_id=37666730" target="_blank">Any other relevant information</a> needed to navigate/use files that is not included in other data documentation (cross check with <u>3.3</u> review)
     priority: "required"
     section: "3. Documentation"
-    curator_check_item: "README file, file tree structure comparison"
+    curator_check_item: |
+      - Files flagged by the automated or manual review in <u>3.1</u>
     check_type: "Semi-automated"
 
   - id: "3.3"
-    action: "Is there documentation for data files?"
+    action: "**Data file documentation**: Is there additional documentation for data files?"
     instructions: |
-      Review README, documentation, and data files, to see if there is anything explaining variable headings etc.
+      - Check if information needed to understand and use data files (e.g. variables, definitions, etc.) is included in at least one of the following:
+        - README as defined in 3.1/3.2
+        - Data documentation files (e.g. codebook, data dictionary, etc.)
+        - Contained in the data file itself (e.g. inside a worksheet of an Excel file)
+      - Curator to determine if any suggestions to enhance data documentation bear comment
+        - Data should be documented to facilitate verification and reuse
+
     priority: "required"
     section: "3. Documentation"
-    curator_check_item: "README file, data file headers, documentation files"
+    curator_check_item: |
+      - README files, documentation files, and file contents
     check_type: "Manual"
 
   - id: "4.1"
