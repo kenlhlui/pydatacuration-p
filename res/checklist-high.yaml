@@ -368,60 +368,129 @@ checklist:
     check_type: "Manual"
 
   - id: "5.1"
-    action: "Does the dataset contain any obvious sensitivity issues, such as direct identifiers?"
+    action: "**Restricted file listing**: Are there any restricted files in the deposited dataset? "
     instructions: |
-      - Review documentation and file names and see if there are any that should be opened and reviewed (e.g. if a file is named “participant survey” - maybe open that one)
-      - Review description, notes, and terms of access metadata fields.
-        - Examples of direct identifier include:
-            - Canadian Social Insurance Number (SINs)
-            - Credit card numbers
-            - Email addresses
-            - Phone numbers
-            - vCards (Virtual Contact Files)
-            - Any other information that can be used to identify an individual.
+      - Automated check will list any files that have restricted access
     priority: "required"
     section: "5.0 Sensitive data and IP"
     curator_check_item: "File names, documentation, metadata description/notes/access fields"
-    check_type: "Manual"
+    check_type: "Fully-automated"
 
   - id: "5.2"
-    action: "If something is flagged in the sensitive data review, does the depositor have REB approval to share the dataset?"
+    action: "**Terms of access**: For any restricted file(s), has the ‘Terms of Access for Restricted Files’ metadata field under the ‘Terms’ tab been populated?"
     instructions: |
-      - If something is flagged in the sensitive data review (see question above), check the intake form to confirm information about their REB status.
+      - For restricted files lacking terms of access, the curator will recommend including access information and procedures
+      - Where terms of access are provided, the curator will verify they are clear
+      - Review information that may need to be contained in the terms of access:
+        - Check if ‘Request Access’ button feature is used
+        - Check if any metadata fields provide direction about accessing restricted data (e.g. data available upon request to an email in the ‘Description’ or ‘Notes’ field)
+        - Check if a data sharing agreement file is in dataset
+        - Terms should Include any conditions of access or criteria for access (unless otherwise contained in a data sharing agreement file in the dataset)
+
     priority: "required"
     section: "5.0 Sensitive data and IP"
-    curator_check_item: "Intake form, REB approval documentation"
+    curator_check_item: |
+      - Restricted files status 
+      - Terms of Access for Restricted files field
+      - Request Access button field
+      - Description field
+      - Notes field
     check_type: "Manual"
 
   - id: "5.3"
-    action: "Has the depositor assigned an appropriate license to the dataset?"
+    action: "**Data sensitivity issues**: Are there any apparent data sensitivity concerns with the dataset?"
     instructions: |
-      - If the dataset uses CC0 - confirm this is what the depositor wants
-      - Check if the deposit includes restricted files (if yes, recommend they use custom terms)
+      - Review deposit for indications of sensitive data or information
+        - file names, documentation, and content 
+        - metafield fields: description, notes, and terms of access
+      - Check for flags such as:
+        - Files with suggestive names like "JoeSmithInt1", “ConsentForm”, “RabbitCancerG1”
+        - Implied sensitive topics or data such as surveys, focus groups, interviews, animal testing, medical testing, etc
+        - Human or animal data - ethics protocol references
+          - Verify that the sensitive data is included in the deposit (a study may have REB approval but they are only depositing non-sensitive data)
+          - Human data - Indications of direct identifiers such as:  
+            - Name or contact information
+            - Location references (postal code, zip code, GIS)
+            - All elements of birth date, except year (including all indicators of age)
+            - Identification numbers (SIN, license, account number, employee number)
+            - Biometric identifiers (photograph, video, audio, fingerprint, iris)
+            - Device identifiers
+            - Any other unique identifying characteristic and/or code
+          - Human data - Indicators of data that may not be properly de-identified
+            - Any combination of information that could potentially identify an individual (e.g. for government officials: elected year with age range with time in office)
+          - Non-human or animal topics that may be sensitive
+            - Location of endangered species
+            - Synthesis of dangerous chemicals
+            - Sensitive technology <a href="https://science.gc.ca/site/science/en/safeguarding-your-research/guidelines-and-tools-implement-research-security/sensitive-technology-research-and-affiliations-concern/sensitive-technology-research-areas" target="blank">research areas</a>
+            - Data subject to research agreements
+            - Patent or commercialized data
+          - Open any files of concern to review contents
+          - Flag any issues for further review or to check with depositor
+
     priority: "required"
     section: "5.0 Sensitive data and IP"
     automated_check_ids: ["termsOfUse", "license"]
-    curator_check_item: "License field, CC0 confirmation, restricted files list"
-    check_type: "Semi-automated"
+    curator_check_item: |
+      - File names
+      - File contents
+      - Documentation 
+      - Description field
+      - Notes field
+      - Access field
 
-  - id: "5.4b"
-    action: "Is the Terms of Access field complete if there are restricted files in the dataset?"
+    check_type: "Manual"
+
+  - id: "5.4"
+    action: "**Research Ethics Board (REB) approval**: If data sensitivity issues for human or animal data were flagged in item 5.2, does the depositor have Research Ethics Board (REB) approval to deposit and/or share the dataset?"
     instructions: |
-      - If there are restricted files and no Terms of Access, recommend including terms of access.
-      - If there are Terms of Access, review to ensure they are clear.
+      - If no REB approval appears to be needed for the deposit, mark ‘Pass’
+      - If REB approval may be needed, this will require communication with the depositor to verify if the data can be deposited
+      - Ethics protocol and consent documentation must indicate that the data:
+      Can be deposited in a repository 
+        - If it can be made available publicly or behind restricted access
+        - If it must be deidentified or can contain direct identifiers
+      - Ensure retention period is noted if protocol/consent made a commitment to a specific timeframe (note any public data cannot have a timeframe as we cannot track who has downloaded)
+
     priority: "required"
     section: "5.0 Sensitive data and IP"
     automated_check_ids: ["restricted_files", "termsOfAccess"]
-    curator_check_item: "Terms of Access field, restricted files status"
-    check_type: "Semi-automated"
+    curator_check_item: |
+      - Communication with depositor
+      - REB approval documentation
+
+    check_type: "Manual"
 
   - id: "5.5"
-    action: "Is the dataset free of any obvious licensing and IP issues?"
+    action: "**Licensing and intellectual property (IP)**: Are there any apparent licensing and/or IP issues with the dataset?"
     instructions: |
-      - Review the description, documentation, and names of files to see if there are any that stand out as possible third-party data sources.
+      - Review descriptions, documentation, data sources, and names of files to identify any content that may be owned by or originate from third-party sources
+      - If other if dataset is comprised of data from other sources, check to see if there are conflicting licenses
+      - If files do not seem to be the IP of the depositor (e.g. data reports from a corporation, data created by another researcher, etc.) may need to check if depositor has permission to deposit
     priority: "required"
     section: "5.0 Sensitive data and IP"
-    curator_check_item: "Description, documentation, file names for third-party sources"
+    curator_check_item: |
+      - Description 
+      - Documentation
+      - File names for third-party sources
+      - Data Source field
+
+    check_type: "Manual"
+
+  - id: "5.6"
+    action: "**Dataset license selection**: Has the depositor selected an appropriate license for the dataset?"
+    instructions: |
+      - Check if anything in the description or documentation implies a different expected action than the license denotes (e.g. recommended citation in README but a CC0 license on the dataset)
+      - If a <a href="https://creativecommons.org/public-domain/cc0/" target="_blank">Creative Commons Zero (CC0)</a> Public Domain license CC0 license has been chosen, Curator will verify that this aligns with the depositor's intentions. 
+        - Note: Licensing applies at the dataset-level, not at the file-level. If the depositor requires different licenses for specific files, explain that the files must be deposited into separate datasets.
+      - For deposits containing restricted files, recommend using custom terms instead of standard licenses.
+        - Note restricted files cannot have a CC license assigned
+
+    priority: "required"
+    section: "5.0 Sensitive data and IP"
+    curator_check_item: |
+      - License field
+      - CC0 license confirmation, if applicable
+      - Restricted files list 
     check_type: "Manual"
 
   - id: "6.1"
@@ -430,7 +499,7 @@ checklist:
       - Review the description, documentation, and names of files to see if there are any that stand out as possible third-party data sources.
     priority: "required"
     section: "6.0 Additional comments"
-    curator_check_item: "General review of all components"
+    # curator_check_item: "General review of all components"
     check_type: "Manual"
 
   - id: "6.2"
@@ -439,5 +508,5 @@ checklist:
       - Review the description, documentation, and names of files to see if there are any that stand out as possible third-party data sources.
     priority: "recommended"
     section: "6.0 Additional comments"
-    curator_check_item: "General review of all components"
+    # curator_check_item: "General review of all components"
     check_type: "Manual"
