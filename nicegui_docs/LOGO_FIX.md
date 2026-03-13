@@ -80,7 +80,7 @@ Using raw HTML `<img>` tag:
 ```
 ┌─────────────────────────────────────┐
 │ [University of Toronto Logo]        │  ← 60px high
-│ Data Curation Tool                  │
+│ U of T dataset curation tool        │
 │ ─────────────────────────────────   │
 │                                     │
 │ Dataset Information                 │
