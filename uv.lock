@@ -1829,14 +1829,14 @@ wheels = [
 
 [[package]]
 name = "seedir"
-version = "0.5.0"
+version = "0.5.1"
 source = { registry = "https://pypi.org/simple" }
 dependencies = [
     { name = "natsort" },
 ]
-sdist = { url = "https://files.pythonhosted.org/packages/46/84/530a5e4abbc0bb195f388b040268e9c81a52f7127cab41a7dbb448087c54/seedir-0.5.0.tar.gz", hash = "sha256:e6f80f9535b57413100f04933fd269f856aca1d067bccadf3ea3ca98a2fc6fc5", size = 3105170, upload-time = "2024-06-25T03:27:45.328Z" }
+sdist = { url = "https://files.pythonhosted.org/packages/1f/cf/52840f80bf568870e5385aedcd7a902feadcc1a11cbe7b168986d93fed6a/seedir-0.5.1.tar.gz", hash = "sha256:9fb82a6133f92a711bb2d46b2a142f56712e242a4fc03fef2fea9418d307efe2", size = 116403, upload-time = "2025-06-04T02:30:28.483Z" }
 wheels = [
-    { url = "https://files.pythonhosted.org/packages/e5/b4/0f5c167f3ab597c693f4c98d3bcaad940cc8a1529ce4029d8e988d0f52da/seedir-0.5.0-py3-none-any.whl", hash = "sha256:fd30221e9a6d92701b6f82cc09285d0c88b16b63a728652c34b3a0bd7363ae68", size = 112992, upload-time = "2024-06-25T03:27:39.982Z" },
+    { url = "https://files.pythonhosted.org/packages/7e/6e/f6e510f8ee4171b5b9cf2321094b74722a39d6d2e19b0bfea57f7b974a56/seedir-0.5.1-py3-none-any.whl", hash = "sha256:76ba4e6c9d85930166fa127b31efcbf8ccb471ed38624e728f4eb22e47e7b1a4", size = 113992, upload-time = "2025-06-04T02:30:26.878Z" },
 ]
 
 [[package]]
