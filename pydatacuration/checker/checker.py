@@ -52,7 +52,7 @@ class Checker:
             workdir (Path): The working directory.
             check_zip (bool): Whether to check zip files.
             db_instance (DatabaseBackend): A database backend instance for database operations.
-            collection_alias (str | None): The collection alias for the author name to be searched.
+            collection_alias (str | None): The collection alias for the depositor name to be searched.
             curator_name (str | None): The name of the data curator.
             curator_email (str | None): The email of the data curator.
             checklist_type (str): The type of checklist to use.
@@ -500,8 +500,8 @@ class Checker:
         query_string = 'data.latestVersion.metadataBlocks.citation.fields[?typeName==`depositor`].value|[0]'  # noqa: E501
         depositor: str | None = jmespath.search(query_string, self.ds_metadata)
 
-        if isinstance(depositor, str):
-            # Check if the author has record by search API
+        if isinstance(depositor, str) and depositor.strip():  # Check if depositor is a non-empty string
+            # Check if the depositor has record by search API
             # See https://github.com/IQSS/dataverse/issues/2038 for fq field;
             # Note that fq supports searching the fields of the database schema
             # i.e. The fields in the Native JSON export of a dataset
@@ -538,13 +538,15 @@ class Checker:
                     check_result_list_schema(
                         check_id='depositor_history',
                         check_name='Depositor History',
-                        description='Previous datasets depositor in this Dataverse instance (a specified collection)',
+                        description='Previous datasets depositor in this Dataverse collection',
                         unit='depositor record',
                         results=depositor_history,
                     )
                 )
             except Exception as e:
                 logger.error(f'Failed to write depositor history to database: {e}')
+        else:
+            logger.info('No valid depositor provided.')
 
     def check_ds_tree_info(self) -> str | None:
         """Check the path of the dataset in the dataverse Repository."""
