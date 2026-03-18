@@ -1,11 +1,14 @@
 """Models for validating checklist YAML files."""
 
 from pydantic import BaseModel
+from pydantic import ConfigDict
 from pydantic import field_validator
 
 
 class ChecklistYAMLItem(BaseModel):
     """Model for validating checklist items from YAML files."""
+
+    model_config = ConfigDict(extra='forbid')
 
     id: str
     action: str
@@ -37,5 +40,7 @@ class ChecklistYAMLItem(BaseModel):
 
 class ChecklistYAML(BaseModel):
     """Model for validating the entire YAML file structure."""
+
+    model_config = ConfigDict(extra='forbid')
 
     checklist: list[ChecklistYAMLItem]
