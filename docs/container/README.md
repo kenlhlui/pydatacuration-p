@@ -1,6 +1,6 @@
-# Container Setup for Data Curation Tool
+# Container Setup for dataset curation tool
 
-This guide explains how to set up and run the **Data Curation Tool**
+This guide explains how to set up and run the **dataset curation tool**
 using **Docker Compose**. Running the tool
 in a containerized environment ensures consistent dependencies, easier
 configuration, and simplified management.
@@ -144,4 +144,4 @@ docker compose up
 ```
 
 ## Accessing the Application
-Once the containers are running, you can access the Data Curation Tool by navigating to `http://localhost:9005` in your web browser.
+Once the containers are running, you can access the dataset curation tool by navigating to `http://localhost:9005` in your web browser.

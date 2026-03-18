@@ -98,7 +98,7 @@ async def main_page() -> None:
             sanitize=False,
         )
         ui.label(
-            'Data Curation Tool',
+            'U of T dataset curation tool',
         ).classes('pdc-header')
 
         # Top row options
@@ -148,7 +148,7 @@ async def new_dataset_page() -> None:
             sanitize=False,
         )
         # Header
-        ui.label('Data Curation Tool').classes('pdc-header')
+        ui.label('U of T dataset curation tool').classes('pdc-header')
 
         # Messages
         error_msg = ui.label().classes('hidden')
@@ -908,6 +908,7 @@ async def render_checklist_table(  # noqa: PLR0913, C901, PLR0917
                             ui.markdown(item.action)
                         if item.instructions:
                             with ui.element('div').classes('pdc-instructions-header'):
+                                ui.markdown('---')
                                 ui.markdown('**Guidance**')
                             ui.markdown(item.instructions).classes('pdc-instructions')
 

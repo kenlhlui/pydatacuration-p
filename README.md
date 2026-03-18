@@ -1,6 +1,6 @@
-# Data Curation Tool
+# U of T Dataverse dataset curation tool
 
-A containerized data curation tool for Dataverse repositories with web interface support.
+A containerized dataset curation tool for Dataverse repositories with web interface support.
 
 <img src="docs/full-tool-demo.gif" alt="The full curation tool demo" width="70%" height="70%">
 
