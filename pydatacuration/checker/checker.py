@@ -52,7 +52,7 @@ class Checker:
             workdir (Path): The working directory.
             check_zip (bool): Whether to check zip files.
             db_instance (DatabaseBackend): A database backend instance for database operations.
-            collection_alias (str | None): The collection alias for the author name to be searched.
+            collection_alias (str | None): The collection alias for the depositor name to be searched.
             curator_name (str | None): The name of the data curator.
             curator_email (str | None): The email of the data curator.
             checklist_type (str): The type of checklist to use.
@@ -489,64 +489,64 @@ class Checker:
         except Exception as e:
             logger.error(f'Failed to write potential typos to database: {e}')
 
-    def check_dv_record(self) -> None:
-        """Check if the author has deposited data in Dataverse.
+    def check_depositor_record(self) -> None:
+        """Check if the depositor has deposited data in the dataverse collection.
 
-        Note: This check only works if the author inputs their name in a consistent way across all datasets.
+        Note: This check only works if the depositor inputs their name in a consistent way across all datasets. By default, the dataset initial creator will be listed as the depositor in the metadata, with the format (LAST NAME, FIRST NAME). But anyone with edit access to the dataset can change the depositor information, so the information might be in accurate.  # noqa: E501
 
-        """
-        author_publication_history = []
+        """  # noqa: E501
+        depositor_history = []
 
-        query_string = (
-            'data.latestVersion.metadataBlocks.citation.fields[?typeName==`author`].value[*].authorName.value[]'  # noqa: E501
-        )
-        author_list = jmespath.search(query_string, self.ds_metadata)
+        query_string = 'data.latestVersion.metadataBlocks.citation.fields[?typeName==`depositor`].value|[0]'  # noqa: E501
+        depositor: str | None = jmespath.search(query_string, self.ds_metadata)
 
-        if isinstance(author_list, list):
-            for author in author_list:
-                # Check if the author has record by search API
-                # See https://github.com/IQSS/dataverse/issues/2038 for fq field;
-                # Note that fq supports searching the fields of the database schema
-                # i.e. The fields in the Native JSON export of a dataset
-                if self.collection_alias:  # Only check the specified collection
-                    response = self.httpx_client.sync_get(
-                        f'/api/search?q=*&type=dataset&per_page=1000&subtree={self.collection_alias}&fq=authorName:"{author}"'
-                    )  # noqa: E501
-                else:
-                    # If no collection_alias is provided, search in all dataverses
-                    response = self.httpx_client.sync_get(
-                        f'/api/search?q=*&type=dataset&per_page=1000&fq=authorName:"{author}"'
-                    )  # noqa: E501
-                if response and response.json():
-                    dataset_publish_history = (
-                        jmespath.search(
-                            'data.items[*].{name: name, url: url, name_of_dataverse: name_of_dataverse}',
-                            response.json(),
-                        )
-                        or []
+        if isinstance(depositor, str) and depositor.strip():  # Check if depositor is a non-empty string
+            # Check if the depositor has record by search API
+            # See https://github.com/IQSS/dataverse/issues/2038 for fq field;
+            # Note that fq supports searching the fields of the database schema
+            # i.e. The fields in the Native JSON export of a dataset
+            # The schema can be found inside the .tsv files for each metadata block: https://github.com/IQSS/dataverse/tree/master/scripts/api/data/metadatablocks
+            if self.collection_alias:  # Only check the specified collection
+                response = self.httpx_client.sync_get(
+                    f'/api/search?q=*&type=dataset&per_page=1000&subtree={self.collection_alias}&fq=depositor:"{depositor}"'
+                )  # noqa: E501
+            else:
+                # If no collection_alias is provided, search in all dataverses
+                response = self.httpx_client.sync_get(
+                    f'/api/search?q=*&type=dataset&per_page=1000&fq=depositor:"{depositor}"'
+                )  # noqa: E501
+            if response and response.json():
+                dataset_publish_history = (
+                    jmespath.search(
+                        'data.items[*].{name: name, url: url, name_of_dataverse: name_of_dataverse}',
+                        response.json(),
                     )
-
-                    # Extend the string to the author_publication_history list
-                    author_publication_history.extend(
-                        f'{author}: {dataset.get("name")} ({dataset.get("url")}) - Dataverse Name: {dataset.get("name_of_dataverse")}'
-                        for dataset in dataset_publish_history
-                    )
-
-                # TODO: Add error handling for the case when the response is None or empty; or HTTP error
-
-        try:
-            check_result_list_schema = self.sqlmodels.check_results()
-            self.db_instance.merge_records_to_table(
-                check_result_list_schema(
-                    check_id='author_dataverse_history',
-                    check_name='Author Publication History',
-                    description='Previous datasets published by authors in this Dataverse instance',
-                    unit='author record',
-                    results=author_publication_history,
+                    or []
                 )
-            )
-        except Exception as e:
-            logger.error(f'Failed to write author publication history to database: {e}')
+
+                # Extend the string to the depositor_history list
+                depositor_history.extend(
+                    f'{depositor}: {dataset.get("name")} ({dataset.get("url")}) - Dataverse Name: {dataset.get("name_of_dataverse")}'
+                    for dataset in dataset_publish_history
+                )
+
+            # TODO: Add error handling for the case when the response is None or empty; or HTTP error
+
+            try:
+                check_result_list_schema = self.sqlmodels.check_results()
+                self.db_instance.merge_records_to_table(
+                    check_result_list_schema(
+                        check_id='depositor_history',
+                        check_name='Depositor History',
+                        description='Previous datasets depositor in this Dataverse collection',
+                        unit='depositor record',
+                        results=depositor_history,
+                    )
+                )
+            except Exception as e:
+                logger.error(f'Failed to write depositor history to database: {e}')
+        else:
+            logger.info('No valid depositor provided.')
 
     def check_ds_tree_info(self) -> str | None:
         """Check the path of the dataset in the dataverse Repository."""
@@ -782,7 +782,7 @@ class Checker:
         self.check_common_file_format()
         self.check_missing_metadata()
         self.check_spelling()
-        self.check_dv_record()
+        self.check_depositor_record()
         self.check_ds_tree_info()
         self.check_restricted_files()
         self.check_terms_of_use()
