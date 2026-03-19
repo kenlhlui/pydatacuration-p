@@ -51,19 +51,3 @@ def get_checklist_file_path(checklist_identifier: str, res_dir: Path) -> Path | 
 
     logger.warning(f'Checklist file not found for identifier: {checklist_identifier}')
     return None
-
-
-if __name__ == '__main__':
-    import argparse
-
-    parser = argparse.ArgumentParser(description='Validate a checklist YAML file')
-    parser.add_argument('yaml_path', help='Path to the YAML file')
-
-    args = parser.parse_args()
-
-    try:
-        validate_checklist_yaml(args.yaml_path)
-        logger.success('✅ YAML is valid')
-    except Exception:
-        logger.error('❌ Validation failed')
-        raise
