@@ -251,12 +251,12 @@ def discover_checklist_files(res_dir: Path) -> dict[str, str]:
         for file_path in res_dir.glob(pattern):
             try:
                 validate_checklist_yaml(file_path)
+                identifier = file_path.stem.replace('checklist-', '')
+                display_name = identifier.replace('_', ' ').replace('-', ' ').title()
+                checklist_options[identifier] = display_name
             except Exception:
                 logger.warning(f'Skipping invalid checklist file: {file_path}')
                 continue
-            identifier = file_path.stem.replace('checklist-', '')
-            display_name = identifier.replace('_', ' ').replace('-', ' ').title()
-            checklist_options[identifier] = display_name
 
     # Pattern 2: checklist.yaml or checklist.yml
     for extension in ['.yaml', '.yml']:
@@ -264,11 +264,9 @@ def discover_checklist_files(res_dir: Path) -> dict[str, str]:
         if default_checklist.exists():
             try:
                 validate_checklist_yaml(default_checklist)
+                checklist_options['default'] = 'Default'
             except Exception:
                 logger.warning(f'Skipping invalid checklist file: {default_checklist}')
                 continue
-            checklist_options['default'] = 'Default'
-
-    logger.debug(f'Discovered checklist options: {checklist_options}')
 
     return checklist_options
