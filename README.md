@@ -36,4 +36,4 @@ just clean
 This will delete the `./workdir`, `./new_dir/` and `./pgadmin/` folders,
 
 ### 🧪 Testing the Checklist Validator
-See the [Checklist Validator CLI Guide](docs/validate_checklist_yaml/README.md) for instructions on how to test the checklist validator using the command line interface (CLI).
+See the [Checklist Validator CLI Guide](docs/checklist/README.md) for instructions on how to test the checklist validator using the command line interface (CLI).
