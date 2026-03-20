@@ -1,4 +1,16 @@
 ---
+checklist_metadata:
+  name: "U of T Dataverse Curation Checklist - Medium level"
+  version: "0.1"
+  description: "This checklist is designed to guide curators through the review process for datasets deposited in U of T Dataverse. It includes a combination of automated checks and manual review items to ensure that datasets meet the necessary standards for accessibility, documentation, metadata quality, and ethical considerations."
+  created_by:
+    - "Ken Lui"
+    - "Dylanne Dearborn"
+    - "Jasmine Lefresne"
+    - "U of T Libraries Research Data Management Team"
+  last_updated: 2026-03-20
+  status: "draft"
+
 checklist:
   - id: "1.1"
     action: "Has the depositor (or their research group) previously created or submitted to a dataverse collection ?"
