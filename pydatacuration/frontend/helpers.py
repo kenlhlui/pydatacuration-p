@@ -448,7 +448,10 @@ def checklist_options() -> dict[str, str]:
 
     # Discover available checklist files
     options = discover_checklist_files(res_dir)
-    return options
+    logger.debug(f'Checklist options discovered: {options}')
+
+    # Add blank option as the first option
+    return {'': 'Select checklist', **options}
 
 
 def back_to_main_menu_button() -> None:
