@@ -267,7 +267,7 @@ async def new_dataset_page() -> None:
             ui.label('Running curation process...')
 
 
-async def handle_setup_submit(
+async def handle_setup_submit(  # noqa: PLR0913, PLR0917
     form_data: dict,
     error_msg: ui.label,
     success_msg: ui.label,
@@ -277,15 +277,6 @@ async def handle_setup_submit(
     back_button: ui.button,
 ) -> None:
     """Handle form submission."""
-    # # Validation
-    # required_fields = ['pid', 'base_url', 'api_token', 'ticket_number', 'curator_name', 'curator_email']
-    # missing = [f for f in required_fields if not form_data.get(f)]
-
-    # if missing:
-    #     error_msg.set_text(f'Missing required fields: {", ".join(missing)}')
-    #     error_msg.classes(remove='hidden', add='pdc-error')
-    #     return
-
     # Validate the form data
     if not form_data.get('checklist'):
         ui.notify('Please select a valid checklist', type='negative', position='top-right', close_button=True)
