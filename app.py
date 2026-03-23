@@ -22,7 +22,7 @@ from pydatacuration.backend.api import init
 
 # Import the API router from the backend module
 from pydatacuration.backend.api import router as api_router
-from pydatacuration.backend.settings import EnvSettings
+from pydatacuration.backend.env_settings import EnvSettings
 from pydatacuration.db import DatabaseBackend
 from pydatacuration.db import get_database
 from pydatacuration.frontend.helpers import NiceGUIHelper
