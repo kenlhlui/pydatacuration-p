@@ -1,5 +1,7 @@
 """The fastapi setting for the backend API."""
 
+from pydantic import EmailStr
+from pydantic import HttpUrl
 from pydantic_settings import BaseSettings
 
 
@@ -11,7 +13,7 @@ class EnvSettings(BaseSettings):
     res_dir: str = 'res'
 
     # Dataverse API defaults
-    base_url: str | None = None
+    base_url: HttpUrl | None = None
     api_token: str | None = None
 
     # Project defaults
@@ -21,7 +23,7 @@ class EnvSettings(BaseSettings):
 
     # Curator defaults
     curator_name: str = ''
-    curator_email: str = ''
+    curator_email: EmailStr | None = None
 
     # Processing options
     force_delete: bool = False

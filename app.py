@@ -143,7 +143,7 @@ async def new_dataset_page() -> None:
             'pid': env_settings.pid,
             'ticket_number': env_settings.ticket_number,
             'collection_alias': env_settings.collection_alias,
-            'base_url': env_settings.base_url,
+            'base_url': str(env_settings.base_url),
             'api_token': env_settings.api_token,
             'curator_name': env_settings.curator_name,
             'curator_email': env_settings.curator_email,
