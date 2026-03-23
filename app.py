@@ -311,36 +311,12 @@ async def handle_setup_submit(  # noqa: PLR0913, PLR0917
 
 
 async def run_curation(form_data: dict) -> None:
-    main_dir = Path(form_data['main_dir'])
+    body = SetupForm(**form_data)
     loop = asyncio.get_event_loop()
 
-    await loop.run_in_executor(
-        None,
-        lambda: init(
-            ticket_number=form_data['ticket_number'], force_delete=form_data['force_delete'], main_dir=main_dir
-        ),
-    )
-    await fetch(
-        pid=form_data['pid'],
-        base_url=form_data['base_url'],
-        api_token=form_data['api_token'],
-        ticket_number=form_data['ticket_number'],
-        main_dir=main_dir,
-    )
-    await loop.run_in_executor(
-        None,
-        lambda: check(
-            ticket_number=form_data['ticket_number'],
-            base_url=form_data['base_url'],
-            api_token=form_data['api_token'],
-            check_zip=form_data['check_zip'],
-            collection_alias=form_data['collection_alias'],
-            curator_name=form_data['curator_name'],
-            curator_email=form_data['curator_email'],
-            checklist=form_data['checklist'],
-            main_dir=main_dir,
-        ),
-    )
+    await loop.run_in_executor(None, lambda: init(body))
+    await fetch(body)
+    await loop.run_in_executor(None, lambda: check(body))
 
 
 def reset_form(form_data: dict, default_form_data: dict, reset_button: ui.button) -> None:

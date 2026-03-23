@@ -7,6 +7,7 @@ from fastapi import APIRouter
 from fastapi import HTTPException
 from loguru import logger
 
+from pydatacuration.backend.setup_form import SetupForm
 from pydatacuration.checker import Checker
 from pydatacuration.db import DatabaseBackend
 from pydatacuration.db import get_database
@@ -45,77 +46,66 @@ router = APIRouter()
 
 
 @router.post('/init')
-def init(ticket_number: str, force_delete: bool, main_dir: Path) -> None:
+def init(body: SetupForm) -> None:
     """Initialize working directory and database for a ticket."""
     # TODO: Add back the args docstring
-    dirs: directory_manager.DirectoryManager = get_dirs(ticket_number, main_dir)
+    dirs: directory_manager.DirectoryManager = get_dirs(body.ticket_number, Path(body.main_dir))
 
     workdir_path = dirs.project_dir
 
-    if workdir_path.exists() and not force_delete:
+    if workdir_path.exists() and not body.force_delete:
         error_message = f"Directory {workdir_path} already exists. Use 'force_del=True' to overwrite."
         raise HTTPException(status_code=409, detail=error_message)
 
     dirs.delete_dir(workdir_path)
     dirs.make_dirs()
 
-    db = get_db(schema_name=ticket_number, db_file=dirs.db_path)
+    db = get_db(schema_name=body.ticket_number, db_file=dirs.db_path)
     db.create_database()
-    db.drop_schema(ticket_number)
+    db.drop_schema(body.ticket_number)
     db.create_schema()
 
-    logger.debug(f'Initialized working directory and database for ticket {ticket_number} at {workdir_path}')
+    logger.debug(f'Initialized working directory and database for ticket {body.ticket_number} at {workdir_path}')
 
 
 @router.post('/fetch')
-async def fetch(pid: str, base_url: str, api_token: str, ticket_number: str, main_dir: Path) -> None:
+async def fetch(body: SetupForm) -> None:
     """Download dataset files and metadata.
 
     Args:
-        pid (str): Dataverse PID.
-        base_url (str): Dataverse base URL.
-        api_token (str): Dataverse API token.
-        ticket_number (str): Ticket identifier.
-        main_dir (Path): Root working directory.
+        body (SetupForm): Request body containing pid, base_url, api_token,
+            ticket_number, and main_dir.
 
     Returns:
         None: Saves files and metadata to working dir.
     """
-    dirs = get_dirs(ticket_number, main_dir)
+    dirs = get_dirs(body.ticket_number, Path(body.main_dir))
     # add_cli_run_logging(dirs.log_files_dir) # FIXME: add back the logging later once the API is fully implemented
 
     try:
         check_ds_read_access(
-            pid, base_url, api_token
+            body.pid, str(body.base_url), body.api_token or ''
         )  # TODO: fix the business logic and make this compatible with the new API design
 
     except HTTPException as http_exc:
-        logger.error(f'HTTP error during access check for dataset {pid}: {http_exc.detail}')
+        logger.error(f'HTTP error during access check for dataset {body.pid}: {http_exc.detail}')
         raise HTTPException(status_code=http_exc.status_code, detail=http_exc.detail) from http_exc
 
     except Exception as e:
-        error_message: str = f'Failed to access dataset {pid}. Error: {e}'
+        error_message: str = f'Failed to access dataset {body.pid}. Error: {e}'
         logger.error(error_message)
         raise HTTPException(status_code=503, detail=error_message) from e
 
-    await Downloads(base_url, api_token, pid, dirs.project_dir, ticket_number).downloader()
+    await Downloads(
+        str(body.base_url), body.api_token or '', body.pid, dirs.project_dir, body.ticket_number
+    ).downloader()
 
-    logger.info(f'Downloaded dataset for PID {pid} to {dirs.project_dir}')
+    logger.info(f'Downloaded dataset for PID {body.pid} to {dirs.project_dir}')
 
 
 @router.post('/check')
-def check(
-    ticket_number: str,
-    base_url: str,
-    api_token: str,
-    check_zip: bool,
-    collection_alias: str | None,
-    curator_name: str | None,
-    curator_email: str | None,
-    checklist: str,
-    main_dir: Path,
-) -> None:
-    dirs: directory_manager.DirectoryManager = get_dirs(ticket_number, main_dir)
+def check(body: SetupForm) -> None:
+    dirs: directory_manager.DirectoryManager = get_dirs(body.ticket_number, Path(body.main_dir))
     db = get_db(schema_name=dirs.ticket_number, db_file=dirs.db_path)
 
     # Get the dataset metadata dir
@@ -129,17 +119,17 @@ def check(
         dv_tree = orjson.loads(f.read())
 
     checker = Checker(
-        base_url=base_url,
-        api_token=api_token,
+        base_url=str(body.base_url),
+        api_token=body.api_token or '',
         ds_metadata=ds_metadata,
         dv_tree=dv_tree,
         workdir=dirs.project_dir,
-        check_zip=check_zip,
+        check_zip=body.check_zip,
         db_instance=db,
-        collection_alias=collection_alias,
-        curator_name=curator_name,
-        curator_email=curator_email,
-        checklist_type=checklist,
+        collection_alias=body.collection_alias,
+        curator_name=body.curator_name,
+        curator_email=body.curator_email,
+        checklist_type=body.checklist,
     )
     checker.run_checks()
     logger.info('Checks completed')
