@@ -1228,7 +1228,8 @@ def create_checklist_select(res_dir: Path, current_value: str, on_change=None):
     # Apply checklist-specific styling
     def update_checklist_style(value: str) -> None:
         select.classes(remove='checklist-high checklist-medium')
-        select.classes(add=f'checklist-{value}')
+        if value:
+            select.classes(add=f'checklist-{value}')
 
     # Initial styling
     update_checklist_style(current_value)

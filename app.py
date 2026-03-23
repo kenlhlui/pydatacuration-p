@@ -287,6 +287,9 @@ async def handle_setup_submit(
     #     return
 
     # Validate the form data
+    if not form_data.get('checklist'):
+        ui.notify('Please select a valid checklist', type='negative', position='top-right', close_button=True)
+        return
 
     # Disable all buttons and show loading
     start_button.set_enabled(False)
