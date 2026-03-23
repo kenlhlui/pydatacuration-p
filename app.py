@@ -11,7 +11,6 @@ from urllib.parse import quote
 
 from future.backports.urllib.parse import urlparse
 from nicegui import app
-from nicegui import app as nicegui_app
 from nicegui import ui
 from nicegui.elements.input import Input
 
@@ -53,7 +52,7 @@ app_settings = AppSettings()
 setup_defaults = SetupDefaults()
 
 # Include the API router in the NiceGUI app with a prefix of /api
-nicegui_app.include_router(api_router, prefix='/api')
+app.include_router(api_router, prefix='/api')
 
 
 # Load environment variables
