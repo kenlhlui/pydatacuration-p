@@ -19,7 +19,7 @@ PID = 'doi:10.80240/FK2/FCZB4A'
 TICKET_NUMBER = 'CUR-999'
 FORCE_DELETE = true
 CHECK_ZIP = true
-CHECK_LIST =  'high'
+CHECKLIST =  'high'
 COLLECTION_ALIAS = 'toronto'
 ```
 

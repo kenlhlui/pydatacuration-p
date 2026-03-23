@@ -45,14 +45,14 @@ router = APIRouter()
 
 
 @router.post('/init')
-def init(ticket_number: str, force_del: bool, main_dir: Path) -> None:
+def init(ticket_number: str, force_delete: bool, main_dir: Path) -> None:
     """Initialize working directory and database for a ticket."""
     # TODO: Add back the args docstring
     dirs: directory_manager.DirectoryManager = get_dirs(ticket_number, main_dir)
 
     workdir_path = dirs.project_dir
 
-    if workdir_path.exists() and not force_del:
+    if workdir_path.exists() and not force_delete:
         error_message = f"Directory {workdir_path} already exists. Use 'force_del=True' to overwrite."
         raise HTTPException(status_code=409, detail=error_message)
 

@@ -21,7 +21,9 @@ from pydatacuration.backend.api import init
 
 # Import the API router from the backend module
 from pydatacuration.backend.api import router as api_router
-from pydatacuration.backend.env_settings import EnvSettings
+from pydatacuration.backend.app_settings import AppSettings
+from pydatacuration.backend.setup_defaults import SetupDefaults
+from pydatacuration.backend.setup_form import SetupForm
 from pydatacuration.db import DatabaseBackend
 from pydatacuration.db import get_database
 from pydatacuration.frontend.helpers import NiceGUIHelper
@@ -47,19 +49,21 @@ from pydatacuration.utils.directory_manager import DirectoryManager
 
 
 # Create global settings instance
-env_settings = EnvSettings()
+app_settings = AppSettings()
+setup_defaults = SetupDefaults()
 
 # Include the API router in the NiceGUI app with a prefix of /api
 nicegui_app.include_router(api_router, prefix='/api')
 
 
 # Load environment variables
-MAIN_DIR: Path = Path(env_settings.main_dir)
-RES_DIR = Path(env_settings.res_dir)
+MAIN_DIR: Path = Path(app_settings.main_dir)
+RES_DIR = Path(app_settings.res_dir)
 
 # Setup logging with your custom style
-setup_logging(log_file_dir=Path(env_settings.main_dir) / 'logs', log_level='DEBUG')
+setup_logging(log_file_dir=Path(app_settings.main_dir) / 'logs', log_level='DEBUG')
 
+default_form = SetupForm(**setup_defaults.model_dump())
 
 # ============================================================================
 # Main Entrance Page
@@ -139,19 +143,7 @@ async def new_dataset_page() -> None:
 
         # Form state - automatically persisted
         # Initialize with environment variable defaults
-        default_form_data = {
-            'pid': env_settings.pid,
-            'ticket_number': env_settings.ticket_number,
-            'collection_alias': env_settings.collection_alias,
-            'base_url': str(env_settings.base_url),
-            'api_token': env_settings.api_token,
-            'curator_name': env_settings.curator_name,
-            'curator_email': env_settings.curator_email,
-            'main_dir': str(Path(env_settings.main_dir).resolve()),
-            'force_del': env_settings.force_delete,
-            'check_zip': env_settings.check_zip,
-            'checklist': env_settings.check_list,
-        }
+        default_form_data = default_form.model_dump()
 
         # Get existing form data or create new
         form_data = app.storage.tab.setdefault('setup_form', default_form_data)
@@ -237,8 +229,8 @@ async def new_dataset_page() -> None:
             ui.label('Processing Options').classes('pdc-form-section-header')
 
             with ui.row().classes('gap-4'):
-                ui.checkbox('Force delete existing project', value=form_data.get('force_del', False)).bind_value(
-                    form_data, 'force_del'
+                ui.checkbox('Force delete existing project', value=form_data.get('force_delete', False)).bind_value(
+                    form_data, 'force_delete'
                 )
 
                 ui.checkbox('Unzip and check contents of zip files', value=form_data.get('check_zip', True)).bind_value(
@@ -284,14 +276,16 @@ async def handle_setup_submit(
     back_button: ui.button,
 ) -> None:
     """Handle form submission."""
-    # Validation
-    required_fields = ['pid', 'base_url', 'api_token', 'ticket_number', 'curator_name', 'curator_email']
-    missing = [f for f in required_fields if not form_data.get(f)]
+    # # Validation
+    # required_fields = ['pid', 'base_url', 'api_token', 'ticket_number', 'curator_name', 'curator_email']
+    # missing = [f for f in required_fields if not form_data.get(f)]
 
-    if missing:
-        error_msg.set_text(f'Missing required fields: {", ".join(missing)}')
-        error_msg.classes(remove='hidden', add='pdc-error')
-        return
+    # if missing:
+    #     error_msg.set_text(f'Missing required fields: {", ".join(missing)}')
+    #     error_msg.classes(remove='hidden', add='pdc-error')
+    #     return
+
+    # Validate the form data
 
     # Disable all buttons and show loading
     start_button.set_enabled(False)
@@ -327,7 +321,9 @@ async def run_curation(form_data: dict) -> None:
 
     await loop.run_in_executor(
         None,
-        lambda: init(ticket_number=form_data['ticket_number'], force_del=form_data['force_del'], main_dir=main_dir),
+        lambda: init(
+            ticket_number=form_data['ticket_number'], force_delete=form_data['force_delete'], main_dir=main_dir
+        ),
     )
     await fetch(
         pid=form_data['pid'],
@@ -880,8 +876,8 @@ async def render_checklist_table(  # noqa: PLR0913, C901, PLR0917
                                     check_names = [
                                         f'- {info["check_name"]}' for info in checks_info if info.get('check_name')
                                     ]
-                                    check_list = '\n'.join(check_names)
-                                    ui.markdown(check_list).classes('pdc-static-curator-check-item')
+                                    checklist = '\n'.join(check_names)
+                                    ui.markdown(checklist).classes('pdc-static-curator-check-item')
                                 elif tool_explanation:
                                     ui.markdown(tool_explanation).classes('pdc-static-curator-check-item')
                                 else:
@@ -1030,8 +1026,8 @@ else:
 
 if __name__ in {'__main__', '__mp_main__'}:
     ui.run(
-        title=env_settings.app_title,
-        favicon=env_settings.app_favicon,
-        port=env_settings.app_port,
+        title=app_settings.app_title,
+        favicon=app_settings.app_favicon,
+        port=app_settings.app_port,
         storage_secret=str(os.urandom(16)),
     )
