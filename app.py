@@ -4,15 +4,11 @@ This version uses the nicegui_styles module for exact CSS matching.
 """
 
 # ruff: noqa: PLR1702
-import asyncio
 import os
 from pathlib import Path
 from urllib.parse import quote
 
-import orjson
 from dotenv import load_dotenv
-from fastapi import HTTPException
-from fastapi.responses import JSONResponse
 from future.backports.urllib.parse import urlparse
 from nicegui import app
 from nicegui import app as nicegui_app
@@ -20,6 +16,12 @@ from nicegui import ui
 from nicegui.elements.input import Input
 from sqlmodel import SQLModel
 
+from pydatacuration.backend.api import check
+from pydatacuration.backend.api import fetch
+from pydatacuration.backend.api import init
+
+# Import the API router from the backend module
+from pydatacuration.backend.api import router as api_router
 from pydatacuration.db import DatabaseBackend
 from pydatacuration.db import get_database
 from pydatacuration.frontend.helpers import NiceGUIHelper
@@ -37,13 +39,14 @@ from pydatacuration.frontend.styles import create_priority_badge
 from pydatacuration.frontend.styles import create_status_select
 
 # Import the typer app for CLI command execution
-from pydatacuration.main import CtxObj
-from pydatacuration.main import run_all
 from pydatacuration.utils.custom_logging import logger
 from pydatacuration.utils.custom_logging import setup_logging
 
 # Import pydatacuration modules
 from pydatacuration.utils.directory_manager import DirectoryManager
+
+
+nicegui_app.include_router(api_router, prefix='/api')
 
 
 # Load environment variables
@@ -291,77 +294,77 @@ async def new_dataset_page() -> None:
             ui.label('Running curation process...')
 
 
-@app.post('/setup')
-async def setup(request: SetupRequest) -> JSONResponse:
-    """Process the setup form and run pydatacuration CLI command.
+# @app.post('/setup')
+# async def setup(request: SetupRequest) -> JSONResponse:
+#     """Process the setup form and run pydatacuration CLI command.
 
-    Args:
-        request (SetupRequest): Setup form data matching CLI parameters
+#     Args:
+#         request (SetupRequest): Setup form data matching CLI parameters
 
-    Returns:
-        JSONResponse: Result of the curation process
-    """
-    try:
-        # Validate required fields
-        if not request.pid or not request.pid.strip():
-            logger.error(f'Validation failed: PID is missing or empty. Received: "{request.pid}"')
-            raise HTTPException(status_code=400, detail='PID is required')
-        if not request.ticket_number or not request.ticket_number.strip():
-            logger.error(f'Validation failed: Ticket number is missing or empty. Received: "{request.ticket_number}"')
-            raise HTTPException(status_code=400, detail='Ticket number is required')
-        if not request.curator_name or not request.curator_name.strip():
-            logger.error(f'Validation failed: Curator name is missing or empty. Received: "{request.curator_name}"')
-            raise HTTPException(status_code=400, detail='Curator name is required')
-        if not request.curator_email or not request.curator_email.strip():
-            logger.error(f'Validation failed: Curator email is missing or empty. Received: "{request.curator_email}"')
-            raise HTTPException(status_code=400, detail='Curator email is required')
+#     Returns:
+#         JSONResponse: Result of the curation process
+#     """
+#     try:
+#         # Validate required fields
+#         if not request.pid or not request.pid.strip():
+#             logger.error(f'Validation failed: PID is missing or empty. Received: "{request.pid}"')
+#             raise HTTPException(status_code=400, detail='PID is required')
+#         if not request.ticket_number or not request.ticket_number.strip():
+#             logger.error(f'Validation failed: Ticket number is missing or empty. Received: "{request.ticket_number}"')
+#             raise HTTPException(status_code=400, detail='Ticket number is required')
+#         if not request.curator_name or not request.curator_name.strip():
+#             logger.error(f'Validation failed: Curator name is missing or empty. Received: "{request.curator_name}"')
+#             raise HTTPException(status_code=400, detail='Curator name is required')
+#         if not request.curator_email or not request.curator_email.strip():
+#             logger.error(f'Validation failed: Curator email is missing or empty. Received: "{request.curator_email}"')
+#             raise HTTPException(status_code=400, detail='Curator email is required')
 
-        # Create context object
-        ctx_obj = CtxObj(main_dir=Path(request.main_dir))
+#         # Create context object
+#         ctx_obj = CtxObj(main_dir=Path(request.main_dir))
 
-        # Store state variables
-        dir_manager = DirectoryManager(request.ticket_number, request.main_dir)
-        app.state.work_dir = dir_manager.project_dir
-        app.state.base_url = request.base_url
+#         # Store state variables
+#         dir_manager = DirectoryManager(request.ticket_number, request.main_dir)
+#         app.state.work_dir = dir_manager.project_dir
+#         app.state.base_url = request.base_url
 
-        # Create a minimal mock context with the obj
-        # We create a simple object that has the required .obj attribute
-        class MockContext:
-            def __init__(self, obj: CtxObj) -> None:
-                self.obj: CtxObj = obj
+#         # Create a minimal mock context with the obj
+#         # We create a simple object that has the required .obj attribute
+#         class MockContext:
+#             def __init__(self, obj: CtxObj) -> None:
+#                 self.obj: CtxObj = obj
 
-        ctx = MockContext(ctx_obj)
+#         ctx = MockContext(ctx_obj)
 
-        # Run in a thread pool to avoid blocking the event loop
-        # This is necessary because run_all uses asyncio.run() internally
-        loop = asyncio.get_event_loop()
+#         # Run in a thread pool to avoid blocking the event loop
+#         # This is necessary because run_all uses asyncio.run() internally
+#         loop = asyncio.get_event_loop()
 
-        def run_curation() -> None:
-            """Run the curation in a separate thread."""
-            run_all(
-                ctx=ctx,
-                pid=request.pid,
-                base_url=request.base_url or '',
-                api_token=request.api_token or '',
-                ticket_number=request.ticket_number,
-                force_del=request.force_del,
-                check_zip=request.check_zip,
-                collection_alias=request.collection_alias,
-                curator_name=request.curator_name,
-                curator_email=request.curator_email,
-                open_dir=False,
-                checklist=request.checklist,
-            )
+#         def run_curation() -> None:
+#             """Run the curation in a separate thread."""
+#             run_all(
+#                 ctx=ctx,
+#                 pid=request.pid,
+#                 base_url=request.base_url or '',
+#                 api_token=request.api_token or '',
+#                 ticket_number=request.ticket_number,
+#                 force_del=request.force_del,
+#                 check_zip=request.check_zip,
+#                 collection_alias=request.collection_alias,
+#                 curator_name=request.curator_name,
+#                 curator_email=request.curator_email,
+#                 open_dir=False,
+#                 checklist=request.checklist,
+#             )
 
-        # Execute in thread pool to avoid event loop conflicts
-        await loop.run_in_executor(None, run_curation)
+#         # Execute in thread pool to avoid event loop conflicts
+#         await loop.run_in_executor(None, run_curation)
 
-        url = f'/checklist?ticket_number={quote(request.ticket_number)}'
-        return JSONResponse(content={'success': True, 'redirect_url': url})
+#         url = f'/checklist?ticket_number={quote(request.ticket_number)}'
+#         return JSONResponse(content={'success': True, 'redirect_url': url})
 
-    except Exception as e:
-        logger.error(f'Curation failed: {e}', exc_info=True)
-        raise HTTPException(status_code=400, detail=str(e))
+#     except Exception as e:
+#         logger.error(f'Curation failed: {e}', exc_info=True)
+#         raise HTTPException(status_code=400, detail=str(e))
 
 
 async def handle_setup_submit(
@@ -392,20 +395,13 @@ async def handle_setup_submit(
     success_msg.classes(add='hidden')
 
     try:
-        # In production, call your FastAPI /setup endpoint
-        response = await setup(SetupRequest(**form_data))
-        response_data = orjson.loads(response.body)
-        ui.notify(f'Setup returned: {response_data}', type='info')
+        await run_curation(form_data)
 
         # Show success
         success_msg.set_text('Curation process completed successfully!')
         success_msg.classes(remove='hidden', add='pdc-success')
 
-        # Redirect using the redirect_url from response
-        if response_data.get('redirect_url'):
-            ui.navigate.to(response_data['redirect_url'])
-        else:
-            ui.navigate.to(f'/checklist?ticket_number={quote(form_data["ticket_number"])}')
+        ui.navigate.to(f'/checklist?ticket_number={quote(form_data["ticket_number"])}')
 
     except Exception as e:
         error_msg.set_text(f'Error: {str(e)}')
@@ -416,6 +412,29 @@ async def handle_setup_submit(
         reset_button.set_enabled(True)
         back_button.set_enabled(True)
         loading_spinner.classes(add='hidden')
+
+
+async def run_curation(form_data: dict) -> None:
+    main_dir = Path(form_data['main_dir'])
+    init(ticket_number=form_data['ticket_number'], force_del=form_data['force_del'], main_dir=main_dir)
+    await fetch(
+        pid=form_data['pid'],
+        base_url=form_data['base_url'],
+        api_token=form_data['api_token'],
+        ticket_number=form_data['ticket_number'],
+        main_dir=main_dir,
+    )
+    check(
+        ticket_number=form_data['ticket_number'],
+        base_url=form_data['base_url'],
+        api_token=form_data['api_token'],
+        check_zip=form_data['check_zip'],
+        collection_alias=form_data['collection_alias'],
+        curator_name=form_data['curator_name'],
+        curator_email=form_data['curator_email'],
+        checklist=form_data['checklist'],
+        main_dir=main_dir,
+    )
 
 
 def reset_form(form_data: dict, default_form_data: dict, reset_button: ui.button) -> None:

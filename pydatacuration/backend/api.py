@@ -1,10 +1,9 @@
 """The backend API for running the curation review tool."""
 
-import asyncio
 from pathlib import Path
 
 import orjson
-from fastapi import FastAPI
+from fastapi import APIRouter
 from fastapi import HTTPException
 from loguru import logger
 
@@ -42,10 +41,10 @@ def get_db(schema_name: str, db_file: Path) -> DatabaseBackend:
     return get_database(schema_name=schema_name, db_file=db_file)
 
 
-app = FastAPI()
+router = APIRouter()
 
 
-@app.post('/init')
+@router.post('/init')
 def init(ticket_number: str, force_del: bool, main_dir: Path) -> None:
     """Initialize working directory and database for a ticket."""
     # TODO: Add back the args docstring
@@ -55,7 +54,7 @@ def init(ticket_number: str, force_del: bool, main_dir: Path) -> None:
 
     if workdir_path.exists() and not force_del:
         error_message = f"Directory {workdir_path} already exists. Use 'force_del=True' to overwrite."
-        raise FileExistsError(error_message)
+        raise HTTPException(status_code=409, detail=error_message)
 
     dirs.delete_dir(workdir_path)
     dirs.make_dirs()
@@ -68,7 +67,7 @@ def init(ticket_number: str, force_del: bool, main_dir: Path) -> None:
     logger.debug(f'Initialized working directory and database for ticket {ticket_number} at {workdir_path}')
 
 
-@app.post('/fetch')
+@router.post('/fetch')
 async def fetch(pid: str, base_url: str, api_token: str, ticket_number: str, main_dir: Path) -> None:
     """Download dataset files and metadata.
 
@@ -89,20 +88,23 @@ async def fetch(pid: str, base_url: str, api_token: str, ticket_number: str, mai
         check_ds_read_access(
             pid, base_url, api_token
         )  # TODO: fix the business logic and make this compatible with the new API design
-    except Exception as e:
-        error_message: str = f'Failed to access dataset {pid}. Error: {e}'
-        logger.error(error_message)
-        raise HTTPException(status_code=503, detail=e) from e
+
     except HTTPException as http_exc:
         logger.error(f'HTTP error during access check for dataset {pid}: {http_exc.detail}')
         raise HTTPException(status_code=http_exc.status_code, detail=http_exc.detail) from http_exc
 
-    asyncio.run(Downloads(base_url, api_token, pid, dirs.project_dir, ticket_number).downloader())
+    except Exception as e:
+        error_message: str = f'Failed to access dataset {pid}. Error: {e}'
+        logger.error(error_message)
+        raise HTTPException(status_code=503, detail=error_message) from e
+
+    await Downloads(base_url, api_token, pid, dirs.project_dir, ticket_number).downloader()
+
     logger.info(f'Downloaded dataset for PID {pid} to {dirs.project_dir}')
 
 
-@app.post('/submit')
-def submit(
+@router.post('/check')
+def check(
     ticket_number: str,
     base_url: str,
     api_token: str,
@@ -143,12 +145,12 @@ def submit(
     logger.info('Checks completed')
 
 
-@app.post('/report')
+@router.post('/report')
 def report() -> None:
     pass
     # TODO: this api endpoint might not be necessary. Might just keep it in the CLI for now
 
 
-@app.post('/run-all')
+@router.post('/run-all')
 def run_all() -> None:
     pass
