@@ -3,6 +3,8 @@
 Replicates the exact look and feel from styles.css.
 """
 
+from pathlib import Path
+
 from nicegui import ui
 
 from pydatacuration.frontend.helpers import checklist_options
@@ -1206,11 +1208,12 @@ def create_status_select(item_id: str, current_value: str = '', on_change=None):
     return select
 
 
-def create_checklist_select(current_value: str, on_change=None):
+def create_checklist_select(res_dir: Path, current_value: str, on_change=None):
     """Create a checklist level select with proper styling.
 
     Args:
-        current_value: Current checklist level
+        res_dir (Path): Path to the resources directory
+        current_value (str): Current checklist level
         on_change: Callback function for value changes
 
     Returns:
@@ -1220,10 +1223,10 @@ def create_checklist_select(current_value: str, on_change=None):
     ui.label('Select Checklist Level').classes('pdc-form-label')
 
     # Create select without internal label - display capitalized but use lowercase values
-    select = ui.select(options=checklist_options(), value=current_value).classes('w-full').style('width: 100%')
+    select = ui.select(options=checklist_options(res_dir), value=current_value).classes('w-full').style('width: 100%')
 
     # Apply checklist-specific styling
-    def update_checklist_style(value):
+    def update_checklist_style(value: str) -> None:
         select.classes(remove='checklist-high checklist-medium')
         select.classes(add=f'checklist-{value}')
 

@@ -219,6 +219,7 @@ async def new_dataset_page() -> None:
             with ui.element('div').classes('pdc-form-group'):
                 # Use our custom checklist select with styling
                 create_checklist_select(
+                    res_dir=RES_DIR,
                     current_value=form_data.get('checklist', 'default'),
                     on_change=lambda e: form_data.update({'checklist': e.value}),
                 ).style('width: 100%')
