@@ -984,7 +984,7 @@ if not static_path.exists():
 
 if static_path.exists():
     # Add static files route
-    nicegui_app.add_static_files('/static', str(static_path))
+    app.add_static_files('/static', str(static_path))
     logger.info('✓ Static files mounted:', static_path.absolute())
 else:
     logger.warning('⚠ WARNING: Static directory not found!')

@@ -47,8 +47,12 @@ router = APIRouter()
 
 @router.post('/init')
 def init(body: SetupForm) -> None:
-    """Initialize working directory and database for a ticket."""
-    # TODO: Add back the args docstring
+    """Initialize working directory and database for a ticket.
+
+    Args:
+        body (SetupForm): The pydantic model containing initialization parameters.
+
+    """
     dirs: directory_manager.DirectoryManager = get_dirs(body.ticket_number, Path(body.main_dir))
 
     workdir_path = dirs.project_dir
@@ -105,6 +109,13 @@ async def fetch(body: SetupForm) -> None:
 
 @router.post('/check')
 def check(body: SetupForm) -> None:
+    """Run curation checks on the dataset.
+
+    Args:
+        body (SetupForm): Request body containing pid, base_url, api_token,
+            ticket_number, main_dir, and checklist.
+
+    """
     dirs: directory_manager.DirectoryManager = get_dirs(body.ticket_number, Path(body.main_dir))
     db = get_db(schema_name=dirs.ticket_number, db_file=dirs.db_path)
 
