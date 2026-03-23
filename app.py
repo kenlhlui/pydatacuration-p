@@ -9,7 +9,6 @@ import os
 from pathlib import Path
 from urllib.parse import quote
 
-from dotenv import load_dotenv
 from future.backports.urllib.parse import urlparse
 from nicegui import app
 from nicegui import app as nicegui_app
@@ -23,6 +22,7 @@ from pydatacuration.backend.api import init
 
 # Import the API router from the backend module
 from pydatacuration.backend.api import router as api_router
+from pydatacuration.backend.settings import EnvSettings
 from pydatacuration.db import DatabaseBackend
 from pydatacuration.db import get_database
 from pydatacuration.frontend.helpers import NiceGUIHelper
@@ -47,12 +47,16 @@ from pydatacuration.utils.custom_logging import setup_logging
 from pydatacuration.utils.directory_manager import DirectoryManager
 
 
+# Create global settings instance
+settings = EnvSettings()
+
+# Include the API router in the NiceGUI app with a prefix of /api
 nicegui_app.include_router(api_router, prefix='/api')
 
 
 # Load environment variables
-load_dotenv(override=True)
-MAIN_DIR: Path = Path(os.getenv('MAIN_DIR', 'workdir'))
+MAIN_DIR: Path = Path(settings.main_dir)
+RES_DIR = Path(settings.res_dir)
 
 # Setup logging with your custom style
 setup_logging(log_file_dir=MAIN_DIR / 'logs', log_level='DEBUG')
@@ -161,17 +165,17 @@ async def new_dataset_page() -> None:
         # Form state - automatically persisted
         # Initialize with environment variable defaults
         default_form_data = {
-            'pid': os.getenv('PID', ''),
-            'ticket_number': os.getenv('TICKET_NUMBER', ''),
-            'collection_alias': os.getenv('COLLECTION_ALIAS', ''),
-            'base_url': os.getenv('BASE_URL', ''),
-            'api_token': os.getenv('API_TOKEN', ''),
-            'curator_name': os.getenv('CURATOR_NAME', ''),
-            'curator_email': os.getenv('CURATOR_EMAIL', ''),
+            'pid': settings.pid,
+            'ticket_number': settings.ticket_number,
+            'collection_alias': settings.collection_alias,
+            'base_url': settings.base_url,
+            'api_token': settings.api_token,
+            'curator_name': settings.curator_name,
+            'curator_email': settings.curator_email,
             'main_dir': str(MAIN_DIR.resolve()),
-            'force_del': os.getenv('FORCE_DELETE', 'false').lower() == 'true',
-            'check_zip': os.getenv('CHECK_ZIP', 'false').lower() == 'true',
-            'checklist': os.getenv('CHECK_LIST', 'high'),
+            'force_del': settings.force_delete,
+            'check_zip': settings.check_zip,
+            'checklist': settings.check_list,
         }
 
         # Get existing form data or create new
