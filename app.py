@@ -4,6 +4,7 @@ This version uses the nicegui_styles module for exact CSS matching.
 """
 
 # ruff: noqa: PLR1702
+import asyncio
 import os
 from pathlib import Path
 from urllib.parse import quote
@@ -416,7 +417,12 @@ async def handle_setup_submit(
 
 async def run_curation(form_data: dict) -> None:
     main_dir = Path(form_data['main_dir'])
-    init(ticket_number=form_data['ticket_number'], force_del=form_data['force_del'], main_dir=main_dir)
+    loop = asyncio.get_event_loop()
+
+    await loop.run_in_executor(
+        None,
+        lambda: init(ticket_number=form_data['ticket_number'], force_del=form_data['force_del'], main_dir=main_dir),
+    )
     await fetch(
         pid=form_data['pid'],
         base_url=form_data['base_url'],
@@ -424,16 +430,19 @@ async def run_curation(form_data: dict) -> None:
         ticket_number=form_data['ticket_number'],
         main_dir=main_dir,
     )
-    check(
-        ticket_number=form_data['ticket_number'],
-        base_url=form_data['base_url'],
-        api_token=form_data['api_token'],
-        check_zip=form_data['check_zip'],
-        collection_alias=form_data['collection_alias'],
-        curator_name=form_data['curator_name'],
-        curator_email=form_data['curator_email'],
-        checklist=form_data['checklist'],
-        main_dir=main_dir,
+    await loop.run_in_executor(
+        None,
+        lambda: check(
+            ticket_number=form_data['ticket_number'],
+            base_url=form_data['base_url'],
+            api_token=form_data['api_token'],
+            check_zip=form_data['check_zip'],
+            collection_alias=form_data['collection_alias'],
+            curator_name=form_data['curator_name'],
+            curator_email=form_data['curator_email'],
+            checklist=form_data['checklist'],
+            main_dir=main_dir,
+        ),
     )
 
 
