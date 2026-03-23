@@ -15,6 +15,7 @@ class AppSettings(BaseSettings):
     main_dir: str = 'workdir'
     res_dir: str = 'res'
     app_port: int = 9005
-    app_title: str = 'PyDataCuration'
+    app_title: str = 'Dataverse Curation review Tool'
+    app_name: str = 'Dataverse Curation review Tool'
     app_favicon: str = '🔬'
     debug: bool = False

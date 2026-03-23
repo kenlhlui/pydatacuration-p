@@ -85,7 +85,7 @@ async def main_page() -> None:
             sanitize=False,
         )
         ui.label(
-            'U of T dataset curation tool',
+            app_settings.app_name,
         ).classes('pdc-header')
 
         # Top row options
@@ -135,7 +135,7 @@ async def new_dataset_page() -> None:
             sanitize=False,
         )
         # Header
-        ui.label('U of T dataset curation tool').classes('pdc-header')
+        ui.label(app_settings.app_name).classes('pdc-header')
 
         # Messages
         error_msg = ui.label().classes('hidden')
