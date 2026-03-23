@@ -146,10 +146,10 @@ def check(body: SetupForm) -> None:
     logger.info('Checks completed')
 
 
-@router.post('/report')
-def report() -> None:
-    pass
-    # TODO: this api endpoint might not be necessary. Might just keep it in the CLI for now
+# @router.post('/report')
+# def report() -> None:
+#     pass
+#     # TODO: this api endpoint might not be necessary. Might just keep it in the CLI for now
 
 
 @router.get('/health')
