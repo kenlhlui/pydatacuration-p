@@ -149,3 +149,9 @@ def check(
 def report() -> None:
     pass
     # TODO: this api endpoint might not be necessary. Might just keep it in the CLI for now
+
+
+@router.get('/health')
+def health_check() -> dict:
+    """Health check endpoint to verify API is running."""
+    return {'status': 'ok'}
