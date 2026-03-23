@@ -31,6 +31,7 @@ class EnvSettings(BaseSettings):
     # Application settings
     app_port: int = 9005
     app_title: str = 'PyDataCuration'
+    app_favicon: str = '🔬'
     debug: bool = False
 
     class Config:

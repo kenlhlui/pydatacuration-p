@@ -14,7 +14,6 @@ from nicegui import app
 from nicegui import app as nicegui_app
 from nicegui import ui
 from nicegui.elements.input import Input
-from sqlmodel import SQLModel
 
 from pydatacuration.backend.api import check
 from pydatacuration.backend.api import fetch
@@ -48,42 +47,18 @@ from pydatacuration.utils.directory_manager import DirectoryManager
 
 
 # Create global settings instance
-settings = EnvSettings()
+env_settings = EnvSettings()
 
 # Include the API router in the NiceGUI app with a prefix of /api
 nicegui_app.include_router(api_router, prefix='/api')
 
 
 # Load environment variables
-MAIN_DIR: Path = Path(settings.main_dir)
-RES_DIR = Path(settings.res_dir)
+MAIN_DIR: Path = Path(env_settings.main_dir)
+RES_DIR = Path(env_settings.res_dir)
 
 # Setup logging with your custom style
-setup_logging(log_file_dir=MAIN_DIR / 'logs', log_level='DEBUG')
-
-# temp: set up the RES_DIR constant
-RES_DIR = Path('res')
-
-
-# ============================================================================
-# Data Models
-# ============================================================================
-
-
-class SetupRequest(SQLModel):
-    """Setup form data model."""
-
-    pid: str
-    base_url: str | None = None
-    api_token: str | None = None
-    ticket_number: str
-    curator_name: str
-    curator_email: str
-    main_dir: str = 'workdir'
-    force_del: bool = False
-    check_zip: bool = True
-    checklist: str = 'high'
-    collection_alias: str | None = None
+setup_logging(log_file_dir=Path(env_settings.main_dir) / 'logs', log_level='DEBUG')
 
 
 # ============================================================================
@@ -165,17 +140,17 @@ async def new_dataset_page() -> None:
         # Form state - automatically persisted
         # Initialize with environment variable defaults
         default_form_data = {
-            'pid': settings.pid,
-            'ticket_number': settings.ticket_number,
-            'collection_alias': settings.collection_alias,
-            'base_url': settings.base_url,
-            'api_token': settings.api_token,
-            'curator_name': settings.curator_name,
-            'curator_email': settings.curator_email,
-            'main_dir': str(MAIN_DIR.resolve()),
-            'force_del': settings.force_delete,
-            'check_zip': settings.check_zip,
-            'checklist': settings.check_list,
+            'pid': env_settings.pid,
+            'ticket_number': env_settings.ticket_number,
+            'collection_alias': env_settings.collection_alias,
+            'base_url': env_settings.base_url,
+            'api_token': env_settings.api_token,
+            'curator_name': env_settings.curator_name,
+            'curator_email': env_settings.curator_email,
+            'main_dir': str(Path(env_settings.main_dir).resolve()),
+            'force_del': env_settings.force_delete,
+            'check_zip': env_settings.check_zip,
+            'checklist': env_settings.check_list,
         }
 
         # Get existing form data or create new
@@ -1054,4 +1029,9 @@ else:
 # ============================================================================
 
 if __name__ in {'__main__', '__mp_main__'}:
-    ui.run(title='PyDataCuration', favicon='🔬', port=9005, storage_secret=str(os.urandom(16)))
+    ui.run(
+        title=env_settings.app_title,
+        favicon=env_settings.app_favicon,
+        port=env_settings.app_port,
+        storage_secret=str(os.urandom(16)),
+    )
