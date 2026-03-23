@@ -4,7 +4,6 @@ This version uses the nicegui_styles module for exact CSS matching.
 """
 
 # ruff: noqa: PLR1702
-import asyncio
 import os
 from pathlib import Path
 from urllib.parse import quote
@@ -14,15 +13,12 @@ from nicegui import app
 from nicegui import ui
 from nicegui.elements.input import Input
 
-from pydatacuration.backend.api import check
-from pydatacuration.backend.api import fetch
-from pydatacuration.backend.api import init
-
 # Import the API router from the backend module
 from pydatacuration.backend.api import router as api_router
-from pydatacuration.backend.app_settings import AppSettings
-from pydatacuration.backend.setup_defaults import SetupDefaults
-from pydatacuration.backend.setup_form import SetupForm
+from pydatacuration.backend.models.app_settings import AppSettings
+from pydatacuration.backend.models.setup_defaults import SetupDefaults
+from pydatacuration.backend.models.setup_form import SetupForm
+from pydatacuration.backend.services.curation import run_curation
 from pydatacuration.db import DatabaseBackend
 from pydatacuration.db import get_database
 from pydatacuration.frontend.helpers import NiceGUIHelper
@@ -290,7 +286,7 @@ async def handle_setup_submit(  # noqa: PLR0913, PLR0917
     success_msg.classes(add='hidden')
 
     try:
-        await run_curation(form_data)
+        await run_curation(SetupForm(**form_data))
 
         # Show success
         success_msg.set_text('Curation process completed successfully!')
@@ -307,15 +303,6 @@ async def handle_setup_submit(  # noqa: PLR0913, PLR0917
         reset_button.set_enabled(True)
         back_button.set_enabled(True)
         loading_spinner.classes(add='hidden')
-
-
-async def run_curation(form_data: dict) -> None:
-    body = SetupForm(**form_data)
-    loop = asyncio.get_event_loop()
-
-    await loop.run_in_executor(None, lambda: init(body))
-    await fetch(body)
-    await loop.run_in_executor(None, lambda: check(body))
 
 
 def reset_form(form_data: dict, default_form_data: dict, reset_button: ui.button) -> None:
