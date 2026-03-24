@@ -16,7 +16,7 @@ from nicegui.elements.input import Input
 # Import the API router from the backend module
 from pydatacuration.backend.api import router as api_router
 from pydatacuration.backend.models.app_settings import AppSettings
-from pydatacuration.backend.models.setup_defaults import SetupDefaults
+from pydatacuration.backend.models.setup_form import SetupDefaults
 from pydatacuration.backend.models.setup_form import SetupForm
 from pydatacuration.backend.services.curation import run_curation
 from pydatacuration.db import DatabaseBackend
