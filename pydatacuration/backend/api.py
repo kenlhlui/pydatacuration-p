@@ -14,7 +14,7 @@ from pydatacuration.exceptions import DirectoryExistsError
 router = APIRouter()
 
 
-@router.post('/check')
+@router.post('/run-curation')
 async def run_curation_endpoint(body: SetupForm) -> dict[str, str]:
     """Runs the curation process and returns a status message.
 
