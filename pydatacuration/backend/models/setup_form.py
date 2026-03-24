@@ -1,3 +1,5 @@
+"""The setup form models."""
+
 from pathlib import Path
 
 from pydantic import BaseModel
@@ -6,6 +8,8 @@ from pydantic import HttpUrl
 from pydantic import field_serializer
 from pydantic_settings import BaseSettings
 from pydantic_settings import SettingsConfigDict
+
+from pydatacuration.backend.models.directory_defaults import MainDir
 
 
 class SetupBase(BaseModel):
@@ -26,11 +30,8 @@ class SetupBase(BaseModel):
     checklist: str = ''
 
 
-class SetupForm(SetupBase):
+class SetupForm(SetupBase, MainDir):
     """Setup form payload."""
-
-    main_dir: str = 'workdir'
-    res_dir: str = 'res'
 
     @field_serializer('base_url')
     def serialize_base_url(self, v: HttpUrl | None) -> str | None:  # noqa: PLR6301

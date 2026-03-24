@@ -3,8 +3,10 @@
 from pydantic_settings import BaseSettings
 from pydantic_settings import SettingsConfigDict
 
+from pydatacuration.backend.models.directory_defaults import DirectoryDefaults
 
-class AppSettings(BaseSettings):
+
+class AppSettings(BaseSettings, DirectoryDefaults):
     """Application runtime settings."""
 
     model_config = SettingsConfigDict(
@@ -14,8 +16,6 @@ class AppSettings(BaseSettings):
         extra='ignore',
     )
 
-    main_dir: str = 'workdir'
-    res_dir: str = 'res'
     app_port: int = 9005
     app_title: str = 'Dataverse Curation review Tool'
     app_name: str = 'Dataverse Curation review Tool'
