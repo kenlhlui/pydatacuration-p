@@ -5,10 +5,10 @@ from fastapi import HTTPException
 
 from pydatacuration.backend.models.setup_form import SetupForm
 from pydatacuration.backend.services.curation import run_curation
+from pydatacuration.exceptions import DatasetAccessError
+from pydatacuration.exceptions import DatasetNotFoundError
+from pydatacuration.exceptions import DatasetUnauthorizedError
 from pydatacuration.exceptions import DirectoryExistsError
-from pydatacuration.utils.utils import DatasetAccessError
-from pydatacuration.utils.utils import DatasetNotFoundError
-from pydatacuration.utils.utils import DatasetUnauthorizedError
 
 
 router = APIRouter()
