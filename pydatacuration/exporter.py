@@ -1,5 +1,6 @@
 """This module provides functions for exporting to YAML and word files."""
 
+import re
 from pathlib import Path
 from typing import Any
 
@@ -10,6 +11,13 @@ from sqlmodel import SQLModel
 from pydatacuration.db.base import DatabaseBackend
 from pydatacuration.utils.custom_logging import logger
 from pydatacuration.utils.directory_manager import DirectoryManager
+
+
+def _strip_markup(text: str) -> str:
+    """Strip HTML tags and markdown bold markers from a string."""
+    text = re.sub(r'<[^>]+>', '', text)
+    text = re.sub(r'\*\*(.*?)\*\*', r'\1', text, flags=re.DOTALL)
+    return text
 
 
 class Exporter:
@@ -65,6 +73,12 @@ class Exporter:
         metadata = yaml_data.get('project_metadata', {})
 
         doc = DocxTemplate(template_path)
+
+        # Strip HTML tags and markdown from string fields so docxtpl doesn't corrupt the XML
+        for item in checklist_items:
+            for field, value in item.items():
+                if isinstance(value, str):
+                    item[field] = _strip_markup(value)
 
         context = {
             'checklist': checklist_items,
