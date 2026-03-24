@@ -975,26 +975,26 @@ def render_check_results(results: dict) -> None:
 # Static Files Setup - Must be BEFORE ui.run()
 # ============================================================================
 
-# Mount static files from your existing frontend directory
-# Determine the correct path to static files
-static_path = Path('pydatacuration/frontend')
-if not static_path.exists():
-    static_path = Path(__file__).parent / 'pydatacuration' / 'frontend'
-
-if static_path.exists():
-    # Add static files route
-    app.add_static_files('/static', str(static_path))
-    logger.info('✓ Static files mounted:', static_path.absolute())
-else:
-    logger.warning('⚠ WARNING: Static directory not found!')
-    logger.warning('Looked for:', static_path.absolute())
-
 
 # ============================================================================
 # Run the application
 # ============================================================================
 
 if __name__ in {'__main__', '__mp_main__'}:
+    # Mount static files from your existing frontend directory
+    # Determine the correct path to static files
+    static_path = Path('pydatacuration/frontend')
+    if not static_path.exists():
+        static_path = Path(__file__).parent / 'pydatacuration' / 'frontend'
+
+    if static_path.exists():
+        # Add static files route
+        app.add_static_files('/static', str(static_path))
+        logger.info('✓ Static files mounted:', static_path.absolute())
+    else:
+        logger.warning('⚠ WARNING: Static directory not found!')
+        logger.warning('Looked for:', static_path.absolute())
+
     ui.run(
         title=app_settings.app_title,
         favicon=app_settings.app_favicon,
