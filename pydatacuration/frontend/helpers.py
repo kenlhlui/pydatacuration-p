@@ -437,18 +437,17 @@ def priority_options() -> dict[str, str]:
     }
 
 
-def checklist_options() -> dict[str, str]:
+def checklist_options(res_dir: Path) -> dict[str, str]:
     """Get checklist options for select input by discovering available checklist files.
 
     Returns:
         dict[str, str]: Dictionary mapping checklist identifiers to display names.
     """
-    # Get the res directory path (relative to the project root)
-    res_dir = Path(__file__).parent.parent.parent / 'res'  # FIXME: make the RES_DIR configurable, not relative
-
     # Discover available checklist files
     options = discover_checklist_files(res_dir)
-    return options
+
+    # Add blank option as the first option
+    return {'': 'Select checklist', **options}
 
 
 def back_to_main_menu_button() -> None:

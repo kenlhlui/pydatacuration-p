@@ -4,24 +4,29 @@ This version uses the nicegui_styles module for exact CSS matching.
 """
 
 # ruff: noqa: PLR1702
-import asyncio
 import os
 from pathlib import Path
 from urllib.parse import quote
+from urllib.parse import urlparse
 
-import orjson
-from dotenv import load_dotenv
-from fastapi import HTTPException
-from fastapi.responses import JSONResponse
-from future.backports.urllib.parse import urlparse
 from nicegui import app
-from nicegui import app as nicegui_app
 from nicegui import ui
 from nicegui.elements.input import Input
-from sqlmodel import SQLModel
 
+# Import the API router from the backend module
+from pydatacuration.backend.api import router as api_router
+from pydatacuration.backend.models.app_settings import AppSettings
+from pydatacuration.backend.models.setup_form import SetupDefaults
+from pydatacuration.backend.models.setup_form import SetupForm
+from pydatacuration.backend.services.curation import run_curation
 from pydatacuration.db import DatabaseBackend
 from pydatacuration.db import get_database
+
+# Import exceptions for error handling
+from pydatacuration.exceptions import DatasetAccessError
+from pydatacuration.exceptions import DatasetNotFoundError
+from pydatacuration.exceptions import DatasetUnauthorizedError
+from pydatacuration.exceptions import DirectoryExistsError
 from pydatacuration.frontend.helpers import NiceGUIHelper
 from pydatacuration.frontend.helpers import back_to_main_menu_button
 from pydatacuration.frontend.helpers import priority_options
@@ -37,8 +42,6 @@ from pydatacuration.frontend.styles import create_priority_badge
 from pydatacuration.frontend.styles import create_status_select
 
 # Import the typer app for CLI command execution
-from pydatacuration.main import CtxObj
-from pydatacuration.main import run_all
 from pydatacuration.utils.custom_logging import logger
 from pydatacuration.utils.custom_logging import setup_logging
 
@@ -46,37 +49,22 @@ from pydatacuration.utils.custom_logging import setup_logging
 from pydatacuration.utils.directory_manager import DirectoryManager
 
 
+# Create global settings instance
+app_settings = AppSettings()
+setup_defaults = SetupDefaults()
+
+# Include the API router in the NiceGUI app with a prefix of /api
+app.include_router(api_router, prefix='/api')
+
+
 # Load environment variables
-load_dotenv(override=True)
-MAIN_DIR: Path = Path(os.getenv('MAIN_DIR', 'workdir'))
+MAIN_DIR: Path = Path(app_settings.main_dir)
+RES_DIR = Path(app_settings.res_dir)
 
 # Setup logging with your custom style
-setup_logging(log_file_dir=MAIN_DIR / 'logs', log_level='DEBUG')
+setup_logging(log_file_dir=Path(app_settings.main_dir) / 'logs', log_level='DEBUG')
 
-# temp: set up the RES_DIR constant
-RES_DIR = Path('res')
-
-
-# ============================================================================
-# Data Models
-# ============================================================================
-
-
-class SetupRequest(SQLModel):
-    """Setup form data model."""
-
-    pid: str
-    base_url: str | None = None
-    api_token: str | None = None
-    ticket_number: str
-    curator_name: str
-    curator_email: str
-    main_dir: str = 'workdir'
-    force_del: bool = False
-    check_zip: bool = True
-    checklist: str = 'high'
-    collection_alias: str | None = None
-
+default_form = SetupForm(**setup_defaults.model_dump(), main_dir=app_settings.main_dir)
 
 # ============================================================================
 # Main Entrance Page
@@ -98,7 +86,7 @@ async def main_page() -> None:
             sanitize=False,
         )
         ui.label(
-            'U of T dataset curation tool',
+            app_settings.app_title,
         ).classes('pdc-header')
 
         # Top row options
@@ -148,7 +136,7 @@ async def new_dataset_page() -> None:
             sanitize=False,
         )
         # Header
-        ui.label('U of T dataset curation tool').classes('pdc-header')
+        ui.label(app_settings.app_title).classes('pdc-header')
 
         # Messages
         error_msg = ui.label().classes('hidden')
@@ -156,19 +144,7 @@ async def new_dataset_page() -> None:
 
         # Form state - automatically persisted
         # Initialize with environment variable defaults
-        default_form_data = {
-            'pid': os.getenv('PID', ''),
-            'ticket_number': os.getenv('TICKET_NUMBER', ''),
-            'collection_alias': os.getenv('COLLECTION_ALIAS', ''),
-            'base_url': os.getenv('BASE_URL', ''),
-            'api_token': os.getenv('API_TOKEN', ''),
-            'curator_name': os.getenv('CURATOR_NAME', ''),
-            'curator_email': os.getenv('CURATOR_EMAIL', ''),
-            'main_dir': str(MAIN_DIR.resolve()),
-            'force_del': os.getenv('FORCE_DELETE', 'false').lower() == 'true',
-            'check_zip': os.getenv('CHECK_ZIP', 'false').lower() == 'true',
-            'checklist': os.getenv('CHECK_LIST', 'high'),
-        }
+        default_form_data = default_form.model_dump()
 
         # Get existing form data or create new
         form_data = app.storage.tab.setdefault('setup_form', default_form_data)
@@ -244,7 +220,8 @@ async def new_dataset_page() -> None:
             with ui.element('div').classes('pdc-form-group'):
                 # Use our custom checklist select with styling
                 create_checklist_select(
-                    current_value=form_data.get('checklist', 'high'),
+                    res_dir=RES_DIR,
+                    current_value=form_data.get('checklist', 'default'),
                     on_change=lambda e: form_data.update({'checklist': e.value}),
                 ).style('width: 100%')
                 ui.label('Select the checklist level for this curation task').classes('pdc-form-helper')
@@ -254,8 +231,8 @@ async def new_dataset_page() -> None:
             ui.label('Processing Options').classes('pdc-form-section-header')
 
             with ui.row().classes('gap-4'):
-                ui.checkbox('Force delete existing project', value=form_data.get('force_del', False)).bind_value(
-                    form_data, 'force_del'
+                ui.checkbox('Force delete existing project', value=form_data.get('force_delete', False)).bind_value(
+                    form_data, 'force_delete'
                 )
 
                 ui.checkbox('Unzip and check contents of zip files', value=form_data.get('check_zip', True)).bind_value(
@@ -291,80 +268,7 @@ async def new_dataset_page() -> None:
             ui.label('Running curation process...')
 
 
-@app.post('/setup')
-async def setup(request: SetupRequest) -> JSONResponse:
-    """Process the setup form and run pydatacuration CLI command.
-
-    Args:
-        request (SetupRequest): Setup form data matching CLI parameters
-
-    Returns:
-        JSONResponse: Result of the curation process
-    """
-    try:
-        # Validate required fields
-        if not request.pid or not request.pid.strip():
-            logger.error(f'Validation failed: PID is missing or empty. Received: "{request.pid}"')
-            raise HTTPException(status_code=400, detail='PID is required')
-        if not request.ticket_number or not request.ticket_number.strip():
-            logger.error(f'Validation failed: Ticket number is missing or empty. Received: "{request.ticket_number}"')
-            raise HTTPException(status_code=400, detail='Ticket number is required')
-        if not request.curator_name or not request.curator_name.strip():
-            logger.error(f'Validation failed: Curator name is missing or empty. Received: "{request.curator_name}"')
-            raise HTTPException(status_code=400, detail='Curator name is required')
-        if not request.curator_email or not request.curator_email.strip():
-            logger.error(f'Validation failed: Curator email is missing or empty. Received: "{request.curator_email}"')
-            raise HTTPException(status_code=400, detail='Curator email is required')
-
-        # Create context object
-        ctx_obj = CtxObj(main_dir=Path(request.main_dir))
-
-        # Store state variables
-        dir_manager = DirectoryManager(request.ticket_number, request.main_dir)
-        app.state.work_dir = dir_manager.project_dir
-        app.state.base_url = request.base_url
-
-        # Create a minimal mock context with the obj
-        # We create a simple object that has the required .obj attribute
-        class MockContext:
-            def __init__(self, obj: CtxObj) -> None:
-                self.obj: CtxObj = obj
-
-        ctx = MockContext(ctx_obj)
-
-        # Run in a thread pool to avoid blocking the event loop
-        # This is necessary because run_all uses asyncio.run() internally
-        loop = asyncio.get_event_loop()
-
-        def run_curation() -> None:
-            """Run the curation in a separate thread."""
-            run_all(
-                ctx=ctx,
-                pid=request.pid,
-                base_url=request.base_url or '',
-                api_token=request.api_token or '',
-                ticket_number=request.ticket_number,
-                force_del=request.force_del,
-                check_zip=request.check_zip,
-                collection_alias=request.collection_alias,
-                curator_name=request.curator_name,
-                curator_email=request.curator_email,
-                open_dir=False,
-                checklist=request.checklist,
-            )
-
-        # Execute in thread pool to avoid event loop conflicts
-        await loop.run_in_executor(None, run_curation)
-
-        url = f'/checklist?ticket_number={quote(request.ticket_number)}'
-        return JSONResponse(content={'success': True, 'redirect_url': url})
-
-    except Exception as e:
-        logger.error(f'Curation failed: {e}', exc_info=True)
-        raise HTTPException(status_code=400, detail=str(e))
-
-
-async def handle_setup_submit(
+async def handle_setup_submit(  # noqa: PLR0913, PLR0917
     form_data: dict,
     error_msg: ui.label,
     success_msg: ui.label,
@@ -374,13 +278,9 @@ async def handle_setup_submit(
     back_button: ui.button,
 ) -> None:
     """Handle form submission."""
-    # Validation
-    required_fields = ['pid', 'base_url', 'api_token', 'ticket_number', 'curator_name', 'curator_email']
-    missing = [f for f in required_fields if not form_data.get(f)]
-
-    if missing:
-        error_msg.set_text(f'Missing required fields: {", ".join(missing)}')
-        error_msg.classes(remove='hidden', add='pdc-error')
+    # Validate the form data
+    if not form_data.get('checklist'):
+        ui.notify('Please select a valid checklist', type='negative', position='top-right', close_button=True)
         return
 
     # Disable all buttons and show loading
@@ -392,21 +292,21 @@ async def handle_setup_submit(
     success_msg.classes(add='hidden')
 
     try:
-        # In production, call your FastAPI /setup endpoint
-        response = await setup(SetupRequest(**form_data))
-        response_data = orjson.loads(response.body)
-        ui.notify(f'Setup returned: {response_data}', type='info')
+        await run_curation(SetupForm(**form_data))
 
         # Show success
         success_msg.set_text('Curation process completed successfully!')
         success_msg.classes(remove='hidden', add='pdc-success')
 
-        # Redirect using the redirect_url from response
-        if response_data.get('redirect_url'):
-            ui.navigate.to(response_data['redirect_url'])
-        else:
-            ui.navigate.to(f'/checklist?ticket_number={quote(form_data["ticket_number"])}')
-
+        ui.navigate.to(f'/checklist?ticket_number={quote(form_data["ticket_number"])}')
+    except DirectoryExistsError as exc:
+        ui.notify(str(exc), type='warning')
+    except DatasetUnauthorizedError:
+        ui.notify('Unauthorized dataset access. Check API token/permissions.', type='negative')
+    except DatasetNotFoundError:
+        ui.notify('Dataset not found. Verify PID and base URL.', type='negative')
+    except DatasetAccessError as exc:
+        ui.notify(str(exc), type='negative')
     except Exception as e:
         error_msg.set_text(f'Error: {str(e)}')
         error_msg.classes(remove='hidden', add='pdc-error')
@@ -946,8 +846,8 @@ async def render_checklist_table(  # noqa: PLR0913, C901, PLR0917
                                     check_names = [
                                         f'- {info["check_name"]}' for info in checks_info if info.get('check_name')
                                     ]
-                                    check_list = '\n'.join(check_names)
-                                    ui.markdown(check_list).classes('pdc-static-curator-check-item')
+                                    checklist = '\n'.join(check_names)
+                                    ui.markdown(checklist).classes('pdc-static-curator-check-item')
                                 elif tool_explanation:
                                     ui.markdown(tool_explanation).classes('pdc-static-curator-check-item')
                                 else:
@@ -1072,17 +972,6 @@ def render_check_results(results: dict) -> None:
 
 
 # ============================================================================
-# Health Check Endpoint
-# ============================================================================
-
-
-@ui.page('/health')
-def health_check() -> dict:
-    """Health check endpoint."""
-    return {'status': 'ok'}
-
-
-# ============================================================================
 # Static Files Setup - Must be BEFORE ui.run()
 # ============================================================================
 
@@ -1094,7 +983,7 @@ if not static_path.exists():
 
 if static_path.exists():
     # Add static files route
-    nicegui_app.add_static_files('/static', str(static_path))
+    app.add_static_files('/static', str(static_path))
     logger.info('✓ Static files mounted:', static_path.absolute())
 else:
     logger.warning('⚠ WARNING: Static directory not found!')
@@ -1106,4 +995,9 @@ else:
 # ============================================================================
 
 if __name__ in {'__main__', '__mp_main__'}:
-    ui.run(title='PyDataCuration', favicon='🔬', port=9005, storage_secret=str(os.urandom(16)))
+    ui.run(
+        title=app_settings.app_title,
+        favicon=app_settings.app_favicon,
+        port=app_settings.app_port,
+        storage_secret=str(os.urandom(16)),
+    )
