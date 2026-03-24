@@ -18,6 +18,5 @@ class AppSettings(BaseSettings, DirectoryDefaults):
 
     app_port: int = 9005
     app_title: str = 'Dataverse Curation review Tool'
-    app_name: str = 'Dataverse Curation review Tool'
     app_favicon: str = '🔬'
     debug: bool = False

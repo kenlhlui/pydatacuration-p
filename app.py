@@ -86,7 +86,7 @@ async def main_page() -> None:
             sanitize=False,
         )
         ui.label(
-            app_settings.app_name,
+            app_settings.app_title,
         ).classes('pdc-header')
 
         # Top row options
@@ -136,7 +136,7 @@ async def new_dataset_page() -> None:
             sanitize=False,
         )
         # Header
-        ui.label(app_settings.app_name).classes('pdc-header')
+        ui.label(app_settings.app_title).classes('pdc-header')
 
         # Messages
         error_msg = ui.label().classes('hidden')
