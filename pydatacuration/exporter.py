@@ -1,13 +1,11 @@
 """This module provides functions for exporting to YAML and word files."""
 
 import re
-from html.parser import HTMLParser
 from pathlib import Path
 from typing import Any
 
 import yaml
 from docxtpl import DocxTemplate
-from docxtpl import RichText
 from sqlmodel import SQLModel
 
 from pydatacuration.db.base import DatabaseBackend
@@ -15,58 +13,11 @@ from pydatacuration.utils.custom_logging import logger
 from pydatacuration.utils.directory_manager import DirectoryManager
 
 
-_HTML_RICH_TEXT_FIELDS = ('action', 'instructions', 'curator_check_item')
-
-
-class _HTMLRichTextParser(HTMLParser):
-    """Parses an HTML string into a docxtpl RichText object."""
-
-    def __init__(self, doc: DocxTemplate) -> None:
-        """Initialize with the DocxTemplate used to build URL IDs."""
-        super().__init__()
-        self.doc = doc
-        self.rt = RichText()
-        self._href: str | None = None
-        self._underline = False
-        self._bold = False
-
-    def handle_starttag(self, tag: str, attrs: list) -> None:
-        """Handle opening HTML tags."""
-        if tag == 'a':
-            self._href = dict(attrs).get('href', '')
-        elif tag == 'u':
-            self._underline = True
-        elif tag in ('b', 'strong'):
-            self._bold = True
-
-    def handle_endtag(self, tag: str) -> None:
-        """Handle closing HTML tags."""
-        if tag == 'a':
-            self._href = None
-        elif tag == 'u':
-            self._underline = False
-        elif tag in ('b', 'strong'):
-            self._bold = False
-
-    def handle_data(self, data: str) -> None:
-        """Append a text run with the current formatting state."""
-        kwargs: dict[str, Any] = {}
-        if self._bold:
-            kwargs['bold'] = True
-        if self._underline:
-            kwargs['underline'] = True
-        if self._href:
-            kwargs['url_id'] = self.doc.build_url_id(self._href)
-        self.rt.add(data, **kwargs)
-
-
-def _to_richtext(doc: DocxTemplate, text: str) -> RichText:
-    """Convert a string with HTML tags and **markdown bold** to a RichText object."""
-    # Convert **markdown bold** to <b> tags so HTMLParser can handle them uniformly
-    normalised = re.sub(r'\*\*(.*?)\*\*', r'<b>\1</b>', text, flags=re.DOTALL)
-    parser = _HTMLRichTextParser(doc)
-    parser.feed(normalised)
-    return parser.rt
+def _strip_markup(text: str) -> str:
+    """Strip HTML tags and markdown bold markers from a string."""
+    text = re.sub(r'<[^>]+>', '', text)
+    text = re.sub(r'\*\*(.*?)\*\*', r'\1', text, flags=re.DOTALL)
+    return text
 
 
 class Exporter:
@@ -123,11 +74,11 @@ class Exporter:
 
         doc = DocxTemplate(template_path)
 
-        # Convert HTML/markdown fields to RichText so docxtpl doesn't corrupt the XML
+        # Strip HTML tags and markdown from string fields so docxtpl doesn't corrupt the XML
         for item in checklist_items:
-            for field in _HTML_RICH_TEXT_FIELDS:
-                if isinstance(item.get(field), str):
-                    item[field] = _to_richtext(doc, item[field])
+            for field, value in item.items():
+                if isinstance(value, str):
+                    item[field] = _strip_markup(value)
 
         context = {
             'checklist': checklist_items,
