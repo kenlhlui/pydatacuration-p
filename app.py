@@ -64,7 +64,7 @@ RES_DIR = Path(app_settings.res_dir)
 # Setup logging with your custom style
 setup_logging(log_file_dir=Path(app_settings.main_dir) / 'logs', log_level='DEBUG')
 
-default_form = SetupForm(**setup_defaults.model_dump())
+default_form = SetupForm(**setup_defaults.model_dump(), main_dir=app_settings.main_dir)
 
 # ============================================================================
 # Main Entrance Page
