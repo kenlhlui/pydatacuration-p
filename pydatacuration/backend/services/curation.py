@@ -1,3 +1,5 @@
+"""Function for the curation process, including initialization, fetching the dataset, and running the checks."""
+
 import asyncio
 from pathlib import Path
 
