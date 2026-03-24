@@ -4,7 +4,6 @@ import asyncio
 from pathlib import Path
 
 import orjson
-from fastapi import HTTPException
 from loguru import logger
 
 from pydatacuration.backend.models.setup_form import SetupForm
@@ -12,6 +11,7 @@ from pydatacuration.checker import Checker
 from pydatacuration.db import DatabaseBackend
 from pydatacuration.db import get_database
 from pydatacuration.downloads import Downloads
+from pydatacuration.exceptions import DirectoryExistsError
 from pydatacuration.utils import directory_manager
 from pydatacuration.utils.utils import DatasetAccessError
 from pydatacuration.utils.utils import DatasetNotFoundError
@@ -53,16 +53,15 @@ def init_curation(body: SetupForm) -> None:
         body (SetupForm): The setup form containing the necessary information for initialization.
 
     Raises:
-        HTTPException: If the working directory already exists and force_delete is not set to True.
+        DirectoryExistsError: If the working directory already exists and force_delete is not set to True.
     """
     dirs = get_dirs(body.ticket_number, Path(body.main_dir))
     workdir_path = dirs.project_dir
 
     if workdir_path.exists() and not body.force_delete:
-        raise HTTPException(
-            status_code=409,
-            detail=f"Directory {workdir_path} already exists. Use 'force_del=True' to overwrite.",
-        )
+        msg = f"Directory {workdir_path} already exists. Use 'force_delete=True' to overwrite."
+        logger.error(msg)
+        raise DirectoryExistsError(msg)
 
     dirs.delete_dir(workdir_path)
     dirs.make_dirs()
@@ -80,17 +79,17 @@ def _ensure_dataset_read_access(body: SetupForm) -> None:
         check_ds_read_access(body.pid, str(body.base_url), body.api_token or '')
     except DatasetUnauthorizedError as exc:
         logger.error(f'Unauthorized access for dataset {body.pid}: {exc}')
-        raise HTTPException(status_code=401, detail=str(exc)) from exc
+        raise
     except DatasetNotFoundError as exc:
         logger.error(f'Dataset not found {body.pid}: {exc}')
-        raise HTTPException(status_code=404, detail=str(exc)) from exc
+        raise
     except DatasetAccessError as exc:
         logger.error(f'Dataset access error for {body.pid}: {exc}')
-        raise HTTPException(status_code=503, detail=str(exc)) from exc
+        raise
     except Exception as exc:
         error_message = f'Failed to access dataset {body.pid}. Error: {exc}'
         logger.error(error_message)
-        raise HTTPException(status_code=503, detail=error_message) from exc
+        raise DatasetAccessError(error_message) from exc
 
 
 async def fetch_curation(body: SetupForm) -> None:

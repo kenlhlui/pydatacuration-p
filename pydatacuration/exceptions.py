@@ -11,3 +11,7 @@ class DatasetUnauthorizedError(DatasetAccessError):
 
 class DatasetNotFoundError(DatasetAccessError):
     """Raised when the dataset does not exist."""
+
+
+class DirectoryExistsError(Exception):
+    """Raised when the working directory already exists and force_delete is not set."""

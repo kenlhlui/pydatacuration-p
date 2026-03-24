@@ -21,6 +21,12 @@ from pydatacuration.backend.models.setup_form import SetupForm
 from pydatacuration.backend.services.curation import run_curation
 from pydatacuration.db import DatabaseBackend
 from pydatacuration.db import get_database
+
+# Import exceptions for error handling
+from pydatacuration.exceptions import DatasetAccessError
+from pydatacuration.exceptions import DatasetNotFoundError
+from pydatacuration.exceptions import DatasetUnauthorizedError
+from pydatacuration.exceptions import DirectoryExistsError
 from pydatacuration.frontend.helpers import NiceGUIHelper
 from pydatacuration.frontend.helpers import back_to_main_menu_button
 from pydatacuration.frontend.helpers import priority_options
@@ -293,7 +299,14 @@ async def handle_setup_submit(  # noqa: PLR0913, PLR0917
         success_msg.classes(remove='hidden', add='pdc-success')
 
         ui.navigate.to(f'/checklist?ticket_number={quote(form_data["ticket_number"])}')
-
+    except DirectoryExistsError as exc:
+        ui.notify(str(exc), type='warning')
+    except DatasetUnauthorizedError:
+        ui.notify('Unauthorized dataset access. Check API token/permissions.', type='negative')
+    except DatasetNotFoundError:
+        ui.notify('Dataset not found. Verify PID and base URL.', type='negative')
+    except DatasetAccessError as exc:
+        ui.notify(str(exc), type='negative')
     except Exception as e:
         error_msg.set_text(f'Error: {str(e)}')
         error_msg.classes(remove='hidden', add='pdc-error')
