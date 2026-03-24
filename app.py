@@ -7,8 +7,8 @@ This version uses the nicegui_styles module for exact CSS matching.
 import os
 from pathlib import Path
 from urllib.parse import quote
+from urllib.parse import urlparse
 
-from future.backports.urllib.parse import urlparse
 from nicegui import app
 from nicegui import ui
 from nicegui.elements.input import Input
