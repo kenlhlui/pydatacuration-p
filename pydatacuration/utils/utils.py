@@ -81,7 +81,8 @@ def gen_tree_diagram(target_dir: Path, save_dir: Path) -> None:
                     f.write(result)
 
                 logger.info(f'Folder tree diagram text file saved at: {str(ds_tree_file_path)}')
-
+        else:
+            logger.warning(f'Target directory does not exist: {str(target_dir)} - skipping tree diagram generation.')
     except Exception as e:
         logger.info(f'Error: {e}')
         logger.info('An error occurred while generating the folder tree diagram. Exiting...')
