@@ -1,6 +1,7 @@
 """Stress test script for the API endpoint and the application."""
 
 import time
+from pathlib import Path
 
 import httpx
 from loguru import logger
@@ -26,14 +27,10 @@ def run_curation(setup_form_instance: SetupForm | SetupDefaults, app_settings: A
 
 def datasets() -> dict[str, str]:
     """Return a list of DOIs for testing."""
-    return {
-        'CUR-001': 'doi:10.80240/FK2/HT4WPP',
-        # 'CUR-002': 'doi:10.80240/FK2/HCUJKX',
-        # 'CUR-003': 'doi:10.80240/FK2/CFUXY6',
-        # 'CUR-004': 'doi:10.80240/FK2/WTMREZ',
-        'CUR-005': 'doi:10.80240/FK2/TSHCUL',
-        'CUR-006': 'doi:10.80240/FK2/5BEARR',
-    }
+    # Note: Change the DOI here for different datasets.
+    with Path('tests/doi_list.txt').open(encoding='utf-8') as f:
+        doi_list = [line.strip() for line in f if line.strip() and '#' not in line]
+    return {f'CUR-{i + 1:03d}': doi for i, doi in enumerate(doi_list)}
 
 
 if __name__ == '__main__':

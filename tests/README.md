@@ -32,3 +32,20 @@ just run-tests
     ```bash
     coverage report
     ```
+
+# To run the stress test, use the following command:
+
+You will first need to create a `doi_list.txt` file in the `tests` directory with the DOIs you want to test. Each DOI should be on a new line.
+
+You can commend out any DOIs you don't want to test by adding a `#` at the beginning of the line.
+
+You will first need to start the tool ()
+
+```bash
+just dev-run -f
+```
+
+Then run the following command in the root directory of the project:
+```bash
+uv pip install -e . && uv run --env-file=.env tests/curation-run-test.py # Load the .env file to set the environment variables needed for the test
+```
