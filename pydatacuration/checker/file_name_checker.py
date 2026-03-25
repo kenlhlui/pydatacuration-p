@@ -1,7 +1,6 @@
 """Module for checking file name format."""
 
 import re
-import sys
 from pathlib import Path
 
 from pydatacuration.utils.custom_logging import logger
@@ -89,7 +88,7 @@ class FileNameFormatChecker:
                     return [line.strip() for line in f.readlines()]
             except FileNotFoundError as e:
                 logger.info(f'Error: {e}')
-                sys.exit(1)
+                return []
 
         if Path(file).suffix in load_preferred_file_formats_list(preferred_file_formats_config):
             return file, True
