@@ -1,7 +1,6 @@
 """Downloads class to download a dataset's metadata and files from a Dataverse repository."""
 
 import asyncio
-import sys
 from pathlib import Path
 from urllib.parse import urljoin
 
@@ -45,6 +44,8 @@ class Downloads:
 
         query_string = 'data.latestVersion.files[*].{file_id:dataFile.id, file_name:dataFile.filename, originalFileName:dataFile.originalFileName, directoryLabel: directoryLabel, md5: dataFile.md5}'  # noqa: E501
         temp_file_list = jmespath.search(query_string, metadata)
+        if not temp_file_list:
+            return []
 
         for item in temp_file_list:
             file_id = item.get('file_id')
@@ -135,13 +136,12 @@ class Downloads:
             if response.status_code == self.success_code and response.json():
                 return response.json()
             self.logger.error(f'Error: {response.status_code} - {response.text}')
-            sys.exit(1)
         except httpx.HTTPStatusError as e:
             self.logger.error(f'HTTP error occurred: {e}')
-            sys.exit(1)
+            return {}
         except Exception as e:
             self.logger.error(f'An error occurred: {e}')
-            sys.exit(1)
+            return {}
 
     def _get_ds_metadata(self) -> dict:
         """Get metadata of a dataset.
@@ -157,14 +157,13 @@ class Downloads:
             response.raise_for_status()
             if response.status_code == self.success_code and response.json():
                 return response.json()
-            sys.exit(1)
 
         except httpx.HTTPStatusError as e:
             self.logger.info(f'HTTP error occurred: {e}')
-            sys.exit(1)
+            return {}
         except Exception as e:
             self.logger.info(f'An error occurred: {e}')
-            sys.exit(1)
+            return {}
 
     def export_metadata(self, file_name: str, dictionary: dict) -> None:
         """Save the dataset metadata to a JSON file."""
@@ -175,7 +174,6 @@ class Downloads:
 
         except Exception as e:
             self.logger.info(f'An error occurred: {e}\nProgram exiting...')
-            sys.exit(1)
 
     async def downloader(self) -> None:
         """Download the dataset as a zip file asynchronously."""
