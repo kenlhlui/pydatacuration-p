@@ -32,6 +32,7 @@ def datasets() -> dict[str, str]:
         # 'CUR-003': 'doi:10.80240/FK2/CFUXY6',
         # 'CUR-004': 'doi:10.80240/FK2/WTMREZ',
         'CUR-005': 'doi:10.80240/FK2/TSHCUL',
+        'CUR-006': 'doi:10.80240/FK2/5BEARR',
     }
 
 
@@ -41,7 +42,7 @@ if __name__ == '__main__':
 
     datasets_dict = datasets()
     for ticket_number, pid in datasets_dict.items():
-        setup_data = default_setup.model_dump()
+        setup_data: dict = default_setup.model_dump(mode='python')
         setup_data['ticket_number'] = ticket_number
         setup_data['pid'] = pid
         setup_form = SetupForm(**setup_data, main_dir=app_settings.main_dir)
