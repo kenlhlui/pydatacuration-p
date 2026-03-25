@@ -123,14 +123,18 @@ def get_database(
             msg = "DuckDB backend requires a 'db_file' path."
             raise ValueError(msg)
 
-        from pydatacuration.db.duck_db import DuckDBBackend
+        from pydatacuration.db.duck_db import (  # noqa: PLC0415
+            DuckDBBackend,  # Note: Import here to avoid unnecessary dependencies when using PostgreSQL
+        )
 
         logger.info(f'Using DuckDB backend with file: {db_file}')
 
         return DuckDBBackend(schema_name=schema_name, db_file=db_file)
 
     # PostgreSQL
-    from pydatacuration.db.postgres import PostgreSQLBackend
+    from pydatacuration.db.postgres import (  # noqa: PLC0415
+        PostgreSQLBackend,  # Note: Import here to avoid unnecessary dependencies when using DuckDB
+    )
 
     url = get_database_url()
     logger.info(f'Using PostgreSQL backend with URL: {url}')
