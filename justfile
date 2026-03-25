@@ -62,7 +62,7 @@ dev-run *ARGS:
         case "$$ans" in [Yy]*) ;; *) echo "Aborted."; exit 1 ;; esac; \
     fi
     uv sync
-    uv run app.py
+    uv run --env-file .env app.py
 
 # ─────────────────────────────────────────────────────────
 # Cleanup
