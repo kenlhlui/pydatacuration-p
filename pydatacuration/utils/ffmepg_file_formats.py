@@ -1,7 +1,6 @@
 """Get the FFmpeg file formats."""
 
 import subprocess
-import sys
 
 from loguru import logger
 
@@ -70,9 +69,11 @@ class FFmpegFileFormats:
 
         except FileNotFoundError:
             self.logger.error('FFmpeg is not installed or not found in the system PATH.')
-            self.logger.info('Exiting...')
-            sys.exit(1)
+            self.logger.warning(
+                'Please install FFmpeg to get the supported file formats. The media file checks will be skipped.'
+            )
+            return []
+
         except Exception as e:
             self.logger.error(f'An error occurred: {e}')
-            self.logger.info('Exiting...')
-            sys.exit(1)
+            return []
