@@ -125,12 +125,13 @@ def get_database(
 
         from pydatacuration.db.duck_db import DuckDBBackend
 
-        logger.debug(f'Creating DuckDB backend: schema={schema_name}, file={db_file}')
+        logger.info(f'Using DuckDB backend with file: {db_file}')
+
         return DuckDBBackend(schema_name=schema_name, db_file=db_file)
 
     # PostgreSQL
     from pydatacuration.db.postgres import PostgreSQLBackend
 
     url = get_database_url()
-    logger.debug(f'Creating PostgreSQL backend: schema={schema_name}')
+    logger.info(f'Using PostgreSQL backend with URL: {url}')
     return PostgreSQLBackend(schema_name=schema_name, database_url=url)
