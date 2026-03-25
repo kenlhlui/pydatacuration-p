@@ -81,14 +81,10 @@ def gen_tree_diagram(target_dir: Path, save_dir: Path) -> None:
                     f.write(result)
 
                 logger.info(f'Folder tree diagram text file saved at: {str(ds_tree_file_path)}')
-        else:
-            logger.info('The target directory does not exist. Exiting...')
-            sys.exit(1)
 
     except Exception as e:
         logger.info(f'Error: {e}')
         logger.info('An error occurred while generating the folder tree diagram. Exiting...')
-        sys.exit(1)
 
 
 def parse_file_list_metadata(file_list_metadata: list) -> list:
