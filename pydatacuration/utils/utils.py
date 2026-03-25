@@ -2,7 +2,6 @@
 
 import os
 import re
-import sys
 from pathlib import Path
 from pathlib import PurePosixPath
 from urllib.parse import urlencode
@@ -39,7 +38,7 @@ def check_readme_file_existence(file: str) -> tuple:
     return file, False
 
 
-def compare_files_and_metadata(dl_files_checksums: list, metadata_file_checksums: list, work_dir: Path) -> None | bool:
+def compare_files_and_metadata(dl_files_checksums: list, metadata_file_checksums: list, work_dir: Path) -> bool:
     """Compare the downloaded files checksums and the metadata JSON file checksums.
 
     Args:
@@ -48,7 +47,7 @@ def compare_files_and_metadata(dl_files_checksums: list, metadata_file_checksums
         work_dir (Path): The working directory.
 
     Returns:
-        bool: True if the downloaded files and the metadata JSON file checksums are the same, False otherwise.
+        bool: True if the downloaded files and the metadata JSON file checksums are different, False otherwise.
     """
     diff = deepdiff.DeepDiff(dl_files_checksums, metadata_file_checksums, ignore_order=True)
     if diff:
@@ -57,11 +56,10 @@ def compare_files_and_metadata(dl_files_checksums: list, metadata_file_checksums
         with diff_log_path.open('w', encoding='utf-8') as f:
             f.write(str(diff))
         logger.warning(f'See the {str(diff_log_path)} file for the differences.')
-        sys.exit(1)
+        return True
 
-    else:
-        logger.info('The downloaded files and the file list metadata are the same.')
-        return False
+    logger.info('The downloaded files and the file list metadata are the same.')
+    return False
 
 
 def gen_tree_diagram(target_dir: Path, save_dir: Path) -> None:
