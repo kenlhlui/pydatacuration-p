@@ -648,6 +648,7 @@ async def checklist_page(ticket_number: str) -> None:
             sanitize=False,
         )
         # Header, with dynamic checklist type
+        # FIXME: change to use the YAML model
         checklist_name = f'{checklist_type.title()}-Level ' if checklist_type else ''
         ui.label(f'{checklist_name}Curation Checklist').classes('pdc-header')
 
