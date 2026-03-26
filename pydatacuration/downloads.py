@@ -58,9 +58,7 @@ class Downloads:
 
         Args:
             setup_form (SetupForm): An instance of the setup form containing base_url and api_token
-            pid (str): Persistent identifier of the dataset
             main_dir (Path): The directory to save the downloaded files
-            ticket_number (str): The ticket number for the dataset, used for directory organization
         """
         return cls(
             base_url=str(setup_form.base_url) if setup_form.base_url else '',

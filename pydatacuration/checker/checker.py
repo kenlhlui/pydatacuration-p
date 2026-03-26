@@ -44,7 +44,6 @@ class Checker:
             dv_tree (dict): The Dataverse tree metadata.
             workdir (Path): The working directory.
             db_instance (DatabaseBackend): A database backend instance for database operations.
-            collection_alias (str | None): The collection alias for the depositor name to be searched.
             setup_form_instance (SetupForm | None): An instance of the setup form.
         """
         self.base_url = str(setup_form_instance.base_url) if setup_form_instance.base_url else ''
@@ -65,7 +64,7 @@ class Checker:
         self.files_opener = FilesOpener
         self.metadata_checker = MetadataChecker(self.workdir.joinpath('dataset', 'metadata', 'ds_metadata.json'))
         self.spell_checker = SpellCheckerCustomized()
-        self.httpx_client = HTTPXClient(str(self.base_url), self.api_token)
+        self.httpx_client = HTTPXClient(self.base_url, self.api_token)
         self.file_list_metadata = self._gen_file_list_metadata()
         self.common_file_format_tuple = self._read_common_file_format()
 
