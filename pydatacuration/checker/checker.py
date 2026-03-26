@@ -7,6 +7,7 @@ import yaml
 from loguru import logger
 from sqlmodel import SQLModel
 
+from pydatacuration.backend.models.setup_form import SetupForm
 from pydatacuration.checker.file_name_checker import FileNameFormatChecker
 from pydatacuration.checker.files_open_checker import FilesOpener
 from pydatacuration.checker.metadata_checker import MetadataChecker
@@ -30,52 +31,41 @@ class Checker:
 
     def __init__(
         self,
-        base_url: str,
-        api_token: str,
         ds_metadata: dict,
         dv_tree: dict,
         workdir: Path,
-        check_zip: bool,
         db_instance: DatabaseBackend,
-        collection_alias: str | None = None,
-        curator_name: str | None = None,
-        curator_email: str | None = None,
-        checklist_type: str = 'default',
+        setup_form_instance: SetupForm,
     ) -> None:
         """Initialize the Checker class.
 
         Args:
-            base_url (str): The base URL of the API.
-            api_token (str): The API token"
             ds_metadata (dict): The dataset metadata.
             dv_tree (dict): The Dataverse tree metadata.
             workdir (Path): The working directory.
-            check_zip (bool): Whether to check zip files.
             db_instance (DatabaseBackend): A database backend instance for database operations.
             collection_alias (str | None): The collection alias for the depositor name to be searched.
-            curator_name (str | None): The name of the data curator.
-            curator_email (str | None): The email of the data curator.
-            checklist_type (str): The type of checklist to use.
+            setup_form_instance (SetupForm | None): An instance of the setup form.
         """
-        self.base_url = base_url
-        self.api_token = api_token
+        self.base_url = str(setup_form_instance.base_url) if setup_form_instance.base_url else ''
+        self.api_token = setup_form_instance.api_token or ''
         self.ds_metadata = ds_metadata
         self.dv_tree = dv_tree
         self.workdir = workdir
-        self.check_zip = check_zip
-        self.collection_alias = collection_alias
+        self.check_zip = setup_form_instance.check_zip
+        self.collection_alias = setup_form_instance.collection_alias
         self.db_instance = db_instance
         self.sqlmodels = self.db_instance.models
-        self.curator_name = curator_name
-        self.curator_email = curator_email
-        self.checklist_type = checklist_type
+        self.curator_name = setup_form_instance.curator_name
+        self.curator_email = setup_form_instance.curator_email
+        self.checklist_type = setup_form_instance.checklist
 
         self.logger = logger
         self.checksums = Checksum()
         self.files_opener = FilesOpener
         self.metadata_checker = MetadataChecker(self.workdir.joinpath('dataset', 'metadata', 'ds_metadata.json'))
         self.spell_checker = SpellCheckerCustomized()
-        self.httpx_client = HTTPXClient(base_url, api_token)
+        self.httpx_client = HTTPXClient(str(self.base_url), self.api_token)
         self.file_list_metadata = self._gen_file_list_metadata()
         self.common_file_format_tuple = self._read_common_file_format()
 
