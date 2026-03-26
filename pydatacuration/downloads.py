@@ -136,6 +136,7 @@ class Downloads:
             if response.status_code == self.success_code and response.json():
                 return response.json()
             self.logger.error(f'Error: {response.status_code} - {response.text}')
+            return {}
         except httpx.HTTPStatusError as e:
             self.logger.error(f'HTTP error occurred: {e}')
             return {}
@@ -157,7 +158,7 @@ class Downloads:
             response.raise_for_status()
             if response.status_code == self.success_code and response.json():
                 return response.json()
-
+            return {}
         except httpx.HTTPStatusError as e:
             self.logger.info(f'HTTP error occurred: {e}')
             return {}
