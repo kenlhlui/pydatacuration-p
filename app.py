@@ -4,6 +4,7 @@ This version uses the nicegui_styles module for exact CSS matching.
 """
 
 # ruff: noqa: PLR1702
+import asyncio
 import os
 from pathlib import Path
 from urllib.parse import quote
@@ -250,7 +251,8 @@ async def new_dataset_page() -> None:
             start_button = ui.button(
                 'Start Curation Process',
                 on_click=lambda: handle_setup_submit(
-                    form_data, error_msg, success_msg, loading_spinner, start_button, reset_button, back_button
+                    form_data, error_msg, success_msg, loading_spinner,
+                    loading_label, start_button, reset_button, back_button,
                 ),
             ).classes('pdc-btn pdc-btn-primary')
 
@@ -265,7 +267,7 @@ async def new_dataset_page() -> None:
         # Loading indicator
         with ui.element('div').classes('pdc-loading hidden') as loading_spinner:
             ui.element('div').classes('pdc-loading-spinner')
-            ui.label('Running curation process...')
+            loading_label = ui.label('Running curation process...')
 
 
 async def handle_setup_submit(  # noqa: PLR0913, PLR0917
@@ -273,6 +275,7 @@ async def handle_setup_submit(  # noqa: PLR0913, PLR0917
     error_msg: ui.label,
     success_msg: ui.label,
     loading_spinner: ui.element,
+    loading_label: ui.label,
     start_button: ui.button,
     reset_button: ui.button,
     back_button: ui.button,
@@ -291,31 +294,48 @@ async def handle_setup_submit(  # noqa: PLR0913, PLR0917
     error_msg.classes(add='hidden')
     success_msg.classes(add='hidden')
 
-    try:
-        await run_curation(SetupForm(**form_data))
+    # Run curation as a background task so the WebSocket connection stays alive
+    # during long downloads. Polling via ui.timer keeps the connection active.
+    task = asyncio.create_task(run_curation(SetupForm(**form_data)))
 
-        # Show success
-        success_msg.set_text('Curation process completed successfully!')
-        success_msg.classes(remove='hidden', add='pdc-success')
-
-        ui.navigate.to(f'/checklist?ticket_number={quote(form_data["ticket_number"])}')
-    except DirectoryExistsError as exc:
-        ui.notify(str(exc), type='warning')
-    except DatasetUnauthorizedError:
-        ui.notify('Unauthorized dataset access. Check API token/permissions.', type='negative')
-    except DatasetNotFoundError:
-        ui.notify('Dataset not found. Verify PID and base URL.', type='negative')
-    except DatasetAccessError as exc:
-        ui.notify(str(exc), type='negative')
-    except Exception as e:
-        error_msg.set_text(f'Error: {str(e)}')
-        error_msg.classes(remove='hidden', add='pdc-error')
-    finally:
-        # Re-enable all buttons and hide loading
+    def restore_buttons() -> None:
         start_button.set_enabled(True)
         reset_button.set_enabled(True)
         back_button.set_enabled(True)
         loading_spinner.classes(add='hidden')
+
+    # Use a list so check_task can reference the timer before it's assigned
+    poll_timer: list[ui.timer] = []
+    elapsed = [0]
+
+    def check_task() -> None:
+        if not task.done():
+            # Update label each tick — this sends a WebSocket message to keep the connection alive
+            elapsed[0] += 1
+            loading_label.set_text(f'Running curation process... ({elapsed[0]}s)')
+            return
+        poll_timer[0].cancel()
+        exc = task.exception()
+        if exc is None:
+            ui.navigate.to(f'/checklist?ticket_number={quote(form_data["ticket_number"])}')
+        elif isinstance(exc, DirectoryExistsError):
+            ui.notify(str(exc), type='warning')
+            restore_buttons()
+        elif isinstance(exc, DatasetUnauthorizedError):
+            ui.notify('Unauthorized dataset access. Check API token/permissions.', type='negative')
+            restore_buttons()
+        elif isinstance(exc, DatasetNotFoundError):
+            ui.notify('Dataset not found. Verify PID and base URL.', type='negative')
+            restore_buttons()
+        elif isinstance(exc, DatasetAccessError):
+            ui.notify(str(exc), type='negative')
+            restore_buttons()
+        else:
+            error_msg.set_text(f'Error: {exc}')
+            error_msg.classes(remove='hidden', add='pdc-error')
+            restore_buttons()
+
+    poll_timer.append(ui.timer(1.0, check_task))
 
 
 def reset_form(form_data: dict, default_form_data: dict, reset_button: ui.button) -> None:
@@ -1000,4 +1020,5 @@ if __name__ in {'__main__', '__mp_main__'}:
         favicon=app_settings.app_favicon,
         port=app_settings.app_port,
         storage_secret=str(os.urandom(16)),
+        reconnect_timeout=30,
     )
