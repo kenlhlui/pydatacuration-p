@@ -25,6 +25,7 @@ class Downloads:
             api_token (str): API token of the Dataverse repository
             pid (str): Persistent identifier of the dataset
             main_dir (Path): The directory to save the downloaded files
+            ticket_number (str): The ticket number for the dataset, used for directory organization
         """
         self.base_url = base_url
         self.pid = pid
