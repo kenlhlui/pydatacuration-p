@@ -41,9 +41,9 @@ from pydatacuration.frontend.styles import create_checklist_select
 from pydatacuration.frontend.styles import create_info_grid
 from pydatacuration.frontend.styles import create_priority_badge
 from pydatacuration.frontend.styles import create_status_select
+from pydatacuration.frontend.utils import mount_static_files
 
 # Import the typer app for CLI command execution
-from pydatacuration.utils.custom_logging import logger
 from pydatacuration.utils.custom_logging import setup_logging
 
 # Import pydatacuration modules
@@ -998,28 +998,15 @@ def render_check_results(results: dict) -> None:
 
 
 # ============================================================================
-# Static Files Setup - Must be BEFORE ui.run()
-# ============================================================================
-
-
-# ============================================================================
 # Run the application
 # ============================================================================
 
-if __name__ in {'__main__', '__mp_main__'}:
-    # Mount static files from your existing frontend directory
-    # Determine the correct path to static files
-    static_path = Path('pydatacuration/frontend')
-    if not static_path.exists():
-        static_path = Path(__file__).parent / 'pydatacuration' / 'frontend'
 
-    if static_path.exists():
-        # Add static files route
-        app.add_static_files('/static', str(static_path))
-        logger.info('✓ Static files mounted:', static_path.absolute())
-    else:
-        logger.warning('⚠ WARNING: Static directory not found!')
-        logger.warning('Looked for:', static_path.absolute())
+if __name__ in {'__main__', '__mp_main__'}:
+    # Must mount before ui.run() and before any routes that use static files
+    mount_static_files(
+        app, Path('pydatacuration/frontend')
+    )  # FIXME: this should be more robust to different execution contexts
 
     ui.run(
         title=app_settings.app_title,

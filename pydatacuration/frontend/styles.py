@@ -43,7 +43,7 @@ body {
    Container & Layout
    ======================================================================== */
 .pdc-container {
-    max-width: 85%;
+    max-width: 90%;
     width: 100%;
     min-width: 320px;
     margin: 0 auto;
@@ -245,8 +245,30 @@ tr.row-status-NA {
     width: 100%;
     border-collapse: collapse;
     margin-bottom: 30px;
-    table-layout: auto;
+    table-layout: fixed;
 }
+
+/* Column widths: ID, Action Item, Info Location, Status, Comments, Priority, Time */
+.pdc-checklist-table th:nth-child(1),
+.pdc-checklist-table td:nth-child(1) { width: 5%; }
+
+.pdc-checklist-table th:nth-child(2),
+.pdc-checklist-table td:nth-child(2) { width: 22%; }
+
+.pdc-checklist-table th:nth-child(3),
+.pdc-checklist-table td:nth-child(3) { width: 25%; }
+
+.pdc-checklist-table th:nth-child(4),
+.pdc-checklist-table td:nth-child(4) { width: 10%; }
+
+.pdc-checklist-table th:nth-child(5),
+.pdc-checklist-table td:nth-child(5) { width: 20%; }
+
+.pdc-checklist-table th:nth-child(6),
+.pdc-checklist-table td:nth-child(6) { width: 8%; }
+
+.pdc-checklist-table th:nth-child(7),
+.pdc-checklist-table td:nth-child(7) { width: 10%; }
 
 /* Prevent table from forcing horizontal scroll */
 .pdc-checklist-table td,
@@ -410,7 +432,6 @@ tr.row-status-NA {
 .pdc-comments-input {
     width: 100%;
     min-height: 80px;
-    min-width: 200px;
     max-width: 100%;
     padding: 10px;
     border: 1px solid #ddd;
@@ -758,6 +779,12 @@ select.checklist-medium {
 /* ========================================================================
    Checklist Table Input Overrides - Compact Heights
    ======================================================================== */
+/* Status select in table - reset min-width so it respects the fixed column */
+.pdc-checklist-table .status-select {
+    min-width: 0 !important;
+    width: 100% !important;
+}
+
 /* Status select in table - force compact height */
 .pdc-checklist-table .status-select.q-select .q-field__control {
     min-height: 28px !important;
