@@ -102,13 +102,8 @@ async def fetch_curation(body: SetupForm) -> None:
 
     await asyncio.to_thread(_ensure_dataset_read_access, body)
 
-    await Downloads(
-        str(body.base_url),
-        body.api_token or '',
-        body.pid,
-        dirs.project_dir,
-        body.ticket_number,
-    ).downloader()
+    downloader = Downloads.from_setup_form(body, dirs.project_dir)
+    await downloader.downloader()
 
     logger.info(f'Downloaded dataset for PID {body.pid} to {dirs.project_dir}')
 
