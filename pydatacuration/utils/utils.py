@@ -83,7 +83,7 @@ def gen_tree_diagram(target_dir: Path, save_dir: Path) -> None:
             logger.warning(f'Target directory does not exist: {str(target_dir)} - skipping tree diagram generation.')
     except Exception as e:
         logger.info(f'Error: {e}')
-        logger.info('An error occurred while generating the folder tree diagram. Exiting...')
+        logger.info('An error occurred while generating the folder tree diagram.')
 
 
 def parse_file_list_metadata(file_list_metadata: list) -> list:
