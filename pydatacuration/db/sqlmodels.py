@@ -7,7 +7,6 @@ from datetime import date
 from datetime import datetime
 from datetime import timedelta
 from typing import Any
-from typing import Literal
 
 from pydantic import field_serializer
 from sqlalchemy import Column
@@ -22,30 +21,28 @@ from sqlmodel import SQLModel as BaseSQLModel
 from sqlmodel import String
 from sqlmodel import text
 
-
-# Backend type literal used throughout the db package
-BackendType = Literal['duckdb', 'postgresql']
+from pydatacuration.db.settings import DBType
 
 
-def _json_column_type(backend: BackendType):
+def _json_column_type(backend: DBType):
     """Return the appropriate JSON column type for the backend.
 
     PostgreSQL benefits from JSONB (indexed, faster queries).
     DuckDB uses plain JSON.
     """
-    if backend == 'postgresql':
+    if backend.db_type == 'postgresql':
         from sqlalchemy.dialects.postgresql import JSONB
 
         return JSONB
     return JSON
 
 
-def _datetime_column_type(backend: BackendType):
+def _datetime_column_type(backend: DBType):
     """Return the appropriate datetime column type for the backend.
 
     PostgreSQL uses TIMESTAMP; DuckDB uses DATETIME.
     """
-    if backend == 'postgresql':
+    if backend.db_type == 'postgresql':
         from sqlalchemy import TIMESTAMP
 
         return TIMESTAMP
@@ -58,18 +55,18 @@ class DBModels:
 
     Args:
         schema_name: The schema name for table placement.
-        backend: The database backend type ('duckdb' or 'postgresql').
+        backend: The database type ('duckdb' or 'postgresql').
     """
 
-    def __init__(self, schema_name: str, backend: BackendType = 'duckdb') -> None:
+    def __init__(self, schema_name: str, db_type: DBType | None = None) -> None:
         """Initialize DBModels with the specified schema name and backend.
 
         Args:
             schema_name (str): The name of the schema to use for the tables.
-            backend (BackendType): The database backend ('duckdb' or 'postgresql').
+            db_type (DBType): The database type ('duckdb' or 'postgresql').
         """
         self.schema_name = schema_name
-        self.backend = backend
+        self.db_type = db_type if db_type is not None else DBType()
 
     def project_metadata_record(self) -> type[SQLModel]:
         """Create a ProjectMetadata table class with the specified schema.
@@ -77,7 +74,7 @@ class DBModels:
         Returns:
             type[SQLModel]: The ProjectMetadata class with the specified schema.
         """
-        dt_type = _datetime_column_type(self.backend)
+        dt_type = _datetime_column_type(self.db_type)
 
         # Only clear if table already exists in metadata
         table_key = f'{self.schema_name}.project_metadata'
@@ -149,8 +146,8 @@ class DBModels:
         Returns:
             type[SQLModel]: The Checklist class with the specified schema.
         """
-        json_type = _json_column_type(self.backend)
-        dt_type = _datetime_column_type(self.backend)
+        json_type = _json_column_type(self.db_type)
+        dt_type = _datetime_column_type(self.db_type)
 
         # Clear metadata to avoid "already defined" errors in long-running processes
         table_key = f'{self.schema_name}.checklist'
@@ -213,8 +210,8 @@ class DBModels:
         Returns:
             type[SQLModel]: The CheckResult class with the specified schema.
         """
-        json_type = _json_column_type(self.backend)
-        dt_type = _datetime_column_type(self.backend)
+        json_type = _json_column_type(self.db_type)
+        dt_type = _datetime_column_type(self.db_type)
 
         # Clear metadata to avoid "already defined" errors in long-running processes
         table_key = f'{self.schema_name}.check_results'

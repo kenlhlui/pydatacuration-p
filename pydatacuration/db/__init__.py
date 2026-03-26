@@ -10,12 +10,12 @@ For PostgreSQL the connection URL is resolved in this order:
 
 Example ``.env`` (Docker Compose — use the service name as the host)::
 
-    DB_BACKEND=postgresql
+    DB_TYPE=postgresql
     DATABASE_URL=postgresql+psycopg://curation:curation@postgres:5432/curation
 
 Or with individual vars::
 
-    DB_BACKEND=postgresql
+    DB_TYPE=postgresql
     POSTGRES_USER=curation
     POSTGRES_PASSWORD=curation
     POSTGRES_HOST=postgres
@@ -25,41 +25,34 @@ Or with individual vars::
 For standalone (non-Docker) usage, set ``POSTGRES_HOST=localhost`` instead.
 """
 
-import os
 from pathlib import Path
-from typing import Literal
 
 from pydatacuration.db.base import DatabaseBackend
-from pydatacuration.db.sqlmodels import BackendType
+from pydatacuration.db.settings import DBSettings
+from pydatacuration.db.settings import DBType
 from pydatacuration.db.sqlmodels import DBModels
 from pydatacuration.utils.custom_logging import logger
 
 
 # Re-export key symbols for convenient imports
 __all__ = [
-    'BackendType',
     'DBModels',
+    'DBSettings',
+    'DBType',
     'DatabaseBackend',
-    'get_backend_type',
     'get_database',
     'get_database_url',
+    'get_db_type',
 ]
 
 
-def get_backend_type() -> BackendType:
+def get_db_type() -> str:
     """Read ``DB_BACKEND`` from the environment.
 
     Returns:
-        BackendType: ``'duckdb'`` or ``'postgresql'``.
-
-    Raises:
-        ValueError: If the env var contains an unsupported value.
+        str: ``'duckdb'`` or ``'postgresql'``.
     """
-    raw = os.getenv('DB_BACKEND', 'duckdb').strip().lower()
-    if raw in {'duckdb', 'postgresql', 'postgres'}:
-        return 'postgresql' if raw in {'postgresql', 'postgres'} else 'duckdb'
-    msg = f'Unsupported DB_BACKEND value: {raw!r}. Expected "duckdb" or "postgresql".'
-    raise ValueError(msg)
+    return DBSettings().db_type
 
 
 def get_database_url() -> str:
@@ -75,33 +68,13 @@ def get_database_url() -> str:
     Raises:
         ValueError: If neither ``DATABASE_URL`` nor the required ``POSTGRES_*`` vars are set.
     """
-    database_url = os.getenv('DATABASE_URL')
-    if database_url:
-        # Ensure the scheme uses psycopg driver if a bare postgresql:// is given
-        if database_url.startswith('postgresql://'):
-            database_url = database_url.replace('postgresql://', 'postgresql+psycopg://', 1)
-        return database_url
-
-    user = os.getenv('POSTGRES_USER')
-    password = os.getenv('POSTGRES_PASSWORD')
-    host = os.getenv('POSTGRES_HOST', 'localhost')
-    port = os.getenv('POSTGRES_PORT', '5432')
-    db_name = os.getenv('POSTGRES_DB')
-
-    if not all([user, password, db_name]):
-        msg = (
-            'PostgreSQL backend requires either DATABASE_URL or '
-            'POSTGRES_USER + POSTGRES_PASSWORD + POSTGRES_DB environment variables.'
-        )
-        raise ValueError(msg)
-
-    return f'postgresql+psycopg://{user}:{password}@{host}:{port}/{db_name}'
+    return DBSettings().build_postgres_url()
 
 
 def get_database(
     schema_name: str,
     db_file: Path | None = None,
-    backend: BackendType | None = None,
+    backend: DBType | None = None,
 ) -> DatabaseBackend:
     """Factory that returns the appropriate database backend instance.
 
@@ -116,9 +89,9 @@ def get_database(
     Raises:
         ValueError: If the backend is ``'duckdb'`` and ``db_file`` is not provided.
     """
-    resolved_backend = backend or get_backend_type()
+    # resolved_backend = backend.db_type if backend is not None else DBSettings().db_type
 
-    if resolved_backend == 'duckdb':
+    if DBSettings().db_type == 'duckdb':
         if db_file is None:
             msg = "DuckDB backend requires a 'db_file' path."
             raise ValueError(msg)
@@ -136,6 +109,5 @@ def get_database(
         PostgreSQLBackend,  # Note: Import here to avoid unnecessary dependencies when using DuckDB
     )
 
-    url = get_database_url()
-    logger.info(f'Using PostgreSQL backend with URL: {url}')
-    return PostgreSQLBackend(schema_name=schema_name, database_url=url)
+    logger.info(f'Using PostgreSQL backend with host: {DBSettings().postgres_host}')
+    return PostgreSQLBackend(schema_name=schema_name, database_url=DBSettings().build_postgres_url())

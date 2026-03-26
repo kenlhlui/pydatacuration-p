@@ -9,6 +9,7 @@ from sqlmodel import create_engine
 from sqlmodel import text
 
 from pydatacuration.db.base import DatabaseBackend
+from pydatacuration.db.settings import DBType
 from pydatacuration.db.sqlmodels import DBModels
 from pydatacuration.utils.custom_logging import logger
 
@@ -38,7 +39,7 @@ class DuckDBBackend(DatabaseBackend):
         """
         super().__init__(schema_name)
         self.db_file = db_file
-        self._db_models = DBModels(schema_name, backend='duckdb')
+        self._db_models = DBModels(schema_name, db_type=DBType(db_type='duckdb'))
 
     # ------------------------------------------------------------------
     # Properties
