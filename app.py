@@ -251,8 +251,14 @@ async def new_dataset_page() -> None:
             start_button = ui.button(
                 'Start Curation Process',
                 on_click=lambda: handle_setup_submit(
-                    form_data, error_msg, success_msg, loading_spinner,
-                    loading_label, start_button, reset_button, back_button,
+                    form_data,
+                    error_msg,
+                    success_msg,
+                    loading_spinner,
+                    loading_label,
+                    start_button,
+                    reset_button,
+                    back_button,
                 ),
             ).classes('pdc-btn pdc-btn-primary')
 
@@ -306,12 +312,12 @@ async def handle_setup_submit(  # noqa: PLR0913, PLR0917
 
     # Use a list so check_task can reference the timer before it's assigned
     poll_timer: list[ui.timer] = []
-    start_time = [asyncio.get_event_loop().time()]
+    start_time = [asyncio.get_running_loop().time()]
 
     def check_task() -> None:
         if not task.done():
             # Update label each tick — this sends a WebSocket message to keep the connection alive
-            elapsed = int(asyncio.get_event_loop().time() - start_time[0])
+            elapsed = int(asyncio.get_running_loop().time() - start_time[0])
             loading_label.set_text(f'Running curation process... ({elapsed}s)')
             return
         poll_timer[0].cancel()
