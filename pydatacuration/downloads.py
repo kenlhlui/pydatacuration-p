@@ -8,6 +8,7 @@ import httpx
 import jmespath
 from loguru import logger
 
+from pydatacuration.backend.models.setup_form import SetupForm
 from pydatacuration.utils.directory_manager import DirectoryManager
 from pydatacuration.utils.utils import orjson_export
 
@@ -17,7 +18,14 @@ from .httpx_client import HTTPXClient
 class Downloads:
     """Class to download a dataset from a Dataverse repository."""
 
-    def __init__(self, base_url: str, api_token: str, pid: str, main_dir: Path, ticket_number: str) -> None:
+    def __init__(
+        self,
+        base_url: str,
+        api_token: str,
+        pid: str,
+        main_dir: Path,
+        ticket_number: str,
+    ) -> None:
         """Initialize the class.
 
         Args:
@@ -28,16 +36,37 @@ class Downloads:
             ticket_number (str): The ticket number for the dataset, used for directory organization
         """
         self.base_url = base_url
+        self.api_token = api_token
         self.pid = pid
         self.download_dir = main_dir
         self.ticket_number = ticket_number
 
         self.success_code = 200
 
-        self.httpx_client = HTTPXClient(base_url, api_token)
+        self.httpx_client = HTTPXClient(self.base_url, self.api_token)
         self.semaphore = asyncio.Semaphore(5)
-        self.directory_manager = DirectoryManager(ticket_number, main_dir)
+        self.directory_manager = DirectoryManager(self.ticket_number, self.download_dir)
         self.logger = logger
+
+    @classmethod
+    def from_setup_form(
+        cls,
+        setup_form: SetupForm,
+        main_dir: Path,
+    ) -> 'Downloads':
+        """Create a Downloads instance from a SetupForm instance.
+
+        Args:
+            setup_form (SetupForm): An instance of the setup form containing base_url and api_token
+            main_dir (Path): The directory to save the downloaded files
+        """
+        return cls(
+            base_url=str(setup_form.base_url) if setup_form.base_url else '',
+            api_token=setup_form.api_token or '',
+            pid=setup_form.pid,
+            main_dir=main_dir,
+            ticket_number=setup_form.ticket_number,
+        )
 
     @staticmethod
     def _get_file_list(metadata: dict) -> list:

@@ -102,13 +102,8 @@ async def fetch_curation(body: SetupForm) -> None:
 
     await asyncio.to_thread(_ensure_dataset_read_access, body)
 
-    await Downloads(
-        str(body.base_url),
-        body.api_token or '',
-        body.pid,
-        dirs.project_dir,
-        body.ticket_number,
-    ).downloader()
+    downloader = Downloads.from_setup_form(body, dirs.project_dir)
+    await downloader.downloader()
 
     logger.info(f'Downloaded dataset for PID {body.pid} to {dirs.project_dir}')
 
@@ -129,17 +124,11 @@ def check_curation(body: SetupForm) -> None:
         dv_tree = orjson.loads(f.read())
 
     checker = Checker(
-        base_url=str(body.base_url),
-        api_token=body.api_token or '',
         ds_metadata=ds_metadata,
         dv_tree=dv_tree,
         workdir=dirs.project_dir,
-        check_zip=body.check_zip,
         db_instance=db,
-        collection_alias=body.collection_alias,
-        curator_name=body.curator_name,
-        curator_email=body.curator_email,
-        checklist_type=body.checklist,
+        setup_form_instance=body,
     )
     checker.run_checks()
     logger.info('Checks completed')

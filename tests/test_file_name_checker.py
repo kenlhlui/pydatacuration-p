@@ -1,7 +1,6 @@
 """Test the file_name_checker.py module."""
 
 import pytest
-from loguru import logger
 
 from pydatacuration.checker.file_name_checker import FileNameFormatChecker
 
