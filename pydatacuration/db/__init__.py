@@ -1,6 +1,6 @@
 """Database package — multi-backend support for DuckDB and PostgreSQL.
 
-The ``DB_BACKEND`` environment variable selects the backend:
+The ``DB_TYPE`` environment variable selects the backend:
     * ``duckdb``      (default) — file-based, zero-config
     * ``postgresql``  — server-based, needs a connection URL
 
@@ -47,7 +47,7 @@ __all__ = [
 
 
 def get_db_type() -> str:
-    """Read ``DB_BACKEND`` from the environment.
+    """Read ``DB_TYPE`` from the environment.
 
     Returns:
         str: ``'duckdb'`` or ``'postgresql'``.
@@ -81,7 +81,7 @@ def get_database(
     Args:
         schema_name: The schema (ticket) name.
         db_file: Path to the DuckDB file (only used when backend is ``'duckdb'``).
-        backend: Explicit backend override. If ``None``, reads ``DB_BACKEND`` env var.
+        backend: Explicit backend override. If ``None``, reads ``DB_TYPE`` env var.
 
     Returns:
         DatabaseBackend: A concrete backend (``DuckDBBackend`` or ``PostgreSQLBackend``).
@@ -89,9 +89,11 @@ def get_database(
     Raises:
         ValueError: If the backend is ``'duckdb'`` and ``db_file`` is not provided.
     """
-    # resolved_backend = backend.db_type if backend is not None else DBSettings().db_type
+    db_settings = DBSettings()
 
-    if DBSettings().db_type == 'duckdb':
+    resolved_backend = backend.db_type if backend is not None else db_settings.db_type
+
+    if resolved_backend == 'duckdb':
         if db_file is None:
             msg = "DuckDB backend requires a 'db_file' path."
             raise ValueError(msg)
@@ -109,5 +111,5 @@ def get_database(
         PostgreSQLBackend,  # Note: Import here to avoid unnecessary dependencies when using DuckDB
     )
 
-    logger.info(f'Using PostgreSQL backend with host: {DBSettings().postgres_host}')
-    return PostgreSQLBackend(schema_name=schema_name, database_url=DBSettings().build_postgres_url())
+    logger.info(f'Using PostgreSQL backend with host: {db_settings.postgres_host}')
+    return PostgreSQLBackend(schema_name=schema_name, database_url=db_settings.build_postgres_url())
