@@ -175,7 +175,7 @@ class Downloads:
             orjson_export(file_path, dictionary)
 
         except Exception as e:
-            self.logger.info(f'An error occurred: {e}')
+            self.logger.error(f'An error occurred: {e}')
 
     async def downloader(self) -> None:
         """Download the dataset as a zip file asynchronously."""

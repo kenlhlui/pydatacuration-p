@@ -87,7 +87,7 @@ class FileNameFormatChecker:
                 with Path(preferred_file_formats_config).open(encoding='utf-8') as f:
                     return [line.strip() for line in f.readlines()]
             except FileNotFoundError as e:
-                logger.info(f'Error: {e}')
+                logger.error(f'Error: {e}')
                 return []
 
         if Path(file).suffix in load_preferred_file_formats_list(preferred_file_formats_config):
