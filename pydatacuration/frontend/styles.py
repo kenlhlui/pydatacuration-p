@@ -265,7 +265,7 @@ tr.row-status-NA {
 .pdc-checklist-table td:nth-child(5) { width: 20%; }
 
 .pdc-checklist-table th:nth-child(6),
-.pdc-checklist-table td:nth-child(6) { width: 8%; }
+.pdc-checklist-table td:nth-child(6) { width: 8%; overflow: hidden; }
 
 .pdc-checklist-table th:nth-child(7),
 .pdc-checklist-table td:nth-child(7) { width: 10%; }
@@ -273,8 +273,7 @@ tr.row-status-NA {
 /* Prevent table from forcing horizontal scroll */
 .pdc-checklist-table td,
 .pdc-checklist-table th {
-    word-wrap: break-word;
-    word-break: break-word;
+    overflow-wrap: break-word;
 }
 
 .pdc-checklist-table th,
@@ -464,9 +463,14 @@ tr.row-status-NA {
     display: inline-block;
     padding: 4px 8px;
     border-radius: 12px;
-    font-size: 11px;
+    font-size: clamp(8px, 1.1vw, 11px);
     font-weight: bold;
     color: white;
+    white-space: nowrap;
+    max-width: 100%;
+    overflow: hidden;
+    text-overflow: ellipsis;
+    box-sizing: border-box;
 }
 
 .pdc-priority-required {
@@ -482,9 +486,7 @@ tr.row-status-NA {
 }
 
 .pdc-priority-badge-container {
-    width: 100px;
-    min-width: 100px;
-    max-width: 100px;
+    overflow: hidden;
 }
 
 /* ========================================================================
