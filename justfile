@@ -30,6 +30,11 @@ docker-build-and-run *ARGS:
     for arg in {{ARGS}}; do
         [[ "$arg" == "-f" ]] && FORCE=1 || PROFILE="$arg"
     done
+    # Auto-detect postgres profile from .env if not explicitly set
+    if [ -z "$PROFILE" ] && [ -f .env ] && grep -qE '^DB_TYPE=postgresql' .env 2>/dev/null; then
+        PROFILE="postgres"
+        echo "Auto-detected PostgreSQL backend from .env — using profile: postgres"
+    fi
     if [ -d ./new_dir ] && [ "$FORCE" -eq 0 ]; then
         read -p "Remove ./new_dir? [y/N] " ans
         case "$ans" in [Yy]*) ;; *) echo "Aborted."; exit 1 ;; esac
@@ -41,7 +46,7 @@ docker-build-and-run *ARGS:
         case "$ans" in [Yy]*) ;; *) echo "Aborted."; exit 1 ;; esac
     fi
     _UID=$(id -u); _GID=$(id -g)
-    env UID=$_UID GID=$_GID COMPOSE_PROFILES="$PROFILE" docker compose down
+    env UID=$_UID GID=$_GID COMPOSE_PROFILES="$PROFILE" docker compose down --remove-orphans
     env UID=$_UID GID=$_GID COMPOSE_PROFILES="$PROFILE" docker compose build
     env UID=$_UID GID=$_GID COMPOSE_PROFILES="$PROFILE" docker compose up --force-recreate
 

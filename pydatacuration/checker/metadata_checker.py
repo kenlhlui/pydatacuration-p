@@ -1,6 +1,5 @@
 """MetadataChecker class for checking metadata fields in a JSON file."""
 
-import sys
 from pathlib import Path
 
 import jmespath
@@ -32,8 +31,7 @@ class MetadataChecker:
             return data
         except Exception as e:
             self.logger.error(f'Error reading JSON file: {e}')
-            self.logger.info('Exiting...')
-            sys.exit(1)
+            return {}
 
     def _read_metadata_cm_field(self, field: str, subfield=None):
         # TODO: fix the logic of subfield
@@ -48,7 +46,7 @@ class MetadataChecker:
             result = jmespath.search(query_string, self.metadata)
         return result
 
-    def check_metadata_cm_field(self, field: str) -> tuple[str, bool]:
+    def check_metadata_cm_field(self, field: str) -> tuple[str | None, bool]:
         r"""Check if a metadata field exists in the metadata JSON file.
 
         Args:
@@ -56,7 +54,7 @@ class MetadataChecker:
             Use '.' to specify subfields; e.g. "title", "author.authorName"
 
         Returns:
-            result (str): Value of the metadata field\n
+            result (str | None): Value of the metadata field or None if it doesn't exist
             exists (bool): True if the metadata field exists, False otherwise
         """
         # Check the input of field has . in it and split it into field and subfield
@@ -80,4 +78,4 @@ class MetadataChecker:
         query_string = 'data.latestVersion.metadataBlocks.citation.fields[?typeName==`author`].value[].{authorName:authorName.value, authorAffiliation: authorAffiliation.value, authorIdentifierScheme: authorIdentifierScheme.value, authorIdentifier:authorIdentifier.value}'
         result = jmespath.search(query_string, self.metadata)
 
-        return result
+        return result or []

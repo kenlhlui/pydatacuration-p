@@ -100,7 +100,7 @@ async def fetch_curation(body: SetupForm) -> None:
     """
     dirs = get_dirs(body.ticket_number, Path(body.main_dir))
 
-    _ensure_dataset_read_access(body)
+    await asyncio.to_thread(_ensure_dataset_read_access, body)
 
     await Downloads(
         str(body.base_url),

@@ -1,7 +1,6 @@
 """Downloads class to download a dataset's metadata and files from a Dataverse repository."""
 
 import asyncio
-import sys
 from pathlib import Path
 from urllib.parse import urljoin
 
@@ -26,6 +25,7 @@ class Downloads:
             api_token (str): API token of the Dataverse repository
             pid (str): Persistent identifier of the dataset
             main_dir (Path): The directory to save the downloaded files
+            ticket_number (str): The ticket number for the dataset, used for directory organization
         """
         self.base_url = base_url
         self.pid = pid
@@ -45,6 +45,8 @@ class Downloads:
 
         query_string = 'data.latestVersion.files[*].{file_id:dataFile.id, file_name:dataFile.filename, originalFileName:dataFile.originalFileName, directoryLabel: directoryLabel, md5: dataFile.md5}'  # noqa: E501
         temp_file_list = jmespath.search(query_string, metadata)
+        if not temp_file_list:
+            return []
 
         for item in temp_file_list:
             file_id = item.get('file_id')
@@ -135,13 +137,13 @@ class Downloads:
             if response.status_code == self.success_code and response.json():
                 return response.json()
             self.logger.error(f'Error: {response.status_code} - {response.text}')
-            sys.exit(1)
+            return {}
         except httpx.HTTPStatusError as e:
             self.logger.error(f'HTTP error occurred: {e}')
-            sys.exit(1)
+            return {}
         except Exception as e:
             self.logger.error(f'An error occurred: {e}')
-            sys.exit(1)
+            return {}
 
     def _get_ds_metadata(self) -> dict:
         """Get metadata of a dataset.
@@ -157,14 +159,13 @@ class Downloads:
             response.raise_for_status()
             if response.status_code == self.success_code and response.json():
                 return response.json()
-            sys.exit(1)
-
+            return {}
         except httpx.HTTPStatusError as e:
             self.logger.info(f'HTTP error occurred: {e}')
-            sys.exit(1)
+            return {}
         except Exception as e:
             self.logger.info(f'An error occurred: {e}')
-            sys.exit(1)
+            return {}
 
     def export_metadata(self, file_name: str, dictionary: dict) -> None:
         """Save the dataset metadata to a JSON file."""
@@ -174,20 +175,19 @@ class Downloads:
             orjson_export(file_path, dictionary)
 
         except Exception as e:
-            self.logger.info(f'An error occurred: {e}\nProgram exiting...')
-            sys.exit(1)
+            self.logger.error(f'An error occurred: {e}')
 
     async def downloader(self) -> None:
         """Download the dataset as a zip file asynchronously."""
-        # Get the dataset metadata
-        ds_metadata = self._get_ds_metadata()
+        # Get the dataset metadata (sync HTTP — offloaded to thread to avoid blocking event loop)
+        ds_metadata = await asyncio.to_thread(self._get_ds_metadata)
         self.export_metadata('ds_metadata.json', ds_metadata)
 
-        # Get the tree structure of the whole dataverse repository
-        dv_tree = self._get_dv_tree()
+        # Get the tree structure of the whole dataverse repository (sync HTTP — can be slow for large repos)
+        dv_tree = await asyncio.to_thread(self._get_dv_tree)
         self.export_metadata('dv_tree.json', dv_tree)
 
         # Download the data files using async method
-        file_list = self._get_file_list(ds_metadata)
-        self.make_dir_structure(ds_metadata)
+        file_list = await asyncio.to_thread(self._get_file_list, ds_metadata)
+        await asyncio.to_thread(self.make_dir_structure, ds_metadata)
         await self.save_files_async(file_list)

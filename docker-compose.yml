@@ -28,6 +28,8 @@ services:
       - POSTGRES_USER=${POSTGRES_USER:-curation}
       - POSTGRES_PASSWORD=${POSTGRES_PASSWORD:-curation}
       - POSTGRES_DB=${POSTGRES_DB:-curation}
+    env_file:
+      - ./.env  # Configure the path to your .env file if it's located elsewhere
     ports:
       - "5432:5432"
     restart: always

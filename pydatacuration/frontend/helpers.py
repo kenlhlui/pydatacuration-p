@@ -14,6 +14,7 @@ from sqlmodel import SQLModel
 from pydatacuration.db import DatabaseBackend
 from pydatacuration.db import DBModels
 from pydatacuration.db import get_database
+from pydatacuration.db import get_db_type
 from pydatacuration.exporter import Exporter
 from pydatacuration.utils.custom_logging import logger
 from pydatacuration.utils.custom_logging import setup_logging
@@ -275,9 +276,7 @@ class NiceGUIHelper:
             list[dict]: List of schemas with metadata
         """
         try:
-            from pydatacuration.db import get_backend_type
-
-            backend = get_backend_type()
+            backend = get_db_type()
 
             # For DuckDB, we need the file to exist
             db_file: Path | None = None
@@ -353,9 +352,9 @@ class NiceGUIHelper:
                 tuple[bool, str]: Success status and message
             """
             try:
-                from pydatacuration.db import get_backend_type
+                from pydatacuration.db import get_db_type
 
-                backend = get_backend_type()
+                backend = get_db_type()
 
                 db_file: Path | None = None
                 if backend == 'duckdb':
