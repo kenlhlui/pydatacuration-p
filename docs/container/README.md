@@ -45,18 +45,18 @@ No additional configuration is required. DuckDB stores data in local files insid
 `workdir` volume. This is the recommended option for simple setups.
 
 ```dotenv
-# DB_BACKEND defaults to duckdb — no entry needed, or set explicitly:
-DB_BACKEND=duckdb
+# DB_TYPE defaults to duckdb — no entry needed, or set explicitly:
+DB_TYPE=duckdb
 ```
 
 #### PostgreSQL
 
-To use PostgreSQL, set `DB_BACKEND=postgresql` and provide the connection details.
+To use PostgreSQL, set `DB_TYPE=postgresql` and provide the connection details.
 When running with **Docker Compose**, a PostgreSQL service is available via the
 `postgres` profile (see [Running with Docker Compose](#running-with-docker-compose)).
 
 ```dotenv
-DB_BACKEND=postgresql
+DB_TYPE=postgresql
 
 # Option A — single connection URL (takes priority over individual variables below)
 DATABASE_URL=postgresql+psycopg://curation:curation@postgres:5432/curation
