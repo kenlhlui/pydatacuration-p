@@ -17,7 +17,6 @@ class MetadataChecker:
         """
         self.metadata_json_path = metadata_json_path
         self.metadata = self._read_json()
-        self.logger = logger
 
     def _read_json(self) -> dict:
         """Read the JSON file and return the data.
@@ -30,7 +29,7 @@ class MetadataChecker:
                 data = orjson.loads(f.read())
             return data
         except Exception as e:
-            self.logger.error(f'Error reading JSON file: {e}')
+            logger.error(f'Error reading JSON file: {e}')
             return {}
 
     def _read_metadata_cm_field(self, field: str, subfield=None):

@@ -10,7 +10,6 @@ class FFmpegFileFormats:
 
     def __init__(self) -> None:
         """Initialize the FFmpegFileFormats class."""
-        self.logger = logger
 
     def get_ffmpeg_formats(self) -> list:
         """Get the FFmpeg file formats.
@@ -68,12 +67,12 @@ class FFmpegFileFormats:
             return ['.' + ext for ext in format_extensions]
 
         except FileNotFoundError:
-            self.logger.error('FFmpeg is not installed or not found in the system PATH.')
-            self.logger.warning(
+            logger.error('FFmpeg is not installed or not found in the system PATH.')
+            logger.warning(
                 'Please install FFmpeg to get the supported file formats. The media file checks will be skipped.'
             )
             return []
 
         except Exception as e:
-            self.logger.error(f'An error occurred: {e}')
+            logger.error(f'An error occurred: {e}')
             return []

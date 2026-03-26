@@ -46,7 +46,6 @@ class Downloads:
         self.httpx_client = HTTPXClient(self.base_url, self.api_token)
         self.semaphore = asyncio.Semaphore(5)
         self.directory_manager = DirectoryManager(self.ticket_number, self.download_dir)
-        self.logger = logger
 
     @classmethod
     def from_setup_form(
@@ -131,7 +130,7 @@ class Downloads:
 
             return None
         except Exception as e:
-            self.logger.info(f'Error downloading {file_path}: {e}')
+            logger.info(f'Error downloading {file_path}: {e}')
             return None
 
     async def save_files_async(self, file_list: list) -> list:
@@ -143,12 +142,12 @@ class Downloads:
         Returns:
             list: List of downloaded files
         """
-        self.logger.info(f'Starting download of {len(file_list)} files...')
+        logger.info(f'Starting download of {len(file_list)} files...')
         tasks = [self._get_data_file_async(file_id, file_path) for file_id, file_path in file_list]
         results = await asyncio.gather(*tasks, return_exceptions=True)
 
         successful = [r for r in results if r is not None]
-        self.logger.info(f'Finished downloading files: {successful}')
+        logger.info(f'Finished downloading files: {successful}')
         return successful
 
     def _get_dv_tree(self) -> dict:
@@ -160,18 +159,18 @@ class Downloads:
         url = f'{self.base_url}/api/info/metrics/tree'
 
         try:
-            self.logger.info(f'Fetching dataverse tree structure from {url}...')
+            logger.info(f'Fetching dataverse tree structure from {url}...')
             response = self.httpx_client.sync_get(url)
             response.raise_for_status()
             if response.status_code == self.success_code and response.json():
                 return response.json()
-            self.logger.error(f'Error: {response.status_code} - {response.text}')
+            logger.error(f'Error: {response.status_code} - {response.text}')
             return {}
         except httpx.HTTPStatusError as e:
-            self.logger.error(f'HTTP error occurred: {e}')
+            logger.error(f'HTTP error occurred: {e}')
             return {}
         except Exception as e:
-            self.logger.error(f'An error occurred: {e}')
+            logger.error(f'An error occurred: {e}')
             return {}
 
     def _get_ds_metadata(self) -> dict:
@@ -183,28 +182,28 @@ class Downloads:
         url = f'{self.base_url}/api/datasets/:persistentId/?persistentId={self.pid}'
 
         try:
-            self.logger.info(f'Fetching dataset metadata from {url}...')
+            logger.info(f'Fetching dataset metadata from {url}...')
             response = self.httpx_client.sync_get(url)
             response.raise_for_status()
             if response.status_code == self.success_code and response.json():
                 return response.json()
             return {}
         except httpx.HTTPStatusError as e:
-            self.logger.info(f'HTTP error occurred: {e}')
+            logger.info(f'HTTP error occurred: {e}')
             return {}
         except Exception as e:
-            self.logger.info(f'An error occurred: {e}')
+            logger.info(f'An error occurred: {e}')
             return {}
 
     def export_metadata(self, file_name: str, dictionary: dict) -> None:
         """Save the dataset metadata to a JSON file."""
         file_path = Path(self.directory_manager.metadata_dir, file_name)
         try:
-            self.logger.info(f'Saving dataset metadata to {file_path}...')
+            logger.info(f'Saving dataset metadata to {file_path}...')
             orjson_export(file_path, dictionary)
 
         except Exception as e:
-            self.logger.error(f'An error occurred: {e}')
+            logger.error(f'An error occurred: {e}')
 
     async def downloader(self) -> None:
         """Download the dataset as a zip file asynchronously."""

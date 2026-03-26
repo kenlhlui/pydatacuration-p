@@ -24,7 +24,6 @@ class DirectoryManager:
         self.ticket_number = ticket_number
         self.main_dir = main_dir
         self.project_dir = self._define_project_dir()
-        self.logger = logger
         self.res_dir = res_dir
 
         # Pre-defined directory structure
@@ -149,7 +148,7 @@ class DirectoryManager:
         created_dirs['db'] = self.create_dir('db')
 
         # Setup logging after log directory is created
-        self.logger.info(f'The working directory is: {self.project_dir}')
+        logger.info(f'The working directory is: {self.project_dir}')
 
         return created_dirs
 

@@ -42,7 +42,6 @@ class FilesOpener:
             file (str | Path): The file path to open.
         """
         self.file = file
-        self.logger = logger
 
     def _open_image_file(self) -> tuple:
         """Open an image file.
@@ -55,7 +54,7 @@ class FilesOpener:
                 pass
             return True, self.file
         except (ValueError, Image.UnidentifiedImageError, OSError) as e:
-            self.logger.error(f'Error reading image file: {e}')
+            logger.error(f'Error reading image file: {e}')
             return False, self.file
 
     def _open_netcdf_file(self) -> tuple:
@@ -68,7 +67,7 @@ class FilesOpener:
             nc.Dataset(self.file, 'r')
             return True, self.file
         except (Exception, OSError) as e:
-            self.logger.error(f'Error reading NetCDF file: {e}')
+            logger.error(f'Error reading NetCDF file: {e}')
             return False, self.file
 
     def _open_sav_file(self) -> tuple:
@@ -81,7 +80,7 @@ class FilesOpener:
             sav_file = pyreadstat.read_sav(self.file)
             return True, sav_file
         except (ReadstatError, OSError) as e:
-            self.logger.error(f'Error reading SAV file: {e}')
+            logger.error(f'Error reading SAV file: {e}')
             return False, self.file
 
     def _open_csv_file(self) -> tuple:
@@ -97,7 +96,7 @@ class FilesOpener:
                     pass
             return True, self.file
         except (csv.Error, UnicodeDecodeError) as e:
-            self.logger.error(f'Error reading CSV file: {e}')
+            logger.error(f'Error reading CSV file: {e}')
             return False, self.file
 
     def _open_tsv_file(self) -> tuple:
@@ -113,7 +112,7 @@ class FilesOpener:
                     pass
             return True, self.file
         except (csv.Error, UnicodeDecodeError) as e:
-            self.logger.error(f'Error reading TSV file: {e}')
+            logger.error(f'Error reading TSV file: {e}')
             return False, self.file
 
     def _open_dta_file(self):
@@ -126,7 +125,7 @@ class FilesOpener:
             dta_file = pyreadstat.read_dta(self.file)
             return True, dta_file
         except (ReadstatError, OSError) as e:
-            self.logger.error(f'Error reading DTA file: {e}')
+            logger.error(f'Error reading DTA file: {e}')
             return False, self.file
 
     def _open_rdata_file(self) -> tuple:
@@ -139,7 +138,7 @@ class FilesOpener:
             rdata_file = pyreadr.read_r(self.file)
             return True, rdata_file
         except (pyreadr.custom_errors.PyreadrError, pyreadr.custom_errors.LibrdataError, OSError) as e:
-            self.logger.error(f'Error reading RData file: {e}')
+            logger.error(f'Error reading RData file: {e}')
             return False, self.file
 
     def _open_audiovisual_file(self) -> tuple:
@@ -156,7 +155,7 @@ class FilesOpener:
             return False, self.file
 
         except ffmpeg.Error as e:
-            self.logger.error(f'Error reading audiovisual file: {e}')
+            logger.error(f'Error reading audiovisual file: {e}')
             return False, self.file
 
     def _open_shape_file(self) -> tuple:
@@ -173,7 +172,7 @@ class FilesOpener:
             return False, self.file
 
         except shapefile.ShapefileException as e:
-            self.logger.error(f'Error reading shape file: {e}')
+            logger.error(f'Error reading shape file: {e}')
             return False, self.file
 
     def _open_spreadsheet_file(self) -> tuple:
@@ -188,7 +187,7 @@ class FilesOpener:
                 return True, self.file
             return False, self.file
         except (pd.errors.ParserError, OSError, ValueError) as e:
-            self.logger.error(f'Error reading spreadsheet file: {e}')
+            logger.error(f'Error reading spreadsheet file: {e}')
             return False, self.file
 
     def _open_pdf_file(self) -> tuple:
@@ -201,7 +200,7 @@ class FilesOpener:
             pypdf.PdfReader(self.file, strict=True)
             return True, self.file
         except pypdf.errors.PdfReadError as e:
-            self.logger.error(f'Error reading PDF file: {e}')
+            logger.error(f'Error reading PDF file: {e}')
             return False, self.file
 
     def open_file(self, file_to_check: Path | str | None = None):

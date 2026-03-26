@@ -156,16 +156,16 @@ def check_ds_read_access(pid: str, base_url: str, api_token: str) -> None:
 
         if response.status_code in http_unauthorized_codes:
             msg = 'You do not have read access to the dataset. Please check your API token or permissions.'
-            httpx_client.logger.error(f'❌{msg}')
+            logger.error(f'❌{msg}')
             raise DatasetUnauthorizedError(msg)
 
         if response.status_code in http_not_found_codes:
             msg = 'The dataset does not exist. Please check the PID input.'
-            httpx_client.logger.error(f'❌{msg}')
+            logger.error(f'❌{msg}')
             raise DatasetNotFoundError(msg)
 
         if response.status_code in http_success_codes:
-            httpx_client.logger.info('✅ Dataset access verified.')
+            logger.info('✅ Dataset access verified.')
 
     except RetryError as e:
         error_msg = (
