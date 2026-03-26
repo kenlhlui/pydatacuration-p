@@ -59,7 +59,6 @@ class Checker:
         self.curator_email = setup_form_instance.curator_email
         self.checklist_type = setup_form_instance.checklist
 
-        self.logger = logger
         self.checksums = Checksum()
         self.files_opener = FilesOpener
         self.metadata_checker = MetadataChecker(self.workdir.joinpath('dataset', 'metadata', 'ds_metadata.json'))
@@ -141,7 +140,7 @@ class Checker:
 
         except FileNotFoundError:
             # Handle the case where the file is not found
-            self.logger.error('common_file_formats.yaml file not found in the res directory.')
+            logger.error('common_file_formats.yaml file not found in the res directory.')
             return None
 
     def _gen_file_list_metadata(self) -> list:
@@ -173,15 +172,15 @@ class Checker:
             file_rel_path = Path(file.get('directoryLabel', ''), file_name)
 
             if file_name_format_checker.check_special_char(file_name)[1] is True:
-                self.logger.info(f'Special characters found in the filename: {file_rel_path}')
+                logger.info(f'Special characters found in the filename: {file_rel_path}')
                 special_char_files.append(str(file_rel_path))
 
             if file_name_format_checker.check_file_ext(file_name)[1] is True:
-                self.logger.info(f'File extension does not found: {file_rel_path}')
+                logger.info(f'File extension does not found: {file_rel_path}')
                 missing_ext_files.append(str(file_rel_path))
 
             if check_readme_file_existence(file_name)[1] is True:
-                self.logger.info(f'README file found: {file_rel_path}')
+                logger.info(f'README file found: {file_rel_path}')
                 readme_files.append(str(file_rel_path))
 
         try:
@@ -257,7 +256,7 @@ class Checker:
                     file_list.extend(extracted_file_rel_paths)
         # Only show the message if there's zip file(s) in the dataset
         elif not self.check_zip and any(file_rel_path.suffix in zip_file_extensions for file_rel_path in file_list):
-            self.logger.info(
+            logger.info(
                 'Skipping the unzipping of zip file(s). The zip file(s) and the content inside will not be checked.'
             )  # noqa: E501
 
@@ -266,12 +265,10 @@ class Checker:
             # Pass if the file is a zip file
             if file_rel_path.suffix not in zip_file_extensions:
                 if self.files_opener(file_abs_path).open_file()[0] is False:
-                    self.logger.info(f'File cannot be opened: {file_abs_path}')
+                    logger.info(f'File cannot be opened: {file_abs_path}')
                     inaccessible_files.append(str(file_rel_path))
                 elif self.files_opener(file_abs_path).open_file()[0] is None:
-                    self.logger.info(
-                        f'File is not a supported file format (not checked by the script): {file_abs_path}'
-                    )  # noqa: E501
+                    logger.info(f'File is not a supported file format (not checked by the script): {file_abs_path}')  # noqa: E501
                     unsupported_files.append(str(file_rel_path))
 
         try:
@@ -313,10 +310,10 @@ class Checker:
                 file_abs_path = Path(self.workdir, 'dataset', 'files', file_rel_path)
                 file_ext = file_rel_path.suffix
                 if file_ext.startswith('.') and file_ext not in self.common_file_format_tuple:
-                    self.logger.info(f'File is not a common file format: {file_abs_path}')
+                    logger.info(f'File is not a common file format: {file_abs_path}')
                     uncommon_format_files.append(str(file_rel_path))
         else:
-            self.logger.error('No common file format found in the res directory. Skipping this check.')
+            logger.error('No common file format found in the res directory. Skipping this check.')
 
         try:
             check_result_list_schema = self.sqlmodels.check_results()
@@ -343,7 +340,7 @@ class Checker:
         for field in field_list:
             return_value = self.metadata_checker.check_metadata_cm_field(field)
             if return_value[1] is False:
-                self.logger.info(f'Missing metadata found in the {field}')
+                logger.info(f'Missing metadata found in the {field}')
                 missing_required_fields.append(field)
 
         # Check any associated fields for an author (affiliation, identifier & scheme) are missing
@@ -353,7 +350,7 @@ class Checker:
             author_name = item.get('authorName')
             for field in field_list_author:
                 if item.get(field) is None:
-                    self.logger.info(f'Missing metadata found in {field} field for author: {author_name}')
+                    logger.info(f'Missing metadata found in {field} field for author: {author_name}')
 
                     # Collect authors missing specific fields
                     if field == 'authorAffiliation':
@@ -366,7 +363,7 @@ class Checker:
         # Check if at least one author has authorAffiliation
         author_affiliation_num = len([item for item in author_info_dict if item.get('authorAffiliation') is not None])
         if author_affiliation_num == 0:
-            self.logger.info('None of the authors have an institutional affiliation listed')
+            logger.info('None of the authors have an institutional affiliation listed')
 
         # Check if at least one author has affiliation with 'University of Toronto' (Non-case sensitive)
         ut_variants = ['university of toronto', 'uoft', 'u of t']
@@ -379,7 +376,7 @@ class Checker:
             ]
         )  # noqa: E501
         if author_affiliation_ut_num == 0:
-            self.logger.info('None of the authors have listed affiliation with University of Toronto')
+            logger.info('None of the authors have listed affiliation with University of Toronto')
 
         try:
             check_result_list_schema = self.sqlmodels.check_results()
@@ -450,7 +447,7 @@ class Checker:
                 if has_typos:
                     typo_messages = [f'{field}: `{item}`' for item in typos]
                     for message in typo_messages:
-                        self.logger.info(f'Spelling mistake found in the {field}: {message}')
+                        logger.info(f'Spelling mistake found in the {field}: {message}')
 
                     # Collect typos for new structure
                     for typo in typos:
@@ -564,7 +561,7 @@ class Checker:
                     ds_title = self.ds_title if self.ds_title else 'Unknown Dataset Title'
                     # Join the Path
                     dataset_path = f'{path}/{ds_title}'
-                    self.logger.debug(f'Dataset path in the dataverse repository: {dataset_path}')  # noqa: E501
+                    logger.debug(f'Dataset path in the dataverse repository: {dataset_path}')  # noqa: E501
 
                 return dataset_path
         return None
@@ -578,7 +575,7 @@ class Checker:
             if item.get('restricted') is True:
                 file_name = item.get('dataFile', {}).get('originalFileName') or item.get('dataFile', {}).get('filename')
                 file_path = Path(item.get('directoryLabel', ''), file_name)
-                self.logger.info(f'Restricted file found: {file_path}')
+                logger.info(f'Restricted file found: {file_path}')
                 restricted_files.append(str(file_path))
 
         try:
@@ -656,7 +653,7 @@ class Checker:
             logger.error(f'Failed to write license to database: {e}')
 
         if license_name == 'CC0 1.0':
-            self.logger.info('The license is CC0 1.0')
+            logger.info('The license is CC0 1.0')
 
     def check_keywords(self) -> None:
         """Check if the keywords are present."""
@@ -665,7 +662,7 @@ class Checker:
         )
         keyword_list = jmespath.search(query_string, self.ds_metadata)
         if isinstance(keyword_list, list):
-            self.logger.info(f'Keywords found in the metadata: {keyword_list}')
+            logger.info(f'Keywords found in the metadata: {keyword_list}')
 
         # DEBUG: Test for writing to database using CheckResultList
         # FIXME: fix the update logic; it won't work if there's table
@@ -714,7 +711,7 @@ class Checker:
                 )
             )
         except Exception as e:
-            self.logger.error(f'Failed to write to database: {e}')
+            logger.error(f'Failed to write to database: {e}')
 
     # Note: maybe to migrate this to main.py
     def write_checklist_db(self, checklist_type: str = 'default') -> None:
@@ -728,7 +725,7 @@ class Checker:
             checklist_type (str): Type of checklist to use. Default is 'default'
         """
         try:
-            self.logger.debug(f'Writing the {checklist_type} checklist to database...')
+            logger.debug(f'Writing the {checklist_type} checklist to database...')
             checklist_schema = self.sqlmodels.checklist()
 
             # Use the flexible file path function to find the checklist file
@@ -736,17 +733,17 @@ class Checker:
 
             if not checklist_file or not checklist_file.exists():
                 error_msg = f'Checklist file not found for type: {checklist_type}'
-                self.logger.error(error_msg)
+                logger.error(error_msg)
                 raise FileNotFoundError(error_msg)
 
-            self.logger.debug(f'Using checklist file: {checklist_file}')
+            logger.debug(f'Using checklist file: {checklist_file}')
 
             with Path.open(checklist_file, 'r') as f:
                 checklist_data = yaml.safe_load(f)
 
             # Write each checklist item to database
             for item in checklist_data.get('checklist', []):
-                self.logger.debug(f'Writing checklist item to database: {item}')
+                logger.debug(f'Writing checklist item to database: {item}')
                 self.db_instance.merge_records_to_table(
                     checklist_schema(
                         id=item.get('id'),
@@ -761,11 +758,11 @@ class Checker:
                     )
                 )
         except Exception as e:
-            self.logger.error(f'Failed to write checklist to database: {e}')
+            logger.error(f'Failed to write checklist to database: {e}')
 
     def run_checks(self) -> None:
         """Run all the checks."""
-        self.logger.info('Running the checks...')
+        logger.info('Running the checks...')
         self.check_file_name_format()
         self.check_file_open()
         self.check_common_file_format()

@@ -23,7 +23,6 @@ class Unzipper:
         """
         self.zip_file = Path(zip_file)
         self.output_dir = Path(output_dir)
-        self.logger = logger
 
     def _unzip(self) -> None:
         """Unzip the file."""
@@ -50,15 +49,15 @@ class Unzipper:
         # Handle single compressed files
         elif name.endswith('.gz'):
             output_file = self.output_dir / self.zip_file.stem
-            with gzip.open(self.zip_file, 'rb') as f_in, open(output_file, 'wb') as f_out:
+            with gzip.open(self.zip_file, 'rb') as f_in, Path(output_file).open('wb') as f_out:
                 f_out.write(f_in.read())
         elif name.endswith('.bz2'):
             output_file = self.output_dir / self.zip_file.stem
-            with bz2.open(self.zip_file, 'rb') as f_in, open(output_file, 'wb') as f_out:
+            with bz2.open(self.zip_file, 'rb') as f_in, Path(output_file).open('wb') as f_out:
                 f_out.write(f_in.read())
         elif name.endswith('.xz'):
             output_file = self.output_dir / self.zip_file.stem
-            with lzma.open(self.zip_file, 'rb') as f_in, open(output_file, 'wb') as f_out:
+            with lzma.open(self.zip_file, 'rb') as f_in, Path(output_file).open('wb') as f_out:
                 f_out.write(f_in.read())
 
     def _extract_7z(self) -> None:
@@ -78,7 +77,7 @@ class Unzipper:
         file_paths = [file for file in extracted_files if file.is_file()]
         # Convert to relative paths
         relative_paths = [file.relative_to(self.output_dir) for file in file_paths]
-        self.logger.debug(f'Extracted file relative paths list: {relative_paths}')
+        logger.debug(f'Extracted file relative paths list: {relative_paths}')
         return relative_paths
 
     def main(self) -> list[Path]:
@@ -98,6 +97,6 @@ class Unzipper:
         ):
             self._extract_tar()
         else:
-            self.logger.warning(f'Unsupported archive format: {self.zip_file}')
+            logger.warning(f'Unsupported archive format: {self.zip_file}')
 
         return self._get_extracted_file_paths()

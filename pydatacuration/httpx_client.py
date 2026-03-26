@@ -26,7 +26,6 @@ class HTTPXClient:
         self.api_token = api_token
         self.headers = {'X-Dataverse-key': api_token}
         self.httpx_success_status = 200
-        self.logger = logger
         self.semaphore = asyncio.Semaphore(10)
         self.async_sleep_time = 0  # TODO: make this configurable
 
@@ -68,20 +67,20 @@ class HTTPXClient:
             try:
                 response = client.get(url)
                 if response.status_code != self.httpx_success_status and raise_for_status:
-                    self.logger.error(f'HTTP request Error for {url}: {response.status_code}')
+                    logger.error(f'HTTP request Error for {url}: {response.status_code}')
                     response.raise_for_status()
                 return response
             except httpx.HTTPStatusError as exc:
-                self.logger.error(f'HTTP request Error for {url}: {exc}')
-                self.logger.error('Retrying... (max 3 attempts with 5 second delay)')
+                logger.error(f'HTTP request Error for {url}: {exc}')
+                logger.error('Retrying... (max 3 attempts with 5 second delay)')
                 raise exc
 
             except (httpx.ConnectError, httpx.ConnectTimeout) as exc:
-                self.logger.error(f'HTTP Connection error occurred {url}: {exc}')
-                self.logger.error('Retrying... (max 3 attempts with 5 second delay)')
+                logger.error(f'HTTP Connection error occurred {url}: {exc}')
+                logger.error('Retrying... (max 3 attempts with 5 second delay)')
                 raise exc
             except RetryError as exc:
-                self.logger.error(f'The retry limit has been reached for {url}: {exc}')
+                logger.error(f'The retry limit has been reached for {url}: {exc}')
                 raise exc
 
     @staticmethod
@@ -120,13 +119,13 @@ class HTTPXClient:
                 return None
 
         except httpx.HTTPStatusError as exc:
-            self.logger.error(f'HTTP request Error for {url}: {exc}')
-            self.logger.error('Retrying... (max 3 attempts with 5 second delay)')
+            logger.error(f'HTTP request Error for {url}: {exc}')
+            logger.error('Retrying... (max 3 attempts with 5 second delay)')
             raise
         except (httpx.ConnectError, httpx.ConnectTimeout) as exc:
-            self.logger.error(f'HTTP Connection error occurred {url}: {exc}')
-            self.logger.error('Retrying... (max 3 attempts with 5 second delay)')
+            logger.error(f'HTTP Connection error occurred {url}: {exc}')
+            logger.error('Retrying... (max 3 attempts with 5 second delay)')
             raise
         except RetryError as exc:
-            self.logger.error(f'The retry limit has been reached for {url}: {exc}')
+            logger.error(f'The retry limit has been reached for {url}: {exc}')
             raise
