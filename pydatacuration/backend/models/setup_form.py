@@ -19,7 +19,7 @@ class SetupBase(BaseModel):
     api_token: str | None = None
 
     pid: str = ''
-    ticket_number: str = ''
+    project_number: str = ''
     collection_alias: str | None = None
 
     curator_name: str = ''

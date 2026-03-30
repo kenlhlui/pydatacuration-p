@@ -72,7 +72,7 @@ async def render_project_table(
             filtered_schemas = [
                 s
                 for s in filtered_schemas
-                if search_term in str(s.get('ticket_number', '')).lower()
+                if search_term in str(s.get('project_number', '')).lower()
                 or search_term in str(s.get('dataset_title', '')).lower()
                 or search_term in str(s.get('dataset_pid', '')).lower()
                 or search_term in str(s.get('dataset_id', '')).lower()
@@ -90,7 +90,7 @@ async def render_project_table(
             with ui.element('table').classes('pdc-checklist-table'):
                 # Table Header
                 with ui.element('thead'), ui.element('tr'):
-                    headers = ['Ticket Number', 'Dataset Information', 'Curator', 'Project Last Modified']
+                    headers = ['Project Number', 'Dataset Information', 'Curator', 'Project Last Modified']
                     if mode == 'delete':
                         headers.append('Action')
                     for header in headers:
@@ -102,17 +102,17 @@ async def render_project_table(
                     for schema in filtered_schemas:
                         row_classes = 'clickable-row' if mode == 'resume' else ''
                         with ui.element('tr').classes(row_classes):
-                            # Ticket Number
+                            # Project Number
                             with ui.element('td'):
                                 if mode == 'resume':
                                     with (
                                         ui.element('a')
-                                        .props(f'href="/checklist?ticket_number={quote(schema["ticket_number"])}"')
+                                        .props(f'href="/checklist?project_number={quote(schema["project_number"])}"')
                                         .style('color: #3498db; text-decoration: none; font-weight: 600;')
                                     ):
-                                        ui.label(f'📋 {schema["ticket_number"]}')
+                                        ui.label(f'📋 {schema["project_number"]}')
                                 else:
-                                    ui.label(f'📋 {schema["ticket_number"]}').style('font-weight: 600;')
+                                    ui.label(f'📋 {schema["project_number"]}').style('font-weight: 600;')
 
                             # Dataset Metadata
                             with ui.element('td'):

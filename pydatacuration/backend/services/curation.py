@@ -19,18 +19,18 @@ from pydatacuration.utils.utils import DatasetUnauthorizedError
 from pydatacuration.utils.utils import check_ds_read_access
 
 
-def get_dirs(ticket_number: str, main_dir: Path) -> directory_manager.DirectoryManager:
-    """Returns a DirectoryManager instance for the given ticket number and main directory.
+def get_dirs(project_number: str, main_dir: Path) -> directory_manager.DirectoryManager:
+    """Returns a DirectoryManager instance for the given project number and main directory.
 
     Args:
-        ticket_number (str): The ticket number for the curation process.
+        project_number (str): The project number for the curation process.
         main_dir (Path): The main directory where the project directory will be created.
 
     Returns:
         DirectoryManager: An instance of the DirectoryManager class.
 
     """
-    return directory_manager.DirectoryManager(ticket_number, str(main_dir))
+    return directory_manager.DirectoryManager(project_number, str(main_dir))
 
 
 def get_db(schema_name: str, db_file: Path) -> DatabaseBackend:
@@ -55,7 +55,7 @@ def init_curation(body: SetupForm) -> None:
     Raises:
         DirectoryExistsError: If the working directory already exists and force_delete is not set to True.
     """
-    dirs = get_dirs(body.ticket_number, Path(body.main_dir))
+    dirs = get_dirs(body.project_number, Path(body.main_dir))
     workdir_path = dirs.project_dir
 
     if workdir_path.exists() and not body.force_delete:
@@ -66,12 +66,12 @@ def init_curation(body: SetupForm) -> None:
     dirs.delete_dir(workdir_path)
     dirs.make_dirs()
 
-    db = get_db(schema_name=body.ticket_number, db_file=dirs.db_path)
+    db = get_db(schema_name=body.project_number, db_file=dirs.db_path)
     db.create_database()
-    db.drop_schema(body.ticket_number)
+    db.drop_schema(body.project_number)
     db.create_schema()
 
-    logger.debug(f'Initialized working directory and database for ticket {body.ticket_number} at {workdir_path}')
+    logger.debug(f'Initialized working directory and database for project {body.project_number} at {workdir_path}')
 
 
 def _ensure_dataset_read_access(body: SetupForm) -> None:
@@ -98,7 +98,7 @@ async def fetch_curation(body: SetupForm) -> None:
     Args:
         body (SetupForm): The setup form containing the necessary information for fetching the dataset.
     """
-    dirs = get_dirs(body.ticket_number, Path(body.main_dir))
+    dirs = get_dirs(body.project_number, Path(body.main_dir))
 
     await asyncio.to_thread(_ensure_dataset_read_access, body)
 
@@ -114,8 +114,8 @@ def check_curation(body: SetupForm) -> None:
     Args:
         body (SetupForm): The setup form containing the necessary information for running the checks.
     """
-    dirs = get_dirs(body.ticket_number, Path(body.main_dir))
-    db = get_db(schema_name=dirs.ticket_number, db_file=dirs.db_path)
+    dirs = get_dirs(body.project_number, Path(body.main_dir))
+    db = get_db(schema_name=dirs.project_number, db_file=dirs.db_path)
 
     with Path(dirs.metadata_dir, 'ds_metadata.json').open('rb') as f:
         ds_metadata = orjson.loads(f.read())

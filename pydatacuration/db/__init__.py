@@ -79,7 +79,7 @@ def get_database(
     """Factory that returns the appropriate database backend instance.
 
     Args:
-        schema_name: The schema (ticket) name.
+        schema_name: The schema (project) name.
         db_file: Path to the DuckDB file (only used when backend is ``'duckdb'``).
         backend: Explicit backend override. If ``None``, reads ``DB_TYPE`` env var.
 

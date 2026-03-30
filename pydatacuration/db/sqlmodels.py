@@ -86,8 +86,8 @@ class DBModels:
 
             __tablename__ = 'project_metadata'  # type: ignore[assignment]
             __table_args__ = {'schema': self.schema_name}
-            ticket_number: str = Field(
-                default='', sa_column=Column(String, nullable=False, unique=True), description='Unique ticket number'
+            project_number: str = Field(
+                default='', sa_column=Column(String, nullable=False, unique=True), description='Unique project number'
             )
             curator_name: str = Field(
                 default='', sa_column=Column(String, nullable=False), description='Name of the data curator'

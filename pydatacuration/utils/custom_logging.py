@@ -1,4 +1,4 @@
-"""Logging setup using loguru with Rich console plus global and per-ticket sinks."""
+"""Logging setup using loguru with Rich console plus global and per-project sinks."""
 
 from __future__ import annotations
 
@@ -66,13 +66,13 @@ def setup_global_logging(log_file_dir: Path | None = None, log_level: str = 'INF
 
 
 def add_cli_run_logging(cli_log_dir: Path) -> Path:
-    """Attach a per-ticket file sink (e.g., <ticket>/log_files/debug.log).
+    """Attach a per-project file sink (e.g., <project>/log_files/debug.log).
 
     Args:
-        cli_log_dir (Path): Ticket-specific log directory.
+        cli_log_dir (Path): Project-specific log directory.
 
     Returns:
-        Path: The path to the CLI ticket log file.
+        Path: The path to the CLI project log file.
     """
     path = Path(cli_log_dir) / 'debug.log'
     if cli_log_dir not in _CLI_SINK_IDS:

@@ -6,9 +6,9 @@ To assist with debugging, you need to retrieve the `debug.log` file and send it 
     
     Usage:
     ```sh
-    find -path "*/projects/$ticket_number/*" -name "debug.log" 2>/dev/null
+    find -path "*/projects/$project_number/*" -name "debug.log" 2>/dev/null
     ```
-    Assume you specified the `ticket-number` as `CUR-881`. Replace the $ticket_number with `CUR-881` above. The code should look like as follows:
+    Assume you specified the `project-number` as `CUR-881`. Replace the $project_number with `CUR-881` above. The code should look like as follows:
     
     ```sh
     find -path "*/projects/CUR-881/*" -name "debug.log" 2>/dev/null
@@ -21,10 +21,10 @@ To assist with debugging, you need to retrieve the `debug.log` file and send it 
 
     Usage:
     ```sh
-    explorer.exe "$(wslpath -w "$(dirname "$(find -path "*/$ticket_number/*" -name "debug.log" 2>/dev/null)")")"
+    explorer.exe "$(wslpath -w "$(dirname "$(find -path "*/$project_number/*" -name "debug.log" 2>/dev/null)")")"
     ```
 
-    Again, replace the `$ticket_number` with the value you specified (in this example is `CUR-881`)
+    Again, replace the `$project_number` with the value you specified (in this example is `CUR-881`)
     
     ```sh
     explorer.exe "$(wslpath -w "$(dirname "$(find -path "*/CUR-881/*" -name "debug.log" 2>/dev/null)")")"

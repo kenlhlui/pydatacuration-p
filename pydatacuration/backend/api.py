@@ -45,22 +45,22 @@ async def run_curation_endpoint(body: SetupForm) -> dict[str, str]:
 
 @router.post('/export-word')
 async def export_word_endpoint(
-    ticket_number: str = Query(...),
+    project_number: str = Query(...),
     main_dir: str = Query(...),
     word_template_name: str | None = Query(None),
 ) -> dict[str, str]:
     """Exports the curation report as a Word document saved to the project outputs directory.
 
     Args:
-        ticket_number (str): The ticket number identifying the curation project.
+        project_number (str): The project number identifying the curation project.
         main_dir (str): The main working directory where the project data is stored.
         word_template_name (str | None): Optional custom Word template filename.
     """
-    dirs = get_dirs(ticket_number, Path(main_dir).resolve())
+    dirs = get_dirs(project_number, Path(main_dir).resolve())
     if not dirs.project_dir.exists():
-        raise HTTPException(status_code=404, detail=f'Project directory for ticket {ticket_number!r} not found.')
+        raise HTTPException(status_code=404, detail=f'Project directory for project {project_number!r} not found.')
 
-    db = get_db(schema_name=ticket_number, db_file=dirs.db_path)
+    db = get_db(schema_name=project_number, db_file=dirs.db_path)
     exporter = Exporter(db, dirs)
     await asyncio.to_thread(exporter.export_word, word_template_name)
 

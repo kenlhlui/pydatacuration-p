@@ -687,7 +687,7 @@ class Checker:
 
         # Check if record already exists
         try:
-            ticket_number = self.db_instance.schema_name
+            project_number = self.db_instance.schema_name
             curator_name: str | None = self.curator_name
             curator_email: str | None = self.curator_email
             dataset_title = self.ds_title if self.ds_title else 'No Title'
@@ -700,7 +700,7 @@ class Checker:
                 project_metadata_schema(
                     curator_name=curator_name,
                     curator_email=curator_email,
-                    ticket_number=ticket_number,
+                    project_number=project_number,
                     dataset_title=dataset_title,
                     dataset_pid=dataset_pid,
                     dataset_id=self.dataset_id,

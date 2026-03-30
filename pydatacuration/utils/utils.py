@@ -109,26 +109,26 @@ def parse_file_list_metadata(file_list_metadata: list) -> list:
     return file_list_metadata_nested_list
 
 
-def check_ticket_num_input(ticket_num: str) -> str:
-    """Check if the ticket number is without any special characters or spaces.
+def check_project_num_input(project_number: str) -> str:
+    """Check if the project number is without any special characters or spaces.
 
     Args:
-        ticket_num (str): The ticket number to check.
+        project_number (str): The project number to check.
 
     Returns:
-        str: The validated ticket number.
+        str: The validated project number.
     """
-    # Check if the ticket number is empty
-    if not ticket_num:
-        msg = 'Ticket number cannot be empty.'
+    # Check if the project number is empty
+    if not project_number:
+        msg = 'Project number cannot be empty.'
         raise typer.BadParameter(msg)
 
-    # Check if the ticket number contains any special characters or spaces
-    if re.search(r'[^a-zA-Z0-9_\-]', ticket_num):
-        msg = '⚠️ Ticket number must only contain letters, numbers, hyphens, and underscores.'
+    # Check if the project number contains any special characters or spaces
+    if re.search(r'[^a-zA-Z0-9_\-]', project_number):
+        msg = '⚠️ Project number must only contain letters, numbers, hyphens, and underscores.'
         raise typer.BadParameter(msg)
 
-    return ticket_num
+    return project_number
 
 
 def check_ds_read_access(pid: str, base_url: str, api_token: str) -> None:

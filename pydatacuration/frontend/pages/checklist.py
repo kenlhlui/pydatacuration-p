@@ -55,14 +55,14 @@ default_form = SetupForm(**setup_defaults.model_dump(), main_dir=app_settings.ma
 
 
 @ui.page('/checklist')
-async def checklist_page(ticket_number: str) -> None:
+async def checklist_page(project_number: str) -> None:
     """Checklist page with exact styling match."""
     apply_pdc_styles()
 
-    # Initialize the db connection for this ticket number
-    dir_manager = DirectoryManager(ticket_number, MAIN_DIR, RES_DIR)
-    db = get_database(schema_name=ticket_number, db_file=dir_manager.db_path)
-    helpers = NiceGUIHelper(db, ticket_number)
+    # Initialize the db connection for this project number
+    dir_manager = DirectoryManager(project_number, MAIN_DIR, RES_DIR)
+    db = get_database(schema_name=project_number, db_file=dir_manager.db_path)
+    helpers = NiceGUIHelper(db, project_number)
 
     # Load metadata from database
     project_metadata = db.read_project_metadata_record()
@@ -86,7 +86,7 @@ async def checklist_page(ticket_number: str) -> None:
         create_info_grid(
             project_metadata,
             [
-                ('ticket_number', 'Ticket number'),
+                ('project_number', 'Project number'),
                 ('curator_name', 'Curator name'),
                 ('curator_email', 'Curator email'),
                 ('dataset_title', 'Dataset title'),
@@ -168,7 +168,7 @@ async def checklist_page(ticket_number: str) -> None:
                     db,
                     fresh_items,
                     check_results,
-                    ticket_number,
+                    project_number,
                     status_filter=status_filter.value,
                     priority_filter=priority_filter.value,
                     refresh_callback=render_filtered_table,
@@ -202,7 +202,7 @@ async def render_checklist_table(  # noqa: PLR0913, C901, PLR0917
     db_instance: DatabaseBackend,
     checklist_items: list,
     check_results: dict[str, str],
-    ticket_number: str,
+    project_number: str,
     status_filter: str = '',
     priority_filter: str = '',
     refresh_callback: None = None,
@@ -213,13 +213,13 @@ async def render_checklist_table(  # noqa: PLR0913, C901, PLR0917
         db_instance: DatabaseBackend instance
         checklist_items: List of checklist items
         check_results: Dictionary of check results
-        ticket_number: Ticket number
+        project_number: Project number
         status_filter: Filter by status (empty string means no filter)
         priority_filter: Filter by priority (empty string means no filter)
         refresh_callback: Optional callback function to refresh the UI after updates
     """
     # Internal helper functions for creating UI components
-    helpers = NiceGUIHelper(db_instance, ticket_number, refresh_callback)
+    helpers = NiceGUIHelper(db_instance, project_number, refresh_callback)
 
     # Apply filters to checklist items
     filtered_items = checklist_items

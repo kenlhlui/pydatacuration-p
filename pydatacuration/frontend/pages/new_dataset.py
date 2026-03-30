@@ -78,7 +78,7 @@ async def handle_setup_submit(  # noqa: PLR0913, PLR0917
         poll_timer[0].cancel()
         exc = task.exception()
         if exc is None:
-            ui.navigate.to(f'/checklist?ticket_number={quote(form_data["ticket_number"])}')
+            ui.navigate.to(f'/checklist?project_number={quote(form_data["project_number"])}')
         elif isinstance(exc, DirectoryExistsError):
             ui.notify(str(exc), type='warning')
             restore_buttons()
@@ -172,11 +172,11 @@ async def new_dataset_page() -> None:
                 ui.label('Your Dataverse API token (will be hidden)').classes('pdc-form-helper')
 
             with ui.element('div').classes('pdc-form-group'):
-                ui.label('Ticket Number *').classes('pdc-form-label')
-                ui.input(placeholder='TICKET-123').classes('pdc-form-input w-full').bind_value(
-                    form_data, 'ticket_number'
+                ui.label('Project Number *').classes('pdc-form-label')
+                ui.input(placeholder='PROJECT-123').classes('pdc-form-input w-full').bind_value(
+                    form_data, 'project_number'
                 ).style('width: 100%')
-                ui.label('Ticket number for the curation report').classes('pdc-form-helper')
+                ui.label('Project number for the curation report').classes('pdc-form-helper')
 
         # Curator Information Section
         with ui.element('div').classes('pdc-form-section'):

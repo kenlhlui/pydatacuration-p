@@ -16,7 +16,7 @@ To quicker populate the new dataset form in the Web UI, you can set the followin
 ```bash
 # Dev settings, for prefilling the new dataset form for faster testing
 PID = 'doi:10.80240/FK2/FCZB4A'
-TICKET_NUMBER = 'CUR-999'
+PROJECT_NUMBER = 'CUR-999'
 FORCE_DELETE = true
 CHECK_ZIP = true
 CHECKLIST =  'high'

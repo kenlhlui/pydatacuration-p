@@ -13,15 +13,15 @@ class DirectoryManager:
     DB_FILE_NAME = 'db.duckdb'
     DB_SUBDIR = 'db'
 
-    def __init__(self, ticket_number: str, main_dir: str | Path, res_dir: str | Path | None = None) -> None:
+    def __init__(self, project_number: str, main_dir: str | Path, res_dir: str | Path | None = None) -> None:
         """Initialize the class.
 
         Args:
-            ticket_number (str): The ticket number, also the name of the working directory.
+            project_number (str): The project number, also the name of the working directory.
             main_dir (str | Path): The main directory that contains /db and the /projects directories.
             res_dir (str | Path | None): The resource directory path.
         """
-        self.ticket_number = ticket_number
+        self.project_number = project_number
         self.main_dir = main_dir
         self.project_dir = self._define_project_dir()
         self.res_dir = res_dir
@@ -44,12 +44,12 @@ class DirectoryManager:
         """
         if self.main_dir_path:
             project_dir = Path(self.main_dir_path)
-            # If project_dir already ends with the ticket number, use it directly
-            if project_dir.name == self.ticket_number:
+            # If project_dir already ends with the project number, use it directly
+            if project_dir.name == self.project_number:
                 return project_dir.resolve()
             # Otherwise, create the project structure
-            return Path(project_dir, 'projects', self.ticket_number).resolve()
-        return Path(Path.cwd(), 'workdir', self.ticket_number).resolve()
+            return Path(project_dir, 'projects', self.project_number).resolve()
+        return Path(Path.cwd(), 'workdir', self.project_number).resolve()
 
     def _define_db_dir(self) -> Path:
         """Define the database directory.
