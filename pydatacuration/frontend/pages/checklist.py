@@ -1,14 +1,11 @@
+"""Checklist page implementation for pydatacuration frontend."""
+
 # ruff: noqa: PLR1702
 from pathlib import Path
 
-from nicegui import app
 from nicegui import ui
 
-# Import the API router from the backend module
-from pydatacuration.backend.api import router as api_router
 from pydatacuration.backend.models.app_settings import AppSettings
-from pydatacuration.backend.models.setup_form import SetupDefaults
-from pydatacuration.backend.models.setup_form import SetupForm
 from pydatacuration.db import DatabaseBackend
 from pydatacuration.db import get_database
 
@@ -24,29 +21,16 @@ from pydatacuration.frontend.styles import create_info_grid
 from pydatacuration.frontend.styles import create_priority_badge
 from pydatacuration.frontend.styles import create_status_select
 
-# Import the typer app for CLI command execution
-from pydatacuration.utils.custom_logging import setup_logging
-
 # Import pydatacuration modules
 from pydatacuration.utils.directory_manager import DirectoryManager
 
 
 # Create global settings instance
 app_settings = AppSettings()
-setup_defaults = SetupDefaults()
-
-# Include the API router in the NiceGUI app with a prefix of /api
-app.include_router(api_router, prefix='/api')
-
 
 # Load environment variables
 MAIN_DIR: Path = Path(app_settings.main_dir)
 RES_DIR = Path(app_settings.res_dir)
-
-# Setup logging with your custom style
-setup_logging(log_file_dir=Path(app_settings.main_dir) / 'logs', log_level='DEBUG')
-
-default_form = SetupForm(**setup_defaults.model_dump(), main_dir=app_settings.main_dir)
 
 
 # ============================================================================
