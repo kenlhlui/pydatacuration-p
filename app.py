@@ -1,9 +1,5 @@
-"""NiceGUI Proof of Concept - With Production-Ready Styling.
+"""NiceGUI application entry point for U of T Dataverse Curation Tool."""
 
-This version uses the nicegui_styles module for exact CSS matching.
-"""
-
-# ruff: noqa: PLR1702
 import os
 from pathlib import Path
 
@@ -12,11 +8,12 @@ from nicegui import ui
 
 # Import the API router from the backend module
 from pydatacuration.backend.api import router as api_router
+
+# Import the data models for application settings and setup defaults
 from pydatacuration.backend.models.app_settings import AppSettings
 from pydatacuration.backend.models.setup_form import SetupDefaults
-from pydatacuration.backend.models.setup_form import SetupForm
 
-# Import styles and styled components
+# Import the utility function to mount static files for the frontend
 from pydatacuration.frontend.utils import mount_static_files
 
 # Import the typer app for CLI command execution
@@ -37,9 +34,6 @@ RES_DIR = Path(app_settings.res_dir)
 
 # Setup logging with your custom style
 setup_logging(log_file_dir=Path(app_settings.main_dir) / 'logs', log_level='DEBUG')
-
-default_form = SetupForm(**setup_defaults.model_dump(), main_dir=app_settings.main_dir)
-
 
 # ============================================================================
 # Main Entrance Page
@@ -70,7 +64,6 @@ from pydatacuration.frontend.pages import resume  # noqa: F401, E402, I001
 # ============================================================================
 # Run the application
 # ============================================================================
-
 
 if __name__ in {'__main__', '__mp_main__'}:
     # Must mount before ui.run() and before any routes that use static files
