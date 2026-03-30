@@ -1,6 +1,7 @@
 """Checklist page implementation for pydatacuration frontend."""
 
 # ruff: noqa: PLR1702
+from collections.abc import Callable
 from pathlib import Path
 
 from nicegui import ui
@@ -189,7 +190,7 @@ async def render_checklist_table(  # noqa: PLR0913, C901, PLR0917
     project_number: str,
     status_filter: str = '',
     priority_filter: str = '',
-    refresh_callback: None = None,
+    refresh_callback: Callable | None = None,
 ) -> None:
     """Render checklist table with exact styling.
 
@@ -203,7 +204,7 @@ async def render_checklist_table(  # noqa: PLR0913, C901, PLR0917
         refresh_callback: Optional callback function to refresh the UI after updates
     """
     # Internal helper functions for creating UI components
-    helpers = NiceGUIHelper(db_instance, project_number, refresh_callback)
+    helpers = NiceGUIHelper(db_instance, project_number)
 
     # Apply filters to checklist items
     filtered_items = checklist_items

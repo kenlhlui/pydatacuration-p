@@ -2,7 +2,6 @@
 
 import re
 import time
-from collections.abc import Callable
 from datetime import timedelta
 from pathlib import Path
 from typing import Any
@@ -32,17 +31,15 @@ Checklist: type[SQLModel] = DBModels('_type_hints_').checklist()
 class NiceGUIHelper:
     """Helper class for NiceGUI components."""
 
-    def __init__(self, db: DatabaseBackend, project_number: str, refresh_callback: Callable | None = None) -> None:
+    def __init__(self, db: DatabaseBackend, project_number: str) -> None:
         """Initialize NiceGUIHelper.
 
         Args:
             db (DatabaseBackend): Database backend instance.
             project_number (str): Project number to work with.
-            refresh_callback: Optional callback function to refresh the UI after updates.
         """
         self.db: DatabaseBackend = db
         self.project_number: str = project_number
-        self.refresh_callback = refresh_callback
         # Timer tracking: {item_id: {'start_time': timestamp, 'elapsed': seconds}}
         self.timers: dict[str, dict] = {}
 
