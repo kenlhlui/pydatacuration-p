@@ -1060,6 +1060,7 @@ def create_status_select(item_id: str, current_value: str | None = None, on_chan
         options=status_options(),
         value=current_value,
         with_input=False,
+        clearable=True,
     ).classes('status-select')
 
     # Apply status-specific styling
