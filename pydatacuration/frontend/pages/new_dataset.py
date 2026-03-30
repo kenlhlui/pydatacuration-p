@@ -1,3 +1,5 @@
+"""The new dataset setup page."""
+
 import asyncio
 from pathlib import Path
 from urllib.parse import quote
