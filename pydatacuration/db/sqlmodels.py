@@ -156,7 +156,11 @@ class DBModels:
 
             __tablename__ = 'checklist_metadata'  # type: ignore[assignment]
             __table_args__ = {'schema': self.schema_name}
-            name: str = Field(default='', sa_column=Column(String, nullable=False), description='Name of the checklist')
+            name: str = Field(
+                default='',
+                sa_column=Column(String, nullable=False, primary_key=True),
+                description='Name of the checklist',
+            )
             version: str = Field(
                 default='',
                 sa_column=Column(String, nullable=False),
