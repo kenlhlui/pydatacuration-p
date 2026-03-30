@@ -77,17 +77,11 @@ class NiceGUIHelper:
         """Handle status change with auto-save."""
         self.db.update_checklist_item(item_id=item_id, status=new_status)
         ui.notify(f'Status updated for {item_id}', type='positive', position='top-right', close_button=True)
-        if self.refresh_callback:
-            # Schedule the async callback to run
-            ui.timer(0.0, self.refresh_callback, once=True)
 
     def handle_comments_change(self, item_id: str, new_comments: str) -> None:
         """Handle comments change."""
         self.db.update_checklist_item(item_id=item_id, comments=new_comments)
         ui.notify(f'Comments updated for {item_id}', type='positive', position='top-right', close_button=True)
-        if self.refresh_callback:
-            # Schedule the async callback to run
-            ui.timer(0.0, self.refresh_callback, once=True)
 
     def handle_time_change(self, item_id: str, time_spent_input: str) -> None:
         """Handle time change with validation."""
@@ -100,9 +94,6 @@ class NiceGUIHelper:
             time_spent_delta: timedelta = timedelta(minutes=minutes, seconds=seconds)
             self.db.update_checklist_item(item_id=item_id, time_spent=time_spent_delta)
             ui.notify(f'Time updated for {item_id}', type='positive', position='top-right', close_button=True)
-            if self.refresh_callback:
-                # Schedule the async callback to run
-                ui.timer(0.0, self.refresh_callback, once=True)
         else:
             ui.notify('Please enter time in MM:SS format', type='negative')
 
@@ -211,10 +202,6 @@ class NiceGUIHelper:
         del self.timers[item_id]
 
         ui.notify(f'Timer stopped for {item_id}: {time_str}', type='positive', position='top-right', close_button=True)
-
-        if self.refresh_callback:
-            # Schedule the async callback to run
-            ui.timer(0.0, self.refresh_callback, once=True)
 
     def toggle_timer(self, item_id: str, time_input: ui.input, button: ui.button) -> None:
         """Toggle timer start/stop for a checklist item.
