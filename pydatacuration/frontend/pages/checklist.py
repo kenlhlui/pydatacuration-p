@@ -326,7 +326,10 @@ async def render_checklist_table(  # noqa: PLR0913, PLR0912, PLR0915, C901, PLR0
                         create_status_select(
                             item.id,
                             item.status or '',
-                            on_change=lambda e, iid=item.id: helpers.handle_status_change(iid, e.value),
+                            on_change=lambda e, iid=item.id, it=item: [
+                                setattr(it, 'status', e.value),
+                                helpers.handle_status_change(iid, e.value),
+                            ],
                         )
 
                     # Comments
