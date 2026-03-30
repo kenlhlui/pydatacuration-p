@@ -5,7 +5,6 @@ from urllib.parse import quote
 from nicegui import app
 from nicegui import ui
 
-from app import app_settings
 from pydatacuration.backend.models.app_settings import AppSettings
 from pydatacuration.backend.models.setup_form import SetupDefaults
 from pydatacuration.backend.models.setup_form import SetupForm
