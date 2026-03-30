@@ -1063,7 +1063,7 @@ def create_status_select(item_id: str, current_value: str = '', on_change=None):
     ).classes('status-select')
 
     # Apply status-specific styling
-    def update_status_style(value):
+    def update_status_style(value: str) -> None:
         select.classes(remove='status-P status-F status-TBD status-NA')
         if value:
             select.classes(add=f'status-{value}')
@@ -1081,19 +1081,19 @@ def create_status_select(item_id: str, current_value: str = '', on_change=None):
     return select
 
 
-def create_checklist_select(res_dir: Path, current_value: str, on_change=None):
-    """Create a checklist level select with proper styling.
+def create_checklist_select(res_dir: Path, current_value: str, on_change=None) -> ui.select:
+    """Create a checklist selection list with proper styling.
 
     Args:
         res_dir (Path): Path to the resources directory
-        current_value (str): Current checklist level
+        current_value (str): Current checklist
         on_change: Callback function for value changes
 
     Returns:
         NiceGUI select element
     """
     # Create label outside the select
-    ui.label('Select Checklist Level').classes('pdc-form-label')
+    ui.label('Checklist').classes('pdc-form-label')
 
     # Create select without internal label - display capitalized but use lowercase values
     select = ui.select(options=checklist_options(res_dir), value=current_value).classes('w-full').style('width: 100%')
