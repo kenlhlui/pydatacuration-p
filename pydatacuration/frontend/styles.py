@@ -1045,7 +1045,7 @@ def create_check_type_badge(check_type: str) -> ui.label:
     return ui.label(text).classes(f'pdc-priority-badge {css_class}')
 
 
-def create_status_select(item_id: str, current_value: str = '', on_change=None):
+def create_status_select(item_id: str, current_value: str | None = None, on_change=None):
     """Create a status select dropdown with proper styling.
 
     Args:

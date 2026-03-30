@@ -106,7 +106,7 @@ async def checklist_page(project_number: str) -> None:
                     status_filter = (
                         ui.select(
                             options=status_options(),
-                            value='',
+                            value=None,
                             with_input=False,
                         )
                         .classes('pdc-status-select')
@@ -119,7 +119,7 @@ async def checklist_page(project_number: str) -> None:
                     priority_filter = (
                         ui.select(
                             options=priority_options(),
-                            value='',
+                            value=None,
                             with_input=False,
                         )
                         .classes('pdc-status-select')
@@ -165,8 +165,8 @@ async def checklist_page(project_number: str) -> None:
                 row.set_visibility(section in visible_sections)
 
         def clear_filters() -> None:
-            status_filter.value = ''
-            priority_filter.value = ''
+            status_filter.value = None
+            priority_filter.value = None
             apply_filters()
 
         # Set after render — depends on item_rows/section_header_rows closures built during render
@@ -324,7 +324,7 @@ async def render_checklist_table(  # noqa: PLR0913, PLR0912, PLR0915, C901, PLR0
                     with ui.element('td'):
                         create_status_select(
                             item.id,
-                            item.status or '',
+                            item.status or None,
                             on_change=lambda e, iid=item.id, it=item: [
                                 setattr(it, 'status', e.value),
                                 helpers.handle_status_change(iid, e.value),
