@@ -169,6 +169,7 @@ async def checklist_page(project_number: str) -> None:
             priority_filter.value = ''
             apply_filters()
 
+        # Set after render — depends on item_rows/section_header_rows closures built during render
         helpers.refresh_callback = apply_filters
         status_filter.on('update:model-value', apply_filters)
         priority_filter.on('update:model-value', apply_filters)
@@ -213,8 +214,6 @@ async def render_checklist_table(  # noqa: PLR0913, PLR0912, PLR0915, C901, PLR0
     if helpers is None:
         helpers = NiceGUIHelper(db_instance, project_number)
 
-    filtered_items = checklist_items
-
     with ui.element('table').classes('pdc-checklist-table'):
         # Table Header
         with ui.element('thead'), ui.element('tr'):
@@ -233,7 +232,7 @@ async def render_checklist_table(  # noqa: PLR0913, PLR0912, PLR0915, C901, PLR0
         # Table Body
         with ui.element('tbody'):
             current_section = None
-            for item in filtered_items:
+            for item in checklist_items:
                 # Section header row
                 if item.section != current_section:
                     current_section = item.section
