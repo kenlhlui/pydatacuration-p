@@ -177,7 +177,7 @@ class DBModels:
                 description='List of people who created the checklist',
             )
             last_updated: date = Field(
-                default=date.today,
+                default=date.today(),
                 sa_column=Column(DATE, nullable=False),
                 description='Date when the checklist was last updated',
             )
