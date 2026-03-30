@@ -2,6 +2,7 @@
 
 import re
 import time
+from collections.abc import Callable
 from datetime import timedelta
 from pathlib import Path
 from typing import Any
@@ -42,6 +43,7 @@ class NiceGUIHelper:
         self.project_number: str = project_number
         # Timer tracking: {item_id: {'start_time': timestamp, 'elapsed': seconds}}
         self.timers: dict[str, dict] = {}
+        self.refresh_callback: Callable | None = None
 
     def get_checklist_items(self) -> list[SQLModel]:
         """Get all checklist items from the database database for the specified project.
@@ -74,6 +76,8 @@ class NiceGUIHelper:
         """Handle status change with auto-save."""
         self.db.update_checklist_item(item_id=item_id, status=new_status)
         ui.notify(f'Status updated for {item_id}', type='positive', position='top-right', close_button=True)
+        if self.refresh_callback:
+            self.refresh_callback()
 
     def handle_comments_change(self, item_id: str, new_comments: str) -> None:
         """Handle comments change."""
