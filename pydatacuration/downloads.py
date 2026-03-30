@@ -24,7 +24,7 @@ class Downloads:
         api_token: str,
         pid: str,
         main_dir: Path,
-        ticket_number: str,
+        project_number: str,
     ) -> None:
         """Initialize the class.
 
@@ -33,19 +33,19 @@ class Downloads:
             api_token (str): API token of the Dataverse repository
             pid (str): Persistent identifier of the dataset
             main_dir (Path): The directory to save the downloaded files
-            ticket_number (str): The ticket number for the dataset, used for directory organization
+            project_number (str): The project number for the dataset, used for directory organization
         """
         self.base_url = base_url
         self.api_token = api_token
         self.pid = pid
         self.download_dir = main_dir
-        self.ticket_number = ticket_number
+        self.project_number = project_number
 
         self.success_code = 200
 
         self.httpx_client = HTTPXClient(self.base_url, self.api_token)
         self.semaphore = asyncio.Semaphore(5)
-        self.directory_manager = DirectoryManager(self.ticket_number, self.download_dir)
+        self.directory_manager = DirectoryManager(self.project_number, self.download_dir)
 
     @classmethod
     def from_setup_form(
@@ -64,7 +64,7 @@ class Downloads:
             api_token=setup_form.api_token or '',
             pid=setup_form.pid,
             main_dir=main_dir,
-            ticket_number=setup_form.ticket_number,
+            project_number=setup_form.project_number,
         )
 
     @staticmethod

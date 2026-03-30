@@ -219,24 +219,6 @@ select.status-NA {
     border-color: #d6d8db !important;
 }
 
-/* ========================================================================
-   Row Status Background Colors
-   ======================================================================== */
-tr.row-status-P {
-    background-color: rgba(212, 237, 218, 0.3) !important;
-}
-
-tr.row-status-F {
-    background-color: rgba(248, 215, 218, 0.3) !important;
-}
-
-tr.row-status-TBD {
-    background-color: rgba(255, 243, 205, 0.3) !important;
-}
-
-tr.row-status-NA {
-    background-color: rgba(226, 227, 229, 0.3) !important;
-}
 
 /* ========================================================================
    Checklist Table
@@ -333,9 +315,6 @@ tr.row-status-NA {
 /* ========================================================================
    Automated Check Results
    ======================================================================== */
-.pdc-automated-check-cell {
-    font-size: 12px;
-}
 
 .pdc-dynamic-check-results {
     max-height: 300px;
@@ -398,33 +377,6 @@ tr.row-status-NA {
     font-size: 11px;
 }
 
-.pdc-information-location {
-    background-color: #f8f9fa;
-    border: 1px solid #e9ecef;
-    border-radius: 4px;
-    padding: 8px;
-    margin-top: 10px;
-    font-size: 12px;
-    color: #495057;
-    font-weight: 500;
-}
-
-.pdc-information-location p {
-    margin: 0.25em 0;
-    line-height: 1.3;
-}
-
-.pdc-information-location ul,
-.pdc-information-location ol {
-    margin: 0.25em 0;
-    padding-left: 1.2em;
-}
-
-.pdc-information-location li {
-    margin: 0.1em 0;
-    line-height: 1.3;
-}
-
 /* ========================================================================
    Form Inputs
    ======================================================================== */
@@ -451,10 +403,6 @@ tr.row-status-NA {
     font-family: monospace;
 }
 
-.pdc-pre-filled {
-    background-color: #e8f5e8;
-    font-style: italic;
-}
 
 /* ========================================================================
    Priority Badges
@@ -568,16 +516,6 @@ select.checklist-medium {
     background-color: #e8f8f0 !important;
 }
 
-/* ========================================================================
-   Logo
-   ======================================================================== */
-.pdc-logo {
-    height: 60px !important;
-    width: auto !important;
-    display: block;
-    margin: 8px;
-    object-fit: contain;
-}
 
 /* ========================================================================
    Form Sections (Landing Page)
@@ -636,22 +574,6 @@ select.checklist-medium {
    ======================================================================== */
 .pdc-error {
     background-color: #e74c3c;
-    color: white;
-    padding: 10px;
-    border-radius: 4px;
-    margin-bottom: 20px;
-}
-
-.pdc-success {
-    background-color: #27ae60;
-    color: white;
-    padding: 10px;
-    border-radius: 4px;
-    margin-bottom: 20px;
-}
-
-.pdc-info {
-    background-color: #3498db;
     color: white;
     padding: 10px;
     border-radius: 4px;
@@ -867,76 +789,6 @@ select.checklist-medium {
     padding: 0 !important;
 }
 
-/* ========================================================================
-   Project List Cards (Resume Work & Delete Project Pages)
-   ======================================================================== */
-.project-card {
-    background-color: white;
-    border: 1px solid #e0e0e0;
-    border-radius: 8px;
-    padding: 20px;
-    margin-bottom: 15px;
-    display: flex;
-    justify-content: space-between;
-    align-items: center;
-    transition: all 0.3s ease;
-}
-
-.project-card:hover {
-    border-color: #3498db;
-    box-shadow: 0 4px 12px rgba(52, 152, 219, 0.15);
-    transform: translateY(-2px);
-}
-
-.project-card.clickable {
-    cursor: pointer;
-}
-
-.project-card-info {
-    flex-grow: 1;
-}
-
-.project-header {
-    display: flex;
-    justify-content: space-between;
-    align-items: center;
-    margin-bottom: 10px;
-}
-
-.project-ticket {
-    font-size: 1.2rem;
-    font-weight: 600;
-    color: #2c3e50;
-}
-
-.project-date {
-    color: #7f8c8d;
-    font-size: 0.9rem;
-}
-
-.project-info {
-    color: #34495e;
-    margin: 5px 0;
-}
-
-.project-badge {
-    display: inline-block;
-    padding: 4px 8px;
-    border-radius: 4px;
-    font-size: 0.85rem;
-    margin-right: 8px;
-}
-
-.badge-high {
-    background-color: #e74c3c;
-    color: white;
-}
-
-.badge-medium {
-    background-color: #f39c12;
-    color: white;
-}
-
 .no-projects {
     text-align: center;
     padding: 40px;
@@ -956,14 +808,6 @@ select.checklist-medium {
     width: auto;
     margin: 8px 0;
     display: block;
-}
-
-/* ========================================================================
-   Global Link Behavior - Open external links in new tab
-   ======================================================================== */
-/* This applies to markdown-rendered links and other content */
-a[href^="http"] {
-    /* External links handled via JavaScript for target and rel attributes */
 }
 
 </style>

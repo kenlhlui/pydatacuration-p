@@ -3,11 +3,12 @@
 from pathlib import Path
 
 import pytest
-from pydatacuration.directory_manager import DirectoryManager
+
+from pydatacuration.utils.directory_manager import DirectoryManager
 
 
 @pytest.mark.parametrize(
-    ('main_dir', 'ticket_number', 'expected_project_dir'),
+    ('main_dir', 'project_number', 'expected_project_dir'),
     [
         ('/home/user/projects', 'TICKET-123', '/home/user/projects/projects/TICKET-123'),
         ('/data/main_dir', 'PROJECT-456', '/data/main_dir/projects/PROJECT-456'),
@@ -15,19 +16,19 @@ from pydatacuration.directory_manager import DirectoryManager
         ('/var/data/projects/TICKET-000', 'TICKET-000', '/var/data/projects/TICKET-000'),
     ],
 )
-def test_define_project_dir(main_dir: str | None, ticket_number: str, expected_project_dir: str) -> None:
+def test_define_project_dir(main_dir: str | None, project_number: str, expected_project_dir: str) -> None:
     """Test the _define_project_dir method of DirectoryManager.
 
     Args:
         main_dir (str | None): The main directory path.
-        ticket_number (str): The ticket number.
+        project_number (str): The project number.
         expected_project_dir (str): The expected project directory path.
 
     Returns:
         None: This test does not return anything.
 
     """
-    dir_manager = DirectoryManager(ticket_number=ticket_number, main_dir=main_dir or Path.cwd(), res_dir=None)
+    dir_manager = DirectoryManager(project_number=project_number, main_dir=main_dir or Path.cwd(), res_dir=None)
     project_dir = dir_manager._define_project_dir()
     assert str(project_dir) == expected_project_dir
 
@@ -51,7 +52,7 @@ def test_define_db_dir(main_dir: str | None, expected_db_dir: str) -> None:
         None: This test does not return anything.
 
     """
-    dir_manager = DirectoryManager(ticket_number='TEST-001', main_dir=main_dir or Path.cwd(), res_dir=None)
+    dir_manager = DirectoryManager(project_number='TEST-001', main_dir=main_dir or Path.cwd(), res_dir=None)
     db_dir = dir_manager._define_db_dir()
     assert str(db_dir) == expected_db_dir
 
@@ -71,7 +72,7 @@ def test_define_db_path(main_dir: str | None, expected_db_path: str) -> None:
         main_dir (str | None): The main directory path.
         expected_db_path (str): The expected database file path.
     """
-    dir_manager = DirectoryManager(ticket_number='TEST-002', main_dir=main_dir or Path.cwd(), res_dir=None)
+    dir_manager = DirectoryManager(project_number='TEST-002', main_dir=main_dir or Path.cwd(), res_dir=None)
     db_path = dir_manager._define_db_path()
     assert str(db_path) == expected_db_path
 
@@ -97,7 +98,7 @@ def test_get_dir(tmp_path: Path, dir_name: str, should_succeed: bool) -> None:
         dir_name (str): The directory name to retrieve.
         should_succeed (bool): Whether the retrieval should succeed.
     """
-    dir_manager = DirectoryManager(ticket_number='TEST-003', main_dir=tmp_path, res_dir=None)
+    dir_manager = DirectoryManager(project_number='TEST-003', main_dir=tmp_path, res_dir=None)
 
     if should_succeed:
         dir_path = dir_manager.get_dir(dir_name)
@@ -118,7 +119,7 @@ def test_create_dir_predefined(tmp_path: Path) -> None:
     Args:
         tmp_path (Path): Pytest fixture for temporary directory.
     """
-    dir_manager = DirectoryManager(ticket_number='TEST-004', main_dir=tmp_path, res_dir=None)
+    dir_manager = DirectoryManager(project_number='TEST-004', main_dir=tmp_path, res_dir=None)
     created_dir = dir_manager.create_dir('logs')
 
     assert created_dir.exists()
@@ -132,7 +133,7 @@ def test_create_dir_custom_path(tmp_path: Path) -> None:
     Args:
         tmp_path (Path): Pytest fixture for temporary directory.
     """
-    dir_manager = DirectoryManager(ticket_number='TEST-005', main_dir=tmp_path, res_dir=None)
+    dir_manager = DirectoryManager(project_number='TEST-005', main_dir=tmp_path, res_dir=None)
     custom_path = 'custom/nested/dir'
     created_dir = dir_manager.create_dir('custom_dir', custom_path=custom_path)
 
@@ -147,7 +148,7 @@ def test_create_dir_already_exists(tmp_path: Path) -> None:
     Args:
         tmp_path (Path): Pytest fixture for temporary directory.
     """
-    dir_manager = DirectoryManager(ticket_number='TEST-006', main_dir=tmp_path, res_dir=None)
+    dir_manager = DirectoryManager(project_number='TEST-006', main_dir=tmp_path, res_dir=None)
     created_dir = dir_manager.create_dir('logs')
     created_dir_again = dir_manager.create_dir('logs')
 
@@ -161,7 +162,7 @@ def test_create_dirs_predefined(tmp_path: Path) -> None:
     Args:
         tmp_path (Path): Pytest fixture for temporary directory.
     """
-    dir_manager = DirectoryManager(ticket_number='TEST-007', main_dir=tmp_path, res_dir=None)
+    dir_manager = DirectoryManager(project_number='TEST-007', main_dir=tmp_path, res_dir=None)
     dir_names = ['logs', 'outputs', 'dataset/files']
     created_dirs = dir_manager.create_dirs(dir_names=dir_names)
 
@@ -178,7 +179,7 @@ def test_create_dirs_custom(tmp_path: Path) -> None:
     Args:
         tmp_path (Path): Pytest fixture for temporary directory.
     """
-    dir_manager = DirectoryManager(ticket_number='TEST-008', main_dir=tmp_path, res_dir=None)
+    dir_manager = DirectoryManager(project_number='TEST-008', main_dir=tmp_path, res_dir=None)
     custom_dirs = {'custom1': 'path1', 'custom2': 'path2/nested'}
     created_dirs = dir_manager.create_dirs(custom_dirs=custom_dirs)
 
@@ -195,7 +196,7 @@ def test_create_dirs_mixed(tmp_path: Path) -> None:
     Args:
         tmp_path (Path): Pytest fixture for temporary directory.
     """
-    dir_manager = DirectoryManager(ticket_number='TEST-009', main_dir=tmp_path, res_dir=None)
+    dir_manager = DirectoryManager(project_number='TEST-009', main_dir=tmp_path, res_dir=None)
     dir_names = ['logs', 'outputs']
     custom_dirs = {'custom': 'custom/path'}
     created_dirs = dir_manager.create_dirs(dir_names=dir_names, custom_dirs=custom_dirs)
@@ -210,7 +211,7 @@ def test_make_dirs(tmp_path: Path) -> None:
     Args:
         tmp_path (Path): Pytest fixture for temporary directory.
     """
-    dir_manager = DirectoryManager(ticket_number='TEST-010', main_dir=tmp_path, res_dir=None)
+    dir_manager = DirectoryManager(project_number='TEST-010', main_dir=tmp_path, res_dir=None)
     created_dirs = dir_manager.make_dirs()
 
     expected_dirs = ['logs', 'dataset/files', 'dataset/metadata', 'dataset/temp', 'outputs', 'db']
@@ -228,7 +229,7 @@ def test_add_directory(tmp_path: Path) -> None:
     Args:
         tmp_path (Path): Pytest fixture for temporary directory.
     """
-    dir_manager = DirectoryManager(ticket_number='TEST-011', main_dir=tmp_path, res_dir=None)
+    dir_manager = DirectoryManager(project_number='TEST-011', main_dir=tmp_path, res_dir=None)
     initial_count = len(dir_manager._directory_structure)
 
     dir_manager.add_directory('new_dir', 'path/to/new_dir')
@@ -244,7 +245,7 @@ def test_list_directories(tmp_path: Path) -> None:
     Args:
         tmp_path (Path): Pytest fixture for temporary directory.
     """
-    dir_manager = DirectoryManager(ticket_number='TEST-012', main_dir=tmp_path, res_dir=None)
+    dir_manager = DirectoryManager(project_number='TEST-012', main_dir=tmp_path, res_dir=None)
     directories = dir_manager.list_directories()
 
     expected_dirs = {
@@ -312,7 +313,7 @@ def test_property_log_files_dir(tmp_path: Path) -> None:
     Args:
         tmp_path (Path): Pytest fixture for temporary directory.
     """
-    dir_manager = DirectoryManager(ticket_number='TEST-013', main_dir=tmp_path, res_dir=None)
+    dir_manager = DirectoryManager(project_number='TEST-013', main_dir=tmp_path, res_dir=None)
     assert dir_manager.log_files_dir == dir_manager.project_dir / 'logs'
 
 
@@ -322,7 +323,7 @@ def test_property_logs_dir(tmp_path: Path) -> None:
     Args:
         tmp_path (Path): Pytest fixture for temporary directory.
     """
-    dir_manager = DirectoryManager(ticket_number='TEST-014', main_dir=tmp_path, res_dir=None)
+    dir_manager = DirectoryManager(project_number='TEST-014', main_dir=tmp_path, res_dir=None)
     assert dir_manager.logs_dir == dir_manager.project_dir / 'logs'
 
 
@@ -332,7 +333,7 @@ def test_property_db_dir(tmp_path: Path) -> None:
     Args:
         tmp_path (Path): Pytest fixture for temporary directory.
     """
-    dir_manager = DirectoryManager(ticket_number='TEST-015', main_dir=tmp_path, res_dir=None)
+    dir_manager = DirectoryManager(project_number='TEST-015', main_dir=tmp_path, res_dir=None)
     assert dir_manager.db_dir == tmp_path / 'db'
 
 
@@ -342,7 +343,7 @@ def test_property_db_path(tmp_path: Path) -> None:
     Args:
         tmp_path (Path): Pytest fixture for temporary directory.
     """
-    dir_manager = DirectoryManager(ticket_number='TEST-016', main_dir=tmp_path, res_dir=None)
+    dir_manager = DirectoryManager(project_number='TEST-016', main_dir=tmp_path, res_dir=None)
     assert dir_manager.db_path == tmp_path / 'db' / 'db.duckdb'
 
 
@@ -352,7 +353,7 @@ def test_property_outputs_dir(tmp_path: Path) -> None:
     Args:
         tmp_path (Path): Pytest fixture for temporary directory.
     """
-    dir_manager = DirectoryManager(ticket_number='TEST-017', main_dir=tmp_path, res_dir=None)
+    dir_manager = DirectoryManager(project_number='TEST-017', main_dir=tmp_path, res_dir=None)
     assert dir_manager.outputs_dir == dir_manager.project_dir / 'outputs'
 
 
@@ -362,7 +363,7 @@ def test_property_metadata_dir(tmp_path: Path) -> None:
     Args:
         tmp_path (Path): Pytest fixture for temporary directory.
     """
-    dir_manager = DirectoryManager(ticket_number='TEST-018', main_dir=tmp_path, res_dir=None)
+    dir_manager = DirectoryManager(project_number='TEST-018', main_dir=tmp_path, res_dir=None)
     assert dir_manager.metadata_dir == dir_manager.project_dir / 'dataset/metadata'
 
 
@@ -372,7 +373,7 @@ def test_property_files_dir(tmp_path: Path) -> None:
     Args:
         tmp_path (Path): Pytest fixture for temporary directory.
     """
-    dir_manager = DirectoryManager(ticket_number='TEST-019', main_dir=tmp_path, res_dir=None)
+    dir_manager = DirectoryManager(project_number='TEST-019', main_dir=tmp_path, res_dir=None)
     assert dir_manager.files_dir == dir_manager.project_dir / 'dataset/files'
 
 
@@ -382,5 +383,5 @@ def test_property_main_dir_path(tmp_path: Path) -> None:
     Args:
         tmp_path (Path): Pytest fixture for temporary directory.
     """
-    dir_manager = DirectoryManager(ticket_number='TEST-020', main_dir=tmp_path, res_dir=None)
+    dir_manager = DirectoryManager(project_number='TEST-020', main_dir=tmp_path, res_dir=None)
     assert dir_manager.main_dir_path == tmp_path.resolve()

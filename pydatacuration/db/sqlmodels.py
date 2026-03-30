@@ -86,8 +86,8 @@ class DBModels:
 
             __tablename__ = 'project_metadata'  # type: ignore[assignment]
             __table_args__ = {'schema': self.schema_name}
-            ticket_number: str = Field(
-                default='', sa_column=Column(String, nullable=False, unique=True), description='Unique ticket number'
+            project_number: str = Field(
+                default='', sa_column=Column(String, nullable=False, unique=True), description='Unique project number'
             )
             curator_name: str = Field(
                 default='', sa_column=Column(String, nullable=False), description='Name of the data curator'
@@ -139,6 +139,55 @@ class DBModels:
             )
 
         return ProjectMetadata
+
+    def checklist_metadata(self) -> type[SQLModel]:
+        """Create a ChecklistMetadata table class with the specified schema.
+
+        Returns:
+            type[SQLModel]: The ChecklistMetadata class with the specified schema.
+        """
+        # Only clear if table already exists in metadata
+        table_key = f'{self.schema_name}.checklist_metadata'
+        if table_key in BaseSQLModel.metadata.tables:
+            BaseSQLModel.metadata.remove(BaseSQLModel.metadata.tables[table_key])
+
+        class ChecklistMetadata(SQLModel, table=True):
+            """Checklist metadata table model."""
+
+            __tablename__ = 'checklist_metadata'  # type: ignore[assignment]
+            __table_args__ = {'schema': self.schema_name}
+            name: str = Field(
+                default='',
+                sa_column=Column(String, nullable=False, primary_key=True),
+                description='Name of the checklist',
+            )
+            version: str = Field(
+                default='',
+                sa_column=Column(String, nullable=False),
+                description='Version of the checklist, should follow semantic versioning (e.g., "1.0.0")',
+            )
+            description: str = Field(
+                default='',
+                sa_column=Column(String, nullable=True),
+                description='Description of the checklist',
+            )
+            created_by: list[str] = Field(
+                default_factory=list,
+                sa_column=Column(_json_column_type(self.db_type), nullable=False),
+                description='List of people who created the checklist',
+            )
+            last_updated: date = Field(
+                default=date.today(),
+                sa_column=Column(DATE, nullable=False),
+                description='Date when the checklist was last updated',
+            )
+            status: str = Field(
+                default='draft',
+                sa_column=Column(String, nullable=False),
+                description='Status of the checklist, either draft, active, or deprecated',
+            )
+
+        return ChecklistMetadata
 
     def checklist(self) -> type[SQLModel]:
         """Create a Checklist table class with the specified schema.

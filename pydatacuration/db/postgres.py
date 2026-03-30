@@ -18,7 +18,7 @@ class PostgreSQLBackend(DatabaseBackend):
     """PostgreSQL backend implementation.
 
     Uses a persistent connection pool to a PostgreSQL server.
-    Schemas are used per project/ticket, same as the DuckDB backend.
+    Schemas are used per project, same as the DuckDB backend.
     """
 
     _SYSTEM_SCHEMAS: frozenset[str] = frozenset(

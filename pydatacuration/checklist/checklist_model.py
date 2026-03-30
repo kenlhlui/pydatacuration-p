@@ -16,7 +16,7 @@ class ChecklistMetadata(BaseModel):
     name: str = Field(..., description='The name of the checklist.')
     version: str = Field(..., description='The version of the checklist.')
     description: str | None = Field(None, description='A description of the checklist.')
-    created_by: str | list[str] | None = Field(None, description='The person who created the checklist.')
+    created_by: list[str] = Field(..., description='The person who created the checklist.')
     last_updated: date | None = Field(None, description='The date the checklist was last updated. (YYYY-MM-DD)')
     status: Literal['draft', 'active', 'deprecated'] = Field(
         ..., description='The status of the checklist, either draft, active, or deprecated.'

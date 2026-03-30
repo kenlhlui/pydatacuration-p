@@ -17,7 +17,7 @@ from pydatacuration.utils.custom_logging import logger
 class DuckDBBackend(DatabaseBackend):
     """DuckDB backend implementation.
 
-    Uses a single DuckDB file with schemas per project/ticket.
+    Uses a single DuckDB file with schemas per project.
     All operations go through SQLAlchemy/SQLModel via the ``duckdb-engine`` driver.
     """
 

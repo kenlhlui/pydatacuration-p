@@ -38,12 +38,12 @@ if __name__ == '__main__':
     app_settings = AppSettings()
 
     datasets_dict = datasets()
-    for ticket_number, pid in datasets_dict.items():
+    for project_number, pid in datasets_dict.items():
         setup_data: dict = default_setup.model_dump(mode='python')
-        setup_data['ticket_number'] = ticket_number
+        setup_data['project_number'] = project_number
         setup_data['pid'] = pid
         setup_form = SetupForm(**setup_data, main_dir=app_settings.main_dir)
         try:
             run_curation(setup_form, app_settings)
         except Exception as e:
-            logger.error(f'Error occurred while running curation for {ticket_number}: {e}')
+            logger.error(f'Error occurred while running curation for {project_number}: {e}')

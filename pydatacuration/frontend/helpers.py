@@ -32,27 +32,27 @@ Checklist: type[SQLModel] = DBModels('_type_hints_').checklist()
 class NiceGUIHelper:
     """Helper class for NiceGUI components."""
 
-    def __init__(self, db: DatabaseBackend, ticket_number: str, refresh_callback: Callable | None = None) -> None:
+    def __init__(self, db: DatabaseBackend, project_number: str, refresh_callback: Callable | None = None) -> None:
         """Initialize NiceGUIHelper.
 
         Args:
             db (DatabaseBackend): Database backend instance.
-            ticket_number (str): Ticket number to work with.
+            project_number (str): Project number to work with.
             refresh_callback: Optional callback function to refresh the UI after updates.
         """
         self.db: DatabaseBackend = db
-        self.ticket_number: str = ticket_number
+        self.project_number: str = project_number
         self.refresh_callback = refresh_callback
         # Timer tracking: {item_id: {'start_time': timestamp, 'elapsed': seconds}}
         self.timers: dict[str, dict] = {}
 
     def get_checklist_items(self) -> list[SQLModel]:
-        """Get all checklist items from the database database for the specified ticket.
+        """Get all checklist items from the database database for the specified project.
 
         The checklist type is determined by what was stored in the database during setup.
 
         Args:
-            ticket_number (str): Ticket number to get checklist items for.
+            project_number (str): Project number to get checklist items for.
 
         Returns:
             Sequence[SQLModel]: List of checklist items with their details.
@@ -313,7 +313,7 @@ class NiceGUIHelper:
                     logger.error(f'Could not get metadata for schema {schema_name}: {e}')
                     project_metadata_schema.append(
                         {
-                            'ticket_number': schema_name.replace('duckdb.', '').replace('"', ''),
+                            'project_number': schema_name.replace('duckdb.', '').replace('"', ''),
                             'name': schema_name,
                             'last_modified': 'Unknown',
                             'has_metadata': False,
@@ -374,18 +374,18 @@ class NiceGUIHelper:
             except Exception as e:
                 return False, f'Error deleting schema: {str(e)}'
 
-        def delete_project_directory(ticket_number: str) -> None:
-            """Delete the project directory for a specific ticket number.
+        def delete_project_directory(project_number: str) -> None:
+            """Delete the project directory for a specific project number.
 
             Args:
-                ticket_number (str): Ticket number of the project to delete (is schema_name_pruned)
+                project_number (str): Project number of the project to delete (is schema_name_pruned)
 
             """
             try:
-                dir_manager = DirectoryManager(ticket_number, main_dir)
-                dir_manager.delete_dir(main_dir / 'projects' / ticket_number)
+                dir_manager = DirectoryManager(project_number, main_dir)
+                dir_manager.delete_dir(main_dir / 'projects' / project_number)
             except Exception as e:
-                logger.error(f'Error deleting project directory for {ticket_number}: {e}')
+                logger.error(f'Error deleting project directory for {project_number}: {e}')
 
         delete_project_directory(schema_name_pruned)
         delete_schema(schema_name_pruned)
