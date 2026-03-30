@@ -32,19 +32,18 @@ Checklist: type[SQLModel] = DBModels('_type_hints_').checklist()
 class NiceGUIHelper:
     """Helper class for NiceGUI components."""
 
-    def __init__(self, db: DatabaseBackend, project_number: str, refresh_callback: Callable | None = None) -> None:
+    def __init__(self, db: DatabaseBackend, project_number: str) -> None:
         """Initialize NiceGUIHelper.
 
         Args:
             db (DatabaseBackend): Database backend instance.
             project_number (str): Project number to work with.
-            refresh_callback: Optional callback function to refresh the UI after updates.
         """
         self.db: DatabaseBackend = db
         self.project_number: str = project_number
-        self.refresh_callback = refresh_callback
         # Timer tracking: {item_id: {'start_time': timestamp, 'elapsed': seconds}}
         self.timers: dict[str, dict] = {}
+        self.refresh_callback: Callable | None = None
 
     def get_checklist_items(self) -> list[SQLModel]:
         """Get all checklist items from the database database for the specified project.
@@ -78,16 +77,12 @@ class NiceGUIHelper:
         self.db.update_checklist_item(item_id=item_id, status=new_status)
         ui.notify(f'Status updated for {item_id}', type='positive', position='top-right', close_button=True)
         if self.refresh_callback:
-            # Schedule the async callback to run
-            ui.timer(0.0, self.refresh_callback, once=True)
+            self.refresh_callback()
 
     def handle_comments_change(self, item_id: str, new_comments: str) -> None:
         """Handle comments change."""
         self.db.update_checklist_item(item_id=item_id, comments=new_comments)
         ui.notify(f'Comments updated for {item_id}', type='positive', position='top-right', close_button=True)
-        if self.refresh_callback:
-            # Schedule the async callback to run
-            ui.timer(0.0, self.refresh_callback, once=True)
 
     def handle_time_change(self, item_id: str, time_spent_input: str) -> None:
         """Handle time change with validation."""
@@ -100,9 +95,6 @@ class NiceGUIHelper:
             time_spent_delta: timedelta = timedelta(minutes=minutes, seconds=seconds)
             self.db.update_checklist_item(item_id=item_id, time_spent=time_spent_delta)
             ui.notify(f'Time updated for {item_id}', type='positive', position='top-right', close_button=True)
-            if self.refresh_callback:
-                # Schedule the async callback to run
-                ui.timer(0.0, self.refresh_callback, once=True)
         else:
             ui.notify('Please enter time in MM:SS format', type='negative')
 
@@ -211,10 +203,6 @@ class NiceGUIHelper:
         del self.timers[item_id]
 
         ui.notify(f'Timer stopped for {item_id}: {time_str}', type='positive', position='top-right', close_button=True)
-
-        if self.refresh_callback:
-            # Schedule the async callback to run
-            ui.timer(0.0, self.refresh_callback, once=True)
 
     def toggle_timer(self, item_id: str, time_input: ui.input, button: ui.button) -> None:
         """Toggle timer start/stop for a checklist item.

@@ -127,43 +127,52 @@ async def checklist_page(project_number: str) -> None:
                     )
 
                 # Clear filters button
-                ui.button('Clear Filters', on_click=lambda: clear_filters(status_filter, priority_filter)).classes(
+                ui.button('Clear Filters', on_click=lambda: clear_filters()).classes(  # noqa: PLW0108
                     'pdc-btn pdc-btn-secondary'
                 )
 
-        # Table container that will be refreshed when filters change
-        table_container = ui.column().style('width: 100%;')
+        # Dicts populated by render_checklist_table for visibility-based filtering
+        # item_rows: {item_id: (row_element, item)}
+        # section_header_rows: {section_name: row_element}
+        item_rows: dict = {}
+        section_header_rows: dict = {}
 
-        # Define clear filters function
-        async def clear_filters(status_sel: ui.select, priority_sel: ui.select) -> None:
-            status_sel.value = ''
-            priority_sel.value = ''
-            # Explicitly trigger a refresh after clearing
-            await render_filtered_table()
+        # Render all rows once — never cleared, so timers are never interrupted
+        checklist_items = helpers.get_checklist_items()
+        await render_checklist_table(
+            db,
+            checklist_items,
+            check_results,
+            project_number,
+            helpers=helpers,
+            item_rows=item_rows,
+            section_header_rows=section_header_rows,
+        )
 
-        # Define render function that applies filters
-        async def render_filtered_table() -> None:
-            # Reload checklist items from database to get latest changes
-            fresh_items = helpers.get_checklist_items()
-
-            table_container.clear()
-            with table_container:
-                await render_checklist_table(
-                    db,
-                    fresh_items,
-                    check_results,
-                    project_number,
-                    status_filter=status_filter.value,
-                    priority_filter=priority_filter.value,
-                    refresh_callback=render_filtered_table,
+        # Filtering is a pure visibility toggle — no re-render needed
+        def apply_filters() -> None:
+            status_val = status_filter.value
+            priority_val = priority_filter.value
+            visible_sections: set[str] = set()
+            for _, (row, item) in item_rows.items():
+                visible = (not status_val or (item.status or '') == status_val) and (
+                    not priority_val or (item.priority or '').lower() == priority_val.lower()
                 )
+                row.set_visibility(visible)
+                if visible:
+                    visible_sections.add(item.section)
+            for section, row in section_header_rows.items():
+                row.set_visibility(section in visible_sections)
 
-        # Connect filters to table refresh
-        status_filter.on('update:model-value', render_filtered_table)
-        priority_filter.on('update:model-value', render_filtered_table)
+        def clear_filters() -> None:
+            status_filter.value = ''
+            priority_filter.value = ''
+            apply_filters()
 
-        # Initial render
-        await render_filtered_table()
+        # Set after render — depends on item_rows/section_header_rows closures built during render
+        helpers.refresh_callback = apply_filters
+        status_filter.on('update:model-value', apply_filters)
+        priority_filter.on('update:model-value', apply_filters)
 
         # Action Buttons
         with ui.element('div').classes('pdc-actions'):
@@ -182,14 +191,14 @@ async def checklist_page(project_number: str) -> None:
             ui.button('New Dataset', on_click=helpers.confirm_new_dataset).classes('pdc-btn pdc-btn-danger')
 
 
-async def render_checklist_table(  # noqa: PLR0913, C901, PLR0917
+async def render_checklist_table(  # noqa: PLR0913, PLR0912, PLR0915, C901, PLR0917
     db_instance: DatabaseBackend,
     checklist_items: list,
     check_results: dict[str, str],
     project_number: str,
-    status_filter: str = '',
-    priority_filter: str = '',
-    refresh_callback: None = None,
+    helpers: NiceGUIHelper | None = None,
+    item_rows: dict | None = None,
+    section_header_rows: dict | None = None,
 ) -> None:
     """Render checklist table with exact styling.
 
@@ -198,19 +207,12 @@ async def render_checklist_table(  # noqa: PLR0913, C901, PLR0917
         checklist_items: List of checklist items
         check_results: Dictionary of check results
         project_number: Project number
-        status_filter: Filter by status (empty string means no filter)
-        priority_filter: Filter by priority (empty string means no filter)
-        refresh_callback: Optional callback function to refresh the UI after updates
+        helpers: NiceGUIHelper instance (shared from page to preserve timer state)
+        item_rows: Dict populated with {item_id: (row_element, item)} for visibility filtering
+        section_header_rows: Dict populated with {section: row_element} for visibility filtering
     """
-    # Internal helper functions for creating UI components
-    helpers = NiceGUIHelper(db_instance, project_number, refresh_callback)
-
-    # Apply filters to checklist items
-    filtered_items = checklist_items
-    if status_filter:
-        filtered_items = [item for item in filtered_items if item.status == status_filter]
-    if priority_filter:
-        filtered_items = [item for item in filtered_items if item.priority.lower() == priority_filter.lower()]
+    if helpers is None:
+        helpers = NiceGUIHelper(db_instance, project_number)
 
     with ui.element('table').classes('pdc-checklist-table'):
         # Table Header
@@ -230,15 +232,17 @@ async def render_checklist_table(  # noqa: PLR0913, C901, PLR0917
         # Table Body
         with ui.element('tbody'):
             current_section = None
-            for item in filtered_items:
+            for item in checklist_items:
                 # Section header row
                 if item.section != current_section:
                     current_section = item.section
-                    with ui.element('tr'), ui.element('td').props('colspan=7').classes('pdc-section-header'):
+                    with ui.element('tr') as section_row, ui.element('td').props('colspan=7').classes('pdc-section-header'):  # noqa: E501
                         ui.label(item.section)
+                    if section_header_rows is not None:
+                        section_header_rows[item.section] = section_row
 
                 # Item row
-                with ui.element('tr').props(f'data-item-id="{item.id}"'):
+                with ui.element('tr').props(f'data-item-id="{item.id}"') as item_row:
                     # ID
                     with ui.element('td').classes('pdc-item-id'):
                         ui.label(item.id)
@@ -321,7 +325,10 @@ async def render_checklist_table(  # noqa: PLR0913, C901, PLR0917
                         create_status_select(
                             item.id,
                             item.status or '',
-                            on_change=lambda e, iid=item.id: helpers.handle_status_change(iid, e.value),
+                            on_change=lambda e, iid=item.id, it=item: [
+                                setattr(it, 'status', e.value),
+                                helpers.handle_status_change(iid, e.value),
+                            ],
                         )
 
                     # Comments
@@ -362,6 +369,9 @@ async def render_checklist_table(  # noqa: PLR0913, C901, PLR0917
                             return timer_btn
 
                         create_timer_callback(item.id, time_input)
+
+                if item_rows is not None:
+                    item_rows[item.id] = (item_row, item)
 
 
 def render_check_results(results: dict) -> None:
