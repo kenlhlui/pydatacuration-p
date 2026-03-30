@@ -121,7 +121,7 @@ POSTGRES_DB=curation
     ```
 
     To also start the bundled **PostgreSQL** and **pgAdmin** services (required when
-    `DB_BACKEND=postgresql` is set), add the `--profile postgres` flag:
+    `DB_TYPE=postgresql` is set), add the `--profile postgres` flag:
 
     ``` bash
     docker compose --profile postgres up -d
