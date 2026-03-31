@@ -6,13 +6,15 @@ from pathlib import Path
 from nicegui import ui
 
 from pydatacuration.backend.models.app_settings import AppSettings
+
+# Import the options models and loaders
+from pydatacuration.checklist.priority_options import load_priority_options
 from pydatacuration.db import DatabaseBackend
 from pydatacuration.db import get_database
 
 # Import exceptions for error handling
 from pydatacuration.frontend.helpers import NiceGUIHelper
-from pydatacuration.frontend.helpers import priority_options
-from pydatacuration.frontend.helpers import status_options
+from pydatacuration.frontend.models.status_options import load_status_options
 
 # Import styles and styled components
 from pydatacuration.frontend.styles import apply_pdc_styles
@@ -54,6 +56,12 @@ async def checklist_page(project_number: str) -> None:
 
     # Load checklist results from database
     check_results = db.read_check_results()
+
+    # Load the options for status and priority from the resource directory (with fallback to defaults)
+    _status_opts = load_status_options(RES_DIR)
+    status_options = list(_status_opts.model_dump(mode='python').values())
+    status_color_map = _status_opts.color_map()
+    priority_options = load_priority_options(RES_DIR).model_dump(mode='python')
 
     with ui.column().classes('pdc-container'):
         # Logo
@@ -105,8 +113,8 @@ async def checklist_page(project_number: str) -> None:
                     ui.label('Filter by Status').classes('pdc-form-label')
                     status_filter = (
                         ui.select(
-                            options=status_options(),
-                            value='',
+                            options=status_options,
+                            value=None,
                             with_input=False,
                         )
                         .classes('pdc-status-select')
@@ -118,8 +126,8 @@ async def checklist_page(project_number: str) -> None:
                     ui.label('Filter by Priority').classes('pdc-form-label')
                     priority_filter = (
                         ui.select(
-                            options=priority_options(),
-                            value='',
+                            options=priority_options,
+                            value=None,
                             with_input=False,
                         )
                         .classes('pdc-status-select')
@@ -144,6 +152,8 @@ async def checklist_page(project_number: str) -> None:
             checklist_items,
             check_results,
             project_number,
+            status_options=status_options,
+            status_color_map=status_color_map,
             helpers=helpers,
             item_rows=item_rows,
             section_header_rows=section_header_rows,
@@ -156,7 +166,7 @@ async def checklist_page(project_number: str) -> None:
             visible_sections: set[str] = set()
             for _, (row, item) in item_rows.items():
                 visible = (not status_val or (item.status or '') == status_val) and (
-                    not priority_val or (item.priority or '').lower() == priority_val.lower()
+                    not priority_val or item.priority == priority_val
                 )
                 row.set_visibility(visible)
                 if visible:
@@ -165,8 +175,8 @@ async def checklist_page(project_number: str) -> None:
                 row.set_visibility(section in visible_sections)
 
         def clear_filters() -> None:
-            status_filter.value = ''
-            priority_filter.value = ''
+            status_filter.value = None
+            priority_filter.value = None
             apply_filters()
 
         # Set after render — depends on item_rows/section_header_rows closures built during render
@@ -196,6 +206,8 @@ async def render_checklist_table(  # noqa: PLR0913, PLR0912, PLR0915, C901, PLR0
     checklist_items: list,
     check_results: dict[str, str],
     project_number: str,
+    status_options: list,
+    status_color_map: dict[str, tuple[str, str]] | None = None,
     helpers: NiceGUIHelper | None = None,
     item_rows: dict | None = None,
     section_header_rows: dict | None = None,
@@ -207,9 +219,12 @@ async def render_checklist_table(  # noqa: PLR0913, PLR0912, PLR0915, C901, PLR0
         checklist_items: List of checklist items
         check_results: Dictionary of check results
         project_number: Project number
+        status_options: List of available status option labels
+        status_color_map: Optional mapping of status label → (bg_color, text_color)
         helpers: NiceGUIHelper instance (shared from page to preserve timer state)
         item_rows: Dict populated with {item_id: (row_element, item)} for visibility filtering
         section_header_rows: Dict populated with {section: row_element} for visibility filtering
+        **kwargs: Additional keyword arguments (unused)
     """
     if helpers is None:
         helpers = NiceGUIHelper(db_instance, project_number)
@@ -236,7 +251,10 @@ async def render_checklist_table(  # noqa: PLR0913, PLR0912, PLR0915, C901, PLR0
                 # Section header row
                 if item.section != current_section:
                     current_section = item.section
-                    with ui.element('tr') as section_row, ui.element('td').props('colspan=7').classes('pdc-section-header'):  # noqa: E501
+                    with (
+                        ui.element('tr') as section_row,
+                        ui.element('td').props('colspan=7').classes('pdc-section-header'),
+                    ):  # noqa: E501
                         ui.label(item.section)
                     if section_header_rows is not None:
                         section_header_rows[item.section] = section_row
@@ -324,11 +342,13 @@ async def render_checklist_table(  # noqa: PLR0913, PLR0912, PLR0915, C901, PLR0
                     with ui.element('td'):
                         create_status_select(
                             item.id,
-                            item.status or '',
+                            status_options=status_options,
+                            current_value=item.status or None,
                             on_change=lambda e, iid=item.id, it=item: [
                                 setattr(it, 'status', e.value),
                                 helpers.handle_status_change(iid, e.value),
                             ],
+                            color_map=status_color_map,
                         )
 
                     # Comments

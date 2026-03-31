@@ -37,3 +37,6 @@ This will delete the `./workdir`, `./new_dir/` and `./pgadmin/` folders,
 
 ### 🧪 Testing the Checklist Validator
 See the [Checklist Validator CLI Guide](docs/checklist/README.md) for instructions on how to test the checklist validator using the command line interface (CLI).
+
+### 📂 Custom Status Options
+See the [Custom Status Options Guide](docs/custom_status_options/README.md) for instructions on how to define and use custom status options.
