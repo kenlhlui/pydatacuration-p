@@ -56,7 +56,12 @@ def load_status_options(res_dir: str | Path) -> StatusOptions | CustomStatusOpti
         logger.debug(f'No status options file found in {res_dir}. Using pure defaults.')
         return StatusOptions()
 
-    raw = file_path.read_text(encoding='utf-8')
-    data = yaml.safe_load(raw) if file_path.suffix in {'.yaml', '.yml'} else orjson.loads(raw)
-    logger.debug(f'Loaded status options from {file_path}: {data}')
-    return CustomStatusOptions.model_validate(data)
+    try:
+        logger.debug(f'Found status options file: {file_path}')
+        raw = file_path.read_text(encoding='utf-8')
+        data = yaml.safe_load(raw) if file_path.suffix in {'.yaml', '.yml'} else orjson.loads(raw)
+        logger.debug(f'Loaded status options from {file_path}: {data}')
+        return CustomStatusOptions.model_validate(data)
+    except Exception as e:
+        logger.error(f'Error reading status options file {file_path}: {e}')
+        return StatusOptions()
