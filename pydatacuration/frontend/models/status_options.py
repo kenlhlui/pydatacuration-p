@@ -4,12 +4,14 @@ from pathlib import Path
 
 import orjson
 import yaml
+from loguru import logger
 from pydantic import BaseModel
 from pydantic import Field
+from pydantic import RootModel
 
 
 class StatusOptions(BaseModel):
-    """Model for the main directory."""
+    """Default status options with full metadata."""
 
     Pass: str = Field(
         'Pass', serialization_alias='Pass', description='Checklist item is complete and meets all requirements.'
@@ -27,7 +29,13 @@ class StatusOptions(BaseModel):
     )
 
 
-def load_status_options(res_dir: str | Path) -> StatusOptions:
+class CustomStatusOptions(RootModel[dict[str, str]]):
+    """Arbitrary status options loaded from a file."""
+
+    root: dict[str, str]
+
+
+def load_status_options(res_dir: str | Path) -> StatusOptions | CustomStatusOptions:
     """Load StatusOptions from a YAML or JSON file in res_dir.
 
         - If file exists: file is the complete source of truth.
@@ -37,7 +45,7 @@ def load_status_options(res_dir: str | Path) -> StatusOptions:
         res_dir (str | Path): Path to the resources directory containing the status options file.
 
     Returns:
-        StatusOptions: The loaded status options.
+        StatusOptions | CustomStatusOptions: The loaded status options.
     """
     res_dir = Path(res_dir)
 
@@ -45,9 +53,10 @@ def load_status_options(res_dir: str | Path) -> StatusOptions:
     file_path = next(res_dir.glob('status_options.*'), None)
 
     if file_path is None:
-        return StatusOptions()  # pure defaults
+        logger.debug(f'No status options file found in {res_dir}. Using pure defaults.')
+        return StatusOptions()
 
     raw = file_path.read_text(encoding='utf-8')
     data = yaml.safe_load(raw) if file_path.suffix in {'.yaml', '.yml'} else orjson.loads(raw)
-
-    return StatusOptions.model_validate(data)
+    logger.debug(f'Loaded status options from {file_path}: {data}')
+    return CustomStatusOptions.model_validate(data)
