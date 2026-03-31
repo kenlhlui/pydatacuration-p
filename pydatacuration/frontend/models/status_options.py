@@ -64,4 +64,5 @@ def load_status_options(res_dir: str | Path) -> StatusOptions | CustomStatusOpti
         return CustomStatusOptions.model_validate(data)
     except Exception as e:
         logger.error(f'Error reading status options file {file_path}: {e}')
+        logger.info('Falling back to pure defaults of status options.')
         return StatusOptions()
