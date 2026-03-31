@@ -28,11 +28,24 @@ class StatusOptions(BaseModel):
         'Not Applicable', serialization_alias='Not Applicable', description='Checklist item is not applicable.'
     )
 
+    def color_map(self) -> dict[str, tuple[str, str]]:
+        """Map each label to (background_color, text_color)."""
+        return {
+            self.Pass: ('#d4edda', '#155724'),
+            self.Follow_up: ('#f8d7da', '#721c24'),
+            self.TBD: ('#fff3cd', '#856404'),
+            self.NA: ('#e2e3e5', '#383d41'),
+        }
+
 
 class CustomStatusOptions(RootModel[dict[str, str]]):
     """Arbitrary status options loaded from a file."""
 
     root: dict[str, str]
+
+    def color_map(self) -> dict[str, tuple[str, str]]:
+        """Neutral fallback color for all custom labels."""
+        return dict.fromkeys(self.root.values(), ('#e2e3e5', '#383d41'))
 
 
 def load_status_options(res_dir: str | Path) -> StatusOptions | CustomStatusOptions:

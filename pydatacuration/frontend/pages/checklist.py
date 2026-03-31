@@ -58,7 +58,9 @@ async def checklist_page(project_number: str) -> None:
     check_results = db.read_check_results()
 
     # Load the options for status and priority from the resource directory (with fallback to defaults)
-    status_options = list(load_status_options(RES_DIR).model_dump(mode='python').values())
+    _status_opts = load_status_options(RES_DIR)
+    status_options = list(_status_opts.model_dump(mode='python').values())
+    status_color_map = _status_opts.color_map()
     priority_options = list(load_priority_options(RES_DIR).model_dump(mode='python').values())
 
     with ui.column().classes('pdc-container'):
@@ -151,6 +153,7 @@ async def checklist_page(project_number: str) -> None:
             check_results,
             project_number,
             status_options=status_options,
+            status_color_map=status_color_map,
             helpers=helpers,
             item_rows=item_rows,
             section_header_rows=section_header_rows,
@@ -204,6 +207,7 @@ async def render_checklist_table(  # noqa: PLR0913, PLR0912, PLR0915, C901, PLR0
     check_results: dict[str, str],
     project_number: str,
     status_options: list,
+    status_color_map: dict[str, tuple[str, str]] | None = None,
     helpers: NiceGUIHelper | None = None,
     item_rows: dict | None = None,
     section_header_rows: dict | None = None,
@@ -216,9 +220,12 @@ async def render_checklist_table(  # noqa: PLR0913, PLR0912, PLR0915, C901, PLR0
         checklist_items: List of checklist items
         check_results: Dictionary of check results
         project_number: Project number
+        status_options: List of available status option labels
+        status_color_map: Optional mapping of status label → (bg_color, text_color)
         helpers: NiceGUIHelper instance (shared from page to preserve timer state)
         item_rows: Dict populated with {item_id: (row_element, item)} for visibility filtering
         section_header_rows: Dict populated with {section: row_element} for visibility filtering
+        **kwargs: Additional keyword arguments (unused)
     """
     if helpers is None:
         helpers = NiceGUIHelper(db_instance, project_number)
@@ -342,6 +349,7 @@ async def render_checklist_table(  # noqa: PLR0913, PLR0912, PLR0915, C901, PLR0
                                 setattr(it, 'status', e.value),
                                 helpers.handle_status_change(iid, e.value),
                             ],
+                            color_map=status_color_map,
                         )
 
                     # Comments

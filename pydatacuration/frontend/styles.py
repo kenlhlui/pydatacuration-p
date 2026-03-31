@@ -3,6 +3,7 @@
 Replicates the exact look and feel from styles.css.
 """
 
+from collections.abc import Callable
 from pathlib import Path
 
 from nicegui import ui
@@ -185,39 +186,6 @@ body {
     font-size: 12px;
     transition: background-color 0.3s ease;
 }
-
-.status-P,
-.status-select.status-P,
-select.status-P {
-    background-color: #d4edda !important;
-    color: #155724 !important;
-    border-color: #c3e6cb !important;
-}
-
-.status-F,
-.status-select.status-F,
-select.status-F {
-    background-color: #f8d7da !important;
-    color: #721c24 !important;
-    border-color: #f5c6cb !important;
-}
-
-.status-TBD,
-.status-select.status-TBD,
-select.status-TBD {
-    background-color: #fff3cd !important;
-    color: #856404 !important;
-    border-color: #ffeaa7 !important;
-}
-
-.status-NA,
-.status-select.status-NA,
-select.status-NA {
-    background-color: #e2e3e5 !important;
-    color: #383d41 !important;
-    border-color: #d6d8db !important;
-}
-
 
 /* ========================================================================
    Checklist Table
@@ -1044,7 +1012,13 @@ def create_check_type_badge(check_type: str) -> ui.label:
     return ui.label(text).classes(f'pdc-priority-badge {css_class}')
 
 
-def create_status_select(item_id: str, status_options: list, current_value: str | None = None, on_change=None):
+def create_status_select(
+    item_id: str,
+    status_options: list,
+    current_value: str | None = None,
+    on_change: Callable | None = None,
+    color_map: dict[str, tuple[str, str]] | None = None,
+):
     """Create a status select dropdown with proper styling.
 
     Args:
@@ -1052,6 +1026,7 @@ def create_status_select(item_id: str, status_options: list, current_value: str 
         status_options: List of available status options
         current_value: Current status value
         on_change: Callback function for value changes
+        color_map: Optional mapping of label → (bg_color, text_color)
 
     Returns:
         NiceGUI select element
@@ -1063,11 +1038,13 @@ def create_status_select(item_id: str, status_options: list, current_value: str 
         clearable=True,
     ).classes('status-select')
 
-    # Apply status-specific styling
+    # Apply status-specific styling via inline styles
     def update_status_style(value: str) -> None:
-        select.classes(remove='status-P status-F status-TBD status-NA')
-        if value:
-            select.classes(add=f'status-{value}')
+        if color_map and value and value in color_map:
+            bg, fg = color_map[value]
+            select.style(f'background-color: {bg}; color: {fg};')
+        else:
+            select.style('')
 
     # Initial styling
     if current_value:
