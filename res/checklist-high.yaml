@@ -8,7 +8,7 @@ checklist_metadata:
     - "Dylanne Dearborn"
     - "Jasmine Lefresne"
     - "U of T Libraries Research Data Management Team"
-  last_updated: 2026-03-20
+  last_updated: 2026-03-26
   status: "draft"
 
 checklist:
@@ -27,7 +27,7 @@ checklist:
     priority: "info"
     section: "1. Structure of deposit"
     automated_check_ids: ["depositor_history"]
-    curator_check_item: "Author metadata, dataverse collection history"
+    # curator_check_item: "Author metadata, dataverse collection history"
     check_type: "Fully-automated"
 
   - id: "1.2"
@@ -50,16 +50,16 @@ checklist:
       - Collection name
       - Collection structure
       - Dataset relationships
-    check_type: "Manual"
+    check_type: "Semi-automated"
 
   - id: "2.1"
     action: "**File integrity**:  Do the files open properly?"
     instructions: |
       - All files will be programmatically tested and files that open successfully will not be listed in automated check
-      - ‘Cannot_be_opened’: notes an error in opening supported file types - check issue manually
+      - ‘Cannot\_be\_opened’: notes an error in opening supported file types - check issue manually
         - Copy list into curator notes
         - Test opening files, note any error message that may be helpful to understanding the issue in curator notes
-      - ‘Type_not_supported: notes files that cannot be opened programmatically
+      - ‘Type\_not\_supported: notes files that cannot be opened programmatically
         - Manually open a minimum of 5 of each file type if we have the program and note any opening errors (include file extension and include at least one example file name)
         - Note any file extensions that were not checked (e.g. “File type: .bin was not reviewed”)
     priority: "required"
@@ -74,7 +74,7 @@ checklist:
     action: "**Special characters**: Do file names include special characters? i.e. >:\"/\\|?*,@$~)"
     instructions: |
       - Review special character inclusion, note any issues that may cause errors in opening or compiling 
-      - Note that some of these errors would be caught in 2.1 (special characters may be the reason behind a file opening error, e.g. ~ for .doc files)
+      - Note that some of these errors would be caught in  <u>2.1</u> (special characters may be the reason behind a file opening error, e.g. ~ for .doc files)
     priority: "recommended"
     section: "2. Files"
     automated_check_ids: ["filename_special_chars"]
@@ -101,26 +101,26 @@ checklist:
         - For data documentation, include suggestions in <u>3.3</u>
     priority: "required"
     section: "2. Files"
-    automated_check_ids: ["missing_file_extensions"]
+    automated_check_ids: ["uncommon_file_formats"]
     # curator_check_item: "Missing file extensions report"
-    check_type: "Semi-automated"
+    check_type: "Fully-automated"
 
   - id: "2.4"
     action: "**File extensions**: Do all the file names contain the file extension?"
     instructions: |
       - Automated check will identify files that are missing an extension. 
       - Files names in the file list should appear with the extension:
-          - Correct: “04_requirements.txt“
-          - Missing: “04_requirements”
+          - Correct: “04\_requirements.txt“
+          - Missing: “04\_requirements”
       - Exception: 
           - READMEs do not require a file extension (e.g. a README file can either be 'README' or 'README.md' or “README.txt” and does not bear comment)
       - For other flagged files researcher should clarify extension, curator needs to check on a case-by-case basis
-    priority: "info"
+    priority: "required"
     section: "2. Files"
-    automated_check_ids: ["uncommon_file_formats"]
+    automated_check_ids: ["missing_file_extensions"]
     curator_check_item: |
       - Files flagged by the tool check
-    check_type: "Fully-automated"
+    check_type: "Semi-automated"
 
   - id: "3.1"
     action: "**README file existence**: Does the dataset include a separate README file?"
@@ -140,7 +140,7 @@ checklist:
   - id: "3.2"
     action: "**README file content**: Does the README file contain accurate and complete information about the files and their organization?"
     instructions: |
-      - Review recommended README fields are present, Curator to determine if/what suggestions are important for the specific deposit
+      - Open README files and review recommended README fields are present, Curator to determine if/what suggestions are important for the specific deposit
         - Authors
         - License
         - Dataset information and DOI
@@ -151,15 +151,16 @@ checklist:
     priority: "required"
     section: "3. Documentation"
     curator_check_item: |
-      - Files flagged by the automated or manual review in <u>3.1</u>
-    check_type: "Semi-automated"
+      - Check contents of files flagged by the automated or manual review in <u>3.1</u>
+    check_type: "Manual"
 
   - id: "3.3"
     action: "**Data file documentation**: Is there additional documentation for data files?"
     instructions: |
       - Check if information needed to understand and use data files (e.g. variables, definitions, etc.) is included in at least one of the following:
-        - README as defined in 3.1/3.2
-        - Data documentation files (e.g. codebook, data dictionary, etc.)
+        - README as defined in <u>3.1</u>/<u>3.2</u>
+        - File that may appear to be data documentation files (e.g. names include codebook, data dictionary, etc.)
+        - Files tagged as 'documentation'
         - Contained in the data file itself (e.g. inside a worksheet of an Excel file)
       - Curator to determine if any suggestions to enhance data documentation bear comment
         - Data should be documented to facilitate verification and reuse
@@ -188,7 +189,7 @@ checklist:
         - Subtitle
         - Alternative Title
         - Description
-        -Notes
+        - Notes
 
     check_type: "Semi-automated"
 
@@ -317,8 +318,8 @@ checklist:
     action: "**Related Publication**: Is this dataset linked to a publication, or does the title/description indicate that the dataset is replication, background, or supporting data for a publication?"
     instructions: |
       - If the publication is listed in ‘Related Publication’ field:
-        - Is the appropriate citation information present (e.g. title, author, date, link/PID)
-        - Does the link or persistent identifier work and link to the correct publication
+        - Is the appropriate citation information present (e.g. title, author, date, URL/PID)
+        - Does the URL or persistent identifier work and link to the correct publication
         - If multiple publications, ensure each citation is separate and not in one long text string 
           - Note: must check ‘Citation Metadata’ under ‘Metadata’ tab for multiple publications as only first publication listed on landing page; check above for all
       - If no publication is listed in the ‘Related Publication’ field:
@@ -342,7 +343,7 @@ checklist:
     action: "**Related Dataset**:  Is this dataset linked to other datasets, or does the title/description indicate that the dataset is related to other datasets?"
     instructions: |
       - ‘Related Dataset’ field should be used for linkages to related data outputs or projects, both within or external to Borealis
-        - Note that third party data used in project should be linked in ‘Data Source’ (see 4.11)
+        - Note that third party data used in project should be linked in ‘Data Source’ (see <u>4.11</u>)
       - If there is a dataset listed in ‘Related Dataset’ field:
         - Is the appropriate citation information present (e.g. title, author, date, link/PID)
         - Does the link or persistent identifier work and link to the correct dataset
@@ -368,7 +369,7 @@ checklist:
         - Is the appropriate citation information present (e.g. title, author, date, link/PID)
         - Does the link or persistent identifier work and link to the correct dataset
         - If multiple sources, ensure each citation is separate and not in one long text string 
-      - Note that this information should also be included in the ‘Description’ field (see 4.7)
+      - Note that this information should also be included in the ‘Description’ field (see <u>4.7</u>)
     priority: "required"
     section: "4. Metadata"
     curator_check_item: |
@@ -384,7 +385,7 @@ checklist:
     instructions: |
       - Automated check will list any files that have restricted access
     priority: "required"
-    section: "5.0 Sensitive data and IP"
+    section: "5.0 Sensitive Data and Intellectual Property (IP)"
     curator_check_item: "File names, documentation, metadata description/notes/access fields"
     check_type: "Fully-automated"
 
@@ -400,7 +401,7 @@ checklist:
         - Terms should Include any conditions of access or criteria for access (unless otherwise contained in a data sharing agreement file in the dataset)
 
     priority: "required"
-    section: "5.0 Sensitive data and IP"
+    section: "5.0 Sensitive Data and Intellectual Property (IP)"
     curator_check_item: |
       - Restricted files status 
       - Terms of Access for Restricted files field
@@ -413,34 +414,34 @@ checklist:
     action: "**Data sensitivity issues**: Are there any apparent data sensitivity concerns with the dataset?"
     instructions: |
       - Review deposit for indications of sensitive data or information
-        - file names, documentation, and content 
-        - metafield fields: description, notes, and terms of access
+        - Check file names, documentation, and content 
+        - Check metafield fields: description, notes, and terms of access
       - Check for flags such as:
         - Files with suggestive names like "JoeSmithInt1", “ConsentForm”, “RabbitCancerG1”
         - Implied sensitive topics or data such as surveys, focus groups, interviews, animal testing, medical testing, etc
         - Human or animal data - ethics protocol references
           - Verify that the sensitive data is included in the deposit (a study may have REB approval but they are only depositing non-sensitive data)
-          - Human data - Indications of direct identifiers such as:  
-            - Name or contact information
-            - Location references (postal code, zip code, GIS)
-            - All elements of birth date, except year (including all indicators of age)
-            - Identification numbers (SIN, license, account number, employee number)
-            - Biometric identifiers (photograph, video, audio, fingerprint, iris)
-            - Device identifiers
-            - Any other unique identifying characteristic and/or code
-          - Human data - Indicators of data that may not be properly de-identified
-            - Any combination of information that could potentially identify an individual (e.g. for government officials: elected year with age range with time in office)
-          - Non-human or animal topics that may be sensitive
-            - Location of endangered species
-            - Synthesis of dangerous chemicals
-            - Sensitive technology <a href="https://science.gc.ca/site/science/en/safeguarding-your-research/guidelines-and-tools-implement-research-security/sensitive-technology-research-and-affiliations-concern/sensitive-technology-research-areas" target="blank">research areas</a>
-            - Data subject to research agreements
+        - Human data - Indications of direct identifiers such as:  
+          - Name or contact information
+          - Location references (postal code, zip code, GIS)
+          - All elements of birth date, except year (including all indicators of age)
+          - Identification numbers (SIN, license, account number, employee number)
+          - Biometric identifiers (photograph, video, audio, fingerprint, iris)
+          - Device identifiers
+          - Any other unique identifying characteristic and/or code
+        - Human data - Indicators of data that may not be properly de-identified
+          - Any combination of information that could potentially identify an individual (e.g. for government officials: elected year with age range with time in office)
+        - Non-human or animal topics that may be sensitive
+          - Location of endangered species
+          - Synthesis of dangerous chemicals
+          - Sensitive technology <a href="https://science.gc.ca/site/science/en/safeguarding-your-research/guidelines-and-tools-implement-research-security/sensitive-technology-research-and-affiliations-concern/sensitive-technology-research-areas" target="blank">research areas</a>
+          - Data subject to research agreements
             - Patent or commercialized data
-          - Open any files of concern to review contents
-          - Flag any issues for further review or to check with depositor
+      - Open any files of concern to review contents
+      - Flag any issues for further review or to check with depositor
 
     priority: "required"
-    section: "5.0 Sensitive data and IP"
+    section: "5.0 Sensitive Data and Intellectual Property (IP)"
     automated_check_ids: ["termsOfUse", "license"]
     curator_check_item: |
       - File names
@@ -453,7 +454,7 @@ checklist:
     check_type: "Manual"
 
   - id: "5.4"
-    action: "**Research Ethics Board (REB) approval**: If data sensitivity issues for human or animal data were flagged in item 5.2, does the depositor have Research Ethics Board (REB) approval to deposit and/or share the dataset?"
+    action: "**Research Ethics Board (REB) approval**: If data sensitivity issues for human or animal data were flagged in item </u>5.2</u>, does the depositor have Research Ethics Board (REB) approval to deposit and/or share the dataset?"
     instructions: |
       - If no REB approval appears to be needed for the deposit, mark ‘Pass’
       - If REB approval may be needed, this will require communication with the depositor to verify if the data can be deposited
@@ -464,7 +465,7 @@ checklist:
       - Ensure retention period is noted if protocol/consent made a commitment to a specific timeframe (note any public data cannot have a timeframe as we cannot track who has downloaded)
 
     priority: "required"
-    section: "5.0 Sensitive data and IP"
+    section: "5.0 Sensitive Data and Intellectual Property (IP)"
     automated_check_ids: ["restricted_files", "termsOfAccess"]
     curator_check_item: |
       - Communication with depositor
@@ -479,13 +480,12 @@ checklist:
       - If other if dataset is comprised of data from other sources, check to see if there are conflicting licenses
       - If files do not seem to be the IP of the depositor (e.g. data reports from a corporation, data created by another researcher, etc.) may need to check if depositor has permission to deposit
     priority: "required"
-    section: "5.0 Sensitive data and IP"
+    section: "5.0 Sensitive Data and Intellectual Property (IP)"
     curator_check_item: |
       - Description 
       - Documentation
       - File names for third-party sources
       - Data Source field
-
     check_type: "Manual"
 
   - id: "5.6"
@@ -498,7 +498,7 @@ checklist:
         - Note restricted files cannot have a CC license assigned
 
     priority: "required"
-    section: "5.0 Sensitive data and IP"
+    section: "5.0 Sensitive Data and Intellectual Property (IP)"
     curator_check_item: |
       - License field
       - CC0 license confirmation, if applicable
@@ -506,18 +506,20 @@ checklist:
     check_type: "Manual"
 
   - id: "6.1"
-    action: "Additional comments or observations (required)"
+    action: |
+      **Required changes**: Any additional comments not captured in the items above or any overarching observations that need to be articulated together that __must be addressed__"
     instructions: |
-      - Review the description, documentation, and names of files to see if there are any that stand out as possible third-party data sources.
+      - Curator will conduct a general review of all components and provide additional comments if applicable
     priority: "required"
     section: "6.0 Additional comments"
     # curator_check_item: "General review of all components"
     check_type: "Manual"
 
   - id: "6.2"
-    action: "Additional comments or observations  (recommended)"
+    action: |
+      **Recommendations**: Any additional comments not captured in the items above or any overarching observations that need to be articulated together that __could be addressed__
     instructions: |
-      - Review the description, documentation, and names of files to see if there are any that stand out as possible third-party data sources.
+      - Curator will conduct a general review of all components and provide additional comments if applicable
     priority: "recommended"
     section: "6.0 Additional comments"
     # curator_check_item: "General review of all components"
