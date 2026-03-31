@@ -31,7 +31,7 @@ class ChecklistYAMLItem(BaseModel):
     id: str = Field(..., description='The unique identifier for the checklist item.')
     action: str = Field(..., description='The action to be taken for the checklist item.')
     instructions: str | None = Field(None, description='Instructions for completing the checklist item.')
-    priority: Literal['required', 'recommended', 'info'] = Field(..., description='The priority of the checklist item.')
+    priority: str = Field(..., description='The priority of the checklist item.')
     section: str = Field(..., description='The section to which the checklist item belongs.')
     automated_check_ids: list[str] | None = Field(
         None, description='The IDs of automated checks associated with the checklist item.'

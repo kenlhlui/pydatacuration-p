@@ -11,12 +11,12 @@ from nicegui import app
 from nicegui import ui
 from sqlmodel import SQLModel
 
+from pydatacuration.checklist.priority_options import load_priority_options
 from pydatacuration.db import DatabaseBackend
 from pydatacuration.db import DBModels
 from pydatacuration.db import get_database
 from pydatacuration.db import get_db_type
 from pydatacuration.exporter import Exporter
-from pydatacuration.frontend.models.priority_options import load_priority_options
 from pydatacuration.frontend.models.status_options import load_status_options
 from pydatacuration.utils.custom_logging import logger
 from pydatacuration.utils.custom_logging import setup_logging

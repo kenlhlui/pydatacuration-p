@@ -1,11 +1,13 @@
-"""Priority options for checklist items in the frontend."""
+"""Priority options for checklist items."""
 
 from pathlib import Path
 
 import orjson
 import yaml
+from loguru import logger
 from pydantic import BaseModel
 from pydantic import Field
+from pydantic import RootModel
 
 
 class PriorityOptions(BaseModel):
@@ -28,7 +30,13 @@ class PriorityOptions(BaseModel):
     )
 
 
-def load_priority_options(res_dir: str | Path) -> PriorityOptions:
+class CustomPriorityOptions(RootModel[dict[str, str]]):
+    """Arbitrary priority options loaded from a file."""
+
+    root: dict[str, str]
+
+
+def load_priority_options(res_dir: str | Path) -> PriorityOptions | CustomPriorityOptions:
     """Load PriorityOptions from a YAML or JSON file in res_dir.
 
         - If file exists: file is the complete source of truth.
@@ -38,7 +46,7 @@ def load_priority_options(res_dir: str | Path) -> PriorityOptions:
         res_dir (str | Path): Path to the resources directory containing the priority options file.
 
     Returns:
-        PriorityOptions: The loaded priority options.
+        PriorityOptions | CustomPriorityOptions: The loaded priority options.
     """
     res_dir = Path(res_dir)
 
@@ -46,9 +54,16 @@ def load_priority_options(res_dir: str | Path) -> PriorityOptions:
     file_path = next(res_dir.glob('priority_options.*'), None)
 
     if file_path is None:
+        logger.debug(f'No priority options file found in {res_dir}. Using pure defaults.')
         return PriorityOptions()  # pure defaults
 
-    raw = file_path.read_text(encoding='utf-8')
-    data = yaml.safe_load(raw) if file_path.suffix in {'.yaml', '.yml'} else orjson.loads(raw)
-
-    return PriorityOptions.model_validate(data)
+    try:
+        logger.debug(f'Found priority options file: {file_path}')
+        raw = file_path.read_text(encoding='utf-8')
+        data = yaml.safe_load(raw) if file_path.suffix in {'.yaml', '.yml'} else orjson.loads(raw)
+        logger.debug(f'Loaded priority options from {file_path}: {data}')
+        return CustomPriorityOptions.model_validate(data)
+    except Exception as e:
+        logger.error(f'Error reading priority options file {file_path}: {e}')
+        logger.info('Falling back to pure defaults of priority options.')
+        return PriorityOptions()

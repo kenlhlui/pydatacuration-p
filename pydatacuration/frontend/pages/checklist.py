@@ -6,14 +6,14 @@ from pathlib import Path
 from nicegui import ui
 
 from pydatacuration.backend.models.app_settings import AppSettings
+
+# Import the options models and loaders
+from pydatacuration.checklist.priority_options import load_priority_options
 from pydatacuration.db import DatabaseBackend
 from pydatacuration.db import get_database
 
 # Import exceptions for error handling
 from pydatacuration.frontend.helpers import NiceGUIHelper
-
-# Import the options models and loaders
-from pydatacuration.frontend.models.priority_options import load_priority_options
 from pydatacuration.frontend.models.status_options import load_status_options
 
 # Import styles and styled components
@@ -151,7 +151,6 @@ async def checklist_page(project_number: str) -> None:
             check_results,
             project_number,
             status_options=status_options,
-            priority_options=priority_options,
             helpers=helpers,
             item_rows=item_rows,
             section_header_rows=section_header_rows,
@@ -205,7 +204,6 @@ async def render_checklist_table(  # noqa: PLR0913, PLR0912, PLR0915, C901, PLR0
     check_results: dict[str, str],
     project_number: str,
     status_options: list,
-    priority_options: list,
     helpers: NiceGUIHelper | None = None,
     item_rows: dict | None = None,
     section_header_rows: dict | None = None,
