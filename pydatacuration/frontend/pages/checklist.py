@@ -61,7 +61,7 @@ async def checklist_page(project_number: str) -> None:
     _status_opts = load_status_options(RES_DIR)
     status_options = list(_status_opts.model_dump(mode='python').values())
     status_color_map = _status_opts.color_map()
-    priority_options = list(load_priority_options(RES_DIR).model_dump(mode='python').values())
+    priority_options = load_priority_options(RES_DIR).model_dump(mode='python')
 
     with ui.column().classes('pdc-container'):
         # Logo
@@ -166,7 +166,7 @@ async def checklist_page(project_number: str) -> None:
             visible_sections: set[str] = set()
             for _, (row, item) in item_rows.items():
                 visible = (not status_val or (item.status or '') == status_val) and (
-                    not priority_val or (item.priority or '').lower() == priority_val.lower()
+                    not priority_val or item.priority == priority_val
                 )
                 row.set_visibility(visible)
                 if visible:
@@ -211,7 +211,6 @@ async def render_checklist_table(  # noqa: PLR0913, PLR0912, PLR0915, C901, PLR0
     helpers: NiceGUIHelper | None = None,
     item_rows: dict | None = None,
     section_header_rows: dict | None = None,
-    **kwargs: dict,
 ) -> None:
     """Render checklist table with exact styling.
 

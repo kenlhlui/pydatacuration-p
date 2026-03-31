@@ -11,13 +11,11 @@ from nicegui import app
 from nicegui import ui
 from sqlmodel import SQLModel
 
-from pydatacuration.checklist.priority_options import load_priority_options
 from pydatacuration.db import DatabaseBackend
 from pydatacuration.db import DBModels
 from pydatacuration.db import get_database
 from pydatacuration.db import get_db_type
 from pydatacuration.exporter import Exporter
-from pydatacuration.frontend.models.status_options import load_status_options
 from pydatacuration.utils.custom_logging import logger
 from pydatacuration.utils.custom_logging import setup_logging
 from pydatacuration.utils.directory_manager import DirectoryManager
@@ -403,20 +401,6 @@ class NiceGUIHelper:
 # ============================================================================
 # Functions for returning dictionary for returning options
 # ============================================================================
-
-
-def status_options(res_dir: Path) -> dict[str, str]:
-    """Get status options for select input."""
-    return load_status_options(res_dir).model_dump(mode='python')
-
-
-def priority_options(res_dir: Path) -> dict[str, str]:
-    """Get priority options for select input.
-
-    Args:
-        res_dir (Path): Path to the resources directory to load priority options from.
-    """
-    return load_priority_options(res_dir).model_dump(mode='python')
 
 
 def checklist_options(res_dir: Path) -> dict[str, str]:

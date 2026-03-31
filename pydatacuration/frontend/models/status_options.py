@@ -13,20 +13,13 @@ from pydantic import RootModel
 class StatusOptions(BaseModel):
     """Default status options with full metadata."""
 
-    Pass: str = Field(
-        'Pass', serialization_alias='Pass', description='Checklist item is complete and meets all requirements.'
-    )
-    Follow_up: str = Field(
-        'Follow-up', serialization_alias='Follow-up', description='Checklist item requires follow-up action.'
-    )
+    Pass: str = Field('Pass', description='Checklist item is complete and meets all requirements.')
+    Follow_up: str = Field('Follow-up', description='Checklist item requires follow-up action.')
     TBD: str = Field(
         'To Be Determined',
-        serialization_alias='To Be Determined',
         description='Checklist item status is pending determination.',
     )
-    NA: str = Field(
-        'Not Applicable', serialization_alias='Not Applicable', description='Checklist item is not applicable.'
-    )
+    NA: str = Field('Not Applicable', description='Checklist item is not applicable.')
 
     def color_map(self) -> dict[str, tuple[str, str]]:
         """Map each label to (background_color, text_color)."""
@@ -62,8 +55,12 @@ def load_status_options(res_dir: str | Path) -> StatusOptions | CustomStatusOpti
     """
     res_dir = Path(res_dir)
 
-    # Safely get the first match, or None if no file found
-    file_path = next(res_dir.glob('status_options.*'), None)
+    # Safely get the first match for supported extensions, or None if no file found
+    file_path = next(
+        (p for ext in ('status_options.yaml', 'status_options.yml', 'status_options.json')
+         if (p := res_dir / ext).exists()),
+        None,
+    )
 
     if file_path is None:
         logger.debug(f'No status options file found in {res_dir}. Using pure defaults.')
