@@ -276,7 +276,7 @@ class Checker:
             self.db_instance.merge_records_to_table(
                 check_result_list_schema(
                     check_id='file_accessibility',
-                    check_name='Inaccessible Files',
+                    check_name='File accessibility report',
                     description='Files that cannot be opened or read by the validation tool',
                     unit='file',
                     results=inaccessible_files,
@@ -320,7 +320,7 @@ class Checker:
             self.db_instance.merge_records_to_table(
                 check_result_list_schema(
                     check_id='uncommon_file_formats',
-                    check_name='Files with Uncommon Formats',
+                    check_name='Unsupported files list',
                     description='Files using uncommon or proprietary file formats',
                     unit='file',
                     results=uncommon_format_files,
@@ -467,7 +467,7 @@ class Checker:
                 check_result_list_schema(
                     check_name='Potential Spelling Errors',
                     check_id='potential_typos',
-                    description='Check for potential spelling errors in metadata fields',
+                    description='Check for Fields for Title, Subtitle, Alternative Title, Description, and Notes in metadata fields',  # noqa: E501
                     unit='typo',
                     results=potential_typos,
                 )
