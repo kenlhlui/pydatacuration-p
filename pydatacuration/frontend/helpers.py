@@ -16,8 +16,8 @@ from pydatacuration.db import DBModels
 from pydatacuration.db import get_database
 from pydatacuration.db import get_db_type
 from pydatacuration.exporter import Exporter
-from pydatacuration.frontend.models.priority_options import PriorityOptions
-from pydatacuration.frontend.models.status_options import StatusOptions
+from pydatacuration.frontend.models.priority_options import load_priority_options
+from pydatacuration.frontend.models.status_options import load_status_options
 from pydatacuration.utils.custom_logging import logger
 from pydatacuration.utils.custom_logging import setup_logging
 from pydatacuration.utils.directory_manager import DirectoryManager
@@ -405,14 +405,18 @@ class NiceGUIHelper:
 # ============================================================================
 
 
-def status_options() -> dict[str, str]:
+def status_options(res_dir: Path) -> dict[str, str]:
     """Get status options for select input."""
-    return StatusOptions().model_dump(mode='python')
+    return load_status_options(res_dir).model_dump(mode='python')
 
 
-def priority_options() -> dict[str, str]:
-    """Get priority options for select input."""
-    return PriorityOptions().model_dump(mode='python')
+def priority_options(res_dir: Path) -> dict[str, str]:
+    """Get priority options for select input.
+
+    Args:
+        res_dir (Path): Path to the resources directory to load priority options from.
+    """
+    return load_priority_options(res_dir).model_dump(mode='python')
 
 
 def checklist_options(res_dir: Path) -> dict[str, str]:

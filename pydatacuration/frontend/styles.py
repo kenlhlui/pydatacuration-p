@@ -8,7 +8,6 @@ from pathlib import Path
 from nicegui import ui
 
 from pydatacuration.frontend.helpers import checklist_options
-from pydatacuration.frontend.helpers import status_options
 
 
 # ============================================================================
@@ -1045,11 +1044,12 @@ def create_check_type_badge(check_type: str) -> ui.label:
     return ui.label(text).classes(f'pdc-priority-badge {css_class}')
 
 
-def create_status_select(item_id: str, current_value: str | None = None, on_change=None):
+def create_status_select(item_id: str, status_options: list, current_value: str | None = None, on_change=None):
     """Create a status select dropdown with proper styling.
 
     Args:
         item_id: Checklist item ID
+        status_options: List of available status options
         current_value: Current status value
         on_change: Callback function for value changes
 
@@ -1057,7 +1057,7 @@ def create_status_select(item_id: str, current_value: str | None = None, on_chan
         NiceGUI select element
     """
     select = ui.select(
-        options=status_options(),
+        options=status_options,
         value=current_value,
         with_input=False,
         clearable=True,

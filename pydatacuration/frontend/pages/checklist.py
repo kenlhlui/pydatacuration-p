@@ -11,8 +11,10 @@ from pydatacuration.db import get_database
 
 # Import exceptions for error handling
 from pydatacuration.frontend.helpers import NiceGUIHelper
-from pydatacuration.frontend.helpers import priority_options
-from pydatacuration.frontend.helpers import status_options
+
+# Import the options models and loaders
+from pydatacuration.frontend.models.priority_options import load_priority_options
+from pydatacuration.frontend.models.status_options import load_status_options
 
 # Import styles and styled components
 from pydatacuration.frontend.styles import apply_pdc_styles
@@ -54,6 +56,10 @@ async def checklist_page(project_number: str) -> None:
 
     # Load checklist results from database
     check_results = db.read_check_results()
+
+    # Load the options for status and priority from the resource directory (with fallback to defaults)
+    status_options = list(load_status_options(RES_DIR).model_dump(mode='python').values())
+    priority_options = list(load_priority_options(RES_DIR).model_dump(mode='python').values())
 
     with ui.column().classes('pdc-container'):
         # Logo
@@ -105,7 +111,7 @@ async def checklist_page(project_number: str) -> None:
                     ui.label('Filter by Status').classes('pdc-form-label')
                     status_filter = (
                         ui.select(
-                            options=status_options(),
+                            options=status_options,
                             value=None,
                             with_input=False,
                         )
@@ -118,7 +124,7 @@ async def checklist_page(project_number: str) -> None:
                     ui.label('Filter by Priority').classes('pdc-form-label')
                     priority_filter = (
                         ui.select(
-                            options=priority_options(),
+                            options=priority_options,
                             value=None,
                             with_input=False,
                         )
@@ -144,6 +150,8 @@ async def checklist_page(project_number: str) -> None:
             checklist_items,
             check_results,
             project_number,
+            status_options=status_options,
+            priority_options=priority_options,
             helpers=helpers,
             item_rows=item_rows,
             section_header_rows=section_header_rows,
@@ -196,9 +204,12 @@ async def render_checklist_table(  # noqa: PLR0913, PLR0912, PLR0915, C901, PLR0
     checklist_items: list,
     check_results: dict[str, str],
     project_number: str,
+    status_options: list,
+    priority_options: list,
     helpers: NiceGUIHelper | None = None,
     item_rows: dict | None = None,
     section_header_rows: dict | None = None,
+    **kwargs: dict,
 ) -> None:
     """Render checklist table with exact styling.
 
@@ -236,7 +247,10 @@ async def render_checklist_table(  # noqa: PLR0913, PLR0912, PLR0915, C901, PLR0
                 # Section header row
                 if item.section != current_section:
                     current_section = item.section
-                    with ui.element('tr') as section_row, ui.element('td').props('colspan=7').classes('pdc-section-header'):  # noqa: E501
+                    with (
+                        ui.element('tr') as section_row,
+                        ui.element('td').props('colspan=7').classes('pdc-section-header'),
+                    ):  # noqa: E501
                         ui.label(item.section)
                     if section_header_rows is not None:
                         section_header_rows[item.section] = section_row
@@ -324,7 +338,8 @@ async def render_checklist_table(  # noqa: PLR0913, PLR0912, PLR0915, C901, PLR0
                     with ui.element('td'):
                         create_status_select(
                             item.id,
-                            item.status or None,
+                            status_options=status_options,
+                            current_value=item.status or None,
                             on_change=lambda e, iid=item.id, it=item: [
                                 setattr(it, 'status', e.value),
                                 helpers.handle_status_change(iid, e.value),
