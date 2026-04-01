@@ -18,7 +18,7 @@ Refer to the [Container Guide](docs/container/README.md) for detailed setup inst
 #### 📂 Custom Status Options
 See the [Custom Status Options Guide](docs/custom_status_options/README.md) for instructions on how to define and use custom status options.
 #### 🌱 Environment Variables
-See the [Environment Variables Guide](docs/env/README.md) for instructions on how to configure the application using environment variables.
+See the [App Settings (Environment Variables) Guide](docs/app_settings/README.md) for instructions on how to configure the application using environment variables.
 
 
 > [!NOTE]
