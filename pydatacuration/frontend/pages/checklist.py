@@ -78,10 +78,10 @@ async def checklist_page(project_number: str) -> None:
 
         # Metadata Display using our helper function
         with ui.tabs() as tabs:
-            one = ui.tab('Project Metadata')
-            two = ui.tab('Checklist Metadata')
-        with ui.tab_panels(tabs, value=one).classes('w-full'):
-            with ui.tab_panel(one).classes('w-full'):
+            project_metadata_tab = ui.tab('Project Metadata')
+            checklist_metadata_tab = ui.tab('Checklist Metadata')
+        with ui.tab_panels(tabs, value=project_metadata_tab).classes('w-full'):
+            with ui.tab_panel(project_metadata_tab).classes('w-full'):
                 create_info_grid(
                     project_metadata,
                     [
@@ -95,7 +95,7 @@ async def checklist_page(project_number: str) -> None:
                         ('dataset_path', 'Dataset Path'),
                     ],
                 )
-            with ui.tab_panel(two).classes('w-full'):
+            with ui.tab_panel(checklist_metadata_tab).classes('w-full'):
                 if checklist_metadata:
                     created_by = checklist_metadata.get('created_by') or []
                     display_metadata = {
