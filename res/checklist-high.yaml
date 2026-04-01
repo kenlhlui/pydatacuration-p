@@ -134,7 +134,8 @@ checklist:
     priority: "required"
     section: "3. Documentation"
     automated_check_ids: ["readme_files"]
-    curator_check_item: "Files that may contain README information"
+    curator_check_item: |
+      - Files that may contain README information
     check_type: "Semi-automated"
 
   - id: "3.2"
@@ -386,6 +387,7 @@ checklist:
       - Automated check will list any files that have restricted access
     priority: "required"
     section: "5.0 Sensitive Data and Intellectual Property (IP)"
+    automated_check_ids: ["restricted_files"]
     curator_check_item: "File names, documentation, metadata description/notes/access fields"
     check_type: "Fully-automated"
 
@@ -442,7 +444,6 @@ checklist:
 
     priority: "required"
     section: "5.0 Sensitive Data and Intellectual Property (IP)"
-    automated_check_ids: ["termsOfUse", "license"]
     curator_check_item: |
       - File names
       - File contents
@@ -466,7 +467,6 @@ checklist:
 
     priority: "required"
     section: "5.0 Sensitive Data and Intellectual Property (IP)"
-    automated_check_ids: ["restricted_files", "termsOfAccess"]
     curator_check_item: |
       - Communication with depositor
       - REB approval documentation
@@ -499,6 +499,7 @@ checklist:
 
     priority: "required"
     section: "5.0 Sensitive Data and Intellectual Property (IP)"
+    automated_check_ids: ["termsOfUse", "license"]
     curator_check_item: |
       - License field
       - CC0 license confirmation, if applicable
