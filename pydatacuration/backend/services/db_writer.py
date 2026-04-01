@@ -2,11 +2,12 @@
 
 from loguru import logger
 
+from pydatacuration.checklist.checklist_model import ChecklistYAML
 from pydatacuration.utils.utils import parse_dataset_url
 
 
 # The below writes the to the database database
-def write_project_metadata(db_instance, checker) -> None:
+def write_project_metadata_to_db(db_instance, checker) -> None:
     """Write the project metadata to the database."""
     project_metadata_schema = db_instance.models.project_metadata_record()
 
@@ -39,11 +40,26 @@ def write_project_metadata(db_instance, checker) -> None:
         logger.error(f'Failed to write to database: {e}')
 
 
-def write_checklist_metadata(db_instance, body) -> None:
-    pass
+def write_checklist_metadata_to_db(db_instance, checklist: ChecklistYAML) -> None:
+    try:
+        checklist_metadata_schema = db_instance.models.checklist_metadata()
+
+        metadata = checklist.checklist_metadata
+        db_instance.merge_records_to_table(
+            checklist_metadata_schema(
+                name=metadata.name,
+                version=metadata.version,
+                description=metadata.description,
+                created_by=metadata.created_by,
+                last_updated=metadata.last_updated,
+                status=metadata.status,
+            )
+        )
+    except Exception as e:
+        logger.error(f'Failed to write checklist metadata to database: {e}')
 
 
-def write_checklist_items(db_instance, checklist) -> None:
+def write_checklist_items_to_db(db_instance, checklist: ChecklistYAML) -> None:
     """Write the checklist items to database.
 
     Args:

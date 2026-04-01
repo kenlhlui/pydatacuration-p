@@ -7,8 +7,9 @@ import orjson
 from loguru import logger
 
 from pydatacuration.backend.models.setup_form import SetupForm
-from pydatacuration.backend.services.db_writer import write_checklist_items
-from pydatacuration.backend.services.db_writer import write_project_metadata
+from pydatacuration.backend.services.db_writer import write_checklist_items_to_db
+from pydatacuration.backend.services.db_writer import write_checklist_metadata_to_db
+from pydatacuration.backend.services.db_writer import write_project_metadata_to_db
 from pydatacuration.checker import Checker
 from pydatacuration.checklist.utils import get_checklist_content
 from pydatacuration.db import DatabaseBackend
@@ -139,9 +140,9 @@ def check_curation(body: SetupForm) -> None:
     checklist_content = get_checklist_content(body.checklist, dirs.res_dir)
 
     # Setup writes — before checks run
-    write_project_metadata(db, checker)
-    # write_checklist_metadata(db, body)
-    write_checklist_items(db, checklist_content)
+    write_project_metadata_to_db(db, checker)
+    write_checklist_metadata_to_db(db, checklist_content)
+    write_checklist_items_to_db(db, checklist_content)
 
     checker.run_checks()
     logger.info('Checks completed')
