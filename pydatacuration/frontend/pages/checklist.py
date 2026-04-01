@@ -54,8 +54,9 @@ async def checklist_page(project_number: str) -> None:
     project_metadata = db.read_project_metadata_record()
     checklist_type: str | None = project_metadata.get('checklist_type')
 
-    # Load checklist results from database
+    # Load checklist results and checklist metadata from database
     check_results = db.read_check_results()
+    checklist_metadata = db.read_checklist_metadata()
 
     # Load the options for status and priority from the resource directory (with fallback to defaults)
     _status_opts = load_status_options(RES_DIR)
@@ -63,6 +64,7 @@ async def checklist_page(project_number: str) -> None:
     status_color_map = _status_opts.color_map()
     priority_options = load_priority_options(RES_DIR).model_dump(mode='python')
 
+    # with ui.tab_panels(tabs, value=one):
     with ui.column().classes('pdc-container'):
         # Logo
         ui.html(
@@ -75,19 +77,27 @@ async def checklist_page(project_number: str) -> None:
         ui.label(f'{checklist_name}Curation Checklist').classes('pdc-header')
 
         # Metadata Display using our helper function
-        create_info_grid(
-            project_metadata,
-            [
-                ('project_number', 'Project number'),
-                ('curator_name', 'Curator name'),
-                ('curator_email', 'Curator email'),
-                ('dataset_title', 'Dataset title'),
-                ('dataset_pid', 'Dataset persistent identifier'),
-                ('dataset_id', 'Dataset ID (versioned)'),
-                ('dataset_url', 'Dataset access URL'),
-                ('dataset_path', 'Dataset Path'),
-            ],
-        )
+        with ui.tabs() as tabs:
+            one = ui.tab('Project Metadata')
+            two = ui.tab('Checklist Metadata')
+        with ui.tab_panels(tabs, value=one), ui.tab_panel(one):
+            create_info_grid(
+                project_metadata,
+                [
+                    ('project_number', 'Project number'),
+                    ('curator_name', 'Curator name'),
+                    ('curator_email', 'Curator email'),
+                    ('dataset_title', 'Dataset title'),
+                    ('dataset_pid', 'Dataset persistent identifier'),
+                    ('dataset_id', 'Dataset ID (versioned)'),
+                    ('dataset_url', 'Dataset access URL'),
+                    ('dataset_path', 'Dataset Path'),
+                ],
+            )
+        with ui.tab_panels(tabs, value=two), ui.tab_panel(two):
+            ui.markdown(str(checklist_metadata) if checklist_metadata else 'No checklist metadata available.').classes(
+                'pdc-additional-info'
+            )
 
         # # Status Legend  # (commented out for cleaner UI); can be re-enabled for other content if needed
         # with ui.element('div').classes('pdc-status-legend'):
