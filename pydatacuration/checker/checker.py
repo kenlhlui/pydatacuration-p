@@ -12,7 +12,6 @@ from pydatacuration.checker.file_name_checker import FileNameFormatChecker
 from pydatacuration.checker.files_open_checker import FilesOpener
 from pydatacuration.checker.metadata_checker import MetadataChecker
 from pydatacuration.checker.spell_checker import SpellCheckerCustomized
-from pydatacuration.checklist.utils import get_checklist_file_path
 from pydatacuration.checksum import Checksum
 from pydatacuration.db.base import DatabaseBackend
 from pydatacuration.httpx_client import HTTPXClient
@@ -712,52 +711,6 @@ class Checker:
             )
         except Exception as e:
             logger.error(f'Failed to write to database: {e}')
-
-    def write_checklist_db(self, checklist_type: str = 'default') -> None:
-        """Write the checklist items to database.
-
-        Supports flexible checklist file naming:
-        - Checklist with types: checklist-{type}.yaml or checklist-{type}.yml
-        - Default: checklist.yaml or checklist.yml (when checklist_type='default')
-
-        Args:
-            checklist_type (str): Type of checklist to use. Default is 'default'
-        """
-        try:
-            logger.debug(f'Writing the {checklist_type} checklist to database...')
-            checklist_schema = self.sqlmodels.checklist()
-
-            # Use the flexible file path function to find the checklist file
-            checklist_file: Path | None = get_checklist_file_path(checklist_type, RES_DIR)
-
-            if not checklist_file or not checklist_file.exists():
-                error_msg = f'Checklist file not found for type: {checklist_type}'
-                logger.error(error_msg)
-                raise FileNotFoundError(error_msg)
-
-            logger.debug(f'Using checklist file: {checklist_file}')
-
-            with Path.open(checklist_file, 'r') as f:
-                checklist_data = yaml.safe_load(f)
-
-            # Write each checklist item to database
-            for item in checklist_data.get('checklist', []):
-                logger.debug(f'Writing checklist item to database: {item}')
-                self.db_instance.merge_records_to_table(
-                    checklist_schema(
-                        id=item.get('id'),
-                        action=item.get('action'),
-                        instructions=item.get('instructions'),
-                        priority=item.get('priority'),
-                        section=item.get('section'),
-                        automated_check_ids=item.get('automated_check_ids'),
-                        tool_explanation=item.get('tool_explanation'),
-                        curator_check_item=item.get('curator_check_item'),
-                        check_type=item.get('check_type'),
-                    )
-                )
-        except Exception as e:
-            logger.error(f'Failed to write checklist to database: {e}')
 
     def run_checks(self) -> None:
         """Run all the checks."""

@@ -52,8 +52,11 @@ def load_priority_options(res_dir: str | Path) -> PriorityOptions | CustomPriori
 
     # Safely get the first match for supported extensions, or None if no file found
     file_path = next(
-        (p for ext in ('priority_options.yaml', 'priority_options.yml', 'priority_options.json')
-         if (p := res_dir / ext).exists()),
+        (
+            p
+            for ext in ('priority_options.yaml', 'priority_options.yml', 'priority_options.json')
+            if (p := res_dir / ext).exists()
+        ),
         None,
     )
 
