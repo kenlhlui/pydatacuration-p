@@ -188,7 +188,7 @@ class Checker:
             self.db_instance.merge_records_to_table(
                 check_result_list_schema(
                     check_id='filename_special_chars',
-                    check_name='Files with Special Characters',
+                    check_name='File names with Special Characters',
                     description='Files containing special characters in filename',
                     unit='file',
                     results=special_char_files,
@@ -202,7 +202,7 @@ class Checker:
             self.db_instance.merge_records_to_table(
                 check_result_list_schema(
                     check_id='missing_file_extensions',
-                    check_name='Files Missing Extensions',
+                    check_name='File names missing extensions',
                     description='Files without proper file extensions',
                     unit='file',
                     results=missing_ext_files,
@@ -216,7 +216,7 @@ class Checker:
             self.db_instance.merge_records_to_table(
                 check_result_list_schema(
                     check_id='readme_files',
-                    check_name='README Files Found',
+                    check_name='File names for README',
                     description='README files detected in the dataset',
                     unit='file',
                     results=readme_files,
@@ -290,7 +290,7 @@ class Checker:
             self.db_instance.merge_records_to_table(
                 check_result_list_schema(
                     check_id='unsupported_files',
-                    check_name='Files with Unsupported Formats',
+                    check_name='Files with uncommon formats',
                     description='Files in formats not supported by the validation tool',
                     unit='file',
                     results=unsupported_files,
@@ -320,7 +320,7 @@ class Checker:
             self.db_instance.merge_records_to_table(
                 check_result_list_schema(
                     check_id='uncommon_file_formats',
-                    check_name='Unsupported files list',
+                    check_name='Files with uncommon formats',
                     description='Files using uncommon or proprietary file formats',
                     unit='file',
                     results=uncommon_format_files,
@@ -397,7 +397,7 @@ class Checker:
             self.db_instance.merge_records_to_table(
                 check_result_list_schema(
                     check_id='authors_missing_affiliation',
-                    check_name='Authors Without Affiliation',
+                    check_name='Author affiliation field',
                     description='Authors missing institutional affiliation information',
                     unit='author',
                     results=authors_missing_affiliation,
@@ -411,7 +411,7 @@ class Checker:
             self.db_instance.merge_records_to_table(
                 check_result_list_schema(
                     check_id='authors_missing_identifier',
-                    check_name='Authors Without Identifier',
+                    check_name='Author Research ID field',
                     description='Authors missing personal identifier (ORCID, etc.)',
                     unit='author',
                     results=authors_missing_identifier,
@@ -425,7 +425,7 @@ class Checker:
             self.db_instance.merge_records_to_table(
                 check_result_list_schema(
                     check_id='authors_missing_scheme',
-                    check_name='Authors Without Identifier Scheme',
+                    check_name='Authors Research Identifier Scheme',
                     description='Authors missing identifier scheme information',
                     unit='author',
                     results=authors_missing_scheme,
@@ -465,9 +465,9 @@ class Checker:
             check_result_list_schema = self.sqlmodels.check_results()
             self.db_instance.merge_records_to_table(
                 check_result_list_schema(
-                    check_name='Potential Spelling Errors',
+                    check_name='Fields for Title, Subtitle, Alternative Title, Description, and Notes',
                     check_id='potential_typos',
-                    description='Check for Fields for Title, Subtitle, Alternative Title, Description, and Notes in metadata fields',  # noqa: E501
+                    description='Fields for Title, Subtitle, Alternative Title, Description, and Notes',  # noqa: E501
                     unit='typo',
                     results=potential_typos,
                 )
@@ -523,7 +523,7 @@ class Checker:
                 self.db_instance.merge_records_to_table(
                     check_result_list_schema(
                         check_id='depositor_history',
-                        check_name='Depositor History',
+                        check_name='Depositor history',
                         description='Previous datasets depositor in this Dataverse collection',
                         unit='depositor record',
                         results=depositor_history,
@@ -670,7 +670,7 @@ class Checker:
             check_result_list_schema = self.sqlmodels.check_results()
             self.db_instance.merge_records_to_table(
                 check_result_list_schema(
-                    check_name='Keywords Existence',
+                    check_name='Keywords',
                     check_id='keywords_existence',
                     description='Check if keywords are present in the dataset',
                     unit='keyword',
