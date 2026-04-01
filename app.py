@@ -33,7 +33,8 @@ MAIN_DIR: Path = Path(app_settings.main_dir)
 RES_DIR = Path(app_settings.res_dir)
 
 # Setup logging with your custom style
-setup_logging(log_file_dir=Path(app_settings.main_dir) / 'logs', log_level='DEBUG')
+setup_logging(log_file_dir=Path(app_settings.main_dir) / 'logs', log_level=app_settings.log_level)
+
 
 # ============================================================================
 # Main Entrance Page
@@ -70,7 +71,6 @@ if __name__ in {'__main__', '__mp_main__'}:
     mount_static_files(
         app, Path('pydatacuration/frontend')
     )  # FIXME: this should be more robust to different execution contexts
-
     ui.run(
         title=app_settings.app_title,
         favicon=app_settings.app_favicon,
