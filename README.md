@@ -14,6 +14,12 @@ A containerized dataset curation tool for Dataverse repositories with web interf
 ### ⚙️ Setup & Run
 Refer to the [Container Guide](docs/container/README.md) for detailed setup instructions.
 
+### Options
+#### 📂 Custom Status Options
+See the [Custom Status Options Guide](docs/custom_status_options/README.md) for instructions on how to define and use custom status options.
+#### 🌱 Environment Variables
+See the [Environment Variables Guide](docs/env/README.md) for instructions on how to configure the application using environment variables.
+
 
 > [!NOTE]
 > Or if you have just installed, then you can simply run:
@@ -22,6 +28,8 @@ Refer to the [Container Guide](docs/container/README.md) for detailed setup inst
 > or
 > just docker-build-and-run postgres -f # To include the postgres profile
 > ```
+
+
 
 ### 🏗️ Development Mode
 For development with rebuild and reloading the container, run:
@@ -37,6 +45,3 @@ This will delete the `./workdir`, `./new_dir/` and `./pgadmin/` folders,
 
 ### 🧪 Testing the Checklist Validator
 See the [Checklist Validator CLI Guide](docs/checklist/README.md) for instructions on how to test the checklist validator using the command line interface (CLI).
-
-### 📂 Custom Status Options
-See the [Custom Status Options Guide](docs/custom_status_options/README.md) for instructions on how to define and use custom status options.
