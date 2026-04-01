@@ -17,12 +17,9 @@ from pydatacuration.db import get_database
 from pydatacuration.db import get_db_type
 from pydatacuration.exporter import Exporter
 from pydatacuration.utils.custom_logging import logger
-from pydatacuration.utils.custom_logging import setup_logging
 from pydatacuration.utils.directory_manager import DirectoryManager
 from pydatacuration.utils.utils import discover_checklist_files
 
-
-setup_logging()
 
 # Type alias for checklist items - uses dummy schema for type hints only
 # The actual schema name will be provided at runtime
