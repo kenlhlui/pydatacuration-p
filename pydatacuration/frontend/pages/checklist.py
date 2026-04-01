@@ -80,24 +80,42 @@ async def checklist_page(project_number: str) -> None:
         with ui.tabs() as tabs:
             one = ui.tab('Project Metadata')
             two = ui.tab('Checklist Metadata')
-        with ui.tab_panels(tabs, value=one), ui.tab_panel(one):
-            create_info_grid(
-                project_metadata,
-                [
-                    ('project_number', 'Project number'),
-                    ('curator_name', 'Curator name'),
-                    ('curator_email', 'Curator email'),
-                    ('dataset_title', 'Dataset title'),
-                    ('dataset_pid', 'Dataset persistent identifier'),
-                    ('dataset_id', 'Dataset ID (versioned)'),
-                    ('dataset_url', 'Dataset access URL'),
-                    ('dataset_path', 'Dataset Path'),
-                ],
-            )
-        with ui.tab_panels(tabs, value=two), ui.tab_panel(two):
-            ui.markdown(str(checklist_metadata) if checklist_metadata else 'No checklist metadata available.').classes(
-                'pdc-additional-info'
-            )
+        with ui.tab_panels(tabs, value=one).classes('w-full'):
+            with ui.tab_panel(one).classes('w-full'):
+                create_info_grid(
+                    project_metadata,
+                    [
+                        ('project_number', 'Project number'),
+                        ('curator_name', 'Curator name'),
+                        ('curator_email', 'Curator email'),
+                        ('dataset_title', 'Dataset title'),
+                        ('dataset_pid', 'Dataset persistent identifier'),
+                        ('dataset_id', 'Dataset ID (versioned)'),
+                        ('dataset_url', 'Dataset access URL'),
+                        ('dataset_path', 'Dataset Path'),
+                    ],
+                )
+            with ui.tab_panel(two).classes('w-full'):
+                if checklist_metadata:
+                    created_by = checklist_metadata.get('created_by') or []
+                    display_metadata = {
+                        **checklist_metadata,
+                        'created_by': ', '.join(created_by) if created_by else 'N/A',
+                        'last_updated': str(checklist_metadata.get('last_updated', 'N/A')),
+                    }
+                    create_info_grid(
+                        display_metadata,
+                        [
+                            ('name', 'Checklist name'),
+                            ('version', 'Version'),
+                            ('description', 'Description'),
+                            ('created_by', 'Created by'),
+                            ('last_updated', 'Last updated'),
+                            ('status', 'Status'),
+                        ],
+                    )
+                else:
+                    ui.label('No checklist metadata available.').classes('pdc-additional-info')
 
         # # Status Legend  # (commented out for cleaner UI); can be re-enabled for other content if needed
         # with ui.element('div').classes('pdc-status-legend'):

@@ -86,6 +86,14 @@ body {
 }
 
 /* ========================================================================
+   Tab Panels — strip Quasar's default 16px padding so content aligns with
+   the rest of pdc-container (specificity 0,2,0 beats Quasar's 0,1,0)
+   ======================================================================== */
+.pdc-container .q-tab-panel {
+    padding: 0;
+}
+
+/* ========================================================================
    Info Section (Metadata Display)
    ======================================================================== */
 .pdc-info-section {
@@ -93,6 +101,7 @@ body {
     padding: 25px;
     border-radius: 8px;
     margin-bottom: 30px;
+    width: 100%;
     max-width: 100%;
     box-sizing: border-box;
 }
@@ -101,6 +110,7 @@ body {
     display: grid;
     grid-template-columns: 1fr 1fr;
     gap: 12px 40px;
+    width: 100%;
     max-width: 100%;
     box-sizing: border-box;
 }
@@ -969,7 +979,7 @@ def create_info_grid(metadata: dict, columns: list[tuple[str, str]]) -> None:
     Returns:
         NiceGUI grid element
     """
-    with ui.element('div').classes('pdc-info-section'), ui.grid(columns=2).classes('pdc-info-grid'):
+    with ui.element('div').classes('pdc-info-section'), ui.grid(columns=2).classes('pdc-info-grid w-full'):
         for key, label in columns:
             with ui.element('div').classes('pdc-info-item'):
                 ui.label(label).classes('pdc-info-label')

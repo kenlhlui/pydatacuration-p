@@ -200,8 +200,7 @@ class DatabaseBackend(ABC):  # noqa: PLR0904
                 checklist_metadata_model = self.models.checklist_metadata()
                 record = session.exec(select(checklist_metadata_model)).first()
                 if record:
-                    session.expunge(record)
-                    return record
+                    return record.model_dump()
                 logger.warning('No checklist metadata record found.')
                 return None
         except Exception as e:
