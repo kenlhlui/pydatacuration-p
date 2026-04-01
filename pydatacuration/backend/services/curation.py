@@ -122,6 +122,8 @@ def check_curation(body: SetupForm) -> None:
     dirs = get_dirs(body.project_number, Path(body.main_dir), res_dir=Path(body.res_dir))
     db = get_db(schema_name=dirs.project_number, db_file=dirs.db_path)
 
+    res_dir = Path(body.res_dir) if body.res_dir else None
+
     with Path(dirs.metadata_dir, 'ds_metadata.json').open('rb') as f:
         ds_metadata = orjson.loads(f.read())
 
@@ -137,7 +139,7 @@ def check_curation(body: SetupForm) -> None:
     )
 
     # Get the checklist content
-    checklist_content = get_checklist_content(body.checklist, dirs.res_dir)
+    checklist_content = get_checklist_content(body.checklist, res_dir)
 
     # Setup writes — before checks run
     write_project_metadata_to_db(db, checker)
