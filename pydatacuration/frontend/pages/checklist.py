@@ -64,7 +64,6 @@ async def checklist_page(project_number: str) -> None:
     status_color_map = _status_opts.color_map()
     priority_options = load_priority_options(RES_DIR).model_dump(mode='python')
 
-    # with ui.tab_panels(tabs, value=one):
     with ui.column().classes('pdc-container'):
         # Logo
         ui.html(

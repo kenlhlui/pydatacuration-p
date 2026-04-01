@@ -18,7 +18,6 @@ from pydatacuration.httpx_client import HTTPXClient
 from pydatacuration.utils.unzip import Unzipper
 from pydatacuration.utils.utils import check_readme_file_existence
 from pydatacuration.utils.utils import compare_files_and_metadata
-from pydatacuration.utils.utils import parse_dataset_url
 from pydatacuration.utils.utils import parse_file_list_metadata
 
 
@@ -678,39 +677,6 @@ class Checker:
             )
         except Exception as e:
             logger.error(f'Failed to write keywords to database: {e}')
-
-    # The below writes the to the database database
-    def write_project_metadata_db(self) -> None:
-        """Write the project metadata to the database."""
-        project_metadata_schema = self.sqlmodels.project_metadata_record()
-
-        # Check if record already exists
-        try:
-            project_number = self.db_instance.schema_name
-            curator_name: str | None = self.curator_name
-            curator_email: str | None = self.curator_email
-            dataset_title = self.ds_title if self.ds_title else 'No Title'
-            dataset_pid = self.ds_metadata.get('data', {}).get('latestVersion', {}).get('datasetPersistentId', 'No ID')
-            datasetid = self.ds_metadata.get('data', {}).get('latestVersion', {}).get('datasetId', 'No ID')
-            dataset_url = parse_dataset_url(self.base_url, dataset_pid)
-            dataset_path = self.check_ds_tree_info()
-
-            self.db_instance.merge_records_to_table(
-                project_metadata_schema(
-                    curator_name=curator_name,
-                    curator_email=curator_email,
-                    project_number=project_number,
-                    dataset_title=dataset_title,
-                    dataset_pid=dataset_pid,
-                    dataset_id=self.dataset_id,
-                    datasetid=datasetid,
-                    dataset_url=dataset_url,
-                    dataset_path=dataset_path,
-                    checklist_type=self.checklist_type,
-                )
-            )
-        except Exception as e:
-            logger.error(f'Failed to write to database: {e}')
 
     def run_checks(self) -> None:
         """Run all the checks."""

@@ -2,17 +2,26 @@
 
 from loguru import logger
 
+from pydatacuration.checker.checker import Checker
 from pydatacuration.checklist.checklist_model import ChecklistYAML
+from pydatacuration.db import DatabaseBackend
 from pydatacuration.utils.utils import parse_dataset_url
 
 
 # The below writes the to the database database
-def write_project_metadata_to_db(db_instance, checker) -> None:
-    """Write the project metadata to the database."""
-    project_metadata_schema = db_instance.models.project_metadata_record()
+def write_project_metadata_to_db(db_instance: DatabaseBackend, checker: Checker) -> None:
+    """Write the project metadata to the database.
 
-    # Check if record already exists
+    Args:
+        db_instance (DatabaseBackend): The database instance to write to.
+        checker (Checker): The Checker instance containing the dataset metadata.
+
+    """
     try:
+        # Get the project metadata schema from the database instance
+        project_metadata_schema = db_instance.models.project_metadata_record()
+
+        # Extract the necessary metadata from the checker instance
         project_number = db_instance.schema_name
         curator_name: str | None = checker.curator_name
         curator_email: str | None = checker.curator_email
@@ -40,7 +49,13 @@ def write_project_metadata_to_db(db_instance, checker) -> None:
         logger.error(f'Failed to write to database: {e}')
 
 
-def write_checklist_metadata_to_db(db_instance, checklist: ChecklistYAML) -> None:
+def write_checklist_metadata_to_db(db_instance: DatabaseBackend, checklist: ChecklistYAML) -> None:
+    """Write the checklist metadata to database.
+
+    Args:
+        db_instance (DatabaseBackend): The database instance to write to.
+        checklist (ChecklistYAML): The checklist content to write.
+    """
     try:
         checklist_metadata_schema = db_instance.models.checklist_metadata()
 
@@ -59,11 +74,11 @@ def write_checklist_metadata_to_db(db_instance, checklist: ChecklistYAML) -> Non
         logger.error(f'Failed to write checklist metadata to database: {e}')
 
 
-def write_checklist_items_to_db(db_instance, checklist: ChecklistYAML) -> None:
+def write_checklist_items_to_db(db_instance: DatabaseBackend, checklist: ChecklistYAML) -> None:
     """Write the checklist items to database.
 
     Args:
-        db_instance: The database instance to write to.
+        db_instance (DatabaseBackend): The database instance to write to.
         checklist (ChecklistYAML): The checklist content to write.
     """
     try:
