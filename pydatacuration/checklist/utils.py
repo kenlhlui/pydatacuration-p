@@ -22,7 +22,7 @@ def validate_checklist_yaml(yaml_path: str | Path) -> ChecklistYAML:
         raise
 
 
-def get_checklist_file_path(checklist_identifier: str, res_dir: Path) -> Path | None:
+def _get_checklist_file_path(checklist_identifier: str, res_dir: Path) -> Path:
     """Get the file path for a checklist identifier.
 
     Args:
@@ -30,13 +30,15 @@ def get_checklist_file_path(checklist_identifier: str, res_dir: Path) -> Path | 
         res_dir (Path): Path to the res directory containing checklist files.
 
     Returns:
-        Path | None: Path to the checklist file if found, None otherwise.
+        Path: Path to the checklist file.
+
+    Raises:
+        FileNotFoundError: If the resource directory or checklist file is not found.
     """
     if not res_dir.exists():
-        logger.warning(f'Resource directory not found: {res_dir}')
-        return None
+        msg = f'Resource directory not found: {res_dir}'
+        raise FileNotFoundError(msg)
 
-    # Check for new naming patterns first
     for extension in ['.yaml', '.yml']:
         # Pattern 1: checklist-{identifier}.yaml
         new_pattern_file = res_dir / f'checklist-{checklist_identifier}{extension}'
@@ -49,5 +51,23 @@ def get_checklist_file_path(checklist_identifier: str, res_dir: Path) -> Path | 
             if default_file.exists():
                 return default_file
 
-    logger.warning(f'Checklist file not found for identifier: {checklist_identifier}')
-    return None
+    msg = f'Checklist file not found for identifier: {checklist_identifier}'
+    raise FileNotFoundError(msg)
+
+
+def get_checklist_content(checklist_identifier: str, res_dir: Path) -> ChecklistYAML:
+    """Resolve, load, and validate a checklist YAML file by identifier.
+
+    Args:
+        checklist_identifier (str): The checklist identifier (e.g., 'default', 'high').
+        res_dir (Path): Path to the res directory containing checklist files.
+
+    Returns:
+        ChecklistYAML: The validated checklist content.
+
+    Raises:
+        FileNotFoundError: If the resource directory or checklist file is not found.
+    """
+    checklist_file = _get_checklist_file_path(checklist_identifier, res_dir)
+    logger.debug(f'Using checklist file: {checklist_file}')
+    return validate_checklist_yaml(checklist_file)

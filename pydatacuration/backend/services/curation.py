@@ -7,7 +7,11 @@ import orjson
 from loguru import logger
 
 from pydatacuration.backend.models.setup_form import SetupForm
+from pydatacuration.backend.services.db_writer import write_checklist_items_to_db
+from pydatacuration.backend.services.db_writer import write_checklist_metadata_to_db
+from pydatacuration.backend.services.db_writer import write_project_metadata_to_db
 from pydatacuration.checker import Checker
+from pydatacuration.checklist.utils import get_checklist_content
 from pydatacuration.db import DatabaseBackend
 from pydatacuration.db import get_database
 from pydatacuration.downloads import Downloads
@@ -19,18 +23,19 @@ from pydatacuration.utils.utils import DatasetUnauthorizedError
 from pydatacuration.utils.utils import check_ds_read_access
 
 
-def get_dirs(project_number: str, main_dir: Path) -> directory_manager.DirectoryManager:
+def get_dirs(project_number: str, main_dir: Path, res_dir: Path | None = None) -> directory_manager.DirectoryManager:
     """Returns a DirectoryManager instance for the given project number and main directory.
 
     Args:
         project_number (str): The project number for the curation process.
         main_dir (Path): The main directory where the project directory will be created.
+        res_dir (Path | None): Optional path to the resource directory containing checklist files.
 
     Returns:
         DirectoryManager: An instance of the DirectoryManager class.
 
     """
-    return directory_manager.DirectoryManager(project_number, str(main_dir))
+    return directory_manager.DirectoryManager(project_number, str(main_dir), res_dir=res_dir)
 
 
 def get_db(schema_name: str, db_file: Path) -> DatabaseBackend:
@@ -114,8 +119,10 @@ def check_curation(body: SetupForm) -> None:
     Args:
         body (SetupForm): The setup form containing the necessary information for running the checks.
     """
-    dirs = get_dirs(body.project_number, Path(body.main_dir))
+    dirs = get_dirs(body.project_number, Path(body.main_dir), res_dir=Path(body.res_dir))
     db = get_db(schema_name=dirs.project_number, db_file=dirs.db_path)
+
+    res_dir = Path(body.res_dir) if body.res_dir else None
 
     with Path(dirs.metadata_dir, 'ds_metadata.json').open('rb') as f:
         ds_metadata = orjson.loads(f.read())
@@ -130,6 +137,15 @@ def check_curation(body: SetupForm) -> None:
         db_instance=db,
         setup_form_instance=body,
     )
+
+    # Get the checklist content
+    checklist_content = get_checklist_content(body.checklist, res_dir)
+
+    # Setup writes — before checks run
+    write_project_metadata_to_db(db, checker)
+    write_checklist_metadata_to_db(db, checklist_content)
+    write_checklist_items_to_db(db, checklist_content)
+
     checker.run_checks()
     logger.info('Checks completed')
 

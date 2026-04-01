@@ -12,14 +12,12 @@ from pydatacuration.checker.file_name_checker import FileNameFormatChecker
 from pydatacuration.checker.files_open_checker import FilesOpener
 from pydatacuration.checker.metadata_checker import MetadataChecker
 from pydatacuration.checker.spell_checker import SpellCheckerCustomized
-from pydatacuration.checklist.utils import get_checklist_file_path
 from pydatacuration.checksum import Checksum
 from pydatacuration.db.base import DatabaseBackend
 from pydatacuration.httpx_client import HTTPXClient
 from pydatacuration.utils.unzip import Unzipper
 from pydatacuration.utils.utils import check_readme_file_existence
 from pydatacuration.utils.utils import compare_files_and_metadata
-from pydatacuration.utils.utils import parse_dataset_url
 from pydatacuration.utils.utils import parse_file_list_metadata
 
 
@@ -680,86 +678,6 @@ class Checker:
         except Exception as e:
             logger.error(f'Failed to write keywords to database: {e}')
 
-    # The below writes the to the database database
-    def write_project_metadata_db(self) -> None:
-        """Write the project metadata to the database."""
-        project_metadata_schema = self.sqlmodels.project_metadata_record()
-
-        # Check if record already exists
-        try:
-            project_number = self.db_instance.schema_name
-            curator_name: str | None = self.curator_name
-            curator_email: str | None = self.curator_email
-            dataset_title = self.ds_title if self.ds_title else 'No Title'
-            dataset_pid = self.ds_metadata.get('data', {}).get('latestVersion', {}).get('datasetPersistentId', 'No ID')
-            datasetid = self.ds_metadata.get('data', {}).get('latestVersion', {}).get('datasetId', 'No ID')
-            dataset_url = parse_dataset_url(self.base_url, dataset_pid)
-            dataset_path = self.check_ds_tree_info()
-
-            self.db_instance.merge_records_to_table(
-                project_metadata_schema(
-                    curator_name=curator_name,
-                    curator_email=curator_email,
-                    project_number=project_number,
-                    dataset_title=dataset_title,
-                    dataset_pid=dataset_pid,
-                    dataset_id=self.dataset_id,
-                    datasetid=datasetid,
-                    dataset_url=dataset_url,
-                    dataset_path=dataset_path,
-                    checklist_type=self.checklist_type,
-                )
-            )
-        except Exception as e:
-            logger.error(f'Failed to write to database: {e}')
-
-    # Note: maybe to migrate this to main.py
-    def write_checklist_db(self, checklist_type: str = 'default') -> None:
-        """Write the checklist items to database.
-
-        Supports flexible checklist file naming:
-        - Checklist with types: checklist-{type}.yaml or checklist-{type}.yml
-        - Default: checklist.yaml or checklist.yml (when checklist_type='default')
-
-        Args:
-            checklist_type (str): Type of checklist to use. Default is 'default'
-        """
-        try:
-            logger.debug(f'Writing the {checklist_type} checklist to database...')
-            checklist_schema = self.sqlmodels.checklist()
-
-            # Use the flexible file path function to find the checklist file
-            checklist_file: Path | None = get_checklist_file_path(checklist_type, RES_DIR)
-
-            if not checklist_file or not checklist_file.exists():
-                error_msg = f'Checklist file not found for type: {checklist_type}'
-                logger.error(error_msg)
-                raise FileNotFoundError(error_msg)
-
-            logger.debug(f'Using checklist file: {checklist_file}')
-
-            with Path.open(checklist_file, 'r') as f:
-                checklist_data = yaml.safe_load(f)
-
-            # Write each checklist item to database
-            for item in checklist_data.get('checklist', []):
-                logger.debug(f'Writing checklist item to database: {item}')
-                self.db_instance.merge_records_to_table(
-                    checklist_schema(
-                        id=item.get('id'),
-                        action=item.get('action'),
-                        instructions=item.get('instructions'),
-                        priority=item.get('priority'),
-                        section=item.get('section'),
-                        automated_check_ids=item.get('automated_check_ids'),
-                        tool_explanation=item.get('tool_explanation'),
-                        curator_check_item=item.get('curator_check_item'),
-                        check_type=item.get('check_type'),
-                    )
-                )
-        except Exception as e:
-            logger.error(f'Failed to write checklist to database: {e}')
-
     def run_checks(self) -> None:
         """Run all the checks."""
         logger.info('Running the checks...')
@@ -775,6 +693,3 @@ class Checker:
         self.check_terms_of_access()
         self.check_keywords()
         self.check_license()
-        self.write_project_metadata_db()
-        # Write the checklist to database using the configured checklist type
-        self.write_checklist_db(self.checklist_type)

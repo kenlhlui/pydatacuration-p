@@ -10,6 +10,7 @@ from pydantic_settings import BaseSettings
 from pydantic_settings import SettingsConfigDict
 
 from pydatacuration.backend.models.directory_defaults import MainDir
+from pydatacuration.backend.models.directory_defaults import ResDir
 
 
 class SetupBase(BaseModel):
@@ -30,7 +31,7 @@ class SetupBase(BaseModel):
     checklist: str = ''
 
 
-class SetupForm(SetupBase, MainDir):
+class SetupForm(SetupBase, MainDir, ResDir):
     """Setup form payload."""
 
     @field_serializer('base_url')
@@ -45,8 +46,8 @@ class SetupForm(SetupBase, MainDir):
         """
         return str(v) if v else None
 
-    @field_serializer('main_dir')
-    def serialize_main_dir(self, v: str) -> str:  # noqa: PLR6301
+    @field_serializer('main_dir', 'res_dir')
+    def serialize_dir(self, v: str) -> str:  # noqa: PLR6301
         """Resolve and serialize path to string.
 
         Args:

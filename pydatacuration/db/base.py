@@ -193,6 +193,20 @@ class DatabaseBackend(ABC):  # noqa: PLR0904
             logger.error(f'Error reading checklist: {e}')
             return []
 
+    def read_checklist_metadata(self) -> dict[str, Any] | None:
+        """Read checklist metadata record."""
+        try:
+            with self.get_connection() as (session, _engine):
+                checklist_metadata_model = self.models.checklist_metadata()
+                record = session.exec(select(checklist_metadata_model)).first()
+                if record:
+                    return record.model_dump()
+                logger.warning('No checklist metadata record found.')
+                return None
+        except Exception as e:
+            logger.error(f'Error reading checklist metadata: {e}')
+            return None
+
     def read_schema_tables(self) -> list[str]:
         """Get the names of the tables inside the current schema.
 
