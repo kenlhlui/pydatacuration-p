@@ -713,7 +713,6 @@ class Checker:
         except Exception as e:
             logger.error(f'Failed to write to database: {e}')
 
-    # Note: maybe to migrate this to main.py
     def write_checklist_db(self, checklist_type: str = 'default') -> None:
         """Write the checklist items to database.
 
@@ -775,6 +774,3 @@ class Checker:
         self.check_terms_of_access()
         self.check_keywords()
         self.check_license()
-        self.write_project_metadata_db()
-        # Write the checklist to database using the configured checklist type
-        self.write_checklist_db(self.checklist_type)
