@@ -47,6 +47,7 @@ def write_project_metadata_to_db(db_instance: DatabaseBackend, checker: Checker)
         )
     except Exception as e:
         logger.error(f'Failed to write to database: {e}')
+        raise
 
 
 def write_checklist_metadata_to_db(db_instance: DatabaseBackend, checklist: ChecklistYAML) -> None:
@@ -72,6 +73,7 @@ def write_checklist_metadata_to_db(db_instance: DatabaseBackend, checklist: Chec
         )
     except Exception as e:
         logger.error(f'Failed to write checklist metadata to database: {e}')
+        raise
 
 
 def write_checklist_items_to_db(db_instance: DatabaseBackend, checklist: ChecklistYAML) -> None:
@@ -101,3 +103,4 @@ def write_checklist_items_to_db(db_instance: DatabaseBackend, checklist: Checkli
             )
     except Exception as e:
         logger.error(f'Failed to write checklist to database: {e}')
+        raise
