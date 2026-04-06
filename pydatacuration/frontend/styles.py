@@ -211,7 +211,8 @@ code, pre,
     border: 1px solid #d0d7de;
     border-radius: 6px;
     box-shadow: inset 0 1px 0 rgba(208, 215, 222, 0.2);
-    min-height: 36px;
+    min-height: 28px !important;
+    height: 28px !important;
 }
 .status-select.q-field .q-field__control:before,
 .status-select.q-field .q-field__control:after {
@@ -220,16 +221,19 @@ code, pre,
 .status-select.q-field .q-field__label {
     display: none !important;
 }
-.status-select.q-field .q-field__control-container {
+.status-select.q-field .q-field__control-container,
+.status-select.q-field .q-field__marginal {
+    height: 28px !important;
+    min-height: 28px !important;
     padding-top: 0 !important;
 }
 .status-select.q-field .q-field__native,
 .status-select.q-field .q-field__input {
-    padding: 6px 12px !important;
+    padding: 0 8px !important;
     font-size: 12px !important;
     color: #1f2328 !important;
-    min-height: 34px !important;
-    line-height: 20px !important;
+    min-height: 26px !important;
+    line-height: 26px !important;
 }
 
 /* ========================================================================
