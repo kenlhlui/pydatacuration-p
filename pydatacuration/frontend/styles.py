@@ -627,7 +627,6 @@ select.checklist-medium {
     margin-bottom: 12px;  /* Reduced from 20px */
     width: 100%;
     max-width: 100%;
-    box-sizing: border-box;
 }
 
 .pdc-form-label {
@@ -635,16 +634,6 @@ select.checklist-medium {
     font-weight: bold;
     margin-bottom: 3px;  /* Reduced from 5px */
     color: #34495e;
-}
-
-.pdc-form-input {
-    width: 100% !important;
-    padding: 8px;  /* Reduced from 10px */
-    border: 1px solid #ddd;
-    border-radius: 4px;
-    font-size: 14px;
-    box-sizing: border-box;
-    background-color: white !important;  /* Force white background */
 }
 
 .pdc-form-helper {
@@ -1230,7 +1219,7 @@ def create_checklist_select(res_dir: Path, current_value: str, on_change=None) -
         NiceGUI select element
     """
     # Create label outside the select
-    ui.label('Checklist').classes('pdc-form-label')
+    ui.label('Checklist').classes('status-select')
 
     # Create select without internal label - display capitalized but use lowercase values
     select = ui.select(options=checklist_options(res_dir), value=current_value).classes('w-full').style('width: 100%')
