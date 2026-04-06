@@ -587,22 +587,6 @@ code, pre,
 }
 
 /* ========================================================================
-   Checklist Selection Colors (for landing page)
-   ======================================================================== */
-.checklist-high,
-select.checklist-high {
-    border-color: #3498db !important;
-    background-color: #ebf5fb !important;
-}
-
-.checklist-medium,
-select.checklist-medium {
-    border-color: #27ae60 !important;
-    background-color: #e8f8f0 !important;
-}
-
-
-/* ========================================================================
    Form Sections (Landing Page)
    ======================================================================== */
 .pdc-form-section {
@@ -1057,10 +1041,6 @@ class PDCStyles:
     STATUS_F = 'status-F'
     STATUS_TBD = 'status-TBD'
     STATUS_NA = 'status-NA'
-
-    # Checklist Selection
-    CHECKLIST_HIGH = 'checklist-high'
-    CHECKLIST_MEDIUM = 'checklist-medium'
 
 
 # ============================================================================
