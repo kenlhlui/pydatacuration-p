@@ -477,25 +477,25 @@ code, pre,
    Check Type Badges — GitHub Primer Label style
    ======================================================================== */
 
-/* Automated → Primer accent (blue) */
+/* Automated → solid blue */
 .pdc-check-type-automated {
-    background-color: #ddf4ff;
-    color: #0969da;
-    border-color: rgba(9, 105, 218, 0.4);
+    background-color: #0969da;
+    color: #ffffff;
+    border-color: #0969da;
 }
 
-/* Manual → Primer attention (yellow) */
+/* Manual → solid yellow/amber */
 .pdc-check-type-manual {
-    background-color: #fff8c5;
-    color: #9a6700;
-    border-color: rgba(154, 103, 0, 0.4);
+    background-color: #9a6700;
+    color: #ffffff;
+    border-color: #9a6700;
 }
 
-/* Hybrid → Primer severe (orange) */
+/* Hybrid → solid orange */
 .pdc-check-type-hybrid {
-    background-color: #fff1e5;
-    color: #bc4c00;
-    border-color: rgba(188, 76, 0, 0.4);
+    background-color: #bc4c00;
+    color: #ffffff;
+    border-color: #bc4c00;
 }
 
 .pdc-check-type-automated,
