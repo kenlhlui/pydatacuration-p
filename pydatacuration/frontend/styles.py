@@ -1218,11 +1218,14 @@ def create_checklist_select(res_dir: Path, current_value: str, on_change=None) -
     Returns:
         NiceGUI select element
     """
+    # TODO: consider whether this should be read from a database, rather than a yaml file.
     # Create label outside the select
-    ui.label('Checklist').classes('status-select')
+    ui.label('Checklist').classes('pdc-form-label')
 
     # Create select without internal label - display capitalized but use lowercase values
-    select = ui.select(options=checklist_options(res_dir), value=current_value).classes('w-full').style('width: 100%')
+    select = (
+        ui.select(options=checklist_options(res_dir), value=current_value).classes('status-select').style('width: 100%')
+    )
 
     # Apply checklist-specific styling
     def update_checklist_style(value: str) -> None:
