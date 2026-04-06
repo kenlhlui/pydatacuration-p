@@ -56,7 +56,7 @@ async def checklist_page(project_number: str) -> None:
 
     # Load checklist results and checklist metadata from database
     check_results = db.read_check_results()
-    checklist_metadata = db.read_checklist_metadata()
+    checklist_metadata = db.read_checklist_metadata() or {}
 
     # Load the options for status and priority from the resource directory (with fallback to defaults)
     _status_opts = load_status_options(RES_DIR)
@@ -70,10 +70,8 @@ async def checklist_page(project_number: str) -> None:
             '<img src="/static/UTL.png" alt="University of Toronto Libraries Logo" class="utl-logo">',
             sanitize=False,
         )
-        # Header, with dynamic checklist type
-        # FIXME: change to use the YAML model
-        checklist_name = f'{checklist_type.title()}-Level ' if checklist_type else ''
-        ui.label(f'{checklist_name}Curation Checklist').classes('pdc-header')
+        # Header using the checklist metadata name field (with fallback to "Unknown Checklist" if not available)
+        ui.label(f'{checklist_metadata.get("name", "Unknown Checklist")}').classes('pdc-header')
 
         # Metadata Display using our helper function
         with ui.tabs() as tabs:
@@ -107,7 +105,6 @@ async def checklist_page(project_number: str) -> None:
                         [
                             ('name', 'Checklist name'),
                             ('version', 'Version'),
-                            ('description', 'Description'),
                             ('created_by', 'Created by'),
                             ('last_updated', 'Last updated'),
                             ('status', 'Status'),
@@ -132,7 +129,7 @@ async def checklist_page(project_number: str) -> None:
 
         # Filters Section
         with ui.element('div').classes('pdc-form-section').style('width: 100%; margin-bottom: 20px;'):
-            ui.label('Filters').classes('text-lg font-semibold text-gray-700').style('margin-bottom: 12px;')
+            ui.label('Filters').classes('pdc-form-section-header')
 
             with ui.row().classes('gap-4').style('align-items: flex-end;'):
                 # Status filter
@@ -144,7 +141,7 @@ async def checklist_page(project_number: str) -> None:
                             value=None,
                             with_input=False,
                         )
-                        .classes('pdc-status-select')
+                        .classes('status-select')
                         .style('width: 100%;')
                     )
 
@@ -157,13 +154,13 @@ async def checklist_page(project_number: str) -> None:
                             value=None,
                             with_input=False,
                         )
-                        .classes('pdc-status-select')
+                        .classes('status-select')
                         .style('width: 100%;')
                     )
 
                 # Clear filters button
                 ui.button('Clear Filters', on_click=lambda: clear_filters()).classes(  # noqa: PLW0108
-                    'pdc-btn pdc-btn-secondary'
+                    'pdc-btn'
                 )
 
         # Dicts populated by render_checklist_table for visibility-based filtering
@@ -230,7 +227,7 @@ async def checklist_page(project_number: str) -> None:
             )
 
             ui.button('Export YAML', on_click=lambda: NiceGUIHelper.export_yaml_button(db, dir_manager)).classes(
-                'pdc-btn pdc-btn-secondary'
+                'pdc-btn'
             )
 
             ui.button('New Dataset', on_click=helpers.confirm_new_dataset).classes('pdc-btn pdc-btn-danger')
@@ -396,7 +393,7 @@ async def render_checklist_table(  # noqa: PLR0913, PLR0912, PLR0915, C901, PLR0
                         )
 
                     # Priority
-                    with ui.element('td'), ui.element('div').classes('pdc-priority-badge-container'):
+                    with ui.element('td'), ui.element('div').classes('pdc-badge-container'):
                         create_priority_badge(item.priority)
 
                     # Time Spent with Timer

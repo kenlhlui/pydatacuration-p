@@ -30,13 +30,22 @@ html {
 }
 
 body {
-    font-family: Arial, sans-serif;
+    font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', 'Noto Sans',
+                 Helvetica, Arial, sans-serif, 'Apple Color Emoji', 'Segoe UI Emoji';
     margin: 20px;
-    background-color: #f5f5f5;
+    background-color: #f6f8fa;
+    color: #1f2328;
     line-height: 1.6;
     overflow-x: hidden;
     max-width: 100vw;
     box-sizing: border-box;
+}
+
+code, pre,
+.pdc-time-input,
+.pdc-check-details-list code {
+    font-family: ui-monospace, SFMono-Regular, 'SF Mono', Menlo, Consolas,
+                 'Liberation Mono', monospace;
 }
 
 /* ========================================================================
@@ -47,10 +56,11 @@ body {
     width: 100%;
     min-width: 320px;
     margin: 0 auto;
-    background-color: white;
+    background-color: #ffffff;
     padding: 30px;
-    border-radius: 8px;
-    box-shadow: 0 2px 10px rgba(0,0,0,0.1);
+    border-radius: 6px;
+    border: 1px solid #d0d7de;
+    box-shadow: 0 1px 0 rgba(31, 35, 40, 0.04);
     box-sizing: border-box;
     overflow-x: auto;
 }
@@ -64,10 +74,11 @@ body {
     max-width: 50%;
     width: 100%;
     margin: 0 auto;
-    background-color: white;
+    background-color: #ffffff;
     padding: 30px;
-    border-radius: 8px;
-    box-shadow: 0 2px 10px rgba(0,0,0,0.1);
+    border-radius: 6px;
+    border: 1px solid #d0d7de;
+    box-shadow: 0 1px 0 rgba(31, 35, 40, 0.04);
     box-sizing: border-box;
     overflow-x: auto;
 }
@@ -82,7 +93,7 @@ body {
     border-bottom: 2px solid #3498db;
     padding-bottom: 10px;
     font-size: 2rem;
-    font-weight: bold;
+    font-weight: 600;
 }
 
 /* ========================================================================
@@ -97,9 +108,10 @@ body {
    Info Section (Metadata Display)
    ======================================================================== */
 .pdc-info-section {
-    background-color: #ecf0f1;
+    background-color: #f6f8fa;
     padding: 25px;
-    border-radius: 8px;
+    border-radius: 6px;
+    border: 1px solid #d0d7de;
     margin-bottom: 30px;
     width: 100%;
     max-width: 100%;
@@ -189,12 +201,39 @@ body {
 .status-select {
     width: 100%;
     min-width: 140px;
-    padding: 3px;
-    min-height: 1px;
-    border: 1px solid #ddd;
-    border-radius: 4px;
     font-size: 12px;
-    transition: background-color 0.3s ease;
+    transition: border-color 0.2s ease, box-shadow 0.2s ease;
+}
+
+/* status-select: GitHub-style border for both text inputs and selects in filter sections */
+.status-select.q-field .q-field__control {
+    background-color: #ffffff;
+    border: 1px solid #d0d7de;
+    border-radius: 6px;
+    box-shadow: inset 0 1px 0 rgba(208, 215, 222, 0.2);
+    min-height: 28px !important;
+    height: 28px !important;
+}
+.status-select.q-field .q-field__control:before,
+.status-select.q-field .q-field__control:after {
+    display: none !important;
+}
+.status-select.q-field .q-field__label {
+    display: none !important;
+}
+.status-select.q-field .q-field__control-container,
+.status-select.q-field .q-field__marginal {
+    height: 28px !important;
+    min-height: 28px !important;
+    padding-top: 0 !important;
+}
+.status-select.q-field .q-field__native,
+.status-select.q-field .q-field__input {
+    padding: 0 8px !important;
+    font-size: 12px !important;
+    color: #1f2328 !important;
+    min-height: 26px !important;
+    line-height: 26px !important;
 }
 
 /* ========================================================================
@@ -355,59 +394,79 @@ body {
 }
 
 /* ========================================================================
-   Form Inputs
+   Form Inputs — GitHub style
    ======================================================================== */
 .pdc-comments-input {
     width: 100%;
     min-height: 80px;
     max-width: 100%;
-    padding: 10px;
-    border: 1px solid #ddd;
-    border-radius: 4px;
-    font-family: Arial, sans-serif;
+    padding: 6px 12px;
+    border: 1px solid #d0d7de;
+    border-radius: 6px;
+    background-color: #ffffff;
+    color: #1f2328;
+    font-family: inherit;
     font-size: 12px;
+    line-height: 20px;
     white-space: pre-wrap;
     box-sizing: border-box;
     resize: vertical;
+    box-shadow: inset 0 1px 0 rgba(208, 215, 222, 0.2);
+    transition: border-color 0.2s ease, box-shadow 0.2s ease;
+}
+
+.pdc-comments-input:focus {
+    outline: none;
+    border-color: #0969da;
+    box-shadow: 0 0 0 3px rgba(9, 105, 218, 0.3);
 }
 
 .pdc-time-input {
     width: 70px;
-    padding: 8px 8px;
-    min-height: 1px;
-    border: 1px solid #ddd;
-    border-radius: 1px;
-    font-family: monospace;
+    font-family: ui-monospace, SFMono-Regular, 'SF Mono', Menlo, Consolas, 'Liberation Mono', monospace;
+    font-size: 12px;
+    transition: border-color 0.2s ease, box-shadow 0.2s ease;
 }
 
 
 /* ========================================================================
-   Priority Badges
+   Priority Badges — GitHub Primer Label style
    ======================================================================== */
 .pdc-priority-badge {
     display: inline-block;
-    padding: 4px 8px;
-    border-radius: 12px;
-    font-size: clamp(8px, 1.1vw, 11px);
-    font-weight: bold;
-    color: white;
+    padding: 0 8px;
+    height: 20px;
+    line-height: 18px;
+    border-radius: 2em;
+    font-size: 12px;
+    font-weight: 500;
     white-space: nowrap;
+    border: 1px solid transparent;
     max-width: 100%;
     overflow: hidden;
     text-overflow: ellipsis;
     box-sizing: border-box;
 }
 
+/* Required → Primer danger (red) */
 .pdc-priority-required {
-    background-color: #dc4633;
+    background-color: #ffebe9;
+    color: #cf222e;
+    border-color: rgba(207, 34, 46, 0.4);
 }
 
+/* Recommended → Primer attention (yellow) */
 .pdc-priority-recommended {
-    background-color: #f1c500;
+    background-color: #fff8c5;
+    color: #9a6700;
+    border-color: rgba(154, 103, 0, 0.4);
 }
 
+/* Info → Primer accent (blue) */
 .pdc-priority-info {
-    background-color: #6fc7ea;
+    background-color: #ddf4ff;
+    color: #0969da;
+    border-color: rgba(9, 105, 218, 0.4);
 }
 
 .pdc-priority-badge-container {
@@ -415,18 +474,28 @@ body {
 }
 
 /* ========================================================================
-   Check Type Badges
+   Check Type Badges — GitHub Primer Label style
    ======================================================================== */
+
+/* Automated → solid blue */
 .pdc-check-type-automated {
-    background-color: #3498db;
+    background-color: #0969da;
+    color: #ffffff;
+    border-color: #0969da;
 }
 
+/* Manual → solid yellow/amber */
 .pdc-check-type-manual {
-    background-color: #f1c500;
+    background-color: #9a6700;
+    color: #ffffff;
+    border-color: #9a6700;
 }
 
+/* Hybrid → solid orange */
 .pdc-check-type-hybrid {
-    background-color: #e67e22;
+    background-color: #bc4c00;
+    color: #ffffff;
+    border-color: #bc4c00;
 }
 
 .pdc-check-type-automated,
@@ -436,7 +505,7 @@ body {
 }
 
 /* ========================================================================
-   Buttons
+   Buttons — GitHub Primer style
    ======================================================================== */
 .pdc-actions {
     margin-top: 30px;
@@ -444,63 +513,87 @@ body {
 }
 
 .pdc-btn {
-    padding: 12px 25px;
-    margin: 0 10px;
-    border: none;
-    border-radius: 5px;
-    cursor: pointer;
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+    padding: 5px 16px;
+    margin: 0 6px;
     font-size: 14px;
-    transition: all 0.3s ease;
+    font-weight: 500;
+    line-height: 20px;
+    border-radius: 6px;
+    border: 1px solid rgba(31, 35, 40, 0.15);
+    cursor: pointer;
+    white-space: nowrap;
+    box-shadow: 0 1px 0 rgba(31, 35, 40, 0.04);
+    transition: background-color 0.2s ease, border-color 0.2s ease, box-shadow 0.2s ease;
 }
 
 .pdc-btn-primary {
-    background-color: #3498db;
-    color: white;
+    background-color: #2da44e;
+    color: #ffffff;
+}
+
+.pdc-btn-primary:hover {
+    background-color: #2c974b;
+    border-color: rgba(31, 35, 40, 0.15);
 }
 
 .pdc-btn-secondary {
-    background-color: #95a5a6;
-    color: white;
+    background-color: #f6f8fa;
+    color: #24292f;
+    border-color: rgba(31, 35, 40, 0.15);
+}
+
+.pdc-btn-secondary:hover {
+    background-color: #f3f4f6;
+    border-color: rgba(31, 35, 40, 0.3);
 }
 
 .pdc-btn-calculate {
     background-color: #6D247A;
-    color: white;
+    color: #ffffff;
+}
+
+.pdc-btn-calculate:hover {
+    background-color: #5c1f67;
 }
 
 .pdc-btn-danger {
-    background-color: #DC4633;
-    color: white;
+    background-color: #cf222e;
+    color: #ffffff;
 }
 
-.pdc-btn:hover {
-    opacity: 0.8;
-    transform: translateY(-1px);
+.pdc-btn-danger:hover {
+    background-color: #a40e26;
 }
 
-/* ========================================================================
-   Checklist Selection Colors (for landing page)
-   ======================================================================== */
-.checklist-high,
-select.checklist-high {
-    border-color: #3498db !important;
-    background-color: #ebf5fb !important;
+/* Quasar overrides for pdc-btn — strip uppercase and normalise sizing */
+.pdc-btn.q-btn {
+    padding: 5px 16px;
+    min-height: 32px;
+    border-radius: 6px;
+    font-size: 14px;
+    font-weight: 500;
+    letter-spacing: normal;
+    box-shadow: 0 1px 0 rgba(31, 35, 40, 0.04);
 }
 
-.checklist-medium,
-select.checklist-medium {
-    border-color: #27ae60 !important;
-    background-color: #e8f8f0 !important;
+.pdc-btn .q-btn__content {
+    text-transform: none;
+    font-size: 14px;
+    font-weight: 500;
+    letter-spacing: normal;
 }
-
 
 /* ========================================================================
    Form Sections (Landing Page)
    ======================================================================== */
 .pdc-form-section {
-    background-color: #ecf0f1;
-    padding: 15px;  /* Reduced from 20px */
-    border-radius: 5px;
+    background-color: #f6f8fa;
+    padding: 15px;
+    border-radius: 6px;
+    border: 1px solid #d0d7de;
     width: 100%;
     max-width: 100%;
     box-sizing: border-box;
@@ -508,7 +601,7 @@ select.checklist-medium {
 }
 
 .pdc-form-section-header {
-    font-size: 1.125rem; /* text-lg */
+    font-size: 18px;
     font-weight: 600; /* font-semibold */
     color: #374151; /* text-gray-700 */
     margin-bottom: 12px;
@@ -518,7 +611,6 @@ select.checklist-medium {
     margin-bottom: 12px;  /* Reduced from 20px */
     width: 100%;
     max-width: 100%;
-    box-sizing: border-box;
 }
 
 .pdc-form-label {
@@ -526,16 +618,6 @@ select.checklist-medium {
     font-weight: bold;
     margin-bottom: 3px;  /* Reduced from 5px */
     color: #34495e;
-}
-
-.pdc-form-input {
-    width: 100% !important;
-    padding: 8px;  /* Reduced from 10px */
-    border: 1px solid #ddd;
-    border-radius: 4px;
-    font-size: 14px;
-    box-sizing: border-box;
-    background-color: white !important;  /* Force white background */
 }
 
 .pdc-form-helper {
@@ -602,20 +684,54 @@ select.checklist-medium {
 /* ========================================================================
    NiceGUI Specific Overrides
    ======================================================================== */
-/* Override NiceGUI's default input widths */
-.pdc-form-input .q-field,
+
+/* pdc-form-input: strip Quasar's floating-label padding and underline */
 .pdc-form-input.q-field {
     width: 100% !important;
     max-width: 100% !important;
     box-sizing: border-box !important;
 }
 
-.pdc-form-input .q-field__control,
 .pdc-form-input.q-field .q-field__control {
     width: 100% !important;
     max-width: 100% !important;
-    background-color: white !important;
+    min-height: 36px !important;
+    padding: 0 !important;
+    background-color: #ffffff !important;
+    border: 1px solid #d0d7de !important;
+    border-radius: 6px !important;
+    box-shadow: inset 0 1px 0 rgba(208, 215, 222, 0.2) !important;
     box-sizing: border-box !important;
+}
+
+/* Remove the animated underline */
+.pdc-form-input.q-field .q-field__control:before,
+.pdc-form-input.q-field .q-field__control:after {
+    display: none !important;
+}
+
+/* Remove padding-top that Quasar reserves for the floating label */
+.pdc-form-input.q-field .q-field__control-container {
+    padding-top: 0 !important;
+}
+
+/* Hide Quasar's internal label (we use external labels) */
+.pdc-form-input.q-field .q-field__label {
+    display: none !important;
+}
+
+/* Native input padding */
+.pdc-form-input.q-field .q-field__native {
+    padding: 6px 12px !important;
+    color: #1f2328 !important;
+    font-size: 14px !important;
+    min-height: 36px !important;
+    line-height: 20px !important;
+}
+
+/* Hide helper/error row below input */
+.pdc-form-input.q-field .q-field__bottom {
+    display: none !important;
 }
 
 .pdc-form-group .q-field,
@@ -630,28 +746,35 @@ select.checklist-medium {
 .pdc-form-group input,
 .pdc-form-group textarea,
 .pdc-form-group select {
-    background-color: white !important;
-    border: 1px solid #ddd !important;
-    border-radius: 4px !important;
-    box-shadow: none !important;
+    background-color: #ffffff !important;
+    border: 1px solid #d0d7de !important;
+    border-radius: 6px !important;
+    box-shadow: inset 0 1px 0 rgba(208, 215, 222, 0.2) !important;
     box-sizing: border-box !important;
     max-width: 100% !important;
+    color: #1f2328 !important;
 }
 
 /* Reduce padding on Quasar fields */
 .pdc-form-group .q-field__control {
     padding: 0 !important;
-    min-height: 40px !important;
+    min-height: 36px !important;
     box-sizing: border-box !important;
 }
 
 /* For text inputs only - not select dropdowns */
 .pdc-form-group .q-input .q-field__control {
-    height: 40px !important;
+    height: 36px !important;
+}
+
+/* Remove padding-top Quasar reserves for floating label */
+.pdc-form-group .q-field__control-container {
+    padding-top: 0 !important;
+    padding-bottom: 0 !important;
 }
 
 .pdc-form-group .q-field__native {
-    padding: 8px !important;
+    padding: 6px 12px !important;
     box-sizing: border-box !important;
 }
 
@@ -678,90 +801,83 @@ select.checklist-medium {
 }
 
 /* ========================================================================
-   Checklist Table Input Overrides - Compact Heights
+   Checklist Table Input Overrides — GitHub style, compact heights
    ======================================================================== */
-/* Status select in table - reset min-width so it respects the fixed column */
+
+/* Shared GitHub input appearance for all table field controls */
+.pdc-checklist-table .status-select.q-select .q-field__control,
+.pdc-checklist-table .pdc-time-input .q-field__control {
+    min-height: 28px !important;
+    height: 28px !important;
+    padding: 0 8px !important;
+    border: 1px solid #d0d7de !important;
+    border-radius: 6px !important;
+    background-color: #ffffff !important;
+    box-shadow: inset 0 1px 0 rgba(208, 215, 222, 0.2) !important;
+    box-sizing: border-box !important;
+    transition: border-color 0.2s ease, box-shadow 0.2s ease !important;
+}
+
+/* Focus state */
+.pdc-checklist-table .status-select.q-select .q-field__control:focus-within,
+.pdc-checklist-table .pdc-time-input .q-field__control:focus-within {
+    border-color: #0969da !important;
+    box-shadow: 0 0 0 3px rgba(9, 105, 218, 0.3) !important;
+}
+
+/* Remove Quasar's animated underline on both */
+.pdc-checklist-table .status-select.q-select .q-field__control:before,
+.pdc-checklist-table .status-select.q-select .q-field__control:after,
+.pdc-checklist-table .pdc-time-input .q-field__control:before,
+.pdc-checklist-table .pdc-time-input .q-field__control:after {
+    display: none !important;
+}
+
+/* Status select */
 .pdc-checklist-table .status-select {
     min-width: 0 !important;
     width: 100% !important;
 }
 
-/* Status select in table - force compact height */
-.pdc-checklist-table .status-select.q-select .q-field__control {
-    min-height: 28px !important;
-    height: 28px !important;
-    padding: 2px 8px !important;
-    border: 1px solid #ddd !important;
-    border-radius: 4px !important;
-    box-shadow: none !important;
-    box-sizing: border-box !important;
-}
-
-/* Remove Quasar's default border lines */
-.pdc-checklist-table .status-select.q-select .q-field__control:before,
-.pdc-checklist-table .status-select.q-select .q-field__control:after {
-    display: none !important;
-    border: none !important;
-}
-
 .pdc-checklist-table .status-select.q-select .q-field__native {
     padding: 0 !important;
-    min-height: 24px !important;
-    line-height: 24px !important;
+    min-height: 26px !important;
+    line-height: 26px !important;
     font-size: 12px !important;
+    color: #1f2328 !important;
 }
 
-.pdc-checklist-table .status-select.q-select .q-field__marginal {
-    height: 28px !important;
-}
-
+.pdc-checklist-table .status-select.q-select .q-field__marginal,
 .pdc-checklist-table .status-select.q-select .q-field__control-container {
-    padding: 0 !important;
-    min-height: 28px !important;
-}
-
-/* Time input in table - force compact height */
-.pdc-checklist-table .pdc-time-input .q-field__control {
-    min-height: 28px !important;
     height: 28px !important;
+    min-height: 28px !important;
     padding: 0 !important;
-    border: none !important;
-    box-shadow: none !important;
 }
 
-/* Remove Quasar's default border lines */
-.pdc-checklist-table .pdc-time-input .q-field__control:before,
-.pdc-checklist-table .pdc-time-input .q-field__control:after {
-    display: none !important;
-    border: none !important;
-}
-
+/* Time input */
 .pdc-checklist-table .pdc-time-input .q-field__native,
 .pdc-checklist-table .pdc-time-input input {
-    padding: 2px 4px !important;
-    min-height: 28px !important;
-    height: 28px !important;
-    line-height: 24px !important;
+    padding: 0 !important;
+    min-height: 26px !important;
+    height: 26px !important;
+    line-height: 26px !important;
     font-size: 12px !important;
-    border: 1px solid #ddd !important;
-    border-radius: 4px !important;
+    color: #1f2328 !important;
+    border: none !important;
+    box-shadow: none !important;
+    background: transparent !important;
     box-sizing: border-box !important;
 }
 
-.pdc-checklist-table .pdc-time-input .q-field__marginal {
-    height: 28px !important;
-}
-
+.pdc-checklist-table .pdc-time-input .q-field__marginal,
 .pdc-checklist-table .pdc-time-input .q-field__control-container {
+    height: 28px !important;
     min-height: 28px !important;
     padding: 0 !important;
 }
 
 /* Remove extra padding from Quasar field wrapper */
-.pdc-checklist-table .q-field__inner {
-    padding: 0 !important;
-}
-
+.pdc-checklist-table .q-field__inner,
 .pdc-checklist-table .q-field__control-container {
     padding: 0 !important;
 }
@@ -926,10 +1042,6 @@ class PDCStyles:
     STATUS_TBD = 'status-TBD'
     STATUS_NA = 'status-NA'
 
-    # Checklist Selection
-    CHECKLIST_HIGH = 'checklist-high'
-    CHECKLIST_MEDIUM = 'checklist-medium'
-
 
 # ============================================================================
 # Helper Functions
@@ -938,6 +1050,12 @@ class PDCStyles:
 
 def apply_pdc_styles() -> None:
     """Apply PyDataCuration CSS to the current page and configure external links."""
+    # Primer CSS — design tokens and components (no base reset to avoid Quasar conflicts)
+    _PRIMER_CDN = 'https://unpkg.com/@primer/css@latest/dist'
+    for module in ('primitives', 'buttons', 'forms', 'labels', 'navigation', 'utilities'):
+        ui.add_head_html(f'<link rel="stylesheet" href="{_PRIMER_CDN}/{module}.css">')
+
+    # Custom styles — loaded after Primer so .pdc-* rules take precedence
     ui.add_head_html(PYDATACURATION_CSS)
 
     # Add JavaScript to make all external links open in new tab
@@ -1080,11 +1198,14 @@ def create_checklist_select(res_dir: Path, current_value: str, on_change=None) -
     Returns:
         NiceGUI select element
     """
+    # TODO: consider whether this should be read from a database, rather than a yaml file.
     # Create label outside the select
     ui.label('Checklist').classes('pdc-form-label')
 
     # Create select without internal label - display capitalized but use lowercase values
-    select = ui.select(options=checklist_options(res_dir), value=current_value).classes('w-full').style('width: 100%')
+    select = (
+        ui.select(options=checklist_options(res_dir), value=current_value).classes('status-select').style('width: 100%')
+    )
 
     # Apply checklist-specific styling
     def update_checklist_style(value: str) -> None:

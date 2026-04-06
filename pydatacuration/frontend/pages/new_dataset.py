@@ -153,14 +153,14 @@ async def new_dataset_page() -> None:
 
             with ui.element('div').classes('pdc-form-group'):
                 ui.label('Dataset PID *').classes('pdc-form-label')
-                ui.input(placeholder='doi:10.5683/SP2/... or hdl:1902.1/...').classes(
-                    'pdc-form-input w-full'
-                ).bind_value(form_data, 'pid').style('width: 100%')
+                ui.input(placeholder='doi:10.5683/SP2/... or hdl:1902.1/...').classes('pdc-form-input').bind_value(
+                    form_data, 'pid'
+                ).style('width: 100%')
                 ui.label('Persistent identifier for the dataset (DOI or Handle)').classes('pdc-form-helper')
 
             with ui.element('div').classes('pdc-form-group'):
                 ui.label('Dataverse Base URL *').classes('pdc-form-label')
-                ui.input(placeholder='https://demo.borealisdata.ca/').classes('pdc-form-input w-full').bind_value(
+                ui.input(placeholder='https://demo.borealisdata.ca/').classes('pdc-form-input').bind_value(
                     form_data, 'base_url'
                 ).style('width: 100%')
                 ui.label('Base URL of the Dataverse installation (e.g., https://demo.borealisdata.ca/)').classes(
@@ -171,16 +171,16 @@ async def new_dataset_page() -> None:
                 ui.label('API Token *').classes('pdc-form-label')
                 ui.input(
                     placeholder='Enter your Dataverse API token', password=True, password_toggle_button=True
-                ).props('autocorrect=off autocapitalize=off spellcheck=false').classes(
-                    'pdc-form-input w-full'
-                ).bind_value(form_data, 'api_token').style('width: 100%')
+                ).props('autocorrect=off autocapitalize=off spellcheck=false').classes('pdc-form-input').bind_value(
+                    form_data, 'api_token'
+                ).style('width: 100%')
                 ui.label('The API token from the Dataverse instance. The value is hidden by default.').classes(
                     'pdc-form-helper'
                 )
 
             with ui.element('div').classes('pdc-form-group'):
                 ui.label('Project Number *').classes('pdc-form-label')
-                ui.input(placeholder='PROJECT-123').classes('pdc-form-input w-full').bind_value(
+                ui.input(placeholder='PROJECT-123').classes('pdc-form-input').bind_value(
                     form_data, 'project_number'
                 ).style('width: 100%')
                 ui.label('Identifier for the curation report (e.g., CUR-999)').classes('pdc-form-helper')
@@ -191,26 +191,26 @@ async def new_dataset_page() -> None:
 
             with ui.element('div').classes('pdc-form-group'):
                 ui.label('Curator Name *').classes('pdc-form-label')
-                ui.input(placeholder='Enter your name').props('autocomplete=name').classes(
-                    'pdc-form-input w-full'
-                ).bind_value(form_data, 'curator_name').style('width: 100%')
+                ui.input(placeholder='Enter your name').props('autocomplete=name').classes('pdc-form-input').bind_value(
+                    form_data, 'curator_name'
+                ).style('width: 100%')
 
             with ui.element('div').classes('pdc-form-group'):
                 ui.label('Curator Email *').classes('pdc-form-label')
-                ui.input(placeholder='Enter your email').classes('pdc-form-input w-full').props(
+                ui.input(placeholder='Enter your email').classes('pdc-form-input').props(
                     'type=email autocomplete=email'
                 ).bind_value(form_data, 'curator_email').style('width: 100%')
 
-        # Directory Settings Section
-        with ui.element('div').classes('pdc-form-section'):
-            ui.label('Directory Settings').classes('pdc-form-section-header')
+        # # Directory Settings Section  # -- removed for now since we're defaulting to main_dir from .env and it can be confusing to have multiple directory fields. Can re-add later if needed --  # noqa: E501
+        # with ui.element('div').classes('pdc-form-section'):
+        #     ui.label('Directory Settings').classes('pdc-form-section-header')
 
-            with ui.element('div').classes('pdc-form-group'):
-                ui.label('Main Directory Path').classes('pdc-form-label')
-                ui.input(placeholder='workdir').classes('pdc-form-input w-full').props(
-                    'spellcheck=false autocorrect=off autocapitalize=off'
-                ).bind_value(form_data, 'main_dir').style('width: 100%')
-                ui.label('Base directory where project folders and files will be created').classes('pdc-form-helper')
+        #     with ui.element('div').classes('pdc-form-group'):
+        #         ui.label('Main Directory Path').classes('pdc-form-label')
+        #         ui.input(placeholder='workdir').classes('pdc-form-input w-full').props(
+        #             'spellcheck=false autocorrect=off autocapitalize=off'
+        #         ).bind_value(form_data, 'main_dir').style('width: 100%')
+        #         ui.label('Base directory where project folders and files will be created').classes('pdc-form-helper')
 
         # Checklist Selection Section
         with ui.element('div').classes('pdc-form-section'):
@@ -239,7 +239,7 @@ async def new_dataset_page() -> None:
 
             with ui.element('div').classes('pdc-form-group'):
                 ui.label('Dataverse Collection Alias').classes('pdc-form-label')
-                ui.input(placeholder='Enter dataverse collection alias').classes('pdc-form-input w-full').bind_value(
+                ui.input(placeholder='Enter dataverse collection alias').classes('pdc-form-input').bind_value(
                     form_data, 'collection_alias'
                 ).style('width: 100%')
                 ui.label('Dataverse collection alias for checking dataset author and depositor history').classes(
@@ -264,10 +264,10 @@ async def new_dataset_page() -> None:
 
             reset_button = ui.button(
                 'Reset Form', on_click=lambda: reset_form(form_data, default_form_data, reset_button)
-            ).classes('pdc-btn pdc-btn-secondary')
+            ).classes('pdc-btn')
 
             back_button = ui.button('Back', on_click=lambda: handle_back_navigation(back_button), color='red').classes(
-                'pdc-btn pdc-btn-secondary'
+                'pdc-btn'
             )
 
         # Loading indicator

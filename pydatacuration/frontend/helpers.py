@@ -246,11 +246,13 @@ class NiceGUIHelper:
             app.storage.user.clear()
             ui.navigate.to('/')
 
-        with ui.dialog() as dialog, ui.card():
-            ui.label('This will clear the current session and start a new dataset. Continue?').classes('text-lg')
-            with ui.row():
-                ui.button('Yes', on_click=lambda: [dialog.close(), handle_confirm()])
-                ui.button('No', on_click=dialog.close)
+        with ui.dialog() as dialog, ui.card().style('min-width: 400px;'):
+            ui.label('This will redirect to the new dataset page. Continue?').classes('text-xl font-semibold')
+            with ui.row().classes('w-full justify-end gap-2').style('margin-top: 20px;'):
+                ui.button('Continue', color='red', on_click=lambda: [dialog.close(), handle_confirm()]).classes(
+                    'pdc-btn'
+                )
+                ui.button('Cancel', on_click=dialog.close).classes('pdc-btn')
         dialog.open()
 
     @staticmethod
@@ -416,4 +418,4 @@ def checklist_options(res_dir: Path) -> dict[str, str]:
 def back_to_main_menu_button() -> None:
     """Create a centered 'Back to Main Menu' button."""
     with ui.row().classes('justify-left my-4'):
-        ui.button('← Back', on_click=lambda: ui.navigate.to('/')).classes('pdc-btn pdc-btn-secondary')
+        ui.button('← Back', on_click=lambda: ui.navigate.to('/')).classes('pdc-btn')

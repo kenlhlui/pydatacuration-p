@@ -36,8 +36,8 @@ async def render_project_table(
             with ui.element('div').style('flex: 1; min-width: 200px;'):
                 ui.label('Search').classes('pdc-form-label')
                 search_input: Input = (
-                    ui.input(placeholder='Search Title, DOI, ID (Versioned), URL')
-                    .classes('pdc-form-input')
+                    ui.input(placeholder='Search Project Number, Title, PID, ID (Versioned), URL')
+                    .classes('status-select')
                     .style('width: 100%;')
                 )
 
@@ -51,14 +51,12 @@ async def render_project_table(
                         value='',
                         with_input=False,
                     )
-                    .classes('pdc-status-select')
+                    .classes('status-select')
                     .style('width: 100%;')
                 )
 
             # Clear filters button
-            ui.button('Clear Filters', on_click=lambda: clear_filters(search_input, curator_filter)).classes(
-                'pdc-btn pdc-btn-secondary'
-            )
+            ui.button('Clear Filters', on_click=lambda: clear_filters(search_input, curator_filter)).classes('pdc-btn')
 
     # Table container
     table_container = ui.column().style('width: 100%;')
@@ -82,7 +80,7 @@ async def render_project_table(
 
         table_container.clear()
         with table_container:
-            ui.label(f'Found {len(filtered_schemas)} project(s)').classes('text-lg font-semibold').style(
+            ui.label(f'Found {len(filtered_schemas)} project(s)').classes('pdc-form-section-header').style(
                 'margin: 20px 0;'
             )
 
