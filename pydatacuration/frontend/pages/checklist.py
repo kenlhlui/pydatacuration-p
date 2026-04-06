@@ -393,7 +393,7 @@ async def render_checklist_table(  # noqa: PLR0913, PLR0912, PLR0915, C901, PLR0
                         )
 
                     # Priority
-                    with ui.element('td'), ui.element('div').classes('pdc-priority-badge-container'):
+                    with ui.element('td'), ui.element('div').classes('pdc-badge-container'):
                         create_priority_badge(item.priority)
 
                     # Time Spent with Timer
