@@ -11,7 +11,7 @@ Below is a summary of the key environment variables you can set to customize the
 | Variable | Default | Description |
 |---|---|---|
 | `APP_PORT` | `9005` | Port the application listens on |
-| `APP_TITLE` | `Dataverse Curation review Tool` | Display title of the application |
+| `APP_TITLE` | `Dataverse Curation Review Tool` | Display title of the application |
 | `APP_FAVICON` | `🔬` | Favicon / icon shown in the UI |
 | `DEBUG` | `false` | Enable debug mode |
 | `LOG_LEVEL` | `INFO` | Logging verbosity (see values below) |

@@ -32,7 +32,7 @@ class AppSettings(BaseSettings, DirectoryDefaults):
     )
 
     app_port: int = 9005
-    app_title: str = 'Dataverse Curation review Tool'
+    app_title: str = 'Dataverse Curation Review Tool'
     app_favicon: str = '🔬'
     debug: bool = False
     log_level: allowed_logging_levels = 'INFO'

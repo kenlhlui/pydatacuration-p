@@ -56,7 +56,7 @@ async def checklist_page(project_number: str) -> None:
 
     # Load checklist results and checklist metadata from database
     check_results = db.read_check_results()
-    checklist_metadata = db.read_checklist_metadata()
+    checklist_metadata = db.read_checklist_metadata() or {}
 
     # Load the options for status and priority from the resource directory (with fallback to defaults)
     _status_opts = load_status_options(RES_DIR)
@@ -70,10 +70,8 @@ async def checklist_page(project_number: str) -> None:
             '<img src="/static/UTL.png" alt="University of Toronto Libraries Logo" class="utl-logo">',
             sanitize=False,
         )
-        # Header, with dynamic checklist type
-        # FIXME: change to use the YAML model
-        checklist_name = f'{checklist_type.title()}-Level ' if checklist_type else ''
-        ui.label(f'{checklist_name}Curation Checklist').classes('pdc-header')
+        # Header using the checklist metadata name field (with fallback to "Unknown Checklist" if not available)
+        ui.label(f'{checklist_metadata.get("name", "Unknown Checklist")}').classes('pdc-header')
 
         # Metadata Display using our helper function
         with ui.tabs() as tabs:
@@ -107,7 +105,6 @@ async def checklist_page(project_number: str) -> None:
                         [
                             ('name', 'Checklist name'),
                             ('version', 'Version'),
-                            ('description', 'Description'),
                             ('created_by', 'Created by'),
                             ('last_updated', 'Last updated'),
                             ('status', 'Status'),
