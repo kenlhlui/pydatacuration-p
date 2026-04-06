@@ -36,8 +36,8 @@ async def render_project_table(
             with ui.element('div').style('flex: 1; min-width: 200px;'):
                 ui.label('Search').classes('pdc-form-label')
                 search_input: Input = (
-                    ui.input(placeholder='Search Title, DOI, ID (Versioned), URL')
-                    .classes('pdc-form-input')
+                    ui.input(placeholder='Search Project Number, Title, PID, ID (Versioned), URL')
+                    .classes('status-select')
                     .style('width: 100%;')
                 )
 
