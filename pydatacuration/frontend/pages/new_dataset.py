@@ -201,16 +201,16 @@ async def new_dataset_page() -> None:
                     'type=email autocomplete=email'
                 ).bind_value(form_data, 'curator_email').style('width: 100%')
 
-        # Directory Settings Section
-        with ui.element('div').classes('pdc-form-section'):
-            ui.label('Directory Settings').classes('pdc-form-section-header')
+        # # Directory Settings Section  # -- removed for now since we're defaulting to main_dir from .env and it can be confusing to have multiple directory fields. Can re-add later if needed --  # noqa: E501
+        # with ui.element('div').classes('pdc-form-section'):
+        #     ui.label('Directory Settings').classes('pdc-form-section-header')
 
-            with ui.element('div').classes('pdc-form-group'):
-                ui.label('Main Directory Path').classes('pdc-form-label')
-                ui.input(placeholder='workdir').classes('pdc-form-input w-full').props(
-                    'spellcheck=false autocorrect=off autocapitalize=off'
-                ).bind_value(form_data, 'main_dir').style('width: 100%')
-                ui.label('Base directory where project folders and files will be created').classes('pdc-form-helper')
+        #     with ui.element('div').classes('pdc-form-group'):
+        #         ui.label('Main Directory Path').classes('pdc-form-label')
+        #         ui.input(placeholder='workdir').classes('pdc-form-input w-full').props(
+        #             'spellcheck=false autocorrect=off autocapitalize=off'
+        #         ).bind_value(form_data, 'main_dir').style('width: 100%')
+        #         ui.label('Base directory where project folders and files will be created').classes('pdc-form-helper')
 
         # Checklist Selection Section
         with ui.element('div').classes('pdc-form-section'):
