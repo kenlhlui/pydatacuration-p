@@ -56,9 +56,7 @@ async def render_project_table(
                 )
 
             # Clear filters button
-            ui.button('Clear Filters', on_click=lambda: clear_filters(search_input, curator_filter)).classes(
-                'pdc-btn pdc-btn-secondary'
-            )
+            ui.button('Clear Filters', on_click=lambda: clear_filters(search_input, curator_filter)).classes('pdc-btn')
 
     # Table container
     table_container = ui.column().style('width: 100%;')

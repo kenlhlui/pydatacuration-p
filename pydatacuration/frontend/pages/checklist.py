@@ -160,7 +160,7 @@ async def checklist_page(project_number: str) -> None:
 
                 # Clear filters button
                 ui.button('Clear Filters', on_click=lambda: clear_filters()).classes(  # noqa: PLW0108
-                    'pdc-btn pdc-btn-secondary'
+                    'pdc-btn'
                 )
 
         # Dicts populated by render_checklist_table for visibility-based filtering
@@ -227,7 +227,7 @@ async def checklist_page(project_number: str) -> None:
             )
 
             ui.button('Export YAML', on_click=lambda: NiceGUIHelper.export_yaml_button(db, dir_manager)).classes(
-                'pdc-btn pdc-btn-secondary'
+                'pdc-btn'
             )
 
             ui.button('New Dataset', on_click=helpers.confirm_new_dataset).classes('pdc-btn pdc-btn-danger')

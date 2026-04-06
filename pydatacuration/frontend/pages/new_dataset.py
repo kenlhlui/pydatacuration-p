@@ -264,10 +264,10 @@ async def new_dataset_page() -> None:
 
             reset_button = ui.button(
                 'Reset Form', on_click=lambda: reset_form(form_data, default_form_data, reset_button)
-            ).classes('pdc-btn pdc-btn-secondary')
+            ).classes('pdc-btn')
 
             back_button = ui.button('Back', on_click=lambda: handle_back_navigation(back_button), color='red').classes(
-                'pdc-btn pdc-btn-secondary'
+                'pdc-btn'
             )
 
         # Loading indicator
