@@ -432,7 +432,7 @@ code, pre,
 /* ========================================================================
    Priority Badges — GitHub Primer Label style
    ======================================================================== */
-.pdc-priority-badge {
+.pdc-badge {
     display: inline-block;
     padding: 0 8px;
     height: 20px;
@@ -469,7 +469,7 @@ code, pre,
     border-color: rgba(9, 105, 218, 0.4);
 }
 
-.pdc-priority-badge-container {
+.pdc-badge-container {
     overflow: hidden;
 }
 
@@ -1118,7 +1118,7 @@ def create_priority_badge(priority: str) -> ui.label:
     }
 
     text, css_class = priority_map.get(priority.lower(), (priority.title(), 'pdc-priority-info'))
-    return ui.label(text).classes(f'pdc-priority-badge {css_class}')
+    return ui.label(text).classes(f'pdc-badge {css_class}')
 
 
 def create_check_type_badge(check_type: str) -> ui.label:
@@ -1137,7 +1137,7 @@ def create_check_type_badge(check_type: str) -> ui.label:
     }
 
     text, css_class = check_type_map.get(check_type.lower(), (check_type.title(), 'pdc-check-type-manual'))
-    return ui.label(text).classes(f'pdc-priority-badge {css_class}')
+    return ui.label(text).classes(f'pdc-badge {css_class}')
 
 
 def create_status_select(
