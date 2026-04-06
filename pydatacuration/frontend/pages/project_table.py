@@ -51,7 +51,7 @@ async def render_project_table(
                         value='',
                         with_input=False,
                     )
-                    .classes('pdc-status-select')
+                    .classes('status-select')
                     .style('width: 100%;')
                 )
 
@@ -82,7 +82,7 @@ async def render_project_table(
 
         table_container.clear()
         with table_container:
-            ui.label(f'Found {len(filtered_schemas)} project(s)').classes('text-lg font-semibold').style(
+            ui.label(f'Found {len(filtered_schemas)} project(s)').classes('pdc-form-section-header').style(
                 'margin: 20px 0;'
             )
 

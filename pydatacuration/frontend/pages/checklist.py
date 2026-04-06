@@ -132,7 +132,7 @@ async def checklist_page(project_number: str) -> None:
 
         # Filters Section
         with ui.element('div').classes('pdc-form-section').style('width: 100%; margin-bottom: 20px;'):
-            ui.label('Filters').classes('text-lg font-semibold text-gray-700').style('margin-bottom: 12px;')
+            ui.label('Filters').classes('pdc-form-section-header')
 
             with ui.row().classes('gap-4').style('align-items: flex-end;'):
                 # Status filter
@@ -144,7 +144,7 @@ async def checklist_page(project_number: str) -> None:
                             value=None,
                             with_input=False,
                         )
-                        .classes('pdc-status-select')
+                        .classes('status-select')
                         .style('width: 100%;')
                     )
 
@@ -157,7 +157,7 @@ async def checklist_page(project_number: str) -> None:
                             value=None,
                             with_input=False,
                         )
-                        .classes('pdc-status-select')
+                        .classes('status-select')
                         .style('width: 100%;')
                     )
 
