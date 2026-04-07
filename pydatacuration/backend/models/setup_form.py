@@ -1,6 +1,7 @@
 """The setup form models."""
 
 from pathlib import Path
+from uuid import UUID
 
 from pydantic import BaseModel
 from pydantic import EmailStr
@@ -17,7 +18,7 @@ class SetupBase(BaseModel):
     """Shared fields for setup models."""
 
     base_url: HttpUrl | None = None
-    api_token: str | None = None
+    api_token: UUID | None = None
 
     pid: str = ''
     project_number: str = ''
