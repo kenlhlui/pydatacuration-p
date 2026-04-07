@@ -43,6 +43,7 @@ def handle_back_navigation(back_button: ui.button) -> None:
 
 async def handle_setup_submit(  # noqa: PLR0913, PLR0917
     form_data: dict,
+    validated_inputs: list[ui.input],
     error_msg: ui.label,
     success_msg: ui.label,
     loading_spinner: ui.element,
@@ -52,7 +53,11 @@ async def handle_setup_submit(  # noqa: PLR0913, PLR0917
     back_button: ui.button,
 ) -> None:
     """Handle form submission."""
-    # Validate the form data
+    # Validate all inputs and block if any fail
+    if not all(i.validate() for i in validated_inputs):
+        ui.notify('Please fix the errors in the form', type='negative', position='top-right', close_button=True)
+        return
+
     if not form_data.get('checklist'):
         ui.notify('Please select a valid checklist', type='negative', position='top-right', close_button=True)
         return
@@ -164,18 +169,28 @@ async def new_dataset_page() -> None:
 
             with ui.element('div').classes('pdc-form-group'):
                 ui.label('Dataset PID *').classes('pdc-form-label')
-                ui.input(
-                    placeholder='doi:10.5683/SP2/... or hdl:1902.1/...',
-                    validation=validate_setup_form_input(SetupForm, 'pid'),
-                ).classes('pdc-form-input').bind_value(form_data, 'pid').style('width: 100%')
+                _input_pid = (
+                    ui.input(
+                        placeholder='doi:10.5683/SP2/... or hdl:1902.1/...',
+                        validation=validate_setup_form_input(SetupForm, 'pid', required=True),
+                    )
+                    .classes('pdc-form-input')
+                    .bind_value(form_data, 'pid')
+                    .style('width: 100%')
+                )
                 ui.label('Persistent identifier for the dataset (DOI or Handle)').classes('pdc-form-helper')
 
             with ui.element('div').classes('pdc-form-group'):
                 ui.label('Dataverse Base URL *').classes('pdc-form-label')
-                ui.input(
-                    placeholder='https://demo.borealisdata.ca/',
-                    validation=validate_setup_form_input(SetupForm, 'base_url'),
-                ).classes('pdc-form-input').bind_value(form_data, 'base_url').style('width: 100%')
+                _input_base_url = (
+                    ui.input(
+                        placeholder='https://demo.borealisdata.ca/',
+                        validation=validate_setup_form_input(SetupForm, 'base_url', required=True),
+                    )
+                    .classes('pdc-form-input')
+                    .bind_value(form_data, 'base_url')
+                    .style('width: 100%')
+                )
                 ui.label('Base URL of the Dataverse installation (e.g., https://demo.borealisdata.ca/)').classes(
                     'pdc-form-helper'
                 )
@@ -188,14 +203,18 @@ async def new_dataset_page() -> None:
                     if _env_token
                     else 'Enter your Dataverse API token'
                 )
-                ui.input(
-                    placeholder=_token_placeholder,
-                    password=True,
-                    password_toggle_button=True,
-                    validation=validate_setup_form_input(SetupForm, 'api_token'),
-                ).props('autocorrect=off autocapitalize=off spellcheck=false').classes('pdc-form-input').bind_value(
-                    form_data, 'api_token'
-                ).style('width: 100%')
+                _input_api_token = (
+                    ui.input(
+                        placeholder=_token_placeholder,
+                        password=True,
+                        password_toggle_button=True,
+                        validation=lambda v: validate_setup_form_input(SetupForm, 'api_token')(v) if v else None,
+                    )
+                    .props('autocorrect=off autocapitalize=off spellcheck=false')
+                    .classes('pdc-form-input')
+                    .bind_value(form_data, 'api_token')
+                    .style('width: 100%')
+                )
                 _helper = (
                     'Leave blank to use the API token from the environment.'
                     if _env_token
@@ -205,10 +224,15 @@ async def new_dataset_page() -> None:
 
             with ui.element('div').classes('pdc-form-group'):
                 ui.label('Project Number *').classes('pdc-form-label')
-                ui.input(
-                    placeholder='PROJECT-123',
-                    validation=validate_setup_form_input(SetupForm, 'project_number'),
-                ).classes('pdc-form-input').bind_value(form_data, 'project_number').style('width: 100%')
+                _input_project_number = (
+                    ui.input(
+                        placeholder='PROJECT-123',
+                        validation=validate_setup_form_input(SetupForm, 'project_number', required=True),
+                    )
+                    .classes('pdc-form-input')
+                    .bind_value(form_data, 'project_number')
+                    .style('width: 100%')
+                )
                 ui.label('Identifier for the curation report (e.g., CUR-999)').classes('pdc-form-helper')
 
         # Curator Information Section
@@ -217,21 +241,38 @@ async def new_dataset_page() -> None:
 
             with ui.element('div').classes('pdc-form-group'):
                 ui.label('Curator Name *').classes('pdc-form-label')
-                ui.input(
-                    placeholder='Enter your name',
-                    validation=validate_setup_form_input(SetupForm, 'curator_name'),
-                ).props('autocomplete=name').classes('pdc-form-input').bind_value(form_data, 'curator_name').style(
-                    'width: 100%'
+                _input_curator_name = (
+                    ui.input(
+                        placeholder='Enter your name',
+                        validation=validate_setup_form_input(SetupForm, 'curator_name', required=True),
+                    )
+                    .props('autocomplete=name')
+                    .classes('pdc-form-input')
+                    .bind_value(form_data, 'curator_name')
+                    .style('width: 100%')
                 )
 
             with ui.element('div').classes('pdc-form-group'):
                 ui.label('Curator Email *').classes('pdc-form-label')
-                ui.input(
-                    placeholder='Enter your email',
-                    validation=validate_setup_form_input(SetupForm, 'curator_email'),
-                ).classes('pdc-form-input').props('type=email autocomplete=email').bind_value(
-                    form_data, 'curator_email'
-                ).style('width: 100%')
+                _input_curator_email = (
+                    ui.input(
+                        placeholder='Enter your email',
+                        validation=validate_setup_form_input(SetupForm, 'curator_email', required=True),
+                    )
+                    .classes('pdc-form-input')
+                    .props('type=email autocomplete=email')
+                    .bind_value(form_data, 'curator_email')
+                    .style('width: 100%')
+                )
+
+        validated_inputs = [
+            _input_pid,
+            _input_base_url,
+            _input_api_token,
+            _input_project_number,
+            _input_curator_name,
+            _input_curator_email,
+        ]
 
         # # Directory Settings Section  # -- removed for now since we're defaulting to main_dir from .env and it can be confusing to have multiple directory fields. Can re-add later if needed --  # noqa: E501
         # with ui.element('div').classes('pdc-form-section'):
@@ -284,6 +325,7 @@ async def new_dataset_page() -> None:
                 'Start Curation Process',
                 on_click=lambda: handle_setup_submit(
                     form_data,
+                    validated_inputs,
                     error_msg,
                     success_msg,
                     loading_spinner,

@@ -61,7 +61,7 @@ class Downloads:
         """
         return cls(
             base_url=str(setup_form.base_url) if setup_form.base_url else '',
-            api_token=setup_form.api_token or '',
+            api_token=str(setup_form.api_token) if setup_form.api_token else '',
             pid=setup_form.pid,
             main_dir=main_dir,
             project_number=setup_form.project_number,

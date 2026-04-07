@@ -75,12 +75,16 @@ class SetupDefaults(SetupBase, BaseSettings):
     )
 
 
-def validate_setup_form_input(model_cls: type[BaseModel], field_name: str) -> Callable[[Any], str | None]:
+def validate_setup_form_input(
+    model_cls: type[BaseModel], field_name: str, *, required: bool = False
+) -> Callable[[Any], str | None]:
     """Shortcut for a standalone field validator."""
     field = model_cls.model_fields[field_name]
     adapter = TypeAdapter(field.annotation)
 
     def rule(value: Any) -> str | None:  # noqa: ANN401
+        if required and not value:
+            return 'This field is required'
         try:
             adapter.validate_python(value)
             return None
