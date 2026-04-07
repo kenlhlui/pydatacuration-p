@@ -1,11 +1,15 @@
 """The setup form models."""
 
+from collections.abc import Callable
 from pathlib import Path
+from typing import Any
 from uuid import UUID
 
 from pydantic import BaseModel
 from pydantic import EmailStr
 from pydantic import HttpUrl
+from pydantic import TypeAdapter
+from pydantic import ValidationError
 from pydantic import field_serializer
 from pydantic_settings import BaseSettings
 from pydantic_settings import SettingsConfigDict
@@ -69,3 +73,18 @@ class SetupDefaults(SetupBase, BaseSettings):
         case_sensitive=False,
         extra='ignore',
     )
+
+
+def validate_setup_form_input(model_cls: type[BaseModel], field_name: str) -> Callable[[Any], str | None]:
+    """Shortcut for a standalone field validator."""
+    field = model_cls.model_fields[field_name]
+    adapter = TypeAdapter(field.annotation)
+
+    def rule(value: Any) -> str | None:  # noqa: ANN401
+        try:
+            adapter.validate_python(value)
+            return None
+        except ValidationError as e:
+            return e.errors()[0].get('msg', 'Invalid value') if e.errors() else 'Invalid value'
+
+    return rule
