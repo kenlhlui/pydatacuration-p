@@ -3,6 +3,7 @@
 from typing import Literal
 from typing import get_args
 
+from pydantic import Field
 from pydantic import field_validator
 from pydantic_settings import BaseSettings
 from pydantic_settings import SettingsConfigDict
@@ -31,11 +32,12 @@ class AppSettings(BaseSettings, DirectoryDefaults):
         extra='ignore',
     )
 
-    app_port: int = 9005
-    app_title: str = 'Dataverse Curation Review Tool'
-    app_favicon: str = '🔬'
-    debug: bool = False
-    log_level: allowed_logging_levels = 'INFO'
+    app_port: int = Field(9005, description='The port number for the NiceGUI app to listen on.')
+    app_title: str = Field('Dataverse Curation Review Tool', description='The title of the NiceGUI app.')
+    app_favicon: str = Field('🔬', description='The favicon for the NiceGUI app.')
+    log_level: allowed_logging_levels = Field('INFO', description='The logging level for the application.')
+    app_reload: bool = Field(False, description='Whether to enable auto-reload for the NiceGUI app.')
+    app_reconnect_timeout: int = Field(60, description='The timeout for reconnection attempts.')
 
     @field_validator('log_level', mode='before')
     def validate_log_level(cls, v: str) -> str:

@@ -76,5 +76,6 @@ if __name__ in {'__main__', '__mp_main__'}:
         favicon=app_settings.app_favicon,
         port=app_settings.app_port,
         storage_secret=str(os.urandom(16)),
-        reconnect_timeout=30,
+        reconnect_timeout=app_settings.app_reconnect_timeout,
+        reload=app_settings.app_reload,
     )
