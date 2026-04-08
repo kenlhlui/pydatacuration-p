@@ -12,6 +12,7 @@ from pydatacuration.checklist.priority_options import load_priority_options
 from pydatacuration.db import DatabaseBackend
 from pydatacuration.db import get_database
 
+# Import reusable form components
 # Import exceptions for error handling
 from pydatacuration.frontend.helpers import NiceGUIHelper
 from pydatacuration.frontend.models.status_options import load_status_options
@@ -128,7 +129,7 @@ async def checklist_page(project_number: str) -> None:
 
         # Filters Section
         with ui.element('div').classes('pdc-form-section').style('width: 100%; margin-bottom: 20px;'):
-            ui.label('Filters').classes('pdc-form-section-header')
+            ui.label('Filters').classes('pdc-form-section-title')
 
             with ui.row().classes('gap-4').style('align-items: flex-end;'):
                 # Status filter

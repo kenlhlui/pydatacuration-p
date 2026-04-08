@@ -600,7 +600,7 @@ code, pre,
     margin-bottom: 20px;
 }
 
-.pdc-form-section-header {
+.pdc-form-section-title {
     font-size: 18px;
     font-weight: 600; /* font-semibold */
     color: #374151; /* text-gray-700 */

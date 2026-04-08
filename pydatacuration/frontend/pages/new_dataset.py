@@ -16,6 +16,7 @@ from pydatacuration.exceptions import DatasetAccessError
 from pydatacuration.exceptions import DatasetNotFoundError
 from pydatacuration.exceptions import DatasetUnauthorizedError
 from pydatacuration.exceptions import DirectoryExistsError
+from pydatacuration.frontend.form import form_section
 from pydatacuration.frontend.styles import apply_pdc_styles
 from pydatacuration.frontend.styles import create_checklist_select
 
@@ -166,9 +167,7 @@ async def new_dataset_page() -> None:
                 form_data[key] = default_value
 
         # Dataset Information Section
-        with ui.element('div').classes('pdc-form-section'):
-            ui.label('Dataset Information').classes('pdc-form-section-header')
-
+        with form_section('Dataset Information'):
             with ui.element('div').classes('pdc-form-group'):
                 ui.label('Dataset PID *').classes('pdc-form-label')
                 _input_pid = (
@@ -238,9 +237,7 @@ async def new_dataset_page() -> None:
                 ui.label('Identifier for the curation report (e.g., CUR-999)').classes('pdc-form-helper')
 
         # Curator Information Section
-        with ui.element('div').classes('pdc-form-section'):
-            ui.label('Curator Information').classes('pdc-form-section-header')
-
+        with form_section('Curator Information'):
             with ui.element('div').classes('pdc-form-group'):
                 ui.label('Curator Name *').classes('pdc-form-label')
                 _input_curator_name = (
@@ -278,7 +275,7 @@ async def new_dataset_page() -> None:
 
         # # Directory Settings Section  # -- removed for now since we're defaulting to main_dir from .env and it can be confusing to have multiple directory fields. Can re-add later if needed --  # noqa: E501
         # with ui.element('div').classes('pdc-form-section'):
-        #     ui.label('Directory Settings').classes('pdc-form-section-header')
+        #     ui.label('Directory Settings').classes('pdc-form-section-title')
 
         #     with ui.element('div').classes('pdc-form-group'):
         #         ui.label('Main Directory Path').classes('pdc-form-label')
@@ -288,21 +285,18 @@ async def new_dataset_page() -> None:
         #         ui.label('Base directory where project folders and files will be created').classes('pdc-form-helper')
 
         # Checklist Selection Section
-        with ui.element('div').classes('pdc-form-section'):
-            ui.label('Checklist Selection').classes('pdc-form-section-header')
-
-            with ui.element('div').classes('pdc-form-group'):
-                # Use our custom checklist select with styling
-                create_checklist_select(
-                    res_dir=RES_DIR,
-                    current_value=form_data.get('checklist', 'default'),
-                    on_change=lambda e: form_data.update({'checklist': e.value}),
-                ).style('width: 100%')
-                ui.label('Checklist used for this curation project').classes('pdc-form-helper')
+        with form_section('Checklist Selection'), ui.element('div').classes('pdc-form-group'):
+            # Use our custom checklist select with styling
+            create_checklist_select(
+                res_dir=RES_DIR,
+                current_value=form_data.get('checklist', 'default'),
+                on_change=lambda e: form_data.update({'checklist': e.value}),
+            ).style('width: 100%')
+            ui.label('Checklist used for this curation project').classes('pdc-form-helper')
 
         # Processing Options Section
-        with ui.element('div').classes('pdc-form-section'):
-            ui.label('Processing Options').classes('pdc-form-section-header')
+        with form_section('Processing Options'):
+            ui.label('Processing Options').classes('pdc-form-section-title')
 
             with ui.row().classes('gap-4'):
                 ui.checkbox(
