@@ -196,47 +196,6 @@ code, pre,
 }
 
 /* ========================================================================
-   Status Select Colors
-   ======================================================================== */
-.status-select {
-    width: 100%;
-    min-width: 140px;
-    font-size: 12px;
-    transition: border-color 0.2s ease, box-shadow 0.2s ease;
-}
-
-/* status-select: GitHub-style border for both text inputs and selects in filter sections */
-.status-select.q-field .q-field__control {
-    background-color: #ffffff;
-    border: 1px solid #d0d7de;
-    border-radius: 6px;
-    box-shadow: inset 0 1px 0 rgba(208, 215, 222, 0.2);
-    min-height: 28px !important;
-    height: 28px !important;
-}
-.status-select.q-field .q-field__control:before,
-.status-select.q-field .q-field__control:after {
-    display: none !important;
-}
-.status-select.q-field .q-field__label {
-    display: none !important;
-}
-.status-select.q-field .q-field__control-container,
-.status-select.q-field .q-field__marginal {
-    height: 28px !important;
-    min-height: 28px !important;
-    padding-top: 0 !important;
-}
-.status-select.q-field .q-field__native,
-.status-select.q-field .q-field__input {
-    padding: 0 8px !important;
-    font-size: 12px !important;
-    color: #1f2328 !important;
-    min-height: 26px !important;
-    line-height: 26px !important;
-}
-
-/* ========================================================================
    Checklist Table
    ======================================================================== */
 .pdc-checklist-table {
@@ -1116,7 +1075,7 @@ def create_status_select(
         value=current_value,
         with_input=False,
         clearable=True,
-    ).classes('status-select')
+    ).classes('pdc-input')
 
     # Apply status-specific styling via inline styles
     def update_status_style(value: str) -> None:

@@ -141,7 +141,7 @@ async def checklist_page(project_number: str) -> None:
                             value=None,
                             with_input=False,
                         )
-                        .classes('status-select')
+                        .classes('pdc-input')
                         .style('width: 100%;')
                     )
 
@@ -154,7 +154,7 @@ async def checklist_page(project_number: str) -> None:
                             value=None,
                             with_input=False,
                         )
-                        .classes('status-select')
+                        .classes('pdc-input')
                         .style('width: 100%;')
                     )
 
