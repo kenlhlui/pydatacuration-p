@@ -147,7 +147,7 @@ async def render_project_table(
                                         '🗑️ Delete',
                                         color='red',
                                         on_click=lambda s=schema: confirm_delete_project(s, refresh_callback),
-                                    ).props('unelevated no-caps').classes('pdc-btn pdc-btn-danger')
+                                    ).props('unelevated no-caps').classes('pdc-btn')
 
     # Define clear filters function
     def clear_filters(search_inp: ui.input, curator_sel: ui.select) -> None:

@@ -488,44 +488,6 @@ code, pre,
     transition: background-color 0.2s ease, border-color 0.2s ease, box-shadow 0.2s ease;
 }
 
-.pdc-btn-primary {
-    background-color: #2da44e;
-    color: #ffffff;
-}
-
-.pdc-btn-primary:hover {
-    background-color: #2c974b;
-    border-color: rgba(31, 35, 40, 0.15);
-}
-
-.pdc-btn-secondary {
-    background-color: #f6f8fa;
-    color: #24292f;
-    border-color: rgba(31, 35, 40, 0.15);
-}
-
-.pdc-btn-secondary:hover {
-    background-color: #f3f4f6;
-    border-color: rgba(31, 35, 40, 0.3);
-}
-
-.pdc-btn-calculate {
-    background-color: #6D247A;
-    color: #ffffff;
-}
-
-.pdc-btn-calculate:hover {
-    background-color: #5c1f67;
-}
-
-.pdc-btn-danger {
-    background-color: #cf222e;
-    color: #ffffff;
-}
-
-.pdc-btn-danger:hover {
-    background-color: #a40e26;
-}
 
 /* Quasar overrides for pdc-btn — strip uppercase and normalise sizing */
 .pdc-btn.q-btn {
