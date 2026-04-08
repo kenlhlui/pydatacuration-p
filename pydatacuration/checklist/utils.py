@@ -47,7 +47,13 @@ def get_validated_checklist_paths(checklist_paths: list[Path]) -> dict[str, Path
     Returns:
         dict[str, Path]: Dictionary mapping checklist identifiers to their file paths.
     """
-    validated_checklists = [f for f in checklist_paths if validate_checklist_yaml(f)]
+    validated_checklists = []
+    try:
+        for path in checklist_paths:
+            validated_checklists.append(validate_checklist_yaml(path))
+    except Exception as e:
+        logger.error(f'Error occurred while validating checklist file: {path} - {e}')
+
     return {f'{f.name}': f for f in validated_checklists}
 
 
