@@ -1118,6 +1118,9 @@ def create_checklist_select(res_dir: Path, current_value: str, on_change=None) -
         ui.select(options=checklist_options(res_dir), value=current_value).classes('pdc-input').style('width: 100%')
     )
 
+    if on_change:
+        select.on_value_change(on_change)
+
     return select
 
 
