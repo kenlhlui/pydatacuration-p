@@ -49,7 +49,7 @@ def text_input_box(  # noqa: PLR0913
         ui.label(label).classes('pdc-form-label')
 
         input_component = (
-            ui.input(**input_kwargs).classes('pdc-form-input').bind_value(form_data, key).style('width: 100%; flex: 1;')
+            ui.input(**input_kwargs).bind_value(form_data, key).classes('pdc-input').style('width: 100%; flex: 1;')
         )
 
         if props:
