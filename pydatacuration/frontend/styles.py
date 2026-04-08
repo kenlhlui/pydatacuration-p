@@ -690,6 +690,7 @@ code, pre,
     width: 100% !important;
     max-width: 100% !important;
     box-sizing: border-box !important;
+    padding-bottom: 0 !important;
 }
 
 .pdc-form-input.q-field .q-field__control {
@@ -739,6 +740,7 @@ code, pre,
     width: 100% !important;
     max-width: 100% !important;
     box-sizing: border-box !important;
+    padding-bottom: 0 !important;
 }
 
 /* Force white background on all input controls in form groups */
