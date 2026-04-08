@@ -7,8 +7,8 @@ from urllib.parse import urlparse
 from nicegui import ui
 from nicegui.elements.input import Input
 
-from pydatacuration.frontend.form import form_section
 from pydatacuration.frontend.pages.utils import confirm_delete_project
+from pydatacuration.frontend.reusable_elements import form_section
 
 
 async def render_project_table(
