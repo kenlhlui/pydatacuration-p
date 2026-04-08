@@ -139,7 +139,6 @@ def check_curation(body: SetupForm) -> None:
     )
 
     # Get the checklist content
-    logger.debug(f'Getting checklist content for identifier: {body.checklist} from resource directory: {res_dir}')
     checklist_content = get_checklist_content(body.checklist, res_dir)
 
     # Setup writes — before checks run

@@ -35,7 +35,7 @@ def get_checklist_paths_from_res_dir(res_dir: Path) -> list[Path]:
 
 
 def get_validated_checklists(checklist_paths: list[Path]) -> dict[str, ChecklistYAML]:
-    """Validate checklist YAML files and return parsed models keyed by filename.
+    """Validate checklist YAML files  and return a dictionary of validated checklist models.
 
     Args:
         checklist_paths (list[Path]): List of paths to checklist YAML files.
