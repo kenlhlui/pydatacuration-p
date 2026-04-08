@@ -29,8 +29,8 @@ def validate_checklist_yaml(yaml_path: str | Path) -> ChecklistYAML:
 def get_checklist_paths_from_res_dir(res_dir: Path) -> list[Path]:
     """Get checklist file paths from the resource directory."""
     checklist_paths = []
-    checklist_paths.extend(res_dir.glob('checklist-*.yaml'))
-    checklist_paths.extend(res_dir.glob('checklist-*.yml'))
+    checklist_paths.extend(res_dir.glob('checklist*.yaml'))
+    checklist_paths.extend(res_dir.glob('checklist*.yml'))
     return checklist_paths
 
 
