@@ -21,13 +21,9 @@ def validate_checklist_yaml_content(yaml_content: str) -> ChecklistYAML:
 
 def validate_checklist_yaml(yaml_path: str | Path) -> ChecklistYAML:
     """Load and validate a checklist YAML file."""
-    try:
-        with Path(yaml_path).open(encoding='utf-8') as f:
-            logger.debug(f'Validating checklist YAML file: {yaml_path}')
-            return validate_checklist_yaml_content(f.read())
-    except (yaml.YAMLError, ValidationError) as e:
-        logger.error(f'Error validating checklist YAML file: {yaml_path} - {e}')
-        raise
+    with Path(yaml_path).open(encoding='utf-8') as f:
+        logger.debug(f'Validating checklist YAML file: {yaml_path}')
+        return validate_checklist_yaml_content(f.read())
 
 
 def get_checklist_paths_from_res_dir(res_dir: Path) -> list[Path]:
