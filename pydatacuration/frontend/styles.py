@@ -1115,23 +1115,8 @@ def create_checklist_select(res_dir: Path, current_value: str, on_change=None) -
 
     # Create select without internal label - display capitalized but use lowercase values
     select = (
-        ui.select(options=checklist_options(res_dir), value=current_value).classes('status-select').style('width: 100%')
+        ui.select(options=checklist_options(res_dir), value=current_value).classes('pdc-input').style('width: 100%')
     )
-
-    # Apply checklist-specific styling
-    def update_checklist_style(value: str) -> None:
-        select.classes(remove='checklist-high checklist-medium')
-        if value:
-            select.classes(add=f'checklist-{value}')
-
-    # Initial styling
-    update_checklist_style(current_value)
-
-    # Handle changes
-    if on_change:
-        select.on_value_change(lambda e: [update_checklist_style(e.value), on_change(e)])
-    else:
-        select.on_value_change(lambda e: update_checklist_style(e.value))
 
     return select
 
