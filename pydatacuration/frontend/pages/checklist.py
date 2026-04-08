@@ -52,7 +52,6 @@ async def checklist_page(project_number: str) -> None:
 
     # Load metadata from database
     project_metadata = db.read_project_metadata_record()
-    checklist_type: str | None = project_metadata.get('checklist_type')
 
     # Load checklist results and checklist metadata from database
     check_results = db.read_check_results()
