@@ -38,45 +38,38 @@ def get_checklist_paths_from_res_dir(res_dir: Path) -> list[Path]:
     return checklist_paths
 
 
-def get_validated_checklist_paths(checklist_paths: list[Path]) -> dict[str, Path]:
-    """Discover and validate checklist YAML files in the resource directory.
+def get_validated_checklists(checklist_paths: list[Path]) -> dict[str, ChecklistYAML]:
+    """Validate checklist YAML files and return parsed models keyed by filename.
 
     Args:
         checklist_paths (list[Path]): List of paths to checklist YAML files.
 
     Returns:
-        dict[str, Path]: Dictionary mapping checklist identifiers to their file paths.
+        dict[str, ChecklistYAML]: Dictionary mapping filenames to validated checklist models.
     """
-    validated_checklists = []
-    try:
-        for path in checklist_paths:
-            validated_checklists.append(validate_checklist_yaml(path))
-    except Exception as e:
-        logger.error(f'Error occurred while validating checklist file: {path} - {e}')
+    validated_checklists: dict[str, ChecklistYAML] = {}
+    for path in checklist_paths:
+        try:
+            validated_checklists[path.name] = validate_checklist_yaml(path)
+        except Exception as e:
+            logger.error(f'Error occurred while validating checklist file: {path} - {e}')
 
-    return {f'{f.name}': f for f in validated_checklists}
+    return validated_checklists
 
 
-def get_checklist_names_from_paths(checklist_paths: dict[str, Path]) -> dict[str, str]:
-    """Extract checklist identifiers and display names from file paths.
+def get_checklist_names_from_paths(checklists: dict[str, ChecklistYAML]) -> dict[str, str]:
+    """Extract checklist identifiers and display names from validated checklist models.
 
     Args:
-        checklist_paths (dict[str, Path]): Dictionary mapping checklist identifiers to their file paths.
+        checklists (dict[str, ChecklistYAML]): Dictionary mapping checklist identifiers to validated models.
 
     Returns:
         dict[str, str]: Dictionary mapping checklist identifiers to display names.
     """
-    checklist_options = {}
-    for identifier, path in checklist_paths.items():
-        # Read the yaml file and get the alias or name field for display
-        try:
-            checklist_yaml = validate_checklist_yaml(path)
-            display_name = checklist_yaml.checklist_metadata.alias or checklist_yaml.checklist_metadata.name
-            checklist_options[identifier] = display_name
-        except Exception as e:
-            logger.error(f'Error occurred while processing checklist file: {path} - {e}')
-
-    return checklist_options
+    return {
+        identifier: checklist.checklist_metadata.alias or checklist.checklist_metadata.name
+        for identifier, checklist in checklists.items()
+    }
 
 
 def get_checklist_content(checklist_filename: str, res_dir: Path) -> ChecklistYAML:
@@ -116,7 +109,7 @@ def discover_checklist_files(res_dir: Path) -> dict[str, str]:
         return checklist_options
 
     checklist_paths: list[Path] = get_checklist_paths_from_res_dir(res_dir)
-    validated_checklist_paths = get_validated_checklist_paths(checklist_paths)
+    validated_checklist_paths = get_validated_checklists(checklist_paths)
     checklist_options = get_checklist_names_from_paths(validated_checklist_paths)
 
     return checklist_options
