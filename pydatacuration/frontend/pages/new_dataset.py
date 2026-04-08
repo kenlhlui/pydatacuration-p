@@ -54,10 +54,12 @@ async def handle_setup_submit(  # noqa: PLR0913, PLR0917
 ) -> None:
     """Handle form submission."""
     # Validate all inputs and block if any fail
+    # FIXME: This should combine with the checklist check below.
     if not all(i.validate() for i in validated_inputs):
         ui.notify('Please fix the errors in the form', type='negative', position='top-right', close_button=True)
         return
 
+    # FIXME: This should algin with the validation logic above.
     if not form_data.get('checklist'):
         ui.notify('Please select a valid checklist', type='negative', position='top-right', close_button=True)
         return
