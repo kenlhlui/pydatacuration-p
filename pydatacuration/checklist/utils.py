@@ -4,19 +4,13 @@ from pathlib import Path
 
 import yaml
 from loguru import logger
-from pydantic import ValidationError
-
 from pydatacuration.checklist.checklist_model import ChecklistYAML
 
 
 def validate_checklist_yaml_content(yaml_content: str) -> ChecklistYAML:
     """Validate checklist YAML content from a string."""
-    try:
-        data = yaml.safe_load(yaml_content)
-        return ChecklistYAML(**data)
-    except (yaml.YAMLError, ValidationError) as e:
-        logger.error(f'Error validating checklist YAML content: {e}')
-        raise
+    data = yaml.safe_load(yaml_content)
+    return ChecklistYAML(**data)
 
 
 def validate_checklist_yaml(yaml_path: str | Path) -> ChecklistYAML:
