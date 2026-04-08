@@ -133,7 +133,7 @@ async def checklist_page(project_number: str) -> None:
 
             with ui.row().classes('gap-4').style('align-items: flex-end;'):
                 # Status filter
-                with ui.element('div').style('flex: 1; min-width: 200px;'):
+                with ui.element('div').style('flex: 1'):
                     ui.label('Filter by Status').classes('pdc-form-label')
                     status_filter = (
                         ui.select(
@@ -146,7 +146,7 @@ async def checklist_page(project_number: str) -> None:
                     )
 
                 # Priority filter
-                with ui.element('div').style('flex: 1; min-width: 200px;'):
+                with ui.element('div').style('flex: 1'):
                     ui.label('Filter by Priority').classes('pdc-form-label')
                     priority_filter = (
                         ui.select(

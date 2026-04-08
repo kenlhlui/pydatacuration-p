@@ -31,7 +31,7 @@ async def render_project_table(
     # Filters
     with form_section('Filters'), ui.row().classes('gap-4').style('align-items: flex-end;'):
         # Search filter
-        with ui.element('div').style('flex: 1; min-width: 200px;'):
+        with ui.element('div').style('flex: 1'):
             ui.label('Search').classes('pdc-form-label')
             search_input: Input = (
                 ui.input(placeholder='Search Project Number, Title, PID, ID (Versioned), URL')
@@ -40,7 +40,7 @@ async def render_project_table(
             )
 
         # Curator filter
-        with ui.element('div').style('flex: 1; min-width: 200px;'):
+        with ui.element('div').style('flex: 1'):
             ui.label('Filter by Curator').classes('pdc-form-label')
             curators = [''] + sorted({s.get('curator_name', '<Unknown>') for s in schemas if s.get('curator_name')})
             curator_filter = (
