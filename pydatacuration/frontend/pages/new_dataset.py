@@ -304,7 +304,7 @@ async def new_dataset_page() -> None:
 
             with ui.row().classes('gap-4'):
                 ui.checkbox(
-                    'Delete existing project folder before starting', value=form_data.get('force_delete', False)
+                    'Replace existing project (if exists)', value=form_data.get('force_delete', False)
                 ).bind_value(form_data, 'force_delete')
                 ui.checkbox(
                     'Unzip archive files and check contents', value=form_data.get('check_zip', True)
