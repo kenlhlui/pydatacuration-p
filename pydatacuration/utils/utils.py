@@ -14,7 +14,6 @@ import typer
 from loguru import logger
 from tenacity import RetryError
 
-from pydatacuration.checklist.utils import validate_checklist_yaml
 from pydatacuration.exceptions import DatasetAccessError
 from pydatacuration.exceptions import DatasetNotFoundError
 from pydatacuration.exceptions import DatasetUnauthorizedError
@@ -219,49 +218,3 @@ def parse_dataset_url(base_url: str | None, pid: str | None) -> str:
         return urljoin(base, api_path) + '?' + query
 
     return 'No URL'
-
-
-def discover_checklist_files(res_dir: Path) -> dict[str, str]:
-    """Discover available checklist files in the res directory.
-
-    Searches for checklist files matching these patterns:
-    - checklist-*.yaml or checklist-*.yml
-    - checklist.yaml or checklist.yml
-
-    Args:
-        res_dir (Path): Path to the res directory containing checklist files.
-
-    Returns:
-        dict[str, str]: Dictionary mapping checklist identifiers to display names.
-                        Example: {'high': 'High', 'medium': 'Medium', 'custom': 'Custom'}
-    """
-    checklist_options = {}
-
-    if not res_dir.exists():
-        logger.warning(f'Resource directory not found: {res_dir}')
-        return checklist_options
-
-    # Pattern 1: checklist-*.yaml or checklist-*.yml
-    for pattern in ['checklist-*.yaml', 'checklist-*.yml']:
-        for file_path in res_dir.glob(pattern):
-            try:
-                validate_checklist_yaml(file_path)
-                identifier = file_path.stem.replace('checklist-', '')
-                display_name = identifier.replace('_', ' ').replace('-', ' ').title()
-                checklist_options[identifier] = display_name
-            except Exception:
-                logger.warning(f'Skipping invalid checklist file: {file_path}')
-                continue
-
-    # Pattern 2: checklist.yaml or checklist.yml
-    for extension in ['.yaml', '.yml']:
-        default_checklist = res_dir / f'checklist{extension}'
-        if default_checklist.exists():
-            try:
-                validate_checklist_yaml(default_checklist)
-                checklist_options['default'] = 'Default'
-            except Exception:
-                logger.warning(f'Skipping invalid checklist file: {default_checklist}')
-                continue
-
-    return checklist_options
