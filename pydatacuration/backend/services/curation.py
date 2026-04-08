@@ -81,7 +81,7 @@ def init_curation(body: SetupForm) -> None:
 
 def _ensure_dataset_read_access(body: SetupForm) -> None:
     try:
-        check_ds_read_access(body.pid, str(body.base_url), body.api_token or '')
+        check_ds_read_access(body.pid, str(body.base_url), str(body.api_token or ''))
     except DatasetUnauthorizedError as exc:
         logger.error(f'Unauthorized access for dataset {body.pid}: {exc}')
         raise

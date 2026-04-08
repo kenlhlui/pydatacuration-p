@@ -10,6 +10,7 @@ from nicegui import ui
 from pydatacuration.backend.models.app_settings import AppSettings
 from pydatacuration.backend.models.setup_form import SetupDefaults
 from pydatacuration.backend.models.setup_form import SetupForm
+from pydatacuration.backend.models.setup_form import validate_setup_form_input
 from pydatacuration.backend.services.curation import run_curation
 from pydatacuration.exceptions import DatasetAccessError
 from pydatacuration.exceptions import DatasetNotFoundError
@@ -25,6 +26,14 @@ default_form = SetupForm(**setup_defaults.model_dump(), main_dir=app_settings.ma
 RES_DIR = Path(app_settings.res_dir)
 
 
+def resolve_form_data(form_data: dict) -> dict:
+    """Return form data with api_token resolved from environment if left blank."""
+    resolved = dict(form_data)
+    if not resolved.get('api_token') and setup_defaults.api_token:
+        resolved['api_token'] = str(setup_defaults.api_token)
+    return resolved
+
+
 def handle_back_navigation(back_button: ui.button) -> None:
     """Handle back button navigation."""
     # Disable button during navigation
@@ -34,6 +43,7 @@ def handle_back_navigation(back_button: ui.button) -> None:
 
 async def handle_setup_submit(  # noqa: PLR0913, PLR0917
     form_data: dict,
+    validated_inputs: list[ui.input],
     error_msg: ui.label,
     success_msg: ui.label,
     loading_spinner: ui.element,
@@ -43,7 +53,13 @@ async def handle_setup_submit(  # noqa: PLR0913, PLR0917
     back_button: ui.button,
 ) -> None:
     """Handle form submission."""
-    # Validate the form data
+    # Validate all inputs and block if any fail
+    # FIXME: This should combine with the checklist check below.
+    if not all(i.validate() for i in validated_inputs):
+        ui.notify('Please fix the errors in the form', type='negative', position='top-right', close_button=True)
+        return
+
+    # FIXME: This should algin with the validation logic above.
     if not form_data.get('checklist'):
         ui.notify('Please select a valid checklist', type='negative', position='top-right', close_button=True)
         return
@@ -58,7 +74,7 @@ async def handle_setup_submit(  # noqa: PLR0913, PLR0917
 
     # Run curation as a background task so the WebSocket connection stays alive
     # during long downloads. Polling via ui.timer keeps the connection active.
-    task = asyncio.create_task(run_curation(SetupForm(**form_data)))
+    task = asyncio.create_task(run_curation(SetupForm(**resolve_form_data(form_data))))
 
     def restore_buttons() -> None:
         start_button.set_enabled(True)
@@ -136,8 +152,10 @@ async def new_dataset_page() -> None:
         success_msg = ui.label().classes('hidden')
 
         # Form state - automatically persisted
-        # Initialize with environment variable defaults
+        # Initialize with environment variable defaults, but strip api_token so
+        # the secret is never sent to the browser — resolved server-side at submit.
         default_form_data = default_form.model_dump()
+        default_form_data['api_token'] = ''
 
         # Get existing form data or create new
         form_data = app.storage.tab.setdefault('setup_form', default_form_data)
@@ -153,36 +171,70 @@ async def new_dataset_page() -> None:
 
             with ui.element('div').classes('pdc-form-group'):
                 ui.label('Dataset PID *').classes('pdc-form-label')
-                ui.input(placeholder='doi:10.5683/SP2/... or hdl:1902.1/...').classes('pdc-form-input').bind_value(
-                    form_data, 'pid'
-                ).style('width: 100%')
+                _input_pid = (
+                    ui.input(
+                        placeholder='doi:10.5683/SP2/... or hdl:1902.1/...',
+                        validation=validate_setup_form_input(SetupForm, 'pid', required=True),
+                    )
+                    .classes('pdc-form-input')
+                    .bind_value(form_data, 'pid')
+                    .style('width: 100%')
+                )
                 ui.label('Persistent identifier for the dataset (DOI or Handle)').classes('pdc-form-helper')
 
             with ui.element('div').classes('pdc-form-group'):
                 ui.label('Dataverse Base URL *').classes('pdc-form-label')
-                ui.input(placeholder='https://demo.borealisdata.ca/').classes('pdc-form-input').bind_value(
-                    form_data, 'base_url'
-                ).style('width: 100%')
+                _input_base_url = (
+                    ui.input(
+                        placeholder='https://demo.borealisdata.ca/',
+                        validation=validate_setup_form_input(SetupForm, 'base_url', required=True),
+                    )
+                    .classes('pdc-form-input')
+                    .bind_value(form_data, 'base_url')
+                    .style('width: 100%')
+                )
                 ui.label('Base URL of the Dataverse installation (e.g., https://demo.borealisdata.ca/)').classes(
                     'pdc-form-helper'
                 )
 
             with ui.element('div').classes('pdc-form-group'):
                 ui.label('API Token *').classes('pdc-form-label')
-                ui.input(
-                    placeholder='Enter your Dataverse API token', password=True, password_toggle_button=True
-                ).props('autocorrect=off autocapitalize=off spellcheck=false').classes('pdc-form-input').bind_value(
-                    form_data, 'api_token'
-                ).style('width: 100%')
-                ui.label('The API token from the Dataverse instance. The value is hidden by default.').classes(
-                    'pdc-form-helper'
+                _env_token = str(setup_defaults.api_token) if setup_defaults.api_token else None
+                _token_placeholder = (
+                    f'Leave blank to use pre-filled token ({_env_token[:4]}...{_env_token[-4:]})'
+                    if _env_token
+                    else 'Enter your Dataverse API token'
                 )
+                _input_api_token = (
+                    ui.input(
+                        placeholder=_token_placeholder,
+                        password=True,
+                        password_toggle_button=True,
+                        validation=lambda v: validate_setup_form_input(SetupForm, 'api_token')(v) if v else None,
+                    )
+                    .props('autocorrect=off autocapitalize=off spellcheck=false')
+                    .classes('pdc-form-input')
+                    .bind_value(form_data, 'api_token')
+                    .style('width: 100%')
+                )
+                _helper = (
+                    'Leave blank to use the API token from the environment.'
+                    if _env_token
+                    else 'The API token from the Dataverse instance. The value is hidden by default.'
+                )
+                ui.label(_helper).classes('pdc-form-helper')
 
             with ui.element('div').classes('pdc-form-group'):
                 ui.label('Project Number *').classes('pdc-form-label')
-                ui.input(placeholder='PROJECT-123').classes('pdc-form-input').bind_value(
-                    form_data, 'project_number'
-                ).style('width: 100%')
+                _input_project_number = (
+                    ui.input(
+                        placeholder='PROJECT-123',
+                        validation=validate_setup_form_input(SetupForm, 'project_number', required=True),
+                    )
+                    .classes('pdc-form-input')
+                    .bind_value(form_data, 'project_number')
+                    .style('width: 100%')
+                )
                 ui.label('Identifier for the curation report (e.g., CUR-999)').classes('pdc-form-helper')
 
         # Curator Information Section
@@ -191,15 +243,38 @@ async def new_dataset_page() -> None:
 
             with ui.element('div').classes('pdc-form-group'):
                 ui.label('Curator Name *').classes('pdc-form-label')
-                ui.input(placeholder='Enter your name').props('autocomplete=name').classes('pdc-form-input').bind_value(
-                    form_data, 'curator_name'
-                ).style('width: 100%')
+                _input_curator_name = (
+                    ui.input(
+                        placeholder='Enter your name',
+                        validation=validate_setup_form_input(SetupForm, 'curator_name', required=True),
+                    )
+                    .props('autocomplete=name')
+                    .classes('pdc-form-input')
+                    .bind_value(form_data, 'curator_name')
+                    .style('width: 100%')
+                )
 
             with ui.element('div').classes('pdc-form-group'):
                 ui.label('Curator Email *').classes('pdc-form-label')
-                ui.input(placeholder='Enter your email').classes('pdc-form-input').props(
-                    'type=email autocomplete=email'
-                ).bind_value(form_data, 'curator_email').style('width: 100%')
+                _input_curator_email = (
+                    ui.input(
+                        placeholder='Enter your email',
+                        validation=validate_setup_form_input(SetupForm, 'curator_email', required=True),
+                    )
+                    .classes('pdc-form-input')
+                    .props('type=email autocomplete=email')
+                    .bind_value(form_data, 'curator_email')
+                    .style('width: 100%')
+                )
+
+        validated_inputs = [
+            _input_pid,
+            _input_base_url,
+            _input_api_token,
+            _input_project_number,
+            _input_curator_name,
+            _input_curator_email,
+        ]
 
         # # Directory Settings Section  # -- removed for now since we're defaulting to main_dir from .env and it can be confusing to have multiple directory fields. Can re-add later if needed --  # noqa: E501
         # with ui.element('div').classes('pdc-form-section'):
@@ -231,7 +306,7 @@ async def new_dataset_page() -> None:
 
             with ui.row().classes('gap-4'):
                 ui.checkbox(
-                    'Delete existing project folder before starting', value=form_data.get('force_delete', False)
+                    'Replace existing project (if exists)', value=form_data.get('force_delete', False)
                 ).bind_value(form_data, 'force_delete')
                 ui.checkbox(
                     'Unzip archive files and check contents', value=form_data.get('check_zip', True)
@@ -252,6 +327,7 @@ async def new_dataset_page() -> None:
                 'Start Curation Process',
                 on_click=lambda: handle_setup_submit(
                     form_data,
+                    validated_inputs,
                     error_msg,
                     success_msg,
                     loading_spinner,

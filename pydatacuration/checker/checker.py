@@ -45,7 +45,7 @@ class Checker:
             setup_form_instance (SetupForm | None): An instance of the setup form.
         """
         self.base_url = str(setup_form_instance.base_url) if setup_form_instance.base_url else ''
-        self.api_token = setup_form_instance.api_token or ''
+        self.api_token = str(setup_form_instance.api_token) if setup_form_instance.api_token else ''
         self.ds_metadata = ds_metadata
         self.dv_tree = dv_tree
         self.workdir = workdir

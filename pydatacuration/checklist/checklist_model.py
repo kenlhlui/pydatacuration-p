@@ -14,6 +14,7 @@ class ChecklistMetadata(BaseModel):
     model_config = ConfigDict(extra='forbid')
 
     name: str = Field(..., description='The name of the checklist.')
+    alias: str | None = Field(None, description='The alias for the checklist.')
     version: str = Field(..., description='The version of the checklist.')
     description: str | None = Field(None, description='A description of the checklist.')
     created_by: list[str] = Field(..., description='The person who created the checklist.')
