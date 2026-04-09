@@ -16,8 +16,12 @@ from pydatacuration.exceptions import DatasetAccessError
 from pydatacuration.exceptions import DatasetNotFoundError
 from pydatacuration.exceptions import DatasetUnauthorizedError
 from pydatacuration.exceptions import DirectoryExistsError
+
+# Import reusable UI elements
 from pydatacuration.frontend.reusable_elements import form_section
 from pydatacuration.frontend.reusable_elements import text_input_box
+
+# Import styles and custom components
 from pydatacuration.frontend.styles import apply_pdc_styles
 from pydatacuration.frontend.styles import create_checklist_select
 
