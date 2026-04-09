@@ -66,6 +66,9 @@ async def checklist_page(project_number: str) -> None:
     status_color_map = _status_opts.color_map()
     priority_options = load_priority_options(RES_DIR).model_dump(mode='python')
 
+    # Load the scroll to top button (using reusable component)
+    scroll_to_top_button()
+
     with ui.column().classes('pdc-container'):
         # Logo
         ui.html(
@@ -231,8 +234,6 @@ async def checklist_page(project_number: str) -> None:
             )
 
             ui.button('New Dataset', on_click=helpers.confirm_new_dataset).classes('pdc-btn')
-    with scroll_to_top_button('↑'):
-        pass
 
 
 async def render_checklist_table(  # noqa: PLR0913, PLR0912, PLR0915, C901, PLR0917

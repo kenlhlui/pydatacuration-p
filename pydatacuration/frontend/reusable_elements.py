@@ -61,9 +61,10 @@ def text_input_box(  # noqa: PLR0913
     return input_component
 
 
-@contextlib.contextmanager
-def scroll_to_top_button(text: str = 'Scroll to Top') -> Generator[None, None, None]:
+def scroll_to_top_button(text: str = '↑') -> None:
     """Create a button that scrolls the page to the top when clicked.
+
+        Default text is an upwards arrow (↑). Can be customized by passing a different string to the `text` parameter.
 
     Args:
         text (str): The text to display on the button.
@@ -71,4 +72,3 @@ def scroll_to_top_button(text: str = 'Scroll to Top') -> Generator[None, None, N
     """
     with ui.page_scroller(position='bottom-right', x_offset=20, y_offset=20):
         ui.button(text)
-        yield
