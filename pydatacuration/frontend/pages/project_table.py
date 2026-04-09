@@ -42,7 +42,7 @@ async def render_project_table(
         # Curator filter
         with ui.element('div').classes('pdc-form-group').style('flex: 1; margin-bottom: 0;'):
             ui.label('Filter by Curator').classes('pdc-form-label')
-            curators = [''] + sorted({s.get('curator_name', '<Unknown>') for s in schemas if s.get('curator_name')})
+            curators = [''] + sorted({s['curator_name'] for s in schemas if s.get('curator_name')})
             curator_filter = (
                 ui.select(
                     options=curators,

@@ -11,9 +11,9 @@ def form_section(title: str) -> Generator[None, None, None]:
     """Create a form section with a title.
 
     Args:
-        title: The title of the form section of the form section.
+        title: The title of the form section.
 
-    Returns:
+    Yields:
         A NiceGUI element representing the form section.
 
     """

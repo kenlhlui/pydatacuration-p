@@ -193,14 +193,18 @@ async def new_dataset_page() -> None:
                 if _env_token
                 else 'Enter your Dataverse API token'
             )
-
+            _helper = (
+                'Leave blank to use the API token from the environment.'
+                if _env_token
+                else 'The API token from the Dataverse instance. The value is hidden by default.'
+            )
             _input_api_token = text_input_box(
                 label='API Token',
                 form_data=form_data,
                 key='api_token',
                 placeholder=_token_placeholder,
                 validation=lambda v: validate_setup_form_input(SetupForm, 'api_token')(v) if v else None,
-                helper_text='The API token from the Dataverse instance. The value is hidden by default.',  # noqa: E501
+                helper_text=_helper,
                 props='autocorrect=off autocapitalize=off spellcheck=false',
                 password=True,
                 password_toggle_button=True,
