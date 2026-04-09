@@ -16,6 +16,9 @@ from pydatacuration.db import get_database
 from pydatacuration.frontend.helpers import NiceGUIHelper
 from pydatacuration.frontend.models.status_options import load_status_options
 
+# Import reusable components
+from pydatacuration.frontend.reusable_elements import scroll_to_top_button
+
 # Import styles and styled components
 from pydatacuration.frontend.styles import apply_pdc_styles
 from pydatacuration.frontend.styles import create_check_type_badge
@@ -228,6 +231,8 @@ async def checklist_page(project_number: str) -> None:
             )
 
             ui.button('New Dataset', on_click=helpers.confirm_new_dataset).classes('pdc-btn')
+    with scroll_to_top_button('↑'):
+        pass
 
 
 async def render_checklist_table(  # noqa: PLR0913, PLR0912, PLR0915, C901, PLR0917

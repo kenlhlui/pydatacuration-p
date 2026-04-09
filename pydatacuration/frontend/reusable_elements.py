@@ -59,3 +59,16 @@ def text_input_box(  # noqa: PLR0913
             ui.label(helper_text).classes('pdc-form-helper')
 
     return input_component
+
+
+@contextlib.contextmanager
+def scroll_to_top_button(text: str = 'Scroll to Top') -> Generator[None, None, None]:
+    """Create a button that scrolls the page to the top when clicked.
+
+    Args:
+        text (str): The text to display on the button.
+
+    """
+    with ui.page_scroller(position='bottom-right', x_offset=20, y_offset=20):
+        ui.button(text)
+        yield
