@@ -53,7 +53,7 @@ async def handle_setup_submit(  # noqa: PLR0913, PLR0917
     validated_inputs: list[ui.input],
     error_msg: ui.label,
     success_msg: ui.label,
-    loading_spinner: ui.element,
+    loading_section: ui.element,
     loading_label: ui.label,
     start_button: ui.button,
     reset_button: ui.button,
@@ -75,7 +75,7 @@ async def handle_setup_submit(  # noqa: PLR0913, PLR0917
     start_button.set_enabled(False)
     reset_button.set_enabled(False)
     back_button.set_enabled(False)
-    loading_spinner.classes(remove='hidden')
+    loading_section.set_visibility(True)
     error_msg.classes(add='hidden')
     success_msg.classes(add='hidden')
 
@@ -87,7 +87,7 @@ async def handle_setup_submit(  # noqa: PLR0913, PLR0917
         start_button.set_enabled(True)
         reset_button.set_enabled(True)
         back_button.set_enabled(True)
-        loading_spinner.classes(add='hidden')
+        loading_section.set_visibility(False)
 
     # Use a list so check_task can reference the timer before it's assigned
     poll_timer: list[ui.timer] = []
@@ -137,7 +137,7 @@ def reset_form(form_data: dict, default_form_data: dict, reset_button: ui.button
 # New Dataset Setup Page
 # ============================================================================
 @ui.page('/new')
-async def new_dataset_page() -> None:
+async def new_dataset_page() -> None:  # noqa: PLR0914
     """New dataset setup page with exact CSS matching your current design."""
     # Enable the session storage for form persistence
     await ui.context.client.connected()
@@ -285,6 +285,13 @@ async def new_dataset_page() -> None:
                 helper_text='Dataverse collection alias for checking dataset author and depositor history',
             )
 
+        # Loading indicator (hidden by default)
+        with ui.column().classes('w-full items-center') as loading_section:
+            with ui.row().classes('items-center justify-center gap-2'):
+                ui.spinner(size='lg').classes('')
+            loading_label = ui.label('Generating the curation report...').classes('text-lg')
+        loading_section.set_visibility(False)
+
         # Action buttons
         with ui.element('div').classes('pdc-actions'):
             start_button = ui.button(
@@ -294,7 +301,7 @@ async def new_dataset_page() -> None:
                     validated_inputs,
                     error_msg,
                     success_msg,
-                    loading_spinner,
+                    loading_section,
                     loading_label,
                     start_button,
                     reset_button,
@@ -309,8 +316,3 @@ async def new_dataset_page() -> None:
             back_button = ui.button('Back', on_click=lambda: handle_back_navigation(back_button), color='red').classes(
                 'pdc-btn'
             )
-
-        # Loading indicator
-        with ui.element('div').classes('pdc-loading hidden') as loading_spinner:
-            ui.element('div').classes('pdc-loading-spinner')
-            loading_label = ui.label('Running curation process...')
