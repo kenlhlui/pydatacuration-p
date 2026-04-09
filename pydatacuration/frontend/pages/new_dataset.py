@@ -241,6 +241,7 @@ async def new_dataset_page() -> None:
             _input_api_token,
             _input_project_number,
             _input_curator_email,
+            _input_curator_name,
         ]
 
         # Checklist Selection Section
@@ -286,7 +287,7 @@ async def new_dataset_page() -> None:
                     reset_button,
                     back_button,
                 ),
-            ).classes('pdc-btn pdc-btn-primary')
+            ).classes('pdc-btn')
 
             reset_button = ui.button(
                 'Reset Form', on_click=lambda: reset_form(form_data, default_form_data, reset_button)
