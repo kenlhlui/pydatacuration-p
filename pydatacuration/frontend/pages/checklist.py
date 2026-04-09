@@ -12,7 +12,6 @@ from pydatacuration.checklist.priority_options import load_priority_options
 from pydatacuration.db import DatabaseBackend
 from pydatacuration.db import get_database
 
-# Import reusable form components
 # Import exceptions for error handling
 from pydatacuration.frontend.helpers import NiceGUIHelper
 from pydatacuration.frontend.models.status_options import load_status_options
