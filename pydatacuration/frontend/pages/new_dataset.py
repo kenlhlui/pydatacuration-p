@@ -201,7 +201,8 @@ async def new_dataset_page() -> None:
                 placeholder=_token_placeholder,
                 validation=lambda v: validate_setup_form_input(SetupForm, 'api_token')(v) if v else None,
                 helper_text='The API token from the Dataverse instance. The value is hidden by default.',  # noqa: E501
-                props='password password-toggle-button autocorrect=off autocapitalize=off spellcheck=false',
+                props='autocorrect=off autocapitalize=off spellcheck=false',
+                password=True,
                 password_toggle_button=True,
             )
 
