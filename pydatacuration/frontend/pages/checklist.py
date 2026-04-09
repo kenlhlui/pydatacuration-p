@@ -128,11 +128,11 @@ async def checklist_page(project_number: str) -> None:
 
         # Filters Section
         with ui.element('div').classes('pdc-form-section').style('width: 100%; margin-bottom: 20px;'):
-            ui.label('Filters').classes('pdc-form-section-header')
+            ui.label('Filters').classes('pdc-form-section-title')
 
             with ui.row().classes('gap-4').style('align-items: flex-end;'):
                 # Status filter
-                with ui.element('div').style('flex: 1; min-width: 200px;'):
+                with ui.element('div').style('flex: 1'):
                     ui.label('Filter by Status').classes('pdc-form-label')
                     status_filter = (
                         ui.select(
@@ -140,12 +140,12 @@ async def checklist_page(project_number: str) -> None:
                             value=None,
                             with_input=False,
                         )
-                        .classes('status-select')
+                        .classes('pdc-input')
                         .style('width: 100%;')
                     )
 
                 # Priority filter
-                with ui.element('div').style('flex: 1; min-width: 200px;'):
+                with ui.element('div').style('flex: 1'):
                     ui.label('Filter by Priority').classes('pdc-form-label')
                     priority_filter = (
                         ui.select(
@@ -153,7 +153,7 @@ async def checklist_page(project_number: str) -> None:
                             value=None,
                             with_input=False,
                         )
-                        .classes('status-select')
+                        .classes('pdc-input')
                         .style('width: 100%;')
                     )
 
@@ -219,17 +219,15 @@ async def checklist_page(project_number: str) -> None:
         with ui.element('div').classes('pdc-actions'):
             ui.button(
                 'Save Curation Log (Word)', on_click=lambda: NiceGUIHelper.export_word_button(db, dir_manager)
-            ).classes('pdc-btn pdc-btn-primary')
+            ).classes('pdc-btn')
 
-            ui.button('Calculate Time Spent', on_click=helpers.calculate_total_time).classes(
-                'pdc-btn pdc-btn-calculate'
-            )
+            ui.button('Calculate Time Spent', on_click=helpers.calculate_total_time).classes('pdc-btn')
 
             ui.button('Export YAML', on_click=lambda: NiceGUIHelper.export_yaml_button(db, dir_manager)).classes(
                 'pdc-btn'
             )
 
-            ui.button('New Dataset', on_click=helpers.confirm_new_dataset).classes('pdc-btn pdc-btn-danger')
+            ui.button('New Dataset', on_click=helpers.confirm_new_dataset).classes('pdc-btn')
 
 
 async def render_checklist_table(  # noqa: PLR0913, PLR0912, PLR0915, C901, PLR0917

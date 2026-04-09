@@ -8,6 +8,7 @@ from nicegui import ui
 from nicegui.elements.input import Input
 
 from pydatacuration.frontend.pages.utils import confirm_delete_project
+from pydatacuration.frontend.reusable_elements import form_section
 
 
 async def render_project_table(
@@ -28,35 +29,32 @@ async def render_project_table(
         return
 
     # Filters
-    with ui.element('div').classes('pdc-form-section'):
-        ui.label('Filters').classes('pdc-form-section-header')
+    with form_section('Filters'), ui.row().classes('gap-4').style('align-items: flex-end;'):
+        # Search filter
+        with ui.element('div').classes('pdc-form-group').style('flex: 1; margin-bottom: 0;'):
+            ui.label('Search').classes('pdc-form-label')
+            search_input: Input = (
+                ui.input(placeholder='Search Project Number, Title, PID, ID (Versioned), URL')
+                .classes('pdc-input')
+                .style('width: 100%;')
+            )
 
-        with ui.row().classes('gap-4').style('align-items: flex-end;'):
-            # Search filter
-            with ui.element('div').style('flex: 1; min-width: 200px;'):
-                ui.label('Search').classes('pdc-form-label')
-                search_input: Input = (
-                    ui.input(placeholder='Search Project Number, Title, PID, ID (Versioned), URL')
-                    .classes('status-select')
-                    .style('width: 100%;')
+        # Curator filter
+        with ui.element('div').classes('pdc-form-group').style('flex: 1; margin-bottom: 0;'):
+            ui.label('Filter by Curator').classes('pdc-form-label')
+            curators = [''] + sorted({s['curator_name'] for s in schemas if s.get('curator_name')})
+            curator_filter = (
+                ui.select(
+                    options=curators,
+                    value='',
+                    with_input=False,
                 )
+                .classes('pdc-input')
+                .style('width: 100%;')
+            )
 
-            # Curator filter
-            with ui.element('div').style('flex: 1; min-width: 200px;'):
-                ui.label('Filter by Curator').classes('pdc-form-label')
-                curators = [''] + sorted(list({s.get('curator_name', '') for s in schemas if s.get('curator_name')}))
-                curator_filter = (
-                    ui.select(
-                        options=curators,
-                        value='',
-                        with_input=False,
-                    )
-                    .classes('status-select')
-                    .style('width: 100%;')
-                )
-
-            # Clear filters button
-            ui.button('Clear Filters', on_click=lambda: clear_filters(search_input, curator_filter)).classes('pdc-btn')
+        # Clear filters button
+        ui.button('Clear Filters', on_click=lambda: clear_filters(search_input, curator_filter)).classes('pdc-btn')
 
     # Table container
     table_container = ui.column().style('width: 100%;')
@@ -80,7 +78,7 @@ async def render_project_table(
 
         table_container.clear()
         with table_container:
-            ui.label(f'Found {len(filtered_schemas)} project(s)').classes('pdc-form-section-header').style(
+            ui.label(f'Found {len(filtered_schemas)} project(s)').classes('pdc-form-section-title').style(
                 'margin: 20px 0;'
             )
 
@@ -149,7 +147,7 @@ async def render_project_table(
                                         '🗑️ Delete',
                                         color='red',
                                         on_click=lambda s=schema: confirm_delete_project(s, refresh_callback),
-                                    ).props('unelevated no-caps').classes('pdc-btn pdc-btn-danger')
+                                    ).props('unelevated no-caps').classes('pdc-btn')
 
     # Define clear filters function
     def clear_filters(search_inp: ui.input, curator_sel: ui.select) -> None:

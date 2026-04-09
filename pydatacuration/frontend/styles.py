@@ -196,47 +196,6 @@ code, pre,
 }
 
 /* ========================================================================
-   Status Select Colors
-   ======================================================================== */
-.status-select {
-    width: 100%;
-    min-width: 140px;
-    font-size: 12px;
-    transition: border-color 0.2s ease, box-shadow 0.2s ease;
-}
-
-/* status-select: GitHub-style border for both text inputs and selects in filter sections */
-.status-select.q-field .q-field__control {
-    background-color: #ffffff;
-    border: 1px solid #d0d7de;
-    border-radius: 6px;
-    box-shadow: inset 0 1px 0 rgba(208, 215, 222, 0.2);
-    min-height: 28px !important;
-    height: 28px !important;
-}
-.status-select.q-field .q-field__control:before,
-.status-select.q-field .q-field__control:after {
-    display: none !important;
-}
-.status-select.q-field .q-field__label {
-    display: none !important;
-}
-.status-select.q-field .q-field__control-container,
-.status-select.q-field .q-field__marginal {
-    height: 28px !important;
-    min-height: 28px !important;
-    padding-top: 0 !important;
-}
-.status-select.q-field .q-field__native,
-.status-select.q-field .q-field__input {
-    padding: 0 8px !important;
-    font-size: 12px !important;
-    color: #1f2328 !important;
-    min-height: 26px !important;
-    line-height: 26px !important;
-}
-
-/* ========================================================================
    Checklist Table
    ======================================================================== */
 .pdc-checklist-table {
@@ -529,44 +488,6 @@ code, pre,
     transition: background-color 0.2s ease, border-color 0.2s ease, box-shadow 0.2s ease;
 }
 
-.pdc-btn-primary {
-    background-color: #2da44e;
-    color: #ffffff;
-}
-
-.pdc-btn-primary:hover {
-    background-color: #2c974b;
-    border-color: rgba(31, 35, 40, 0.15);
-}
-
-.pdc-btn-secondary {
-    background-color: #f6f8fa;
-    color: #24292f;
-    border-color: rgba(31, 35, 40, 0.15);
-}
-
-.pdc-btn-secondary:hover {
-    background-color: #f3f4f6;
-    border-color: rgba(31, 35, 40, 0.3);
-}
-
-.pdc-btn-calculate {
-    background-color: #6D247A;
-    color: #ffffff;
-}
-
-.pdc-btn-calculate:hover {
-    background-color: #5c1f67;
-}
-
-.pdc-btn-danger {
-    background-color: #cf222e;
-    color: #ffffff;
-}
-
-.pdc-btn-danger:hover {
-    background-color: #a40e26;
-}
 
 /* Quasar overrides for pdc-btn — strip uppercase and normalise sizing */
 .pdc-btn.q-btn {
@@ -600,7 +521,7 @@ code, pre,
     margin-bottom: 20px;
 }
 
-.pdc-form-section-header {
+.pdc-form-section-title {
     font-size: 18px;
     font-weight: 600; /* font-semibold */
     color: #374151; /* text-gray-700 */
@@ -685,121 +606,71 @@ code, pre,
    NiceGUI Specific Overrides
    ======================================================================== */
 
-/* pdc-form-input: strip Quasar's floating-label padding and underline */
-.pdc-form-input.q-field {
+/* pdc-input: compact GitHub-style input, applied directly to ui.input / ui.select */
+.pdc-input.q-field,
+.pdc-input.q-input {
     width: 100% !important;
     max-width: 100% !important;
     box-sizing: border-box !important;
     padding-bottom: 0 !important;
+    min-width: 0 !important;
 }
 
-.pdc-form-input.q-field .q-field__control {
-    width: 100% !important;
-    max-width: 100% !important;
-    min-height: 36px !important;
-    padding: 0 !important;
+.pdc-input .q-field__control {
+    min-height: 28px !important;
+    height: 28px !important;
+    padding: 0 8px !important;
     background-color: #ffffff !important;
     border: 1px solid #d0d7de !important;
     border-radius: 6px !important;
     box-shadow: inset 0 1px 0 rgba(208, 215, 222, 0.2) !important;
     box-sizing: border-box !important;
-}
-
-/* Remove the animated underline */
-.pdc-form-input.q-field .q-field__control:before,
-.pdc-form-input.q-field .q-field__control:after {
-    display: none !important;
-}
-
-/* Remove padding-top that Quasar reserves for the floating label */
-.pdc-form-input.q-field .q-field__control-container {
-    padding-top: 0 !important;
-}
-
-/* Hide Quasar's internal label (we use external labels) */
-.pdc-form-input.q-field .q-field__label {
-    display: none !important;
-}
-
-/* Native input padding */
-.pdc-form-input.q-field .q-field__native {
-    padding: 6px 12px !important;
+    transition: border-color 0.2s ease, box-shadow 0.2s ease !important;
     color: #1f2328 !important;
-    font-size: 14px !important;
-    min-height: 36px !important;
-    line-height: 20px !important;
 }
 
-/* Hide helper/error row below input */
-.pdc-form-input.q-field .q-field__bottom {
+.pdc-input .q-field__control:focus-within {
+    border-color: #0969da !important;
+    box-shadow: 0 0 0 3px rgba(9, 105, 218, 0.3) !important;
+}
+
+.pdc-input .q-field__control:before,
+.pdc-input .q-field__control:after {
     display: none !important;
 }
 
+.pdc-input .q-field__native {
+    padding: 0 !important;
+    min-height: 26px !important;
+    height: 26px !important;
+    line-height: 26px !important;
+    font-size: 13px !important;
+    color: #1f2328 !important;
+    border: none !important;
+    box-shadow: none !important;
+    background: transparent !important;
+    box-sizing: border-box !important;
+}
+
+.pdc-input .q-field__marginal,
+.pdc-input .q-field__control-container {
+    height: 28px !important;
+    min-height: 28px !important;
+    padding: 0 !important;
+    border: none !important;
+    box-sizing: border-box !important;
+}
+
+.pdc-input .q-field__bottom {
+    display: none !important;
+}
+
+/* pdc-form-group: layout/spacing only — no input styling */
 .pdc-form-group .q-field,
 .pdc-form-group .q-input {
     width: 100% !important;
     max-width: 100% !important;
     box-sizing: border-box !important;
-    padding-bottom: 0 !important;
-}
-
-/* Force white background on all input controls in form groups */
-.pdc-form-group .q-field__control,
-.pdc-form-group input,
-.pdc-form-group textarea,
-.pdc-form-group select {
-    background-color: #ffffff !important;
-    border: 1px solid #d0d7de !important;
-    border-radius: 6px !important;
-    box-shadow: inset 0 1px 0 rgba(208, 215, 222, 0.2) !important;
-    box-sizing: border-box !important;
-    max-width: 100% !important;
-    color: #1f2328 !important;
-}
-
-/* Reduce padding on Quasar fields */
-.pdc-form-group .q-field__control {
-    padding: 0 !important;
-    min-height: 36px !important;
-    box-sizing: border-box !important;
-}
-
-/* For text inputs only - not select dropdowns */
-.pdc-form-group .q-input .q-field__control {
-    height: 36px !important;
-}
-
-/* Remove padding-top Quasar reserves for floating label */
-.pdc-form-group .q-field__control-container {
-    padding-top: 0 !important;
-    padding-bottom: 0 !important;
-}
-
-.pdc-form-group .q-field__native {
-    padding: 6px 12px !important;
-    box-sizing: border-box !important;
-}
-
-/* Remove bottom border line from Quasar inputs */
-.pdc-form-group .q-field__control:before,
-.pdc-form-group .q-field__control:after {
-    display: none !important;
-}
-
-.pdc-form-group .q-field__bottom {
-    display: none !important;
-}
-
-/* Remove inner border/shadow from Quasar components */
-.pdc-form-group .q-field__control-container {
-    border: none !important;
-    box-sizing: border-box !important;
-    max-width: 100% !important;
-}
-
-.pdc-form-group .q-field__marginal {
-    height: auto !important;
-    max-width: 100% !important;
 }
 
 /* ========================================================================
@@ -1166,7 +1037,7 @@ def create_status_select(
         value=current_value,
         with_input=False,
         clearable=True,
-    ).classes('status-select')
+    ).classes('pdc-input')
 
     # Apply status-specific styling via inline styles
     def update_status_style(value: str) -> None:
@@ -1206,23 +1077,11 @@ def create_checklist_select(res_dir: Path, current_value: str, on_change=None) -
 
     # Create select without internal label - display capitalized but use lowercase values
     select = (
-        ui.select(options=checklist_options(res_dir), value=current_value).classes('status-select').style('width: 100%')
+        ui.select(options=checklist_options(res_dir), value=current_value).classes('pdc-input').style('width: 100%')
     )
 
-    # Apply checklist-specific styling
-    def update_checklist_style(value: str) -> None:
-        select.classes(remove='checklist-high checklist-medium')
-        if value:
-            select.classes(add=f'checklist-{value}')
-
-    # Initial styling
-    update_checklist_style(current_value)
-
-    # Handle changes
     if on_change:
-        select.on_value_change(lambda e: [update_checklist_style(e.value), on_change(e)])
-    else:
-        select.on_value_change(lambda e: update_checklist_style(e.value))
+        select.on_value_change(on_change)
 
     return select
 
