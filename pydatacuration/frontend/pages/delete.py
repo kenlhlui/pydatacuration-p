@@ -15,6 +15,9 @@ from pydatacuration.frontend.helpers import back_to_main_menu_button
 # Import utility functions for project management pages
 from pydatacuration.frontend.pages.project_table import render_project_table
 
+# Import reusable components
+from pydatacuration.frontend.reusable_elements import scroll_to_top_button
+
 # Import styles and styled components
 from pydatacuration.frontend.styles import apply_pdc_styles
 
@@ -31,6 +34,9 @@ MAIN_DIR: Path = Path(app_settings.main_dir)
 async def delete_project_page() -> None:
     """Delete project page - shows list of projects with delete buttons."""
     apply_pdc_styles()
+
+    # Apply the scroll to top button
+    scroll_to_top_button()
 
     # Container to hold the project list (for refreshing after delete)
     container = ui.column().classes('pdc-container')

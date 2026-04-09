@@ -488,7 +488,6 @@ code, pre,
     transition: background-color 0.2s ease, border-color 0.2s ease, box-shadow 0.2s ease;
 }
 
-
 /* Quasar overrides for pdc-btn — strip uppercase and normalise sizing */
 .pdc-btn.q-btn {
     padding: 5px 16px;
@@ -505,6 +504,16 @@ code, pre,
     font-size: 14px;
     font-weight: 500;
     letter-spacing: normal;
+}
+
+.pdc-btn.pdc-btn--lg.q-btn {
+    font-size: 15px;
+    padding: 8px 18px;
+    min-height: 44px;
+}
+
+.pdc-btn.pdc-btn--lg .q-btn__content {
+    font-size: 15px;
 }
 
 /* ========================================================================

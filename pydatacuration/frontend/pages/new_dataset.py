@@ -16,8 +16,13 @@ from pydatacuration.exceptions import DatasetAccessError
 from pydatacuration.exceptions import DatasetNotFoundError
 from pydatacuration.exceptions import DatasetUnauthorizedError
 from pydatacuration.exceptions import DirectoryExistsError
+
+# Import reusable UI elements
 from pydatacuration.frontend.reusable_elements import form_section
+from pydatacuration.frontend.reusable_elements import scroll_to_top_button
 from pydatacuration.frontend.reusable_elements import text_input_box
+
+# Import styles and custom components
 from pydatacuration.frontend.styles import apply_pdc_styles
 from pydatacuration.frontend.styles import create_checklist_select
 
@@ -139,6 +144,9 @@ async def new_dataset_page() -> None:
 
     # Apply our custom CSS
     apply_pdc_styles()
+
+    # Apply the scroll to top button
+    scroll_to_top_button()
 
     with ui.column().classes('pdc-container-narrow'):
         # Logo
