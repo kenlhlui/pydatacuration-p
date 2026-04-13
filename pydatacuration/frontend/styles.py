@@ -205,27 +205,27 @@ code, pre,
     table-layout: fixed;
 }
 
-/* Column widths: ID, Action Item, Info Location, Status, Comments, Priority, Time */
+/* Column widths: ID, Action Item, Info Location, Priority, Comments, Status, Time */
 .pdc-checklist-table th:nth-child(1),
-.pdc-checklist-table td:nth-child(1) { width: 5%; }
+.pdc-checklist-table td:nth-child(1) { width: 3%; }
 
 .pdc-checklist-table th:nth-child(2),
-.pdc-checklist-table td:nth-child(2) { width: 22%; }
+.pdc-checklist-table td:nth-child(2) { width: 25%; }
 
 .pdc-checklist-table th:nth-child(3),
 .pdc-checklist-table td:nth-child(3) { width: 25%; }
 
 .pdc-checklist-table th:nth-child(4),
-.pdc-checklist-table td:nth-child(4) { width: 10%; }
+.pdc-checklist-table td:nth-child(4) { width: 8%; }
 
 .pdc-checklist-table th:nth-child(5),
-.pdc-checklist-table td:nth-child(5) { width: 20%; }
+.pdc-checklist-table td:nth-child(5) { width: 25%; }
 
 .pdc-checklist-table th:nth-child(6),
-.pdc-checklist-table td:nth-child(6) { width: 8%; overflow: hidden; }
+.pdc-checklist-table td:nth-child(6) { width: 10%; overflow: hidden; }
 
 .pdc-checklist-table th:nth-child(7),
-.pdc-checklist-table td:nth-child(7) { width: 10%; }
+.pdc-checklist-table td:nth-child(7) { width: 5%; }
 
 /* Prevent table from forcing horizontal scroll */
 .pdc-checklist-table td,
