@@ -72,3 +72,34 @@ def scroll_to_top_button(text: str = '↑') -> None:
     """
     with ui.page_scroller(position='bottom-right', x_offset=20, y_offset=20):
         ui.button(text).classes('pdc-btn pdc-btn--lg')
+
+
+def action_button(label: str, on_click) -> ui.button:
+    """Create a standardized action button.
+
+    Args:
+        label (str): The text to display on the button.
+        on_click: The callback function to execute when the button is clicked.
+
+    Returns:
+        ui.button: The created button component.
+
+    """
+    return ui.button(label, on_click=on_click).classes('pdc-btn')
+
+
+def dropdown_menu(label: str, options: list) -> ui.select:
+    """Create a standardized filter dropdown.
+
+    Args:
+        label (str): The text to display on the dropdown label.
+        options (list): The list of options for the dropdown.
+
+    Returns:
+        ui.select: The created dropdown component.
+
+    """
+    with ui.element('div').style('flex: 1'):
+        ui.label(label).classes('pdc-form-label')
+        value = ui.select(options, value=None, with_input=False).classes('pdc-input').style('width: 100%;')
+        return value
