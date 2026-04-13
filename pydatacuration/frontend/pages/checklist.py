@@ -142,15 +142,6 @@ async def checklist_page(project_number: str, view_only: bool = False) -> None:
         #                 ui.label(f'{code}:').classes('pdc-status-code')
         #                 ui.label(f' {meaning}')
 
-        # Status and time dashboard with view-only toggle
-        @ui.refreshable
-        def status_progress_ui() -> None:
-            with ui.row().classes('gap-4').style('align-items: flex-end;'):
-                helpers.render_status_progress(color_map=status_color_map)
-
-        with form_section('Status and Time'):
-            status_progress_ui()
-
         # View-only toggle state and element refs (populated by render_checklist_table)
         is_view_only = {'value': view_only}
         interactive_elements: list = []
@@ -169,10 +160,29 @@ async def checklist_page(project_number: str, view_only: bool = False) -> None:
                 btn.set_visibility(not active)
             action_button_div.set_visibility(not active)
 
-        toggle_btn = ui.button(
-            'Edit Mode' if view_only else 'View Only',
-            on_click=toggle_view_only,
-        ).classes('pdc-btn')
+        # Status and time dashboard with view-only toggle
+        @ui.refreshable
+        def status_progress_ui() -> None:
+            with ui.row().classes('gap-4 items-end'):
+                helpers.render_status_progress(color_map=status_color_map)
+                with ui.column().classes('items-center gap-1'):
+                    ui.label(helpers.get_total_time_str()).classes('text-lg font-bold')
+                    ui.label('Total Time (HH:MM)').classes('text-sm text-center')
+
+        _btn_ref: list = []
+
+        def _render_toggle_btn() -> None:
+            _btn_ref.append(
+                ui.button(
+                    'Edit Mode' if view_only else 'View Only',
+                    on_click=toggle_view_only,
+                ).classes('pdc-btn')
+            )
+
+        with form_section('Status and Time', header_slot=_render_toggle_btn):
+            status_progress_ui()
+
+        toggle_btn = _btn_ref[0]
 
         # Filters Section
         with form_section('Filters'), ui.row().classes('gap-4').style('align-items: flex-end;'):

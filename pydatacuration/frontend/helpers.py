@@ -109,12 +109,9 @@ class NiceGUIHelper:
                 ui.circular_progress(value=value, min=0, max=100, size='xl', color=color)
                 ui.label(f'{label} ({count})').classes('text-sm text-center')
 
-    def calculate_total_time(
-        self,
-    ) -> None:
-        """Calculate total time spent."""
+    def get_total_time_str(self) -> str:
+        """Return total time spent across all checklist items as H:MM string."""
         items = self.get_checklist_items()
-
         total_minutes = 0
         for item in items:
             if item.time_spent:
@@ -123,10 +120,15 @@ class NiceGUIHelper:
                     total_minutes += int(parts[0]) * 60 + int(parts[1])
                 except (ValueError, IndexError):
                     continue
-
         hours = total_minutes // 60
         minutes = total_minutes % 60
-        ui.notify(f'Total Time Spent: {hours}:{minutes:02d}', type='info', position='top')
+        return f'{hours}:{minutes:02d}'
+
+    def calculate_total_time(
+        self,
+    ) -> None:
+        """Calculate total time spent."""
+        ui.notify(f'Total Time Spent: {self.get_total_time_str()}', type='info', position='top')
 
     @staticmethod
     def validate_time_format(time_str: str) -> bool:
