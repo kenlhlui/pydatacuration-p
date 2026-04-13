@@ -276,9 +276,9 @@ async def render_checklist_table(  # noqa: PLR0913, PLR0912, PLR0915, C901, PLR0
                 'ID',
                 'Action Item',
                 'Information Location',
-                'Status',
-                "Curator's Comments",
                 'Priority',
+                "Curator's Comments",
+                'Status',
                 'Time Spent',
             ]:
                 with ui.element('th'):
@@ -378,6 +378,23 @@ async def render_checklist_table(  # noqa: PLR0913, PLR0912, PLR0915, C901, PLR0
                             with ui.element('div').classes('pdc-instructions-header'):
                                 ui.markdown('**Curator Checks:**')
                             ui.markdown(curator_check_item).classes('pdc-static-curator-check-item')
+
+                    # Priority
+                    with ui.element('td'), ui.element('div').classes('pdc-badge-container'):
+                        create_priority_badge(item.priority)
+
+                    # Comments
+                    with ui.element('td'):
+                        comments_input = ui.textarea(
+                            value=item.comments or '', placeholder="Curator's comments..."
+                        ).classes('pdc-comments-input')
+                        if view_only:
+                            comments_input.props('readonly')
+                        comments_input.on(
+                            'change',
+                            lambda e, iid=item.id: helpers.handle_comments_change(iid, e.sender.value),
+                        )
+
                     # Status
                     with ui.element('td'):
                         status_el = create_status_select(
@@ -392,22 +409,6 @@ async def render_checklist_table(  # noqa: PLR0913, PLR0912, PLR0915, C901, PLR0
                         )
                         if view_only:
                             status_el.props('readonly')
-
-                    # Comments
-                    with ui.element('td'):
-                        comments_input = ui.textarea(
-                            value=item.comments or '', placeholder="Curator's comments..."
-                        ).classes('pdc-comments-input')
-                        if view_only:
-                            comments_input.props('readonly')
-                        comments_input.on(
-                            'change',
-                            lambda e, iid=item.id: helpers.handle_comments_change(iid, e.sender.value),
-                        )
-
-                    # Priority
-                    with ui.element('td'), ui.element('div').classes('pdc-badge-container'):
-                        create_priority_badge(item.priority)
 
                     # Time Spent with Timer
                     with (
