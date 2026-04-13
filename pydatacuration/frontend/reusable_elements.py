@@ -74,7 +74,7 @@ def scroll_to_top_button(text: str = '↑') -> None:
         ui.button(text).classes('pdc-btn pdc-btn--lg')
 
 
-def action_buttons(label: str, on_click) -> ui.button:
+def action_button(label: str, on_click) -> ui.button:
     """Create a standardized action button.
 
     Args:
@@ -95,8 +95,11 @@ def dropdown_menu(label: str, options: list) -> ui.select:
         label (str): The text to display on the dropdown label.
         options (list): The list of options for the dropdown.
 
+    Returns:
+        ui.select: The created dropdown component.
+
     """
     with ui.element('div').style('flex: 1'):
         ui.label(label).classes('pdc-form-label')
-        value = ui.select(options).classes('pdc-input').style('width: 100%;')
+        value = ui.select(options, value=None, with_input=False).classes('pdc-input').style('width: 100%;')
         return value

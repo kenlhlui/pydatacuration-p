@@ -17,7 +17,7 @@ from pydatacuration.frontend.helpers import NiceGUIHelper
 from pydatacuration.frontend.models.status_options import load_status_options
 
 # Import the reusable elements
-from pydatacuration.frontend.reusable_elements import action_buttons
+from pydatacuration.frontend.reusable_elements import action_button
 from pydatacuration.frontend.reusable_elements import dropdown_menu
 from pydatacuration.frontend.reusable_elements import form_section
 
@@ -158,7 +158,7 @@ async def checklist_page(project_number: str, view_only: bool = False) -> None:
                     el.props(remove='readonly')
             for btn in timer_buttons:
                 btn.set_visibility(not active)
-            action_buttons_div.set_visibility(not active)
+            action_button_div.set_visibility(not active)
 
         toggle_btn = ui.button(
             'Edit Mode' if view_only else 'View Only',
@@ -170,7 +170,7 @@ async def checklist_page(project_number: str, view_only: bool = False) -> None:
             status_filter = dropdown_menu('Filter by Status', status_options)
             priority_filter = dropdown_menu('Filter by Priority', priority_options)
             # Clear filters button
-            action_buttons('Clear Filters', lambda: clear_filters())  # noqa: PLW0108
+            action_button('Clear Filters', lambda: clear_filters())  # noqa: PLW0108
 
         # Dicts populated by render_checklist_table for visibility-based filtering
         # item_rows: {item_id: (row_element, item)}
@@ -229,12 +229,12 @@ async def checklist_page(project_number: str, view_only: bool = False) -> None:
         priority_filter.on('update:model-value', apply_filters)
 
         # Action Buttons — always rendered so toggle_view_only can show/hide
-        with ui.element('div').classes('pdc-actions') as action_buttons_div:
-            action_buttons('Save Curation Log (Word)', lambda: NiceGUIHelper.export_word_button(db, dir_manager))
-            action_buttons('Calculate Time Spent', lambda: helpers.calculate_total_time)
-            action_buttons('Export YAML', lambda: NiceGUIHelper.export_yaml_button(db, dir_manager))
-            action_buttons('New Dataset', helpers.confirm_new_dataset)
-        action_buttons_div.set_visibility(not view_only)
+        with ui.element('div').classes('pdc-actions') as action_button_div:
+            action_button('Save Curation Log (Word)', lambda: NiceGUIHelper.export_word_button(db, dir_manager))
+            action_button('Calculate Time Spent', lambda: helpers.calculate_total_time)
+            action_button('Export YAML', lambda: NiceGUIHelper.export_yaml_button(db, dir_manager))
+            action_button('New Dataset', helpers.confirm_new_dataset)
+        action_button_div.set_visibility(not view_only)
 
 
 async def render_checklist_table(  # noqa: PLR0913, PLR0912, PLR0915, C901, PLR0917
@@ -263,7 +263,8 @@ async def render_checklist_table(  # noqa: PLR0913, PLR0912, PLR0915, C901, PLR0
         helpers: NiceGUIHelper instance (shared from page to preserve timer state)
         item_rows: Dict populated with {item_id: (row_element, item)} for visibility filtering
         section_header_rows: Dict populated with {section: row_element} for visibility filtering
-        **kwargs: Additional keyword arguments (unused)
+        interactive_elements: List populated with references to interactive elements for view-only toggling
+        timer_buttons: List populated with references to timer buttons for view-only toggling
     """
     if helpers is None:
         helpers = NiceGUIHelper(db_instance, project_number)

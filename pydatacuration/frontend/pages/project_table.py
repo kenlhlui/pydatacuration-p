@@ -8,7 +8,7 @@ from nicegui import ui
 from nicegui.elements.input import Input
 
 from pydatacuration.frontend.pages.utils import confirm_delete_project
-from pydatacuration.frontend.reusable_elements import action_buttons
+from pydatacuration.frontend.reusable_elements import action_button
 from pydatacuration.frontend.reusable_elements import dropdown_menu
 from pydatacuration.frontend.reusable_elements import form_section
 
@@ -47,7 +47,7 @@ async def render_project_table(
             curator_filter = dropdown_menu('Select Curator', curators)
 
         # Clear filters button
-        action_buttons('Clear Filters', lambda: clear_filters(search_input, curator_filter))
+        action_button('Clear Filters', lambda: clear_filters(search_input, curator_filter))
 
     # Table container
     table_container = ui.column().style('width: 100%;')
@@ -145,7 +145,7 @@ async def render_project_table(
     # Define clear filters function
     def clear_filters(search_inp: ui.input, curator_sel: ui.select) -> None:
         search_inp.value = ''
-        curator_sel.value = ''
+        curator_sel.value = None
         render_filtered_table()
 
     # Connect filters to table refresh - bind directly to the function
