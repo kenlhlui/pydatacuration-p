@@ -92,6 +92,8 @@ class NiceGUIHelper:
             time_spent_delta: timedelta = timedelta(minutes=minutes, seconds=seconds)
             self.db.update_checklist_item(item_id=item_id, time_spent=time_spent_delta)
             ui.notify(f'Time updated for {item_id}', type='positive', position='top-right', close_button=True)
+            if self.refresh_callback:
+                self.refresh_callback()
         else:
             ui.notify('Please enter time in MM:SS format', type='negative')
 
@@ -216,6 +218,8 @@ class NiceGUIHelper:
         del self.timers[item_id]
 
         ui.notify(f'Timer stopped for {item_id}: {time_str}', type='positive', position='top-right', close_button=True)
+        if self.refresh_callback:
+            self.refresh_callback()
 
     def toggle_timer(self, item_id: str, time_input: ui.input, button: ui.button) -> None:
         """Toggle timer start/stop for a checklist item.

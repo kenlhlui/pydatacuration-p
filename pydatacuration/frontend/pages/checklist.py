@@ -163,7 +163,7 @@ async def checklist_page(project_number: str, view_only: bool = False) -> None:
         # Status and time dashboard with view-only toggle
         @ui.refreshable
         def status_progress_ui() -> None:
-            with ui.row().classes('gap-4 items-end'):
+            with ui.row().classes('gap-4 items-center justify-center w-full'):
                 helpers.render_status_progress(color_map=status_color_map)
                 with ui.column().classes('items-center gap-1'):
                     ui.label(helpers.get_total_time_str()).classes('text-lg font-bold')
