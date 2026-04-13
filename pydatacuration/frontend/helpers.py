@@ -107,8 +107,8 @@ class NiceGUIHelper:
             value = round((count / total * 100), 1) if total > 0 else 0
             # color_map maps status label → (bg_color, text_color); fall back to 'primary'
             color = color_map[label][0] if (color_map and label in color_map) else 'primary'
-            with ui.column().classes('items-center gap-1'):
-                ui.circular_progress(value=value, min=0, max=100, size='80px', color=color)
+            with ui.column().classes('flex-1 items-center gap-1'):
+                ui.circular_progress(value=value, min=0, max=100, size='120px', color=color)
                 ui.label(f'{label} ({count})').classes('text-sm text-center')
 
     def get_total_time_str(self) -> str:

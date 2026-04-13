@@ -163,9 +163,9 @@ async def checklist_page(project_number: str, view_only: bool = False) -> None:
         # Status and time dashboard with view-only toggle
         @ui.refreshable
         def status_progress_ui() -> None:
-            with ui.row().classes('gap-4 items-end justify-center w-full'):
+            with ui.row().classes('w-full items-end'):
                 helpers.render_status_progress(color_map=status_color_map)
-                with ui.column().classes('items-center gap-1'):
+                with ui.column().classes('flex-1 items-center gap-1'):
                     ui.label(helpers.get_total_time_str()).classes('text-lg font-bold')
                     ui.label('Total Time Spent').classes('text-sm text-center')
 
@@ -179,7 +179,7 @@ async def checklist_page(project_number: str, view_only: bool = False) -> None:
                 ).classes('pdc-btn')
             )
 
-        with form_section('Status and Time', header_slot=_render_toggle_btn):
+        with form_section('Status and Time Dashboard', header_slot=_render_toggle_btn):
             status_progress_ui()
 
         toggle_btn = _btn_ref[0]
