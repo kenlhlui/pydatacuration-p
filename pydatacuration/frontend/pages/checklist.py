@@ -142,6 +142,10 @@ async def checklist_page(project_number: str, view_only: bool = False) -> None:
         #                 ui.label(f'{code}:').classes('pdc-status-code')
         #                 ui.label(f' {meaning}')
 
+        # Status and time dashboard with view-only toggle
+        with form_section('Status and Time'), ui.row().classes('gap-4').style('align-items: flex-end;'):
+            helpers.render_status_progress(color_map=status_color_map)
+
         # View-only toggle state and element refs (populated by render_checklist_table)
         is_view_only = {'value': view_only}
         interactive_elements: list = []
