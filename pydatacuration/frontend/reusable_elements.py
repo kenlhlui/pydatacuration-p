@@ -86,3 +86,17 @@ def action_buttons(label: str, on_click) -> ui.button:
 
     """
     return ui.button(label, on_click=on_click).classes('pdc-btn')
+
+
+def dropdown_menu(label: str, options: list) -> ui.select:
+    """Create a standardized filter dropdown.
+
+    Args:
+        label (str): The text to display on the dropdown label.
+        options (list): The list of options for the dropdown.
+
+    """
+    with ui.element('div').style('flex: 1'):
+        ui.label(label).classes('pdc-form-label')
+        value = ui.select(options).classes('pdc-input').style('width: 100%;')
+        return value

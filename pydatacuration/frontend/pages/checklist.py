@@ -18,6 +18,8 @@ from pydatacuration.frontend.models.status_options import load_status_options
 
 # Import the reusable elements
 from pydatacuration.frontend.reusable_elements import action_buttons
+from pydatacuration.frontend.reusable_elements import dropdown_menu
+from pydatacuration.frontend.reusable_elements import form_section
 
 # Import reusable components
 from pydatacuration.frontend.reusable_elements import scroll_to_top_button
@@ -164,40 +166,11 @@ async def checklist_page(project_number: str, view_only: bool = False) -> None:
         ).classes('pdc-btn')
 
         # Filters Section
-        with ui.element('div').classes('pdc-form-section').style('width: 100%; margin-bottom: 20px;'):
-            ui.label('Filters').classes('pdc-form-section-title')
-
-            with ui.row().classes('gap-4').style('align-items: flex-end;'):
-                # Status filter
-                with ui.element('div').style('flex: 1'):
-                    ui.label('Filter by Status').classes('pdc-form-label')
-                    status_filter = (
-                        ui.select(
-                            options=status_options,
-                            value=None,
-                            with_input=False,
-                        )
-                        .classes('pdc-input')
-                        .style('width: 100%;')
-                    )
-
-                # Priority filter
-                with ui.element('div').style('flex: 1'):
-                    ui.label('Filter by Priority').classes('pdc-form-label')
-                    priority_filter = (
-                        ui.select(
-                            options=priority_options,
-                            value=None,
-                            with_input=False,
-                        )
-                        .classes('pdc-input')
-                        .style('width: 100%;')
-                    )
-
-                # Clear filters button
-                ui.button('Clear Filters', on_click=lambda: clear_filters()).classes(  # noqa: PLW0108
-                    'pdc-btn'
-                )
+        with form_section('Filters'), ui.row().classes('gap-4').style('align-items: flex-end;'):
+            status_filter = dropdown_menu('Filter by Status', status_options)
+            priority_filter = dropdown_menu('Filter by Priority', priority_options)
+            # Clear filters button
+            action_buttons('Clear Filters', lambda: clear_filters())  # noqa: PLW0108
 
         # Dicts populated by render_checklist_table for visibility-based filtering
         # item_rows: {item_id: (row_element, item)}
