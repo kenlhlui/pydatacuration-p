@@ -18,7 +18,6 @@ from pydatacuration.frontend.models.status_options import load_status_options
 
 # Import reusable components
 from pydatacuration.frontend.reusable_elements import scroll_to_top_button
-from pydatacuration.frontend.reusable_elements import view_only_button
 
 # Import styles and styled components
 from pydatacuration.frontend.styles import apply_pdc_styles
@@ -74,8 +73,6 @@ async def checklist_page(project_number: str, view_only: bool = False) -> None:
 
     # Load the scroll to top button (using reusable component)
     scroll_to_top_button()
-    if view_only:
-        view_only_button()
 
     with ui.column().classes('pdc-container'):
         # Logo
@@ -140,6 +137,29 @@ async def checklist_page(project_number: str, view_only: bool = False) -> None:
         #                 ui.label(f'{code}:').classes('pdc-status-code')
         #                 ui.label(f' {meaning}')
 
+        # View-only toggle state and element refs (populated by render_checklist_table)
+        is_view_only = {'value': view_only}
+        interactive_elements: list = []
+        timer_buttons: list = []
+
+        def toggle_view_only() -> None:
+            is_view_only['value'] = not is_view_only['value']
+            active = is_view_only['value']
+            toggle_btn.set_text('Edit Mode' if active else 'View Only')
+            for el in interactive_elements:
+                if active:
+                    el.props('readonly')
+                else:
+                    el.props(remove='readonly')
+            for btn in timer_buttons:
+                btn.set_visibility(not active)
+            action_buttons_div.set_visibility(not active)
+
+        toggle_btn = ui.button(
+            'Edit Mode' if view_only else 'View Only',
+            on_click=toggle_view_only,
+        ).classes('pdc-btn')
+
         # Filters Section
         with ui.element('div').classes('pdc-form-section').style('width: 100%; margin-bottom: 20px;'):
             ui.label('Filters').classes('pdc-form-section-title')
@@ -203,6 +223,8 @@ async def checklist_page(project_number: str, view_only: bool = False) -> None:
             item_rows=item_rows,
             section_header_rows=section_header_rows,
             view_only=view_only,
+            interactive_elements=interactive_elements,
+            timer_buttons=timer_buttons,
         )
 
         # Filtering is a pure visibility toggle — no re-render needed
@@ -230,20 +252,17 @@ async def checklist_page(project_number: str, view_only: bool = False) -> None:
         status_filter.on('update:model-value', apply_filters)
         priority_filter.on('update:model-value', apply_filters)
 
-        # Action Buttons
-        if not view_only:
-            with ui.element('div').classes('pdc-actions'):
-                ui.button(
-                    'Save Curation Log (Word)', on_click=lambda: NiceGUIHelper.export_word_button(db, dir_manager)
-                ).classes('pdc-btn')
-
-                ui.button('Calculate Time Spent', on_click=helpers.calculate_total_time).classes('pdc-btn')
-
-                ui.button('Export YAML', on_click=lambda: NiceGUIHelper.export_yaml_button(db, dir_manager)).classes(
-                    'pdc-btn'
-                )
-
-                ui.button('New Dataset', on_click=helpers.confirm_new_dataset).classes('pdc-btn')
+        # Action Buttons — always rendered so toggle_view_only can show/hide
+        with ui.element('div').classes('pdc-actions') as action_buttons_div:
+            ui.button(
+                'Save Curation Log (Word)', on_click=lambda: NiceGUIHelper.export_word_button(db, dir_manager)
+            ).classes('pdc-btn')
+            ui.button('Calculate Time Spent', on_click=helpers.calculate_total_time).classes('pdc-btn')
+            ui.button('Export YAML', on_click=lambda: NiceGUIHelper.export_yaml_button(db, dir_manager)).classes(
+                'pdc-btn'
+            )
+            ui.button('New Dataset', on_click=helpers.confirm_new_dataset).classes('pdc-btn')
+        action_buttons_div.set_visibility(not view_only)
 
 
 async def render_checklist_table(  # noqa: PLR0913, PLR0912, PLR0915, C901, PLR0917
@@ -257,6 +276,8 @@ async def render_checklist_table(  # noqa: PLR0913, PLR0912, PLR0915, C901, PLR0
     item_rows: dict | None = None,
     section_header_rows: dict | None = None,
     view_only: bool = False,
+    interactive_elements: list | None = None,
+    timer_buttons: list | None = None,
 ) -> None:
     """Render checklist table with exact styling.
 
@@ -430,8 +451,7 @@ async def render_checklist_table(  # noqa: PLR0913, PLR0912, PLR0915, C901, PLR0
                         if view_only:
                             time_input.props('readonly')
 
-                        # Single toggle timer button
-                        # Create a closure-safe callback
+                        # Single toggle timer button — always rendered, visibility toggled
                         def create_timer_callback(item_id: str, time_inp: ui.input) -> ui.button:
                             timer_btn = (
                                 ui.button(icon='play_arrow')
@@ -441,8 +461,13 @@ async def render_checklist_table(  # noqa: PLR0913, PLR0912, PLR0915, C901, PLR0
                             timer_btn.on('click', lambda: helpers.toggle_timer(item_id, time_inp, timer_btn))
                             return timer_btn
 
-                        if not view_only:
-                            create_timer_callback(item.id, time_input)
+                        t_btn = create_timer_callback(item.id, time_input)
+                        t_btn.set_visibility(not view_only)
+                        if timer_buttons is not None:
+                            timer_buttons.append(t_btn)
+
+                    if interactive_elements is not None:
+                        interactive_elements.extend([status_el, comments_input, time_input])
 
                 if item_rows is not None:
                     item_rows[item.id] = (item_row, item)
