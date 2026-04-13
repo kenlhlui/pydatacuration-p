@@ -143,8 +143,13 @@ async def checklist_page(project_number: str, view_only: bool = False) -> None:
         #                 ui.label(f' {meaning}')
 
         # Status and time dashboard with view-only toggle
-        with form_section('Status and Time'), ui.row().classes('gap-4').style('align-items: flex-end;'):
-            helpers.render_status_progress(color_map=status_color_map)
+        @ui.refreshable
+        def status_progress_ui() -> None:
+            with ui.row().classes('gap-4').style('align-items: flex-end;'):
+                helpers.render_status_progress(color_map=status_color_map)
+
+        with form_section('Status and Time'):
+            status_progress_ui()
 
         # View-only toggle state and element refs (populated by render_checklist_table)
         is_view_only = {'value': view_only}
@@ -228,7 +233,11 @@ async def checklist_page(project_number: str, view_only: bool = False) -> None:
             apply_filters()
 
         # Set after render — depends on item_rows/section_header_rows closures built during render
-        helpers.refresh_callback = apply_filters
+        def on_status_change() -> None:
+            apply_filters()
+            status_progress_ui.refresh()
+
+        helpers.refresh_callback = on_status_change
         status_filter.on('update:model-value', apply_filters)
         priority_filter.on('update:model-value', apply_filters)
 
