@@ -92,27 +92,46 @@ class NiceGUIHelper:
             time_spent_delta: timedelta = timedelta(minutes=minutes, seconds=seconds)
             self.db.update_checklist_item(item_id=item_id, time_spent=time_spent_delta)
             ui.notify(f'Time updated for {item_id}', type='positive', position='top-right', close_button=True)
+            if self.refresh_callback:
+                self.refresh_callback()
         else:
             ui.notify('Please enter time in MM:SS format', type='negative')
+
+    def render_status_progress(self, color_map: dict[str, tuple[str, str]] | None = None) -> None:
+        """Render circular progress indicators for each status count."""
+        status_counts = self.db.get_status_count()
+        total = sum(status_counts.values())
+
+        for status, count in status_counts.items():
+            label = status or 'No Status'
+            value = round((count / total * 100), 1) if total > 0 else 0
+            # color_map maps status label → (bg_color, text_color); fall back to 'primary'
+            color = color_map[label][0] if (color_map and label in color_map) else 'primary'
+            with ui.column().classes('flex-1 items-center gap-1'):
+                ui.circular_progress(value=value, min=0, max=100, size='120px', color=color)
+                ui.label(f'{label} ({count})').classes('text-sm text-center')
+
+    def get_total_time_str(self) -> str:
+        """Return total time spent across all checklist items as H:MM string."""
+        items = self.get_checklist_items()
+        total_seconds = 0
+        for item in items:
+            if item.time_spent:
+                try:
+                    parts = item.time_spent.split(':')
+                    total_seconds += int(parts[0]) * 60 + int(parts[1])
+                except (ValueError, IndexError):
+                    continue
+        hours = total_seconds // 3600
+        minutes = (total_seconds % 3600) // 60
+        seconds = total_seconds % 60
+        return f'{hours:02d}:{minutes:02d}:{seconds:02d}'
 
     def calculate_total_time(
         self,
     ) -> None:
         """Calculate total time spent."""
-        items = self.get_checklist_items()
-
-        total_minutes = 0
-        for item in items:
-            if item.time_spent:
-                try:
-                    parts = item.time_spent.split(':')
-                    total_minutes += int(parts[0]) * 60 + int(parts[1])
-                except (ValueError, IndexError):
-                    continue
-
-        hours = total_minutes // 60
-        minutes = total_minutes % 60
-        ui.notify(f'Total Time Spent: {hours}:{minutes:02d}', type='info', position='top')
+        ui.notify(f'Total Time Spent: {self.get_total_time_str()}', type='info', position='top')
 
     @staticmethod
     def validate_time_format(time_str: str) -> bool:
@@ -200,6 +219,8 @@ class NiceGUIHelper:
         del self.timers[item_id]
 
         ui.notify(f'Timer stopped for {item_id}: {time_str}', type='positive', position='top-right', close_button=True)
+        if self.refresh_callback:
+            self.refresh_callback()
 
     def toggle_timer(self, item_id: str, time_input: ui.input, button: ui.button) -> None:
         """Toggle timer start/stop for a checklist item.

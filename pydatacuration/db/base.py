@@ -10,6 +10,7 @@ from typing import Literal
 
 from sqlalchemy import ScalarResult
 from sqlmodel import SQLModel
+from sqlmodel import func
 from sqlmodel import inspect
 from sqlmodel import select
 from sqlmodel import text
@@ -384,3 +385,27 @@ class DatabaseBackend(ABC):  # noqa: PLR0904
                     logger.debug(f'Updated project_metadata timestamps for schema {self.schema_name}')
         except Exception as e:
             logger.error(f'Error updating project_metadata timestamps: {e}')
+
+    def get_status_count(self) -> dict[str | None, int]:
+        """Get the count of checklist items by status.
+
+        Args:
+            sqlmodel (type[SQLModel]): The SQLModel class representing the table.
+
+        Returns:
+            int: The number of rows in the table.
+        """
+        try:
+            with self.get_connection() as (session, _engine):
+                checklist_model = self.models.checklist()
+                status_counts = dict(
+                    session.exec(
+                        select(checklist_model.status, func.count(checklist_model.id)).group_by(checklist_model.status)
+                    ).all()
+                )
+                if status_counts:
+                    logger.debug(f'Status counts: {status_counts}')
+                    return status_counts
+        except Exception as e:
+            logger.error(f'Error getting status count: {e}')
+        return {}

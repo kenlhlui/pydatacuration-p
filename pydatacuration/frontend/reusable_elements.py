@@ -1,24 +1,29 @@
 """Reuseable form components for frontend."""
 
 import contextlib
+from collections.abc import Callable
 from collections.abc import Generator
 
 from nicegui import ui
 
 
 @contextlib.contextmanager
-def form_section(title: str) -> Generator[None, None, None]:
+def form_section(title: str, header_slot: Callable | None = None) -> Generator[None, None, None]:
     """Create a form section with a title.
 
     Args:
         title: The title of the form section.
+        header_slot: Optional callable rendered in the title row at the top-right.
 
     Yields:
         A NiceGUI element representing the form section.
 
     """
     with ui.element('div').classes('pdc-form-section'):
-        ui.label(title).classes('pdc-form-section-title')
+        with ui.row().classes('w-full justify-between items-center'):
+            ui.label(title).classes('pdc-form-section-title')
+            if header_slot:
+                header_slot()
         yield
 
 

@@ -79,6 +79,23 @@ async def checklist_page(project_number: str, view_only: bool = False) -> None:
     # Load the scroll to top button (using reusable component)
     scroll_to_top_button()
 
+    # Sticky view-only banner — outside pdc-container so fixed positioning works correctly
+    with (
+        ui.element('div')
+        .classes('warning-banner')
+        .style(
+            'position: fixed; top: 0; left: 0; right: 0; z-index: 1000; '
+            'border-radius: 0; margin: 0; display: flex; align-items: center; gap: 10px;'
+        ) as view_only_banner
+    ):
+        ui.label("🔒You're in view-only mode \u2014 changes are disabled.").style('flex: 1').classes(
+            'text-lg font-semibold'
+        )
+        ui.button('Edit', icon='edit', on_click=lambda: toggle_view_only()).props('flat dense').style(  # noqa: PLW0108
+            'color: #92400e;'
+        )
+    view_only_banner.set_visibility(view_only)
+
     with ui.column().classes('pdc-container'):
         # Logo
         ui.html(
@@ -150,7 +167,9 @@ async def checklist_page(project_number: str, view_only: bool = False) -> None:
         def toggle_view_only() -> None:
             is_view_only['value'] = not is_view_only['value']
             active = is_view_only['value']
-            toggle_btn.set_text('Edit Mode' if active else 'View Only')
+            toggle_btn.set_text('Edit' if active else 'View Only')
+            toggle_btn.props('icon=edit' if active else 'icon=lock')
+            view_only_banner.set_visibility(active)
             for el in interactive_elements:
                 if active:
                     el.props('readonly')
@@ -160,10 +179,30 @@ async def checklist_page(project_number: str, view_only: bool = False) -> None:
                 btn.set_visibility(not active)
             action_button_div.set_visibility(not active)
 
-        toggle_btn = ui.button(
-            'Edit Mode' if view_only else 'View Only',
-            on_click=toggle_view_only,
-        ).classes('pdc-btn')
+        # Status and time dashboard with view-only toggle
+        @ui.refreshable
+        def status_progress_ui() -> None:
+            with ui.row().classes('w-full items-end'):
+                helpers.render_status_progress(color_map=status_color_map)
+                with ui.column().classes('flex-1 items-center gap-1'):
+                    ui.label(helpers.get_total_time_str()).classes('text-lg font-bold')
+                    ui.label('Total Time Spent').classes('text-sm text-center')
+
+        _btn_ref: list = []
+
+        def _render_toggle_btn() -> None:
+            _btn_ref.append(
+                ui.button(
+                    'Edit' if view_only else 'View Only',
+                    icon='edit' if view_only else 'lock',
+                    on_click=toggle_view_only,
+                ).classes('pdc-btn')
+            )
+
+        with form_section('Status and Time Dashboard', header_slot=_render_toggle_btn):
+            status_progress_ui()
+
+        toggle_btn = _btn_ref[0]
 
         # Filters Section
         with form_section('Filters'), ui.row().classes('gap-4').style('align-items: flex-end;'):
@@ -224,7 +263,11 @@ async def checklist_page(project_number: str, view_only: bool = False) -> None:
             apply_filters()
 
         # Set after render — depends on item_rows/section_header_rows closures built during render
-        helpers.refresh_callback = apply_filters
+        def on_status_change() -> None:
+            apply_filters()
+            status_progress_ui.refresh()
+
+        helpers.refresh_callback = on_status_change
         status_filter.on('update:model-value', apply_filters)
         priority_filter.on('update:model-value', apply_filters)
 
