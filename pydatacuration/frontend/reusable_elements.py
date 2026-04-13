@@ -72,3 +72,16 @@ def scroll_to_top_button(text: str = '↑') -> None:
     """
     with ui.page_scroller(position='bottom-right', x_offset=20, y_offset=20):
         ui.button(text).classes('pdc-btn pdc-btn--lg')
+
+
+def view_only_button(text: str = 'View Only') -> None:
+    """Create a button that indicates the form is in view-only mode.
+
+        Default text is "View Only". Can be customized by passing a different string to the `text` parameter.
+
+    Args:
+        text (str): The text to display on the button.
+
+    """
+    with ui.page_scroller(position='top-right', x_offset=20, y_offset=20):
+        ui.button(text).classes('pdc-btn pdc-btn--lg pdc-btn--disabled').props('disabled')

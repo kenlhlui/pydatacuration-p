@@ -18,6 +18,7 @@ from pydatacuration.frontend.models.status_options import load_status_options
 
 # Import reusable components
 from pydatacuration.frontend.reusable_elements import scroll_to_top_button
+from pydatacuration.frontend.reusable_elements import view_only_button
 
 # Import styles and styled components
 from pydatacuration.frontend.styles import apply_pdc_styles
@@ -44,8 +45,13 @@ RES_DIR = Path(app_settings.res_dir)
 
 
 @ui.page('/checklist')
-async def checklist_page(project_number: str) -> None:
-    """Checklist page with exact styling match."""
+async def checklist_page(project_number: str, view_only: bool = False) -> None:
+    """Checklist page with exact styling match.
+
+    Args:
+        project_number (str): The project number to load data for.
+        view_only (bool): If True, disables all interactive elements for read-only viewing.
+    """
     apply_pdc_styles()
 
     # Initialize the db connection for this project number
@@ -68,6 +74,8 @@ async def checklist_page(project_number: str) -> None:
 
     # Load the scroll to top button (using reusable component)
     scroll_to_top_button()
+    if view_only:
+        view_only_button()
 
     with ui.column().classes('pdc-container'):
         # Logo
@@ -194,6 +202,7 @@ async def checklist_page(project_number: str) -> None:
             helpers=helpers,
             item_rows=item_rows,
             section_header_rows=section_header_rows,
+            view_only=view_only,
         )
 
         # Filtering is a pure visibility toggle — no re-render needed
@@ -222,18 +231,19 @@ async def checklist_page(project_number: str) -> None:
         priority_filter.on('update:model-value', apply_filters)
 
         # Action Buttons
-        with ui.element('div').classes('pdc-actions'):
-            ui.button(
-                'Save Curation Log (Word)', on_click=lambda: NiceGUIHelper.export_word_button(db, dir_manager)
-            ).classes('pdc-btn')
+        if not view_only:
+            with ui.element('div').classes('pdc-actions'):
+                ui.button(
+                    'Save Curation Log (Word)', on_click=lambda: NiceGUIHelper.export_word_button(db, dir_manager)
+                ).classes('pdc-btn')
 
-            ui.button('Calculate Time Spent', on_click=helpers.calculate_total_time).classes('pdc-btn')
+                ui.button('Calculate Time Spent', on_click=helpers.calculate_total_time).classes('pdc-btn')
 
-            ui.button('Export YAML', on_click=lambda: NiceGUIHelper.export_yaml_button(db, dir_manager)).classes(
-                'pdc-btn'
-            )
+                ui.button('Export YAML', on_click=lambda: NiceGUIHelper.export_yaml_button(db, dir_manager)).classes(
+                    'pdc-btn'
+                )
 
-            ui.button('New Dataset', on_click=helpers.confirm_new_dataset).classes('pdc-btn')
+                ui.button('New Dataset', on_click=helpers.confirm_new_dataset).classes('pdc-btn')
 
 
 async def render_checklist_table(  # noqa: PLR0913, PLR0912, PLR0915, C901, PLR0917
@@ -246,6 +256,7 @@ async def render_checklist_table(  # noqa: PLR0913, PLR0912, PLR0915, C901, PLR0
     helpers: NiceGUIHelper | None = None,
     item_rows: dict | None = None,
     section_header_rows: dict | None = None,
+    view_only: bool = False,
 ) -> None:
     """Render checklist table with exact styling.
 
@@ -375,7 +386,7 @@ async def render_checklist_table(  # noqa: PLR0913, PLR0912, PLR0915, C901, PLR0
                             ui.markdown(curator_check_item).classes('pdc-static-curator-check-item')
                     # Status
                     with ui.element('td'):
-                        create_status_select(
+                        status_el = create_status_select(
                             item.id,
                             status_options=status_options,
                             current_value=item.status or None,
@@ -385,12 +396,17 @@ async def render_checklist_table(  # noqa: PLR0913, PLR0912, PLR0915, C901, PLR0
                             ],
                             color_map=status_color_map,
                         )
+                        if view_only:
+                            status_el.props('readonly')
 
                     # Comments
                     with ui.element('td'):
-                        ui.textarea(value=item.comments or '', placeholder="Curator's comments...").classes(
-                            'pdc-comments-input'
-                        ).on(
+                        comments_input = ui.textarea(
+                            value=item.comments or '', placeholder="Curator's comments..."
+                        ).classes('pdc-comments-input')
+                        if view_only:
+                            comments_input.props('readonly')
+                        comments_input.on(
                             'change',
                             lambda e, iid=item.id: helpers.handle_comments_change(iid, e.sender.value),
                         )
@@ -411,6 +427,8 @@ async def render_checklist_table(  # noqa: PLR0913, PLR0912, PLR0915, C901, PLR0
                             .props('maxlength=5')
                             .style('flex: 1; min-width: 60px;')
                         )
+                        if view_only:
+                            time_input.props('readonly')
 
                         # Single toggle timer button
                         # Create a closure-safe callback
@@ -423,7 +441,8 @@ async def render_checklist_table(  # noqa: PLR0913, PLR0912, PLR0915, C901, PLR0
                             timer_btn.on('click', lambda: helpers.toggle_timer(item_id, time_inp, timer_btn))
                             return timer_btn
 
-                        create_timer_callback(item.id, time_input)
+                        if not view_only:
+                            create_timer_callback(item.id, time_input)
 
                 if item_rows is not None:
                     item_rows[item.id] = (item_row, item)
