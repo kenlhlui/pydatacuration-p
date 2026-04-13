@@ -167,7 +167,7 @@ async def checklist_page(project_number: str, view_only: bool = False) -> None:
                 helpers.render_status_progress(color_map=status_color_map)
                 with ui.column().classes('items-center gap-1'):
                     ui.label(helpers.get_total_time_str()).classes('text-lg font-bold')
-                    ui.label('Total Time (HH:MM)').classes('text-sm text-center')
+                    ui.label('Total Time Spent').classes('text-sm text-center')
 
         _btn_ref: list = []
 

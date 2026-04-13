@@ -114,17 +114,18 @@ class NiceGUIHelper:
     def get_total_time_str(self) -> str:
         """Return total time spent across all checklist items as H:MM string."""
         items = self.get_checklist_items()
-        total_minutes = 0
+        total_seconds = 0
         for item in items:
             if item.time_spent:
                 try:
                     parts = item.time_spent.split(':')
-                    total_minutes += int(parts[0]) * 60 + int(parts[1])
+                    total_seconds += int(parts[0]) * 60 + int(parts[1])
                 except (ValueError, IndexError):
                     continue
-        hours = total_minutes // 60
-        minutes = total_minutes % 60
-        return f'{hours}:{minutes:02d}'
+        hours = total_seconds // 3600
+        minutes = (total_seconds % 3600) // 60
+        seconds = total_seconds % 60
+        return f'{hours:02d}:{minutes:02d}:{seconds:02d}'
 
     def calculate_total_time(
         self,
