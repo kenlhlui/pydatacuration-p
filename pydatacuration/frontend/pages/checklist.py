@@ -16,6 +16,9 @@ from pydatacuration.db import get_database
 from pydatacuration.frontend.helpers import NiceGUIHelper
 from pydatacuration.frontend.models.status_options import load_status_options
 
+# Import the reusable elements
+from pydatacuration.frontend.reusable_elements import action_buttons
+
 # Import reusable components
 from pydatacuration.frontend.reusable_elements import scroll_to_top_button
 
@@ -254,14 +257,10 @@ async def checklist_page(project_number: str, view_only: bool = False) -> None:
 
         # Action Buttons — always rendered so toggle_view_only can show/hide
         with ui.element('div').classes('pdc-actions') as action_buttons_div:
-            ui.button(
-                'Save Curation Log (Word)', on_click=lambda: NiceGUIHelper.export_word_button(db, dir_manager)
-            ).classes('pdc-btn')
-            ui.button('Calculate Time Spent', on_click=helpers.calculate_total_time).classes('pdc-btn')
-            ui.button('Export YAML', on_click=lambda: NiceGUIHelper.export_yaml_button(db, dir_manager)).classes(
-                'pdc-btn'
-            )
-            ui.button('New Dataset', on_click=helpers.confirm_new_dataset).classes('pdc-btn')
+            action_buttons('Save Curation Log (Word)', lambda: NiceGUIHelper.export_word_button(db, dir_manager))
+            action_buttons('Calculate Time Spent', lambda: helpers.calculate_total_time)
+            action_buttons('Export YAML', lambda: NiceGUIHelper.export_yaml_button(db, dir_manager))
+            action_buttons('New Dataset', helpers.confirm_new_dataset)
         action_buttons_div.set_visibility(not view_only)
 
 

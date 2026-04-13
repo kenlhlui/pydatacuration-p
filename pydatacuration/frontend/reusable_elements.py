@@ -72,3 +72,17 @@ def scroll_to_top_button(text: str = '↑') -> None:
     """
     with ui.page_scroller(position='bottom-right', x_offset=20, y_offset=20):
         ui.button(text).classes('pdc-btn pdc-btn--lg')
+
+
+def action_buttons(label: str, on_click) -> ui.button:
+    """Create a standardized action button.
+
+    Args:
+        label (str): The text to display on the button.
+        on_click: The callback function to execute when the button is clicked.
+
+    Returns:
+        ui.button: The created button component.
+
+    """
+    return ui.button(label, on_click=on_click).classes('pdc-btn')
