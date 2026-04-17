@@ -18,13 +18,14 @@ checklist:
       **History of previous deposits:** Has the person submitting the dataset had previous curation reviews, or have they deposited other datasets in U of T Dataverse?
     instructions: |
       * This item is just informational to give an idea of what we might be dealing with in terms of experience with the system and experience with the curation review and feedback process previously  
-      * An automated check will display if the person who submitted for review has gone through the curation review process before with any other dataset  
-        * Can do a spot check on the tracking sheet to get an overview of the types of deposit issues that have occurred in previous deposits  
       * Refer to ‘Dataset Path’ in the dataset information box (above), if the dataset is part of a collection that indicates a research group, can also spot check previous deposits from that group on the curation review tracking sheet   
-      * TEMPORARY: A secondary automated check identifies any other datasets where the submitter is listed as a “Depositor” and displays them to the reviewer. This provides additional context about the submitter’s experience with Borealis, especially in cases where no curation review history is available.  
+      * An automated check identifies any other datasets where the submitter is listed as a “Depositor” and displays them to the reviewer. This provides additional context about the submitter’s experience with Borealis, especially in cases where no curation review history is available.  
         * The person who creates the deposit is not always the same person who populates the metadata, files, etc  
       * Just a reminder that this is not always a comprehensive reflection of experience  
-        * The depositor may have also worked on deposits where they do not have this role assigned and the ‘Depositor’ field can also be manually changed
+        * The depositor may have also worked on deposits where they do not have this role assigned and the ‘Depositor’ field can also be manually changed  
+      * PLACE HOLDER: IGNORE THE BELOW NOW  
+        * An automated check will display if the person who submitted for review has gone through the curation review process before with any other dataset  
+          * Can do a spot check on the tracking sheet to get an overview of the types of deposit issues that have occurred in previous deposits
     priority: "info"
     section: "1. Structure of deposit"
     automated_check_ids: ["depositor_history"]
