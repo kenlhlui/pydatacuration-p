@@ -396,7 +396,7 @@ checklist:
     action: "**Restricted file listing:** Are there any restricted files in the deposited dataset?"
     instructions: |
       - Automated check will list any files that have restricted access
-    priority: "required"
+    priority: "info"
     section: "5.0 Sensitive Data and Intellectual Property (IP)"
     automated_check_ids: ["restricted_files"]
     curator_check_item: "File names, documentation, metadata description/notes/access fields"
