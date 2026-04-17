@@ -86,7 +86,7 @@ checklist:
       * Automated check will identify files with uncommon formats  
         * As per common file formats list  
       * Note any uncommon formats that may benefit from an additional open format file format (if appropriate)   
-        * E.g. a **.wpd** file may benefit from an additional file in **.pdf** format for preservation purposes  
+        * e.g. a **.wpd** file may benefit from an additional file in **.pdf** format for preservation purposes  
       * For any files with uncommon formats, check if the deposit provides any information or software needed to open or work with the file  
         * Check Metadata fields:  
           * In the ‘Metadata’ tab, ‘Software’:    
