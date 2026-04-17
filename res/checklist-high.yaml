@@ -323,6 +323,7 @@ checklist:
   - id: "4.9"
     action: "**Related Publication:** Is this dataset linked to a publication, or does the title/description indicate that the dataset is *replication*, *background*, or *supporting* data for a publication?"
     instructions: |
+      * Found under ‘Metadata’ tab
       * If the publication is listed in ‘Related Publication’ field:  
         * Is the appropriate citation information present (e.g. title, author, date, URL/PID)  
           * Note there is no recommended citation standard, but common elements should be included  
@@ -353,6 +354,7 @@ checklist:
   - id: "4.10"
     action: "**Related Dataset:** Is this dataset linked to other datasets, or does the title/description indicate that the dataset is related to other datasets?"
     instructions: |
+      * Found under ‘Metadata’ tab
       * ‘Related Dataset’ field should be used for linkages to related data outputs or projects, both within or external to Borealis  
         * This is open to interpretation and may include datasets from the same project, or datasets from other projects that may have a connection  
         * Note that third party data used in project should be linked in ‘Data Source’ (see <u>4.11</u>)  
