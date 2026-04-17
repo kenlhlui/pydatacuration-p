@@ -45,7 +45,7 @@ checklist:
       * Mark ‘Not Applicable’ if dataset deposited directly in institutional collection   
         * Can also spot check dataset relationship field to see if there appears to be another dataset or collection that should be considered for this deposit
 
-    priority: "info"
+    priority: "recommended"
     section: "1. Structure of deposit"
     curator_check_item: |
       - Collection name
