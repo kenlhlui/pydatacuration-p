@@ -212,7 +212,7 @@ checklist:
         - Title
         - Description
         - Subject
-        - Author name & affiliation
+        - Author
     check_type: "Manual"
 
   - id: "4.3"
