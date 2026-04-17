@@ -74,7 +74,7 @@ checklist:
     action: "**Special characters**: Do file names include special characters? i.e. >:\"/\\|?*,@$~)"
     instructions: |
       * Review special character inclusion, note any issues that may cause errors in opening or compiling files   
-      * Note that some of these errors would be caught in 2.1 (special characters may be the reason behind a file opening error, e.g. \~ prefix for **.doc** files)
+      * Note that some of these errors would be caught in <u>2.1</u> (special characters may be the reason behind a file opening error, e.g. \~ prefix for **.doc** files)
     priority: "recommended"
     section: "2. Files"
     automated_check_ids: ["filename_special_chars"]
