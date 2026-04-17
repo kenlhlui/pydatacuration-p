@@ -382,7 +382,7 @@ checklist:
         * If multiple sources, ensure each citation is separate and not in one long text string   
           * Note: must check ‘Citation Metadata’ under ‘Metadata’ tab \- sources entries will appear separated by “;” (e.g. Source1; Source2)  
       * Note that this information should also be included in the ‘Description’ field (see <u>4.7</u>)
-    priority: "required"
+    priority: "recommended"
     section: "4. Metadata"
     curator_check_item: |
       * Data Source field  
