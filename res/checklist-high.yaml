@@ -354,7 +354,7 @@ checklist:
     instructions: |
       * ‘Related Dataset’ field should be used for linkages to related data outputs or projects, both within or external to Borealis  
         * This is open to interpretation and may include datasets from the same project, or datasets from other projects that may have a connection  
-        * Note that third party data used in project should be linked in ‘Data Source’ (see 4.11)  
+        * Note that third party data used in project should be linked in ‘Data Source’ (see <u>4.11</u>)  
       * If there is a dataset listed in ‘Related Dataset’ field:  
         * Is the appropriate citation information present (e.g. title, author, date, link/PID)  
         * Does the link or persistent identifier work and link to the correct dataset  
