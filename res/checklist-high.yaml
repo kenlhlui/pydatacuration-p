@@ -203,7 +203,7 @@ checklist:
           * Placeholders (e.g. TBD, coming soon, etc.)  
           * Incorrectly filled data (e.g. placing the author's name in the title)  
           * Blank entries  
-          * Missing information
+          * Missing information (e.g. no affiliation listed)
 
     priority: "required"
     section: "4. Metadata"
@@ -212,11 +212,11 @@ checklist:
         - Title
         - Description
         - Subject
-        - Author
+        - Author name & affiliation
     check_type: "Manual"
 
   - id: "4.3"
-    action: "**Author affiliation:** Is at least one author affiliated with the University of Toronto?"
+    action: "**U of T Author:** Is at least one author affiliated with the University of Toronto?"
     instructions: |
       * Tool will check that either ‘uoft’, ‘u of t’ or ‘university of toronto’ is contained in the Author Affiliation field (non-case sensitive)  
       * Also review any description to see if research is noted as under an organization other than U of T (e.g. description says ‘project for UHN’)
@@ -304,7 +304,7 @@ checklist:
   - id: "4.8"
     action: "**Keywords**: Are appropriate keywords included with the dataset?"
     instructions: |
-      * If keywords are present, Curator checks:  
+      * If keywords are present (found number ‘Metadata’ tab), Curator checks:  
         * Formatting (e.g. one keyword per entry, spaces between words, etc.)  
         * Appropriate choice for the dataset description and contents (e.g. ‘acoustic emission sensor’ and ‘physics’, instead of just ‘physics’)  
       * If keywords are absent or limited, Curator recommends:  
