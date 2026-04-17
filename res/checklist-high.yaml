@@ -471,9 +471,9 @@ checklist:
     check_type: "Manual"
 
   - id: "5.4"
-    action: "**Research Ethics Board (REB) approval:** If data sensitivity issues for human or animal data were flagged in item <u5.2</u>, does the depositor have Research Ethics Board (REB) approval to deposit and/or share the dataset?"
+    action: "**Research Ethics Board (REB) approval:** If data sensitivity issues for human or animal data were flagged in item <u>5.2</u>, does the depositor have Research Ethics Board (REB) approval to deposit and/or share the dataset?"
     instructions: |
-      * If no REB approval appears to be needed for the deposit, mark ‘Pass’  
+      * If no REB approval appears to be needed for the deposit, mark ‘Not Applicable’  
       * If REB approval may be needed, this will require communication with the depositor to verify if the data can be deposited (unless a blank template consent form is included in the file list). Things to to check with may include verifying:  
         * Ethics protocol and consent documentation indicates that the data:  
           * Can be deposited in a repository   
