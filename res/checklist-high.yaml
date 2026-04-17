@@ -509,7 +509,7 @@ checklist:
         * Note: Licensing applies at the dataset-level, not at the file-level. If the depositor requires different licenses for specific files, explain that the files must be deposited into separate datasets.  
       * For deposits containing restricted files, recommend using custom terms instead of standard licenses.  
         *  Note restricted files cannot have a CC license assigned \- if any file is restricted and has a CC license, curator should note contradiction and require researcher to modify license  
-      * If a for license, ‘Custom Dataset Terms’ is used, review contents to ensure it feels appropriate  
+      * If a ‘Custom Dataset Terms’ is used, review contents to ensure it feels appropriate  
         * Ensure field is not blank or that placeholder text is not used to skip license decisions at the start of the deposit  
           * Default blank text reads: ‘This dataset is made available without information on how it can be used. You should communicate with the Contact(s) specified before use’  
         * Appropriate custom license may include something like:  
