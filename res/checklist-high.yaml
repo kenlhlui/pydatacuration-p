@@ -397,7 +397,7 @@ checklist:
     instructions: |
       - Automated check will list any files that have restricted access
     priority: "info"
-    section: "5.0 Sensitive Data and Intellectual Property (IP)"
+    section: "5. Sensitive Data and Intellectual Property (IP)"
     automated_check_ids: ["restricted_files"]
     curator_check_item: "File names, documentation, metadata description/notes/access fields"
     check_type: "Fully-automated"
@@ -416,7 +416,7 @@ checklist:
           * e.g. Please use or provide email used for your Borealis account when sending the Data Access Agreement
 
     priority: "required"
-    section: "5.0 Sensitive Data and Intellectual Property (IP)"
+    section: "5. Sensitive Data and Intellectual Property (IP)"
     curator_check_item: |
       - Restricted files status 
       - Terms of Access for Restricted files field
@@ -456,7 +456,7 @@ checklist:
       * Curator to flag any issues, and also note anything that needs to be checked with depositor
 
     priority: "required"
-    section: "5.0 Sensitive Data and Intellectual Property (IP)"
+    section: "5. Sensitive Data and Intellectual Property (IP)"
     curator_check_item: |
       - File names
       - File contents
@@ -479,7 +479,7 @@ checklist:
         * Ensure retention period is noted if protocol/consent made a commitment to a specific timeframe (note any public data cannot have a timeframe as we cannot track who has downloaded)
 
     priority: "required"
-    section: "5.0 Sensitive Data and Intellectual Property (IP)"
+    section: "5. Sensitive Data and Intellectual Property (IP)"
     curator_check_item: |
       - Communication with depositor
       - REB approval documentation
@@ -493,7 +493,7 @@ checklist:
       * If the dataset is comprised of data from other sources, check to see if there are conflicting licenses  
       * If files do not seem to be the IP of the depositor (e.g. data reports from a corporation, data created by another researcher, etc.) may need to add note and verify if depositor has permission to deposit
     priority: "required"
-    section: "5.0 Sensitive Data and Intellectual Property (IP)"
+    section: "5. Sensitive Data and Intellectual Property (IP)"
     curator_check_item: |
       - Description 
       - Documentation
@@ -516,7 +516,7 @@ checklist:
           * ‘Data is restricted for use by faculty, students, and staff of University of Toronto and subscribing institutions, for academic research and teaching purposes only’   
           * ‘Public files are CC0 1.0, restricted files may be are subject to conditions outlined in the Data Sharing Agreement and terms of access for the files’
     priority: "required"
-    section: "5.0 Sensitive Data and Intellectual Property (IP)"
+    section: "5. Sensitive Data and Intellectual Property (IP)"
     automated_check_ids: ["termsOfUse", "license"]
     curator_check_item: |
       - License field
