@@ -203,7 +203,7 @@ checklist:
           * Placeholders (e.g. TBD, coming soon, etc.)  
           * Incorrectly filled data (e.g. placing the author's name in the title)  
           * Blank entries  
-          * Missing information (e.g. no affiliation listed)
+          * Missing information
 
     priority: "required"
     section: "4. Metadata"
