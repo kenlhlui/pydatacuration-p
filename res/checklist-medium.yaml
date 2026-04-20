@@ -14,7 +14,8 @@ checklist_metadata:
 
 checklist:
   - id: "1.1"
-    action: "**History of previous deposits:** Has the person submitting the dataset had previous curation reviews, or have they deposited other datasets in U of T Dataverse?"
+    action: |
+      **History of previous deposits:** Has the person submitting the dataset had previous curation reviews, or have they deposited other datasets in U of T Dataverse?
     instructions: |
       * This item is just informational to give an idea of what we might be dealing with in terms of experience with the system and experience with the curation review and feedback process previously  
       * Refer to ‘Dataset Path’ in the dataset information box (above), if the dataset is part of a collection that indicates a research group, can also spot check previous deposits from that group on the curation review tracking sheet   
@@ -27,8 +28,8 @@ checklist:
           * Can do a spot check on the tracking sheet to get an overview of the types of deposit issues that have occurred in previous deposits
     priority: "info"
     section: "1. Structure of deposit"
-    automated_check_ids: ["author_dataverse_history"]
-    curator_check_item: "Author metadata, dataverse collection history"
+    automated_check_ids: ["depositor_history"]
+    # curator_check_item: "Author metadata, dataverse collection history"
     check_type: "Fully-automated"
 
   - id: "1.2"
