@@ -80,6 +80,8 @@ class NiceGUIHelper:  # noqa: PLR0904
         """Handle comments change."""
         self.db.update_checklist_item(item_id=item_id, comments=new_comments)
         ui.notify(f'Comments updated for {item_id}', type='positive', position='top-right', close_button=True)
+        if self.refresh_callback:
+            self.refresh_callback()
 
     def handle_time_change(self, item_id: str, time_spent_input: str) -> None:
         """Handle time change with validation."""
