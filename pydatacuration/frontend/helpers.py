@@ -26,7 +26,7 @@ from pydatacuration.utils.directory_manager import DirectoryManager
 Checklist: type[SQLModel] = DBModels('_type_hints_').checklist()
 
 
-class NiceGUIHelper:
+class NiceGUIHelper:  # noqa: PLR0904
     """Helper class for NiceGUI components."""
 
     def __init__(self, db: DatabaseBackend, project_number: str) -> None:
@@ -111,7 +111,16 @@ class NiceGUIHelper:
                 ui.circular_progress(value=value, min=0, max=100, size='120px', color=color)
                 ui.label(f'{label} ({count})').classes('text-sm text-center')
 
-    def get_time_spent_input_count(self) -> str:
+    def render_comment_input_counter(self) -> None:
+        """Render comment input counter."""
+        comment_input_count = self.db.get_comment_input_count()
+        total_items = len(self.get_checklist_items())
+        comment_input_counter = f'{comment_input_count}/{total_items}' if total_items > 0 else '0/0'
+        with ui.column().classes('flex-1 items-center gap-1'):
+            ui.label(f'{comment_input_counter}').classes('text-5xl font-bold text-center w-full')
+            ui.label('Comments input').classes('text-sm text-center')
+
+    def _get_time_spent_input_count(self) -> str:
         """Get count of checklist items that have time spent input.
 
         Return:
