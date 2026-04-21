@@ -111,6 +111,19 @@ class NiceGUIHelper:
                 ui.circular_progress(value=value, min=0, max=100, size='120px', color=color)
                 ui.label(f'{label} ({count})').classes('text-sm text-center')
 
+    def get_time_spent_input_count(self) -> str:
+        """Get count of checklist items that have time spent input.
+
+        Return:
+            str: A string in the format "X/Y" where X is the count of items with time spent input and Y is the total number of items.
+
+        """  # noqa: E501
+        time_spent_count = self.db.get_time_spent_input_count()
+        items = self.get_checklist_items()
+
+        counter = f'{time_spent_count}/{len(items)}' if items else '0/0'
+        return counter
+
     def get_total_time_str(self) -> str:
         """Return total time spent across all checklist items as H:MM string."""
         items = self.get_checklist_items()
