@@ -186,7 +186,8 @@ async def checklist_page(project_number: str, view_only: bool = False) -> None:
                 helpers.render_status_progress(color_map=status_color_map)
                 helpers.render_comment_input_counter()
                 with ui.column().classes('flex-1 items-center gap-1'):
-                    ui.label(helpers.get_total_time_str()).classes('text-5xl font-bold text-center w-full')
+                    with ui.element('div').classes('flex items-center justify-center').style('height: 120px'):
+                        ui.label(helpers.get_total_time_str()).classes('text-5xl font-bold text-center w-full')
                     ui.label(f'Total Time Spent ({helpers._get_time_spent_input_count()})').classes(
                         'text-sm text-center'
                     )
