@@ -117,7 +117,8 @@ class NiceGUIHelper:  # noqa: PLR0904
         total_items = len(self.get_checklist_items())
         comment_input_counter = f'{comment_input_count}/{total_items}' if total_items > 0 else '0/0'
         with ui.column().classes('flex-1 items-center gap-1'):
-            ui.label(f'{comment_input_counter}').classes('text-5xl font-bold text-center w-full')
+            with ui.element('div').classes('flex items-center justify-center').style('height: 120px'):
+                ui.label(f'{comment_input_counter}').classes('text-5xl font-bold text-center w-full')
             ui.label('Comments input').classes('text-sm text-center')
 
     def _get_time_spent_input_count(self) -> str:
