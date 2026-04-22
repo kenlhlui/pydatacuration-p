@@ -14,6 +14,7 @@ from pydatacuration.checker.metadata_checker import MetadataChecker
 from pydatacuration.checker.services.tree_info import get_tree_info
 from pydatacuration.checker.spell_checker import SpellCheckerCustomized
 from pydatacuration.checksum import Checksum
+from pydatacuration.connector.dv_calls import DvCalls
 from pydatacuration.db.base import DatabaseBackend
 from pydatacuration.httpx_client import HTTPXClient
 from pydatacuration.utils.unzip import Unzipper
@@ -63,6 +64,7 @@ class Checker:
         self.metadata_checker = MetadataChecker(self.workdir.joinpath('dataset', 'metadata', 'ds_metadata.json'))
         self.spell_checker = SpellCheckerCustomized()
         self.httpx_client = HTTPXClient(self.base_url, self.api_token)
+        self.dv_calls = DvCalls(self.httpx_client)
         self.file_list_metadata = self._gen_file_list_metadata()
         self.common_file_format_tuple = self._read_common_file_format()
 
@@ -490,23 +492,13 @@ class Checker:
         """Check the path of the dataset in the dataverse Repository."""
         ds_version_id = self.ds_metadata.get('data', {}).get('latestVersion', {}).get('id')
         if ds_version_id:
-            # See https://github.com/IQSS/dataverse/issues/2038 for fq field;
-            # Also check the source code the the available fq fields https://github.com/IQSS/dataverse/blob/develop/src/main/java/edu/harvard/iq/dataverse/search/SearchFields.java
-            # Use 'datasetVersionId' here; in ds_metadata it is data.latestVersion.id
-            # Don't mess up with data.id or data.latestVersion.datasetId which are the same and is the persistent id in the dataverse system  # noqa: E501
-            response = self.httpx_client.sync_get(
-                f'/api/search?q=*&type=dataset&per_page=1&fq=datasetVersionId:{ds_version_id}'
-            )  # noqa: E501
-            if response and response.json():
-                # Get the name_of_dataverse from the response
-                name_of_dataverse = response.json().get('data', {}).get('items', [{}])[0].get('name_of_dataverse', None)  # noqa: E501
-
+            response_json = self.dv_calls.get_ds_search_record(ds_version_id)
+            if response_json:
                 # Get the path of the dataverse from the response
                 identifier_of_dataverse = (
-                    response.json().get('data', {}).get('items', [{}])[0].get('identifier_of_dataverse', None)
+                    response_json.get('data', {}).get('items', [{}])[0].get('identifier_of_dataverse', None)
                 )  # noqa: E501
                 tree_info = get_tree_info(identifier_of_dataverse, self.dv_tree)
-                logger.debug(f'Tree info of the dataset in the dataverse repository: {tree_info}')
                 path: str | None = tree_info.get('path', '')
                 dataset_path = ''  # Placeholder to prevent error
                 if path:
@@ -518,7 +510,6 @@ class Checker:
 
                 return dataset_path
         return None
-        # TODO: Add error handling for the case when the response is None or empty; or HTTP error
 
     def check_restricted_files(self) -> None:
         """Check for restricted files."""
