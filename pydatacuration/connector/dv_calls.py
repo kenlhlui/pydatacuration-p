@@ -35,3 +35,30 @@ class DvCalls:
         if response and response.json():
             return response.json()
         return {}
+
+    def get_depositor_record(self, depositor: str, collection_alias: str | None = None) -> dict:
+        """Get the dataset search record for a given depositor.
+
+        Args:
+            depositor (str): The depositor's identifier (e.g., email).
+            collection_alias (str | None): The alias of the collection to search in.
+
+        Returns:
+            dict: The dataset search record for the depositor or an empty dictionary if not found.
+        """
+        # Check if the depositor has record by search API
+        # See https://github.com/IQSS/dataverse/issues/2038 for fq field;
+        # Note that fq supports searching the fields of the database schema
+        # i.e. The fields in the Native JSON export of a dataset
+        # The schema can be found inside the .tsv files for each metadata block: https://github.com/IQSS/dataverse/tree/master/scripts/api/data/metadatablocks
+        endpoint = f'/api/search?q=*&type=dataset&per_page=1000&fq=depositor:"{depositor}"'
+
+        if collection_alias:  # Only check the specified collection
+            endpoint = f'{endpoint}&subtree={collection_alias}'
+
+        response = self.client.sync_get(endpoint)
+
+        if response and response.json():
+            return response.json()
+
+        return {}

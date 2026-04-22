@@ -440,37 +440,21 @@ class Checker:
         query_string = 'data.latestVersion.metadataBlocks.citation.fields[?typeName==`depositor`].value|[0]'  # noqa: E501
         depositor: str | None = jmespath.search(query_string, self.ds_metadata)
 
-        if isinstance(depositor, str) and depositor.strip():  # Check if depositor is a non-empty string
-            # Check if the depositor has record by search API
-            # See https://github.com/IQSS/dataverse/issues/2038 for fq field;
-            # Note that fq supports searching the fields of the database schema
-            # i.e. The fields in the Native JSON export of a dataset
-            # The schema can be found inside the .tsv files for each metadata block: https://github.com/IQSS/dataverse/tree/master/scripts/api/data/metadatablocks
-            if self.collection_alias:  # Only check the specified collection
-                response = self.httpx_client.sync_get(
-                    f'/api/search?q=*&type=dataset&per_page=1000&subtree={self.collection_alias}&fq=depositor:"{depositor}"'
-                )  # noqa: E501
-            else:
-                # If no collection_alias is provided, search in all dataverses
-                response = self.httpx_client.sync_get(
-                    f'/api/search?q=*&type=dataset&per_page=1000&fq=depositor:"{depositor}"'
-                )  # noqa: E501
-            if response and response.json():
-                dataset_publish_history = (
-                    jmespath.search(
-                        'data.items[*].{name: name, url: url, name_of_dataverse: name_of_dataverse}',
-                        response.json(),
-                    )
-                    or []
+        if isinstance(depositor, str) and depositor.strip():
+            response_json = self.dv_calls.get_depositor_record(depositor, self.collection_alias)
+            dataset_publish_history = (
+                jmespath.search(
+                    'data.items[*].{name: name, url: url, name_of_dataverse: name_of_dataverse}',
+                    response_json,
                 )
+                or []
+            )
 
-                # Extend the string to the depositor_history list
-                depositor_history.extend(
-                    f'{depositor}: {dataset.get("name")} ({dataset.get("url")}) - Dataverse Name: {dataset.get("name_of_dataverse")}'
-                    for dataset in dataset_publish_history
-                )
-
-            # TODO: Add error handling for the case when the response is None or empty; or HTTP error
+            # Extend the string to the depositor_history list
+            depositor_history.extend(
+                f'{depositor}: {dataset.get("name")} ({dataset.get("url")}) - Dataverse Name: {dataset.get("name_of_dataverse")}'  # noqa: E501
+                for dataset in dataset_publish_history
+            )
 
             try:
                 check_result_list_schema = self.sqlmodels.check_results()
