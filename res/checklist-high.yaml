@@ -304,7 +304,7 @@ checklist:
   - id: "4.8"
     action: "**Keywords**: Are appropriate keywords included with the dataset?"
     instructions: |
-      * If keywords are present (found number ‘Metadata’ tab), Curator checks:  
+      * If keywords are present (found under ‘Metadata’ tab), Curator checks:  
         * Formatting (e.g. one keyword per entry, spaces between words, etc.)  
         * Appropriate choice for the dataset description and contents (e.g. ‘acoustic emission sensor’ and ‘physics’, instead of just ‘physics’)  
       * If keywords are absent or limited, Curator recommends:  
