@@ -94,14 +94,15 @@ async def render_project_table(
                             # Project Number
                             with ui.element('td'):
                                 if mode == 'resume':
-                                    with (
-                                        ui.element('a')
-                                        .props(f'href="/checklist?project_number={quote(schema["project_number"])}"')
-                                        .style('color: #3498db; text-decoration: none; font-weight: 600;')
-                                    ):
-                                        ui.label(f'📋 {schema["project_number"]}')
-                                else:
-                                    ui.label(f'📋 {schema["project_number"]}').style('font-weight: 600;')
+                                    href = ui.element('a').props(
+                                        f'href="/checklist?project_number={quote(schema["project_number"])}"'
+                                    )
+                                if mode == 'delete':
+                                    href = ui.element('a').props(
+                                        f'href="/checklist?project_number={quote(schema["project_number"])}&view_only=true"'
+                                    )
+                                with href.style('color: #3498db; text-decoration: none; font-weight: 600;'):
+                                    ui.label(f'📋 {schema["project_number"]}')
 
                             # Dataset Metadata
                             with ui.element('td'):
