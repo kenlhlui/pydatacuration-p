@@ -1,23 +1,334 @@
 ---
 checklist_metadata:
   name: "U of T Dataverse Curation Checklist - Medium level"
-  version: "0.1"
+  alias: "medium-level checklist"
+  version: "20260420"
   description: "This checklist is designed to guide curators through the review process for datasets deposited in U of T Dataverse. It includes a combination of automated checks and manual review items to ensure that datasets meet the necessary standards for accessibility, documentation, metadata quality, and ethical considerations."
   created_by:
     - "Ken Lui"
     - "Dylanne Dearborn"
     - "Jasmine Lefresne"
     - "U of T Libraries Research Data Management Team"
-  last_updated: 2026-03-20
+  last_updated: 2026-04-20
   status: "draft"
 
 checklist:
   - id: "1.1"
-    action: "Has the depositor (or their research group) previously created or submitted to a dataverse collection ?"
+    action: |
+      **History of previous deposits:** Has the person submitting the dataset had previous curation reviews, or have they deposited other datasets in U of T Dataverse?
     instructions: |
-      - Confirm whether the listed dataverse collection refers to the same researcher/author
+      * This item is just informational to give an idea of what we might be dealing with in terms of experience with the system and experience with the curation review and feedback process previously  
+      * Refer to ‘Dataset Path’ in the dataset information box (above), if the dataset is part of a collection that indicates a research group, can also spot check previous deposits from that group on the curation review tracking sheet   
+      * An automated check identifies any other datasets where the submitter is listed as a “Depositor” and displays them to the reviewer. This provides additional context about the submitter’s experience with Borealis, especially in cases where no curation review history is available.  
+        * The person who creates the deposit is not always the same person who populates the metadata, files, etc  
+      * Just a reminder that this is not always a comprehensive reflection of experience  
+        * The depositor may have also worked on deposits where they do not have this role assigned and the ‘Depositor’ field can also be manually changed  
+      * PLACE HOLDER: IGNORE THE BELOW NOW  
+        * An automated check will display if the person who submitted for review has gone through the curation review process before with any other dataset  
+          * Can do a spot check on the tracking sheet to get an overview of the types of deposit issues that have occurred in previous deposits
     priority: "info"
     section: "1. Structure of deposit"
-    automated_check_ids: ["author_dataverse_history"]
-    curator_check_item: "Author metadata, dataverse collection history"
+    automated_check_ids: ["depositor_history"]
+    # curator_check_item: "Author metadata, dataverse collection history"
     check_type: "Fully-automated"
+
+  - id: "1.2"
+    action: "**Collection structure:** If the dataset is deposited in a collection, does the collection structure seem appropriate?"
+    instructions: |
+      * Automated check will display collection structure and list all datasets contained in collection  
+        * If dataset was deposited directly into U of T Dataverse, automated check will display “xxxx”  
+      * Review the collection name  
+        * Is it descriptive and appropriate for the datasets contained within? (e.g research group, project)   
+      * If the depositor created a dataverse collection with one dataset, confirm that they actually require a dataverse (e.g. will there be future deposits?) or if it should move to the institutional collection   
+        * One indicator may be if the dataset name is the same as the collection name   
+      * Check if the dataset appears related to other datasets in the collection   
+      * Mark ‘Not Applicable’ if dataset deposited directly in institutional collection   
+        * Can also spot check dataset relationship field to see if there appears to be another dataset or collection that should be considered for this deposit
+
+    priority: "recommended"
+    section: "1. Structure of deposit"
+    curator_check_item: |
+      - Collection name
+      - Collection structure
+      - Dataset relationships
+    check_type: "Semi-automated"
+
+  - id: "2.1"
+    action: "**File integrity:** Do the files open properly?"
+    instructions: |
+      * Automated check will programmatically test all files; those with an error will be listed   
+      * ‘Cannot\_be\_opened’: notes an error in opening supported file types \- check issues manually  
+        * Test opening files, note any error message that may be helpful to understanding the issue in curator notes  
+      * ‘Type\_not\_supported: notes files that cannot be opened programmatically  
+        * Manually open a minimum of 5 of each file type if we have the program and note any opening errors (include file extension and include at least one example file name)  
+        * If we do not have the program, note any file extensions that were not checked (e.g. “File type: **.bin** was not reviewed”)
+    priority: "required"
+    section: "2. Files"
+    automated_check_ids: ["file_accessibility", "unsupported_files"]
+    curator_check_item: |
+      - Opening errors
+      - Files flagged by the tool check
+    check_type: "Semi-automated"
+
+  - id: "3.1"
+    action: "**README file existence**: Does the dataset include a separate README file?"
+    instructions: |
+      * This review is for READMEs for the deposit; data documentation for specific data files will be reviewed in 3.3  
+      * Tool will identify any files with the string ‘README’ (not case sensitive)  
+      * If no README is identified in automated check, review file list to see if there is a file with README contents under a different name (e.g. ‘read me.txt’, ‘data\_info.doc’, ‘39u570.pdf’) or files tagged as documentation that may have README content  
+      * Curator may suggest renaming README unless it appears to be a disciplinary practice to name otherwise  
+      * Curator may suggest or add the ‘Documentation’ tag to relevant file(s)
+
+    priority: "required"
+    section: "3. Documentation"
+    automated_check_ids: ["readme_files"]
+    curator_check_item: |
+      - Files that may contain README information
+    check_type: "Semi-automated"
+
+  - id: "4.1"
+    action: "**Typos in metadata fields:** Do any metadata fields contain typos?"
+    instructions: |
+      * Automated check will identify potentially misspelled words (excluding words that are capitalized)  
+      * Note that the tool check might flag some fields incorrectly (such as acronyms/specialized terms). Delete the items from the list accordingly.  
+      * Curator should also note any apparent incorrect words (e.g. ‘their’ instead of ‘there’)  
+      * Curator may use judgment to modify obvious errors directly in the system (e.g. ‘Unicorn of Toronto’ instead of ‘University of Toronto’ as affiliation)
+
+    priority: "required"
+    section: "4. Metadata"
+    automated_check_ids: ["potential_typos"]
+    curator_check_item: |
+      - Files flagged by the tool check
+      - Fields for:
+        - Title
+        - Subtitle
+        - Alternative Title
+        - Description
+        - Notes
+
+    check_type: "Semi-automated"
+
+  - id: "4.2"
+    action: "**Valid metadata entries:** Do the metadata fields have valid entries?"
+    instructions: |
+      * Review metadata fields noted to ensure complete and relevant information is contained    
+        * Examples of items to flag:  
+          * Placeholders (e.g. TBD, coming soon, etc.)  
+          * Incorrectly filled data (e.g. placing the author's name in the title)  
+          * Blank entries  
+          * Missing information (e.g. no affiliation listed)
+
+    priority: "required"
+    section: "4. Metadata"
+    curator_check_item: |
+      - Fields for:
+        - Title
+        - Description
+        - Subject
+        - Author name & affiliation
+    check_type: "Manual"
+
+  - id: "4.3"
+    action: "**U of T Author:** Is at least one author affiliated with the University of Toronto?"
+    instructions: |
+      * Tool will check that either ‘uoft’, ‘u of t’ or ‘university of toronto’ is contained in the Author Affiliation field (non-case sensitive)  
+      * Also review any description to see if research is noted as under an organization other than U of T (e.g. description says ‘project for UHN’)
+
+    priority: "required"
+    section: "4. Metadata"
+    automated_check_ids: ["authors_missing_affiliation"]
+    # curator_check_item: "Authors missing affiliation report"
+    check_type: "Fully-automated"
+
+  - id: "4.7"
+    action: "**Dataset description:** Is the dataset description comprehensive and informative?"
+    instructions: |
+      * Evaluate whether the description includes key details relevant for the discipline, data type(s), and/or research method, such as:  
+        * Overview of the method of analysis  
+        * Overview of files and types of data   
+        * Data processing tools used  
+        * Relevant characteristics of the data, such as:  
+          * Dates of collection  
+          * Geographical location  
+          * Experimental conditions  
+          * etc.  
+        * Other dataset(s) used in creating the dataset  
+        * Other relevant information  
+      * Recommendations should be limited to information needed to understand the data as appropriate for the field of research  
+      * Curator may wish to check related publications to ensure description is suitable for the dataset and not just the article abstract (unless appropriate for dataset description)
+    priority: "recommended"
+    section: "4. Metadata"
+    curator_check_item: |
+      - Dataset description field
+    check_type: "Manual"
+
+  - id: "4.8"
+    action: "**Keywords**: Are appropriate keywords included with the dataset?"
+    instructions: |
+      * If keywords are present (found number ‘Metadata’ tab), Curator checks:  
+        * Formatting (e.g. one keyword per entry, spaces between words, etc.)  
+        * Appropriate choice for the dataset description and contents (e.g. ‘acoustic emission sensor’ and ‘physics’, instead of just ‘physics’)  
+      * If keywords are absent or limited, Curator recommends:  
+        * Addition of keywords or suggest keyword terms for review  
+        * Any relevant controlled vocabularies/ontologies that may be useful for term generation  
+      * Curator may also check related publication keywords if in a disciplinary index (e.g. INSPEC, PubMed, etc.)
+    priority: "recommended"
+    section: "4. Metadata"
+    automated_check_ids: ["keywords_existence"]
+    curator_check_item: |
+      - Keywords field
+      - Controlled vocabulary/ontology from the relevant subject domain (if appropriate)
+
+    check_type: "Semi-automated"
+
+  - id: "5.1"
+    action: "**Restricted file listing:** Are there any restricted files in the deposited dataset?"
+    instructions: |
+      - Automated check will list any files that have restricted access
+    priority: "info"
+    section: "5. Sensitive Data and Intellectual Property (IP)"
+    automated_check_ids: ["restricted_files"]
+    curator_check_item: "File names, documentation, metadata description/notes/access fields"
+    check_type: "Fully-automated"
+
+  - id: "5.2"
+    action: "**Terms of access:** For any restricted file(s), has the ‘Terms of Access for Restricted Files’ metadata field under the ‘Terms’ tab been populated?"
+    instructions: |
+      * Curator should check restricted files (5.1) have terms of access  
+        * Where terms of access are provided, the curator will verify they are clear  
+        * For restricted files lacking terms of access, the curator will recommend including access information and procedures  
+      * Review any information in dataset that may need to be contained in the terms of access and recommend adding any missing information to terms of access:  
+        * Check if any metadata fields provide direction about accessing restricted data (e.g. data available upon request to an email in the ‘Description’ or ‘Notes’ field)  
+        * Check if a data sharing agreement file is part of the dataset and should be mentioned in terms  
+        * Terms should Include any conditions of access or criteria for access (unless otherwise contained in a data sharing agreement file in the dataset)  
+        * Check if ‘Request Access’ button feature is used \- ensure any terms of access action that requires external communication includes getting requestor’s Borealis account email to match the request access action   
+          * e.g. Please use or provide email used for your Borealis account when sending the Data Access Agreement
+
+    priority: "required"
+    section: "5. Sensitive Data and Intellectual Property (IP)"
+    curator_check_item: |
+      - Restricted files status 
+      - Terms of Access for Restricted files field
+      - Request Access button field
+      - Description field
+      - Notes field
+    check_type: "Manual"
+
+  - id: "5.3"
+    action: "**Data sensitivity issues**: Are there any apparent data sensitivity concerns with the dataset?"
+    instructions: |
+      * Review deposit for indications of sensitive data or information  
+        * Check file names, documentation, and content   
+        * Check metafield fields: *description*, *notes*, and *terms of access*  
+      * Check for flags such as:  
+        * Files with suggestive names like "JoeSmithInt1", “ConsentForm”, “RabbitCancerG1”  
+        * Implied sensitive topics or data such as surveys, focus groups, interviews, animal testing, medical testing, etc  
+        * Human or animal data \- ethics protocol references  
+          * Verify that the sensitive data is included in the deposit (a study may have REB approval but they are only depositing non-sensitive data)  
+        * Human data \- Indications of direct identifiers such as:    
+          * Name or contact information  
+          * Location references (postal code, zip code, GIS)  
+          * All elements of birth date, except year (including all indicators of age)  
+          * Identification numbers (SIN, license, account number, employee number)  
+          * Biometric identifiers (photograph, video, audio, fingerprint, iris)  
+          * Device identifiers  
+          * Any other unique identifying characteristic and/or code  
+        * Human data \- Indicators of data that may not be properly de-identified  
+          * Any combination of information that could potentially identify an individual (e.g. for government officials: elected year with age range with time in office)  
+        * Non-human or animal topics that may be sensitive  
+          * Location of endangered species  
+          * Synthesis of dangerous chemicals  
+          * Sensitive technology <a href="https://science.gc.ca/site/science/en/safeguarding-your-research/guidelines-and-tools-implement-research-security/sensitive-technology-research-and-affiliations-concern/sensitive-technology-research-areas" target="_blank">research areas</a>  
+          * Data subject to research agreements  
+          * Patent or commercialized data  
+      * Open any files of concern to review contents for issues  
+      * Curator to flag any issues, and also note anything that needs to be checked with depositor
+
+    priority: "required"
+    section: "5. Sensitive Data and Intellectual Property (IP)"
+    curator_check_item: |
+      - File names
+      - File contents
+      - Documentation 
+      - Description field
+      - Notes field
+      - Access field
+
+    check_type: "Manual"
+
+  - id: "5.4"
+    action: "**Research Ethics Board (REB) approval:** If data sensitivity issues for human or animal data were flagged in item <u>5.2</u>, does the depositor have Research Ethics Board (REB) approval to deposit and/or share the dataset?"
+    instructions: |
+      * If no REB approval appears to be needed for the deposit, mark ‘Not Applicable’  
+      * If REB approval may be needed, this will require communication with the depositor to verify if the data can be deposited (unless a blank template consent form is included in the file list). Things to to check with may include verifying:  
+        * Ethics protocol and consent documentation indicates that the data:  
+          * Can be deposited in a repository   
+          * If it can be made available publicly or behind restricted access  
+          * If it must be deidentified or can contain direct identifiers  
+        * Ensure retention period is noted if protocol/consent made a commitment to a specific timeframe (note any public data cannot have a timeframe as we cannot track who has downloaded)
+
+    priority: "required"
+    section: "5. Sensitive Data and Intellectual Property (IP)"
+    curator_check_item: |
+      - Communication with depositor
+      - REB approval documentation
+
+    check_type: "Manual"
+
+  - id: "5.5"
+    action: "**Licensing and intellectual property (IP):** Are there any apparent licensing and/or IP issues with the dataset?"
+    instructions: |
+      * Review descriptions, documentation, data sources, and names of files to identify any content that may be owned by or originate from third-party sources  
+      * If the dataset is comprised of data from other sources, check to see if there are conflicting licenses  
+      * If files do not seem to be the IP of the depositor (e.g. data reports from a corporation, data created by another researcher, etc.) may need to add note and verify if depositor has permission to deposit
+    priority: "required"
+    section: "5. Sensitive Data and Intellectual Property (IP)"
+    curator_check_item: |
+      - Description 
+      - Documentation
+      - File names for third-party sources
+      - Data Source field
+    check_type: "Manual"
+
+  - id: "5.6"
+    action: "**Dataset license selection:** Has the depositor selected an appropriate license for the dataset?"
+    instructions: |
+      * Check if anything in the description or documentation implies a different expected action than the license denotes (e.g. recommended citation in README but a CC0 license on the dataset)  
+      * If a <a href="https://creativecommons.org/public-domain/cc0/" target="_blank">Creative Commons Zero (CC0)</a> Public Domain license CC0 license has been chosen, Curator will verify that this aligns with the depositor's intentions.   
+        * Note: Licensing applies at the dataset-level, not at the file-level. If the depositor requires different licenses for specific files, explain that the files must be deposited into separate datasets.  
+      * For deposits containing restricted files, recommend using custom terms instead of standard licenses.  
+        *  Note restricted files cannot have a CC license assigned \- if any file is restricted and has a CC license, curator should note contradiction and require researcher to modify license  
+      * If a ‘Custom Dataset Terms’ is used, review contents to ensure it feels appropriate  
+        * Ensure field is not blank or that placeholder text is not used to skip license decisions at the start of the deposit  
+          * Default blank text reads: ‘This dataset is made available without information on how it can be used. You should communicate with the Contact(s) specified before use’  
+        * Appropriate custom license may include something like:  
+          * ‘Data is restricted for use by faculty, students, and staff of University of Toronto and subscribing institutions, for academic research and teaching purposes only’   
+          * ‘Public files are CC0 1.0, restricted files may be are subject to conditions outlined in the Data Sharing Agreement and terms of access for the files’
+    priority: "required"
+    section: "5. Sensitive Data and Intellectual Property (IP)"
+    automated_check_ids: ["termsOfUse", "license"]
+    curator_check_item: |
+      - License field
+      - CC0 license confirmation, if applicable
+      - Restricted files list
+    check_type: "Manual"
+
+  - id: "6.1"
+    action: "**Required changes:** Any additional comments not captured in the items above or any overarching observations that need to be articulated together that *must be addressed*"
+    instructions: |
+      * Curator will conduct a general review of all components and provide additional comments if applicable  
+      * This may include overarching comments that affect multiple items and are easier addressed together rather than separately in item rows
+    priority: "required"
+    section: "6.0 Additional comments"
+    # curator_check_item: "General review of all components"
+    check_type: "Manual"
+
+  - id: "6.2"
+    action: "**Recommendations:** Any additional comments not captured in the items above or any overarching observations that need to be articulated together that *could be addressed*"
+    instructions: |
+      * Curator will conduct a general review of all components and provide additional comments if applicable  
+      * This may include overarching comments that affect multiple items and are easier addressed together rather than separately in item rows
+    priority: "recommended"
+    section: "6.0 Additional comments"
+    # curator_check_item: "General review of all components"
+    check_type: "Manual"

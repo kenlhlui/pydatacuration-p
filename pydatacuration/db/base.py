@@ -409,3 +409,44 @@ class DatabaseBackend(ABC):  # noqa: PLR0904
         except Exception as e:
             logger.error(f'Error getting status count: {e}')
         return {}
+
+    def get_time_spent_input_count(self) -> int:
+        """Get how many time_spent inputs have been entered.
+
+        Args:
+            sqlmodel (type[SQLModel]): The SQLModel class representing the table.
+
+        Returns:
+            int: The number of rows with time_spent values.
+        """
+        try:
+            with self.get_connection() as (session, _engine):
+                checklist_model = self.models.checklist()
+                time_spent_counts = session.exec(
+                    select(checklist_model.time_spent).where(checklist_model.time_spent != None)  # noqa: E711
+                ).all()
+                count = len(time_spent_counts)
+                logger.debug(f'Time spent input count: {count}')
+                return count
+        except Exception as e:
+            logger.error(f'Error getting time spent input count: {e}')
+            return 0
+
+    def get_comment_input_count(self) -> int:
+        """Get how many comment inputs have been entered.
+
+        Returns:
+            int: The number of rows with comments.
+        """
+        try:
+            with self.get_connection() as (session, _engine):
+                checklist_model = self.models.checklist()
+                comment_counts = session.exec(
+                    select(checklist_model.comments).where(checklist_model.comments != None)  # noqa: E711
+                ).all()
+                count = len(comment_counts)
+                logger.debug(f'Comment input count: {count}')
+                return count
+        except Exception as e:
+            logger.error(f'Error getting comment input count: {e}')
+            return 0

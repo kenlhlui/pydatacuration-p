@@ -581,8 +581,8 @@ class Checker:
             self.db_instance.merge_records_to_table(
                 check_result_list_schema(
                     check_id='restricted_files',
-                    check_name='Restricted Access Files',
-                    description='Files with access restrictions in the dataset',
+                    check_name='Restricted file names',
+                    description='files with access restrictions in the dataset',
                     unit='file',
                     results=restricted_files,
                 )
