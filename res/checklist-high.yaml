@@ -47,6 +47,7 @@ checklist:
 
     priority: "recommended"
     section: "1. Structure of deposit"
+    automated_check_ids: ["other_datasets_in_collection"]
     curator_check_item: |
       - Collection name
       - Collection structure

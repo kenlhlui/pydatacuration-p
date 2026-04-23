@@ -29,7 +29,7 @@ def write_project_metadata_to_db(db_instance: DatabaseBackend, checker: Checker)
         dataset_pid = checker.ds_metadata.get('data', {}).get('latestVersion', {}).get('datasetPersistentId', 'No ID')
         datasetid = checker.ds_metadata.get('data', {}).get('latestVersion', {}).get('datasetId', 'No ID')
         dataset_url = parse_dataset_url(checker.base_url, dataset_pid)
-        dataset_path = checker.check_ds_tree_info()
+        dataset_path = checker.get_ds_path()
 
         db_instance.merge_records_to_table(
             project_metadata_schema(

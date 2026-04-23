@@ -52,7 +52,7 @@ def _process_tree(
     return {}
 
 
-def get_tree_info(identifier_of_dataverse: str, dv_tree: dict) -> dict:
+def construct_tree_info(identifier_of_dataverse: str, dv_tree: dict) -> dict:
     """Get the dataset tree information in the Dataverse repository.
 
     Args:

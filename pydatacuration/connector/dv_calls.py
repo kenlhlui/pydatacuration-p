@@ -51,7 +51,7 @@ class DvCalls:
         # Note that fq supports searching the fields of the database schema
         # i.e. The fields in the Native JSON export of a dataset
         # The schema can be found inside the .tsv files for each metadata block: https://github.com/IQSS/dataverse/tree/master/scripts/api/data/metadatablocks
-        endpoint = f'/api/search?q=*&type=dataset&per_page=1000&fq=depositor:"{depositor}"'
+        endpoint = f'/api/search?q=*&type=dataset&per_page=1000&fq=depositor:"{depositor}"'  # FIXME: Iteration
 
         if collection_alias:  # Only check the specified collection
             endpoint = f'{endpoint}&subtree={collection_alias}'
@@ -61,4 +61,18 @@ class DvCalls:
         if response and response.json():
             return response.json()
 
+        return {}
+
+    def get_ds_in_collection(self, collection_alias: str) -> dict:
+        """Get the datasets in a given collection alias.
+
+        Args:
+            collection_alias (str): The alias of the collection to search in.
+        """
+        endpoint = f'/api/search?q=*&type=dataset&per_page=1000&subtree={collection_alias}'  # FIXME: Iteration
+
+        response = self.client.sync_get(endpoint)
+
+        if response and response.json():
+            return response.json()
         return {}

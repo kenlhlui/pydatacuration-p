@@ -51,6 +51,7 @@ checklist:
       - Collection name
       - Collection structure
       - Dataset relationships
+    automated_check_ids: ["other_datasets_in_collection"]
     check_type: "Semi-automated"
 
   - id: "2.1"

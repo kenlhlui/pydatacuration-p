@@ -11,7 +11,7 @@ from pydatacuration.backend.models.setup_form import SetupForm
 from pydatacuration.checker.file_name_checker import FileNameFormatChecker
 from pydatacuration.checker.files_open_checker import FilesOpener
 from pydatacuration.checker.metadata_checker import MetadataChecker
-from pydatacuration.checker.services.tree_info import get_tree_info
+from pydatacuration.checker.services.tree_info import construct_tree_info
 from pydatacuration.checker.spell_checker import SpellCheckerCustomized
 from pydatacuration.checksum import Checksum
 from pydatacuration.connector.dv_calls import DvCalls
@@ -72,6 +72,7 @@ class Checker:
             'data.latestVersion.metadataBlocks.citation.fields[?typeName == `title`].value | [0]', self.ds_metadata
         )  # noqa
         self.dataset_id = self.ds_metadata.get('data', {}).get('latestVersion', {}).get('id')
+        self.tree_info = self._get_ds_tree_info()
 
     def _read_common_file_format(self) -> tuple | None:
         """Reads the common_file_format.yaml file and returns it as a dictionary.
@@ -113,6 +114,21 @@ class Checker:
         compare_files_and_metadata(dl_file_checksum_nested_list, file_list_metadata_nested_list, self.workdir)
 
         return file_list_metadata
+
+    def _get_ds_tree_info(self) -> dict:
+        """Get the dataset tree information from the dataverse tree metadata."""
+        ds_version_id = self.ds_metadata.get('data', {}).get('latestVersion', {}).get('id')
+        if ds_version_id:
+            response_json = self.dv_calls.get_ds_search_record(ds_version_id)
+            if response_json:
+                # Get the path of the dataverse from the response
+                identifier_of_dataverse = (
+                    response_json.get('data', {}).get('items', [{}])[0].get('identifier_of_dataverse', None)
+                )  # noqa: E501
+                tree_info = construct_tree_info(identifier_of_dataverse, self.dv_tree)
+                # TODO: Change the tree_info structure to a pydantic model for better structure and type checking
+                return tree_info
+        return {}
 
     def check_file_name_format(self) -> None:
         """Check the file name format."""
@@ -472,28 +488,60 @@ class Checker:
         else:
             logger.info('No valid depositor provided.')
 
-    def check_ds_tree_info(self) -> str | None:
+    def get_ds_path(self) -> str | None:
         """Check the path of the dataset in the dataverse Repository."""
-        ds_version_id = self.ds_metadata.get('data', {}).get('latestVersion', {}).get('id')
-        if ds_version_id:
-            response_json = self.dv_calls.get_ds_search_record(ds_version_id)
-            if response_json:
-                # Get the path of the dataverse from the response
-                identifier_of_dataverse = (
-                    response_json.get('data', {}).get('items', [{}])[0].get('identifier_of_dataverse', None)
-                )  # noqa: E501
-                tree_info = get_tree_info(identifier_of_dataverse, self.dv_tree)
-                path: str | None = tree_info.get('path', '')
-                dataset_path = ''  # Placeholder to prevent error
-                if path:
-                    # Add the dataset title to the end of the path
-                    ds_title = self.ds_title if self.ds_title else 'Unknown Dataset Title'
-                    # Join the Path
-                    dataset_path = f'{path}/{ds_title}'
-                    logger.debug(f'Dataset path in the dataverse repository: {dataset_path}')  # noqa: E501
+        tree_info = self._get_ds_tree_info()
+        path: str | None = tree_info.get('path', '')
+        dataset_path = ''  # Placeholder to prevent error
+        if path:
+            # Add the dataset title to the end of the path
+            ds_title = self.ds_title if self.ds_title else 'Unknown Dataset Title'
+            # Join the Path
+            dataset_path = f'{path}/{ds_title}'
+            logger.debug(f'Dataset path in the dataverse repository: {dataset_path}')  # noqa: E501
 
-                return dataset_path
+        return dataset_path
         return None
+
+    def get_other_ds_in_collection(self) -> None:
+        """Get other datasets in the same dataverse collection."""
+        tree_info = self._get_ds_tree_info()
+
+        # Get the last collection alias from the alias
+        ds_collection_alias = tree_info.get('alias', [])[-1] if tree_info.get('alias') else None
+        logger.debug(f'Dataset collection alias: {ds_collection_alias}')
+
+        other_datasets = []
+
+        # Only process when the dataset belongs to a collection differs from the target collection specified by the user
+        if ds_collection_alias and ds_collection_alias != self.collection_alias:
+            logger.info(f'Getting other datasets in the same collection: {ds_collection_alias}')
+            response_json = self.dv_calls.get_ds_in_collection(ds_collection_alias)
+
+            # Get all the names and the global_id (persistent_id) of the datasets in the collection
+            other_datasets = [
+                f'{item.get("name")} - {item.get("global_id")}'
+                for item in response_json.get('data', {}).get('items', [])
+            ]
+            logger.debug(f'Other datasets in the same collection: {other_datasets}')
+        else:
+            logger.info(
+                'The dataset belongs to the target collection specified by the user. Will skip listing the other datasets in the same collection.'  # noqa: E501
+            )
+
+        try:
+            check_result_list_schema = self.sqlmodels.check_results()
+            self.db_instance.merge_records_to_table(
+                check_result_list_schema(
+                    check_id='other_datasets_in_collection',
+                    check_name='Other datasets within the same collection (except dataset is located in the base/institutional collection)',
+                    description='Other datasets in the same dataverse collection',
+                    unit='dataset',
+                    results=other_datasets,
+                )
+            )
+        except Exception as e:
+            logger.error(f'Failed to write other_datasets_in_collection to database: {e}')
 
     def check_restricted_files(self) -> None:
         """Check for restricted files."""
@@ -617,9 +665,10 @@ class Checker:
         self.check_missing_metadata()
         self.check_spelling()
         self.check_depositor_record()
-        self.check_ds_tree_info()
+        self.get_ds_path()
         self.check_restricted_files()
         self.check_terms_of_use()
         self.check_terms_of_access()
         self.check_keywords()
         self.check_license()
+        self.get_other_ds_in_collection()
