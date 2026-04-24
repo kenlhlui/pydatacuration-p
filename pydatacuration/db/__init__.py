@@ -102,7 +102,7 @@ def get_database(
             DuckDBBackend,  # Note: Import here to avoid unnecessary dependencies when using PostgreSQL
         )
 
-        logger.info(f'Using DuckDB backend with file: {db_file}')
+        logger.debug(f'Using DuckDB backend with file: {db_file}')
 
         return DuckDBBackend(schema_name=schema_name, db_file=db_file)
 
