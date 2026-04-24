@@ -5,16 +5,17 @@ from pathlib import Path
 import jmespath
 import yaml
 from loguru import logger
-from sqlmodel import SQLModel
 
 from pydatacuration.backend.models.setup_form import SetupForm
+
+# Write to db module
+from pydatacuration.checker.check_result_writer import CheckResultWriter
+
+# Checker
 from pydatacuration.checker.file_name_checker import FileNameFormatChecker
 from pydatacuration.checker.files_open_checker import FilesOpener
 from pydatacuration.checker.metadata_checker import MetadataChecker
 from pydatacuration.checker.spell_checker import SpellCheckerCustomized
-
-# Write to db module
-from pydatacuration.checker.write_to_db import ChecklistResultWriter
 from pydatacuration.checksum import Checksum
 from pydatacuration.db.base import DatabaseBackend
 from pydatacuration.httpx_client import HTTPXClient
@@ -57,8 +58,8 @@ class Checker:
 
         self.db_instance = db_instance
         self.sqlmodels = self.db_instance.models
-        self.checklist_results = self.sqlmodels.check_results()
-        self.checklist_result_writer = ChecklistResultWriter(db_instance=self.db_instance)
+        self.checklist_result = self.sqlmodels.check_results()
+        self.checklist_result_writer = CheckResultWriter(db_instance=self.db_instance)
 
         self.curator_name = setup_form_instance.curator_name
         self.curator_email = setup_form_instance.curator_email
@@ -189,36 +190,30 @@ class Checker:
                 readme_files.append(str(file_rel_path))
 
         # Check special characters in file names and write to db
-        self.checklist_result_writer.write_results(
-            self.checklist_results(
-                check_id='filename_format',
-                check_name='File names with Special Characters',
-                description='Files containing special characters in filename',
-                unit='file',
-                results=special_char_files,
-            )
+        self.checklist_result_writer.write(
+            check_id='filename_format',
+            check_name='File names with Special Characters',
+            description='Files containing special characters in filename',
+            unit='file',
+            results=special_char_files,
         )
 
         # Check missing file extension and write to db
-        self.checklist_result_writer.write_results(
-            self.checklist_results(
-                check_id='missing_file_extensions',
-                check_name='File names missing extensions',
-                description='Files without proper file extensions',
-                unit='file',
-                results=missing_ext_files,
-            )
+        self.checklist_result_writer.write(
+            check_id='missing_file_extensions',
+            check_name='File names missing extensions',
+            description='Files without proper file extensions',
+            unit='file',
+            results=missing_ext_files,
         )
 
         # Check README files and write to db
-        self.checklist_result_writer.write_results(
-            self.checklist_results(
-                check_id='readme_files',
-                check_name='File names for README',
-                description='README files detected in the dataset',
-                unit='file',
-                results=readme_files,
-            )
+        self.checklist_result_writer.write(
+            check_id='readme_files',
+            check_name='File names for README',
+            description='README files detected in the dataset',
+            unit='file',
+            results=readme_files,
         )
 
     def check_file_open(self) -> None:
@@ -267,33 +262,21 @@ class Checker:
                     logger.info(f'File is not a supported file format (not checked by the script): {file_abs_path}')  # noqa: E501
                     unsupported_files.append(str(file_rel_path))
 
-        try:
-            check_result_list_schema = self.sqlmodels.check_results()
-            self.db_instance.merge_records_to_table(
-                check_result_list_schema(
-                    check_id='file_accessibility',
-                    check_name='File accessibility report',
-                    description='Files that cannot be opened or read by the validation tool',
-                    unit='file',
-                    results=inaccessible_files,
-                )
-            )
-        except Exception as e:
-            logger.error(f'Failed to write file_accessibility to database: {e}')
+        self.checklist_result_writer.write(
+            check_id='file_accessibility',
+            check_name='File accessibility report',
+            description='Files that cannot be opened or read by the validation tool',
+            unit='file',
+            results=inaccessible_files,
+        )
 
-        try:
-            check_result_list_schema = self.sqlmodels.check_results()
-            self.db_instance.merge_records_to_table(
-                check_result_list_schema(
-                    check_id='unsupported_files',
-                    check_name='Files with uncommon formats',
-                    description='Files in formats not supported by the validation tool',
-                    unit='file',
-                    results=unsupported_files,
-                )
-            )
-        except Exception as e:
-            logger.error(f'Failed to write unsupported_files to database: {e}')
+        self.checklist_result_writer.write(
+            check_id='unsupported_files',
+            check_name='Files with uncommon formats',
+            description='Files in formats not supported by the validation tool',
+            unit='file',
+            results=unsupported_files,
+        )
 
     def check_common_file_format(self) -> None:
         """Check if the file format is in the common file format."""
@@ -311,19 +294,13 @@ class Checker:
         else:
             logger.error('No common file format found in the res directory. Skipping this check.')
 
-        try:
-            check_result_list_schema = self.sqlmodels.check_results()
-            self.db_instance.merge_records_to_table(
-                check_result_list_schema(
-                    check_id='uncommon_file_formats',
-                    check_name='Files with uncommon formats',
-                    description='Files using uncommon or proprietary file formats',
-                    unit='file',
-                    results=uncommon_format_files,
-                )
-            )
-        except Exception as e:
-            logger.error(f'Failed to write uncommon_file_formats to database: {e}')
+        self.checklist_result_writer.write(
+            check_id='uncommon_file_formats',
+            check_name='Files with uncommon formats',
+            description='Files using uncommon or proprietary file formats',
+            unit='file',
+            results=uncommon_format_files,
+        )
 
     def check_missing_metadata(self) -> None:
         """Check for missing metadata."""
@@ -374,61 +351,37 @@ class Checker:
         if author_affiliation_ut_num == 0:
             logger.info('None of the authors have listed affiliation with University of Toronto')
 
-        try:
-            check_result_list_schema = self.sqlmodels.check_results()
-            self.db_instance.merge_records_to_table(
-                check_result_list_schema(
-                    check_id='missing_required_fields',
-                    check_name='Missing Required Metadata Fields',
-                    description='Required metadata fields that are empty or missing',
-                    unit='field',
-                    results=missing_required_fields,
-                )
-            )
-        except Exception as e:
-            logger.error(f'Failed to write missing_required_fields to database: {e}')
+        self.checklist_result_writer.write(
+            check_id='missing_required_fields',
+            check_name='Missing Required Metadata Fields',
+            description='Required metadata fields that are empty or missing',
+            unit='field',
+            results=missing_required_fields,
+        )
 
-        try:
-            check_result_list_schema = self.sqlmodels.check_results()
-            self.db_instance.merge_records_to_table(
-                check_result_list_schema(
-                    check_id='authors_missing_affiliation',
-                    check_name='Author affiliation field',
-                    description='Authors missing institutional affiliation information',
-                    unit='author',
-                    results=authors_missing_affiliation,
-                )
-            )
-        except Exception as e:
-            logger.error(f'Failed to write authors_missing_affiliation to database: {e}')
+        self.checklist_result_writer.write(
+            check_id='authors_missing_affiliation',
+            check_name='Author affiliation field',
+            description='Authors missing institutional affiliation information',
+            unit='author',
+            results=authors_missing_affiliation,
+        )
 
-        try:
-            check_result_list_schema = self.sqlmodels.check_results()
-            self.db_instance.merge_records_to_table(
-                check_result_list_schema(
-                    check_id='authors_missing_identifier',
-                    check_name='Author Research ID field',
-                    description='Authors missing personal identifier (ORCID, etc.)',
-                    unit='author',
-                    results=authors_missing_identifier,
-                )
-            )
-        except Exception as e:
-            logger.error(f'Failed to write authors_missing_identifier to database: {e}')
+        self.checklist_result_writer.write(
+            check_id='authors_missing_identifier',
+            check_name='Author Research ID field',
+            description='Authors missing personal identifier (ORCID, etc.)',
+            unit='author',
+            results=authors_missing_identifier,
+        )
 
-        try:
-            check_result_list_schema = self.sqlmodels.check_results()
-            self.db_instance.merge_records_to_table(
-                check_result_list_schema(
-                    check_id='authors_missing_scheme',
-                    check_name='Authors Research Identifier Scheme',
-                    description='Authors missing identifier scheme information',
-                    unit='author',
-                    results=authors_missing_scheme,
-                )
-            )
-        except Exception as e:
-            logger.error(f'Failed to write authors_missing_scheme to database: {e}')
+        self.checklist_result_writer.write(
+            check_id='authors_missing_scheme',
+            check_name='Authors Research Identifier Scheme',
+            description='Authors missing identifier scheme information',
+            unit='author',
+            results=authors_missing_scheme,
+        )
 
     def check_spelling(self) -> None:
         """Check for spelling mistakes in the metadata."""
@@ -457,19 +410,13 @@ class Checker:
                             }
                         )
 
-        try:
-            check_result_list_schema = self.sqlmodels.check_results()
-            self.db_instance.merge_records_to_table(
-                check_result_list_schema(
-                    check_name='Fields for Title, Subtitle, Alternative Title, Description, and Notes',
-                    check_id='potential_typos',
-                    description='Fields for Title, Subtitle, Alternative Title, Description, and Notes',  # noqa: E501
-                    unit='typo',
-                    results=potential_typos,
-                )
-            )
-        except Exception as e:
-            logger.error(f'Failed to write potential typos to database: {e}')
+        self.checklist_result_writer.write(
+            check_name='Fields for Title, Subtitle, Alternative Title, Description, and Notes',
+            check_id='potential_typos',
+            description='Fields for Title, Subtitle, Alternative Title, Description, and Notes',  # noqa: E501
+            unit='typo',
+            results=potential_typos,
+        )
 
     def check_depositor_record(self) -> None:
         """Check if the depositor has deposited data in the dataverse collection.
@@ -508,25 +455,20 @@ class Checker:
 
                 # Extend the string to the depositor_history list
                 depositor_history.extend(
-                    f'{depositor}: {dataset.get("name")} ({dataset.get("url")}) - Dataverse Name: {dataset.get("name_of_dataverse")}'
+                    f'{depositor}: {dataset.get("name")} ({dataset.get("url")}) - Dataverse Name: {dataset.get("name_of_dataverse")}'  # noqa: E501
                     for dataset in dataset_publish_history
                 )
 
             # TODO: Add error handling for the case when the response is None or empty; or HTTP error
 
-            try:
-                check_result_list_schema = self.sqlmodels.check_results()
-                self.db_instance.merge_records_to_table(
-                    check_result_list_schema(
-                        check_id='depositor_history',
-                        check_name='Depositor history',
-                        description='Previous datasets depositor in this Dataverse collection',
-                        unit='depositor record',
-                        results=depositor_history,
-                    )
-                )
-            except Exception as e:
-                logger.error(f'Failed to write depositor history to database: {e}')
+            self.checklist_result_writer.write(
+                check_id='depositor_history',
+                check_name='Depositor history',
+                description='Previous datasets depositor in this Dataverse collection',
+                unit='depositor record',
+                results=depositor_history,
+            )
+
         else:
             logger.info('No valid depositor provided.')
 
@@ -538,6 +480,7 @@ class Checker:
             # Also check the source code the the available fq fields https://github.com/IQSS/dataverse/blob/develop/src/main/java/edu/harvard/iq/dataverse/search/SearchFields.java
             # Use 'datasetVersionId' here; in ds_metadata it is data.latestVersion.id
             # Don't mess up with data.id or data.latestVersion.datasetId which are the same and is the persistent id in the dataverse system  # noqa: E501
+            # FIXME: Move this business logic out of the checker.
             response = self.httpx_client.sync_get(
                 f'/api/search?q=*&type=dataset&per_page=1&fq=datasetVersionId:{ds_version_id}'
             )  # noqa: E501
@@ -561,7 +504,6 @@ class Checker:
 
                 return dataset_path
         return None
-        # TODO: Add error handling for the case when the response is None or empty; or HTTP error
 
     def check_restricted_files(self) -> None:
         """Check for restricted files."""
@@ -574,79 +516,55 @@ class Checker:
                 logger.info(f'Restricted file found: {file_path}')
                 restricted_files.append(str(file_path))
 
-        try:
-            check_result_list_schema: type[SQLModel] = self.sqlmodels.check_results()
-            self.db_instance.merge_records_to_table(
-                check_result_list_schema(
-                    check_id='restricted_files',
-                    check_name='Restricted file names',
-                    description='files with access restrictions in the dataset',
-                    unit='file',
-                    results=restricted_files,
-                )
-            )
-        except Exception as e:
-            logger.error(f'Failed to write restricted_files to database: {e}')
+        self.checklist_result_writer.write(
+            check_id='restricted_files',
+            check_name='Restricted file names',
+            description='files with access restrictions in the dataset',
+            unit='file',
+            results=restricted_files,
+        )
 
     def check_terms_of_use(self) -> None:
         """Check if the terms of use are present."""
         terms_of_use = self.ds_metadata.get('data', {}).get('latestVersion', {}).get('termsOfUse', None)
 
-        try:
-            check_result_list_schema = self.sqlmodels.check_results()
-            self.db_instance.merge_records_to_table(
-                check_result_list_schema(
-                    check_id='termsOfUse',
-                    check_name='Terms of Use of the Dataset',
-                    description='Terms of Use information in the dataset',
-                    unit='terms of use',
-                    results=[
-                        terms_of_use,
-                    ],
-                )
-            )
-        except Exception as e:
-            logger.error(f'Failed to write termsOfUse to database: {e}')
+        self.checklist_result_writer.write(
+            check_id='termsOfUse',
+            check_name='Terms of Use of the Dataset',
+            description='Terms of Use information in the dataset',
+            unit='terms of use',
+            results=[
+                terms_of_use,  # FIXME: might need to update the model to accept None object, and also need to handle the rendering part.  # noqa: E501
+            ],
+        )
 
     def check_terms_of_access(self) -> None:
         """Check if the terms of access are present."""
         terms_of_access = self.ds_metadata.get('data', {}).get('latestVersion', {}).get('termsOfAccess', None)
 
-        try:
-            check_result_list_schema = self.sqlmodels.check_results()
-            self.db_instance.merge_records_to_table(
-                check_result_list_schema(
-                    check_id='termsOfAccess',
-                    check_name='Terms of Access of the Dataset',
-                    description='Terms of Access information in the dataset',
-                    unit='term of access',
-                    results=[
-                        terms_of_access,
-                    ],
-                )
-            )
-        except Exception as e:
-            logger.error(f'Failed to write termsOfAccess to database: {e}')
+        self.checklist_result_writer.write(
+            check_id='termsOfAccess',
+            check_name='Terms of Access of the Dataset',
+            description='Terms of Access information in the dataset',
+            unit='term of access',
+            results=[
+                terms_of_access,  # FIXME: might need to update the model to accept None object, and also need to handle the rendering part.  # noqa: E501
+            ],
+        )
 
     def check_license(self) -> None:
         """Check if the terms of use and license are present."""
         license_name = self.ds_metadata.get('data', {}).get('latestVersion', {}).get('license', {}).get('name', None)
 
-        try:
-            check_result_list_schema = self.sqlmodels.check_results()
-            self.db_instance.merge_records_to_table(
-                check_result_list_schema(
-                    check_id='license',
-                    check_name='License of the Dataset',
-                    description='License information in the dataset',
-                    unit='license',
-                    results=[
-                        license_name,
-                    ],
-                )
-            )
-        except Exception as e:
-            logger.error(f'Failed to write license to database: {e}')
+        self.checklist_result_writer.write(
+            check_id='license',
+            check_name='License of the Dataset',
+            description='License information in the dataset',
+            unit='license',
+            results=[
+                license_name,
+            ],
+        )
 
         if license_name == 'CC0 1.0':
             logger.info('The license is CC0 1.0')
@@ -660,21 +578,13 @@ class Checker:
         if isinstance(keyword_list, list):
             logger.info(f'Keywords found in the metadata: {keyword_list}')
 
-        # DEBUG: Test for writing to database using CheckResultList
-        # FIXME: fix the update logic; it won't work if there's table
-        try:
-            check_result_list_schema = self.sqlmodels.check_results()
-            self.db_instance.merge_records_to_table(
-                check_result_list_schema(
-                    check_name='Keywords',
-                    check_id='keywords_existence',
-                    description='Check if keywords are present in the dataset',
-                    unit='keyword',
-                    results=keyword_list,
-                )
-            )
-        except Exception as e:
-            logger.error(f'Failed to write keywords to database: {e}')
+        self.checklist_result_writer.write(
+            check_name='Keywords',
+            check_id='keywords_existence',
+            description='Check if keywords are present in the dataset',
+            unit='keyword',
+            results=keyword_list,
+        )
 
     def run_checks(self) -> None:
         """Run all the checks."""
