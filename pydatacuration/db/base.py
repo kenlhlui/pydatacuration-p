@@ -395,6 +395,7 @@ class DatabaseBackend(ABC):  # noqa: PLR0904
         Returns:
             int: The number of rows in the table.
         """
+        # FIXME: move this business logic to new module
         try:
             with self.get_connection() as (session, _engine):
                 checklist_model = self.models.checklist()
@@ -419,6 +420,7 @@ class DatabaseBackend(ABC):  # noqa: PLR0904
         Returns:
             int: The number of rows with time_spent values.
         """
+        # FIXME: move this business logic to new module
         try:
             with self.get_connection() as (session, _engine):
                 checklist_model = self.models.checklist()
@@ -438,6 +440,7 @@ class DatabaseBackend(ABC):  # noqa: PLR0904
         Returns:
             int: The number of rows with comments.
         """
+        # FIXME: move this business logic to new module
         try:
             with self.get_connection() as (session, _engine):
                 checklist_model = self.models.checklist()

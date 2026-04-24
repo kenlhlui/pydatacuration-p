@@ -12,6 +12,9 @@ from pydatacuration.checker.file_name_checker import FileNameFormatChecker
 from pydatacuration.checker.files_open_checker import FilesOpener
 from pydatacuration.checker.metadata_checker import MetadataChecker
 from pydatacuration.checker.spell_checker import SpellCheckerCustomized
+
+# Write to db module
+from pydatacuration.checker.write_to_db import ChecklistResultWriter
 from pydatacuration.checksum import Checksum
 from pydatacuration.db.base import DatabaseBackend
 from pydatacuration.httpx_client import HTTPXClient
@@ -51,8 +54,12 @@ class Checker:
         self.workdir = workdir
         self.check_zip = setup_form_instance.check_zip
         self.collection_alias = setup_form_instance.collection_alias
+
         self.db_instance = db_instance
         self.sqlmodels = self.db_instance.models
+        self.checklist_results = self.sqlmodels.check_results()
+        self.checklist_result_writer = ChecklistResultWriter(db_instance=self.db_instance)
+
         self.curator_name = setup_form_instance.curator_name
         self.curator_email = setup_form_instance.curator_email
         self.checklist_type = setup_form_instance.checklist
@@ -181,47 +188,38 @@ class Checker:
                 logger.info(f'README file found: {file_rel_path}')
                 readme_files.append(str(file_rel_path))
 
-        try:
-            check_result_list_schema = self.sqlmodels.check_results()
-            self.db_instance.merge_records_to_table(
-                check_result_list_schema(
-                    check_id='filename_special_chars',
-                    check_name='File names with Special Characters',
-                    description='Files containing special characters in filename',
-                    unit='file',
-                    results=special_char_files,
-                )
+        # Check special characters in file names and write to db
+        self.checklist_result_writer.write_results(
+            self.checklist_results(
+                check_id='filename_format',
+                check_name='File names with Special Characters',
+                description='Files containing special characters in filename',
+                unit='file',
+                results=special_char_files,
             )
-        except Exception as e:
-            logger.error(f'Failed to write special character files to database: {e}')
+        )
 
-        try:
-            check_result_list_schema = self.sqlmodels.check_results()
-            self.db_instance.merge_records_to_table(
-                check_result_list_schema(
-                    check_id='missing_file_extensions',
-                    check_name='File names missing extensions',
-                    description='Files without proper file extensions',
-                    unit='file',
-                    results=missing_ext_files,
-                )
+        # Check missing file extension and write to db
+        self.checklist_result_writer.write_results(
+            self.checklist_results(
+                check_id='missing_file_extensions',
+                check_name='File names missing extensions',
+                description='Files without proper file extensions',
+                unit='file',
+                results=missing_ext_files,
             )
-        except Exception as e:
-            logger.error(f'Failed to write missing_file_extensions to database: {e}')
+        )
 
-        try:
-            check_result_list_schema = self.sqlmodels.check_results()
-            self.db_instance.merge_records_to_table(
-                check_result_list_schema(
-                    check_id='readme_files',
-                    check_name='File names for README',
-                    description='README files detected in the dataset',
-                    unit='file',
-                    results=readme_files,
-                )
+        # Check README files and write to db
+        self.checklist_result_writer.write_results(
+            self.checklist_results(
+                check_id='readme_files',
+                check_name='File names for README',
+                description='README files detected in the dataset',
+                unit='file',
+                results=readme_files,
             )
-        except Exception as e:
-            logger.error(f'Failed to write readme_files to database: {e}')
+        )
 
     def check_file_open(self) -> None:
         """Check if the file can be opened."""
