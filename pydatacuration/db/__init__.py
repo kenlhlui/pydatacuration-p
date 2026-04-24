@@ -111,5 +111,5 @@ def get_database(
         PostgreSQLBackend,  # Note: Import here to avoid unnecessary dependencies when using DuckDB
     )
 
-    logger.info(f'Using PostgreSQL backend with host: {db_settings.postgres_host}')
+    logger.debug(f'Using PostgreSQL backend with host: {db_settings.postgres_host}')
     return PostgreSQLBackend(schema_name=schema_name, database_url=db_settings.build_postgres_url())
