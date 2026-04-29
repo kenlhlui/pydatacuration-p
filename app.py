@@ -78,4 +78,5 @@ if __name__ in {'__main__', '__mp_main__'}:
         storage_secret=str(os.urandom(16)),
         reconnect_timeout=app_settings.app_reconnect_timeout,
         reload=app_settings.app_reload,
+        uvicorn_reload_dirs='pydatacuration, app.py',
     )
