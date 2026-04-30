@@ -278,7 +278,7 @@ async def checklist_page(project_number: str, view_only: bool = False) -> None:
         # Action Buttons — always rendered so toggle_view_only can show/hide
         with ui.element('div').classes('pdc-actions') as action_button_div:
             action_button('Save Curation Log (Word)', lambda: NiceGUIHelper.export_word_button(db, dir_manager))
-            action_button('Calculate Time Spent', lambda: helpers.calculate_total_time)
+            # action_button('Calculate Time Spent', lambda: helpers.calculate_total_time)
             action_button('Export YAML', lambda: NiceGUIHelper.export_yaml_button(db, dir_manager))
             action_button('New Dataset', helpers.confirm_new_dataset)
         action_button_div.set_visibility(not view_only)
