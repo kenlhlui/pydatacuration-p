@@ -678,6 +678,26 @@ class Checker:
         except Exception as e:
             logger.error(f'Failed to write keywords to database: {e}')
 
+    def check_related_publications(self) -> None:
+        """Check if the related publications are present."""
+        query_string = 'data.latestVersion.metadataBlocks.citation.fields[?typeName==`publication`].value[*].publicationCitation[].value'  # noqa: E501
+        related_publications = jmespath.search(query_string, self.ds_metadata)
+        if isinstance(related_publications, list):
+            logger.info(f'Related publications found in the metadata: {related_publications}')
+        try:
+            check_result_list_schema = self.sqlmodels.check_results()
+            self.db_instance.merge_records_to_table(
+                check_result_list_schema(
+                    check_name='Related Publications',
+                    check_id='related_publications_existence',
+                    description='Check if related publications are present in the dataset',
+                    unit='publication',
+                    results=related_publications,
+                )
+            )
+        except Exception as e:
+            logger.error(f'Failed to write related publications to database: {e}')
+
     def run_checks(self) -> None:
         """Run all the checks."""
         logger.info('Running the checks...')
@@ -693,3 +713,4 @@ class Checker:
         self.check_terms_of_access()
         self.check_keywords()
         self.check_license()
+        self.check_related_publications()
