@@ -59,7 +59,7 @@ class Exporter:
             # Write the checklist results to YAML
             yaml.dump(yaml_data, yaml_file, sort_keys=False, allow_unicode=True)
 
-    def export_word(self, word_template_name: str | None = None) -> None:
+    def render_word(self, word_template_name: str | None = None) -> DocxTemplate:
         """Export word file from the project directory."""
         yaml_data = self.generate_yaml()
 
@@ -87,6 +87,11 @@ class Exporter:
 
         # pass the list in under the name 'rows' to match the template
         doc.render(context)
+        return doc
+
+    def export_word(self, word_template_name: str | None = None) -> None:
+        """Export word file from the project directory."""
+        doc = self.render_word(word_template_name)
         logger.info(f'Exporting word to {self.dir_manager.outputs_dir / "curation_report.docx"}')
         output_path = self.dir_manager.outputs_dir / 'curation_report.docx'
         doc.save(output_path)
