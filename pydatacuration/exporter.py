@@ -30,21 +30,20 @@ class Exporter:
         self.dir_manager = dir_manager
         self.res_dir = res_dir if res_dir is not None else Path.cwd() / 'res'
 
+        self.project_metadata = self.db.read_project_metadata_record()
+        self.checklist: list[SQLModel] = self.db.read_checklist()
+
     def get_docx_file_name(self) -> str:
         """Generate a file name for the exported word document based on the project metadata."""
-        project_metadata = self.db.read_project_metadata_record()
-        project_number = project_metadata.get('project_number', '')
-        curator_initials = get_name_initials(project_metadata.get('curator_name', ''))
+        project_number = self.project_metadata.get('project_number', '')
+        curator_initials = get_name_initials(self.project_metadata.get('curator_name', ''))
         logger.debug(f'Generated docx file name: {project_number}_{curator_initials}_curation_report.docx')
         return f'{project_number}_{curator_initials}_curation_report.docx'
 
     def generate_yaml(self) -> dict[str, Any]:
         """Generate YAML data by reading the database."""
-        project_metadata = self.db.read_project_metadata_record()
-        checklist: list[SQLModel] = self.db.read_checklist()
-
         # Merge checklist results into checklist
-        for row in checklist:
+        for row in self.checklist:
             row_dict = row.model_dump()
             # Unpack the automated check results to the checklist item
             if row_dict.get('automated_check_ids') and row_dict.get('automated_check_ids') != []:
@@ -55,8 +54,8 @@ class Exporter:
                         row_dict.setdefault('automated_check_results', {})[check_name] = result.get('results')
 
         yaml_data = {
-            'project_metadata': project_metadata,
-            'checklist': [item.model_dump() for item in checklist],
+            'project_metadata': self.project_metadata,
+            'checklist': [item.model_dump() for item in self.checklist],
         }
 
         return yaml_data
