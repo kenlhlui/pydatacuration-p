@@ -218,3 +218,15 @@ def parse_dataset_url(base_url: str | None, pid: str | None) -> str:
         return urljoin(base, api_path) + '?' + query
 
     return 'No URL'
+
+
+def get_name_initials(fullname: str) -> str:
+    """Get the initials from a full name string.
+
+    Args:
+        fullname (str): The full name string.
+
+    Returns:
+        str: The initials of the name.
+    """
+    return ''.join([x[0].upper() for x in fullname.split(' ')])

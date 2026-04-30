@@ -11,6 +11,7 @@ from sqlmodel import SQLModel
 from pydatacuration.db.base import DatabaseBackend
 from pydatacuration.utils.custom_logging import logger
 from pydatacuration.utils.directory_manager import DirectoryManager
+from pydatacuration.utils.utils import get_name_initials
 
 
 def _strip_markup(text: str) -> str:
@@ -28,6 +29,14 @@ class Exporter:
         self.db = db
         self.dir_manager = dir_manager
         self.res_dir = res_dir if res_dir is not None else Path.cwd() / 'res'
+
+    def get_docx_file_name(self) -> str:
+        """Generate a file name for the exported word document based on the project metadata."""
+        project_metadata = self.db.read_project_metadata_record()
+        project_number = project_metadata.get('project_number', '')
+        curator_initials = get_name_initials(project_metadata.get('curator_name', ''))
+        logger.debug(f'Generated docx file name: {project_number}_{curator_initials}_curation_report.docx')
+        return f'{project_number}_{curator_initials}_curation_report.docx'
 
     def generate_yaml(self) -> dict[str, Any]:
         """Generate YAML data by reading the database."""
