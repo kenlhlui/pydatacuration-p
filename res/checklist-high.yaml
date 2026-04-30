@@ -349,6 +349,7 @@ checklist:
       - Related Publication field
       - DOI/PID references
       - Title/Description fields
+    automated_check_ids: ["related_publications_existence"]
     check_type: "Manual"
 
   - id: "4.10"
