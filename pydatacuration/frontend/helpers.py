@@ -431,9 +431,11 @@ class NiceGUIHelper:  # noqa: PLR0904
         """Save curation report to Word."""
         exporter = Exporter(db, dir_manager)
         exporter.export_word(word_template_name=word_template_name)
+        docx_file_name = exporter.get_docx_file_name()
+
         ui.download.file(
             Path(dir_manager.outputs_dir, 'curation_report.docx'),
-            'curation_report.docx',
+            docx_file_name,
         )
 
         ui.notify('Curation report saved successfully!', type='positive')
