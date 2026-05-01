@@ -1,36 +1,18 @@
-"""MetadataChecker class for checking metadata fields in a JSON file."""
-
-from pathlib import Path
+"""MetadataChecker class for checking dataset metadata."""
 
 import jmespath
-import orjson
-from loguru import logger
 
 
 class MetadataChecker:
-    def __init__(self, metadata_json_path: Path | str) -> None:
+    """Class for checking dataset metadata."""
+
+    def __init__(self, metadata: dict) -> None:
         """Initialize the MetadataChecker class.
 
         Args:
-            metadata_json_path (Path | str): Path to the metadata JSON file.
             metadata (dict): Metadata from the JSON file.
         """
-        self.metadata_json_path = metadata_json_path
-        self.metadata = self._read_json()
-
-    def _read_json(self) -> dict:
-        """Read the JSON file and return the data.
-
-        Returns:
-            data (dict): Data from the JSON file.
-        """
-        try:
-            with Path(self.metadata_json_path).open('r', encoding='utf-8') as f:
-                data = orjson.loads(f.read())
-            return data
-        except Exception as e:
-            logger.error(f'Error reading JSON file: {e}')
-            return {}
+        self.metadata = metadata
 
     def _read_metadata_cm_field(self, field: str, subfield=None):
         # TODO: fix the logic of subfield
@@ -74,7 +56,7 @@ class MetadataChecker:
         Returns:
             result (list[dict]): List of dictionaries containing author metadata fields
         """
-        query_string = 'data.latestVersion.metadataBlocks.citation.fields[?typeName==`author`].value[].{authorName:authorName.value, authorAffiliation: authorAffiliation.value, authorIdentifierScheme: authorIdentifierScheme.value, authorIdentifier:authorIdentifier.value}'
+        query_string = 'data.latestVersion.metadataBlocks.citation.fields[?typeName==`author`].value[].{authorName:authorName.value, authorAffiliation: authorAffiliation.value, authorIdentifierScheme: authorIdentifierScheme.value, authorIdentifier:authorIdentifier.value}'  # noqa: E501
         result = jmespath.search(query_string, self.metadata)
 
         return result or []

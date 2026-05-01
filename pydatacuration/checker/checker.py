@@ -67,7 +67,7 @@ class Checker:
 
         self.checksums = Checksum()
         self.files_opener = FilesOpener
-        self.metadata_checker = MetadataChecker(self.workdir.joinpath('dataset', 'metadata', 'ds_metadata.json'))
+        self.metadata_checker = MetadataChecker(metadata=self.ds_metadata)
         self.spell_checker = SpellCheckerCustomized()
         self.httpx_client = HTTPXClient(self.base_url, self.api_token)
         self.file_list_metadata = self._gen_file_list_metadata()
