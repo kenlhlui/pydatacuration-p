@@ -67,7 +67,7 @@ class Checker:
 
         self.checksums = Checksum()
         self.files_opener = FilesOpener
-        self.metadata_checker = MetadataChecker(metadata=self.ds_metadata)
+        self.metadata_checker = MetadataChecker(self.ds_metadata, self.checklist_result_writer)
         self.spell_checker = SpellCheckerCustomized()
         self.httpx_client = HTTPXClient(self.base_url, self.api_token)
         self.file_list_metadata = self._gen_file_list_metadata()
@@ -75,7 +75,7 @@ class Checker:
 
         self.ds_title = jmespath.search(
             'data.latestVersion.metadataBlocks.citation.fields[?typeName == `title`].value | [0]', self.ds_metadata
-        )  # noqa
+        )
         self.dataset_id = self.ds_metadata.get('data', {}).get('latestVersion', {}).get('id')
 
     def _get_ds_tree_info(self, identifier_of_dataverse: str) -> dict:
@@ -304,84 +304,10 @@ class Checker:
 
     def check_missing_metadata(self) -> None:
         """Check for missing metadata."""
-        missing_required_fields = []
-        authors_missing_affiliation = []
-        authors_missing_identifier = []
-        authors_missing_scheme = []
-
-        field_list = ['title', 'dsDescription', 'subject']
-        for field in field_list:
-            return_value = self.metadata_checker.check_metadata_cm_field(field)
-            if return_value[1] is False:
-                logger.info(f'Missing metadata found in the {field}')
-                missing_required_fields.append(field)
-
-        # Check any associated fields for an author (affiliation, identifier & scheme) are missing
-        field_list_author = ['authorAffiliation', 'authorIdentifierScheme', 'authorIdentifier']
-        author_info_dict = self.metadata_checker.check_author_cm_field()
-        for item in author_info_dict:
-            author_name = item.get('authorName')
-            for field in field_list_author:
-                if item.get(field) is None:
-                    logger.info(f'Missing metadata found in {field} field for author: {author_name}')
-
-                    # Collect authors missing specific fields
-                    if field == 'authorAffiliation':
-                        authors_missing_affiliation.append(author_name)
-                    elif field == 'authorIdentifier':
-                        authors_missing_identifier.append(author_name)
-                    elif field == 'authorIdentifierScheme':
-                        authors_missing_scheme.append(author_name)
-
-        # Check if at least one author has authorAffiliation
-        author_affiliation_num = len([item for item in author_info_dict if item.get('authorAffiliation') is not None])
-        if author_affiliation_num == 0:
-            logger.info('None of the authors have an institutional affiliation listed')
-
-        # Check if at least one author has affiliation with 'University of Toronto' (Non-case sensitive)
-        ut_variants = ['university of toronto', 'uoft', 'u of t']
-        author_affiliation_ut_num = len(
-            [
-                item
-                for item in author_info_dict
-                if item.get('authorAffiliation') is not None
-                and any(variant in item.get('authorAffiliation', '').lower() for variant in ut_variants)
-            ]
-        )  # noqa: E501
-        if author_affiliation_ut_num == 0:
-            logger.info('None of the authors have listed affiliation with University of Toronto')
-
-        self.checklist_result_writer.write(
-            check_id='missing_required_fields',
-            check_name='Missing Required Metadata Fields',
-            description='Required metadata fields that are empty or missing',
-            unit='field',
-            results=missing_required_fields,
-        )
-
-        self.checklist_result_writer.write(
-            check_id='authors_missing_affiliation',
-            check_name='Author affiliation field',
-            description='Authors missing institutional affiliation information',
-            unit='author',
-            results=authors_missing_affiliation,
-        )
-
-        self.checklist_result_writer.write(
-            check_id='authors_missing_identifier',
-            check_name='Author Research ID field',
-            description='Authors missing personal identifier (ORCID, etc.)',
-            unit='author',
-            results=authors_missing_identifier,
-        )
-
-        self.checklist_result_writer.write(
-            check_id='authors_missing_scheme',
-            check_name='Authors Research Identifier Scheme',
-            description='Authors missing identifier scheme information',
-            unit='author',
-            results=authors_missing_scheme,
-        )
+        self.metadata_checker.check_missing_required_fields()
+        self.metadata_checker.check_missing_author_affiliation()
+        self.metadata_checker.check_missing_author_identifier()
+        self.metadata_checker.check_missing_author_identifier_scheme()
 
     def check_spelling(self) -> None:
         """Check for spelling mistakes in the metadata."""
@@ -389,7 +315,7 @@ class Checker:
 
         field_list = ['title', 'subtitle', 'alternativeTitle', 'dsDescription.dsDescriptionValue', 'notesText']
         for field in field_list:
-            return_value, field_exists = self.metadata_checker.check_metadata_cm_field(field)
+            return_value, field_exists = self.metadata_checker.get_metadata_cm_field(field)
 
             if field_exists:
                 typos, has_typos = self.spell_checker.check_spelling(return_value[0])
