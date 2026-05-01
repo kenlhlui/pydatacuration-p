@@ -165,3 +165,71 @@ class MetadataChecker:
             logger.info('None of the authors have listed affiliation with University of Toronto')
 
         # TODO: Write this to db and make it a check in the checklist
+
+    def check_related_datasets(self) -> None:
+        """Check if the related datasets are present."""
+        query_string = 'data.latestVersion.metadataBlocks.citation.fields[?typeName==`relatedDatasets`].value[*][]'  # noqa: E501
+        related_datasets = jmespath.search(query_string, self.metadata)
+        if isinstance(related_datasets, list):
+            logger.info(f'Related datasets found in the metadata: {related_datasets}')
+        try:
+            self.checklist_result_writer.write(
+                check_name='Related Datasets',
+                check_id='related_datasets_entires',
+                description='Check if related datasets are present in the dataset metadata',  # noqa: E501
+                unit='related dataset',
+                results=related_datasets,
+            )
+        except Exception as e:
+            logger.error(f'Failed to write related datasets to database: {e}')
+
+    def check_data_sources(self) -> None:
+        """Check if the data sources are present."""
+        query_string = 'data.latestVersion.metadataBlocks.citation.fields[?typeName==`dataSources`].value[*][]'  # noqa: E501
+        data_sources = jmespath.search(query_string, self.metadata)
+        if isinstance(data_sources, list):
+            logger.info(f'Data sources found in the metadata: {data_sources}')
+        try:
+            self.checklist_result_writer.write(
+                check_name='Data Sources',
+                check_id='data_sources_entires',
+                description='Check if data sources are present in the dataset metadata',  # noqa: E501
+                unit='data source',
+                results=data_sources,
+            )
+        except Exception as e:
+            logger.error(f'Failed to write data sources to database: {e}')
+
+    def check_related_publications(self) -> None:
+        """Check if the related publications are present."""
+        query_string = 'data.latestVersion.metadataBlocks.citation.fields[?typeName==`publication`].value[*].publicationCitation[].value'  # noqa: E501
+        related_publications = jmespath.search(query_string, self.metadata)
+        if isinstance(related_publications, list):
+            logger.info(f'Related publications found in the metadata: {related_publications}')
+        try:
+            self.checklist_result_writer.write(
+                check_name='Related Publications',
+                check_id='related_publications_entires',
+                description='Check if related publications are present in the dataset',
+                unit='publication',
+                results=related_publications,
+            )
+        except Exception as e:
+            logger.error(f'Failed to write related publications to database: {e}')
+
+    def check_keywords(self) -> None:
+        """Check if the keywords are present."""
+        query_string = (
+            'data.latestVersion.metadataBlocks.citation.fields[?typeName==`keyword`].value[*].keywordValue.value[]'  # noqa: E501
+        )
+        keyword_list = jmespath.search(query_string, self.metadata)
+        if isinstance(keyword_list, list):
+            logger.info(f'Keywords found in the metadata: {keyword_list}')
+
+        self.checklist_result_writer.write(
+            check_name='Keywords',
+            check_id='keywords_existence',
+            description='Check if keywords are present in the dataset',
+            unit='keyword',
+            results=keyword_list,
+        )
