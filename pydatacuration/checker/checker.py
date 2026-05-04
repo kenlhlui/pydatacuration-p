@@ -3,15 +3,23 @@
 from pathlib import Path
 
 import jmespath
-import yaml
 from loguru import logger
 
 from pydatacuration.backend.models.setup_form import SetupForm
 
 # Write to db module
 from pydatacuration.checker.check_result_writer import CheckResultWriter
+
+# File Format Checker
+from pydatacuration.checker.file_format_checker import FileFormatChecker
+
+# File Name Checker
 from pydatacuration.checker.file_name_checker import FileNameChecker
+
+# File Open Checker
 from pydatacuration.checker.files_open_checker import FilesOpener
+
+# Metadata Checker
 from pydatacuration.checker.metadata_checker import MetadataChecker
 
 # Services
@@ -83,36 +91,19 @@ class Checker:
         self.spell_checker = SpellCheckerCustomized()
 
         self.file_name_checker = FileNameChecker(self.file_list_metadata, self.checklist_result_writer)
-        self.common_file_format_tuple = self._read_common_file_format()
+
+        # File format checker
+        self.file_format_checker = FileFormatChecker(
+            self.file_list_metadata,
+            self.checklist_result_writer,
+            res_dir=RES_DIR,
+            workdir=self.workdir,
+        )
 
         self.ds_title = jmespath.search(
             'data.latestVersion.metadataBlocks.citation.fields[?typeName == `title`].value | [0]', self.ds_metadata
         )
         self.dataset_id = self.ds_metadata.get('data', {}).get('latestVersion', {}).get('id')
-
-    def _read_common_file_format(self) -> tuple | None:
-        """Reads the common_file_format.yaml file and returns it as a dictionary.
-
-        Returns:
-            dict: The common file format as a dictionary.
-        """
-        try:
-            # Check if the file exists
-            if RES_DIR.joinpath('common_file_formats.yaml').exists():
-                # Open the file and read its content
-                with RES_DIR.joinpath('common_file_formats.yaml').open(encoding='utf-8') as file:
-                    common_file_format_dict = yaml.safe_load(file)
-
-                    file_formats = set()
-                    for _category, extensions in common_file_format_dict['file_formats'].items():
-                        file_formats.update(extensions)  # Use set to avoid duplicates
-
-                    return tuple(file_formats)  # Convert set to tuple for immutability
-
-        except FileNotFoundError:
-            # Handle the case where the file is not found
-            logger.error('common_file_formats.yaml file not found in the res directory.')
-            return None
 
     def check_file_open(self) -> None:
         """Check if the file can be opened."""
@@ -170,34 +161,10 @@ class Checker:
 
         self.checklist_result_writer.write(
             check_id='unsupported_files',
-            check_name='Files with uncommon formats',
+            check_name='Files in unsupported formats by the validation tool',
             description='Files in formats not supported by the validation tool',
             unit='file',
             results=unsupported_files,
-        )
-
-    def check_common_file_format(self) -> None:
-        """Check if the file format is in the common file format."""
-        uncommon_format_files = []
-
-        if self.common_file_format_tuple:
-            for file in self.file_list_metadata:
-                file_name = file.get('dataFile', {}).get('originalFileName') or file.get('dataFile', {}).get('filename')
-                file_rel_path = Path(file.get('directoryLabel', ''), file_name)
-                file_abs_path = Path(self.workdir, 'dataset', 'files', file_rel_path)
-                file_ext = file_rel_path.suffix
-                if file_ext.startswith('.') and file_ext not in self.common_file_format_tuple:
-                    logger.info(f'File is not a common file format: {file_abs_path}')
-                    uncommon_format_files.append(str(file_rel_path))
-        else:
-            logger.error('No common file format found in the res directory. Skipping this check.')
-
-        self.checklist_result_writer.write(
-            check_id='uncommon_file_formats',
-            check_name='Files with uncommon formats',
-            description='Files using uncommon or proprietary file formats',
-            unit='file',
-            results=uncommon_format_files,
         )
 
     def check_spelling(self) -> None:
@@ -329,8 +296,9 @@ class Checker:
         self.file_name_checker.check_file_name_with_special_char()
         self.file_name_checker.check_file_missing_extension()
         self.file_name_checker.check_readme_file()
+
         self.check_file_open()
-        self.check_common_file_format()
+        self.file_format_checker.check_common_file_format()
         self.check_spelling()
         self.check_depositor_record()
         self.check_ds_tree_info()
