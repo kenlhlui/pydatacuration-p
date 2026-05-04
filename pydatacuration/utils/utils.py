@@ -20,23 +20,6 @@ from pydatacuration.exceptions import DatasetUnauthorizedError
 from pydatacuration.httpx_client import HTTPXClient
 
 
-# Logger is imported directly from loguru
-
-
-def check_readme_file_existence(file: str) -> tuple:
-    """Check if the file is a README file.
-
-    Args:
-        file (str): The path to the file.
-
-    Returns:
-        tuple: The file path and a boolean value.
-    """
-    if re.search(r'readme', file, re.IGNORECASE):
-        return file, True
-    return file, False
-
-
 def compare_files_and_metadata(dl_files_checksums: list, metadata_file_checksums: list, work_dir: Path) -> bool:
     """Compare the downloaded files checksums and the metadata JSON file checksums.
 

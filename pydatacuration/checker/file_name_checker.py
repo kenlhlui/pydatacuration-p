@@ -3,17 +3,21 @@
 import re
 from pathlib import Path
 
-from pydatacuration.utils.custom_logging import logger
+from loguru import logger
+
+from pydatacuration.checker.check_result_writer import CheckResultWriter
 
 
-class FileNameFormatChecker:
+class FileNameChecker:
     """This class is used to check the file name format."""
 
-    def __init__(self) -> None:
+    def __init__(self, file_list_metadata: list, checklist_result_writer: CheckResultWriter) -> None:
         """Initialize the class."""
+        self.file_list_metadata = file_list_metadata
+        self.checklist_result_writer = checklist_result_writer
 
     @staticmethod
-    def check_special_char(file: str) -> tuple:
+    def _check_special_char(file: str) -> tuple:
         r"""Check if the file name contains special characters.
 
         <>:"/\|?* `CR` `LF` are absolutely forbidden in file names.
@@ -33,7 +37,7 @@ class FileNameFormatChecker:
         return file, False
 
     @staticmethod
-    def check_file_name_len(file: str, file_name_max_len: int) -> tuple:
+    def _check_file_name_len(file: str, file_name_max_len: int) -> tuple:
         """Check if the file name is longer than the maximum length.
 
         Args:
@@ -48,7 +52,7 @@ class FileNameFormatChecker:
         return file, False
 
     @staticmethod
-    def check_file_ext(file: str) -> tuple:
+    def _check_file_ext(file: str) -> tuple:
         """Check if the file has an extension.
 
         Args:
@@ -62,34 +66,75 @@ class FileNameFormatChecker:
         return file, True
 
     @staticmethod
-    def check_file_preferred_format(file: str, preferred_file_formats_config: str) -> tuple:
-        """Check if the file format is in the preferred file formats list.
+    def check_readme_file_existence(file: str) -> tuple:
+        """Check if the file is a README file.
 
         Args:
             file (str): The path to the file.
-            preferred_file_formats_config (str): The path to the configuration .txt file.
 
         Returns:
             tuple: The file path and a boolean value.
         """
-
-        def load_preferred_file_formats_list(preferred_file_formats_config: str) -> list:
-            """Load the list of preferred file formats from the configuration .txt file.
-
-            Args:
-                file (str): The path to the text file.
-                preferred_file_formats_config (str): The path to the configuration .txt file.
-
-            Returns:
-                list: A list of lines in the text file without newline characters.
-            """
-            try:
-                with Path(preferred_file_formats_config).open(encoding='utf-8') as f:
-                    return [line.strip() for line in f.readlines()]
-            except FileNotFoundError as e:
-                logger.error(f'Error: {e}')
-                return []
-
-        if Path(file).suffix in load_preferred_file_formats_list(preferred_file_formats_config):
+        if re.search(r'readme', file, re.IGNORECASE):
             return file, True
         return file, False
+
+    def check_file_name_with_special_char(self) -> None:
+        """Check if the file name contains special characters."""
+        special_char_files = []
+        for file in self.file_list_metadata:
+            file_name = file.get('dataFile', {}).get('originalFileName') or file.get('dataFile', {}).get('filename')
+            file_rel_path = Path(file.get('directoryLabel', ''), file_name)
+
+            if self._check_special_char(file_name)[1] is True:
+                logger.info(f'Special characters found in the filename: {file_rel_path}')
+                special_char_files.append(str(file_rel_path))
+
+        # Check special characters in file names and write to db
+        self.checklist_result_writer.write(
+            check_id='filename_special_chars',
+            check_name='File names with Special Characters',
+            description='Files containing special characters in filename',
+            unit='file',
+            results=special_char_files,
+        )
+
+    def check_file_missing_extension(self) -> None:
+        """Check if the file name is without extension."""
+        missing_ext_files = []
+        for file in self.file_list_metadata:
+            file_name = file.get('dataFile', {}).get('originalFileName') or file.get('dataFile', {}).get('filename')
+            file_rel_path = Path(file.get('directoryLabel', ''), file_name)
+
+            if self._check_file_ext(file_name)[1] is True:
+                logger.info(f'File extension does not found: {file_rel_path}')
+                missing_ext_files.append(str(file_rel_path))
+
+        # Check missing file extension and write to db
+        self.checklist_result_writer.write(
+            check_id='missing_file_extensions',
+            check_name='File names missing extensions',
+            description='Files without proper file extensions',
+            unit='file',
+            results=missing_ext_files,
+        )
+
+    def check_readme_file(self) -> None:
+        """Check if the README file exists."""
+        readme_files = []
+        for file in self.file_list_metadata:
+            file_name = file.get('dataFile', {}).get('originalFileName') or file.get('dataFile', {}).get('filename')
+            file_rel_path = Path(file.get('directoryLabel', ''), file_name)
+
+            if self.check_readme_file_existence(file_name)[1] is True:
+                logger.info(f'README file found: {file_rel_path}')
+                readme_files.append(str(file_rel_path))
+
+        # Check README files and write to db
+        self.checklist_result_writer.write(
+            check_id='readme_files',
+            check_name='File names for README',
+            description='README files detected in the dataset',
+            unit='file',
+            results=readme_files,
+        )

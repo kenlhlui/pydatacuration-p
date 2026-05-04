@@ -10,9 +10,9 @@ from pydatacuration.backend.models.setup_form import SetupForm
 
 # Write to db module
 from pydatacuration.checker.check_result_writer import CheckResultWriter
+from pydatacuration.checker.file_name_checker import FileNameChecker
 
 # Checker
-from pydatacuration.checker.file_name_checker import FileNameFormatChecker
 from pydatacuration.checker.files_open_checker import FilesOpener
 from pydatacuration.checker.metadata_checker import MetadataChecker
 from pydatacuration.checker.spell_checker import SpellCheckerCustomized
@@ -20,7 +20,6 @@ from pydatacuration.checksum import Checksum
 from pydatacuration.db.base import DatabaseBackend
 from pydatacuration.httpx_client import HTTPXClient
 from pydatacuration.utils.unzip import Unzipper
-from pydatacuration.utils.utils import check_readme_file_existence
 from pydatacuration.utils.utils import compare_files_and_metadata
 from pydatacuration.utils.utils import parse_file_list_metadata
 
@@ -71,6 +70,7 @@ class Checker:
         self.spell_checker = SpellCheckerCustomized()
         self.httpx_client = HTTPXClient(self.base_url, self.api_token)
         self.file_list_metadata = self._gen_file_list_metadata()
+        self.file_name_checker = FileNameChecker(self.file_list_metadata, self.checklist_result_writer)
         self.common_file_format_tuple = self._read_common_file_format()
 
         self.ds_title = jmespath.search(
@@ -165,56 +165,6 @@ class Checker:
         compare_files_and_metadata(dl_file_checksum_nested_list, file_list_metadata_nested_list, self.workdir)
 
         return file_list_metadata
-
-    def check_file_name_format(self) -> None:
-        """Check the file name format."""
-        file_name_format_checker = FileNameFormatChecker()
-        special_char_files = []
-        missing_ext_files = []
-        readme_files = []
-
-        for file in self.file_list_metadata:
-            file_name = file.get('dataFile', {}).get('originalFileName') or file.get('dataFile', {}).get('filename')
-            file_rel_path = Path(file.get('directoryLabel', ''), file_name)
-
-            if file_name_format_checker.check_special_char(file_name)[1] is True:
-                logger.info(f'Special characters found in the filename: {file_rel_path}')
-                special_char_files.append(str(file_rel_path))
-
-            if file_name_format_checker.check_file_ext(file_name)[1] is True:
-                logger.info(f'File extension does not found: {file_rel_path}')
-                missing_ext_files.append(str(file_rel_path))
-
-            if check_readme_file_existence(file_name)[1] is True:
-                logger.info(f'README file found: {file_rel_path}')
-                readme_files.append(str(file_rel_path))
-
-        # Check special characters in file names and write to db
-        self.checklist_result_writer.write(
-            check_id='filename_format',
-            check_name='File names with Special Characters',
-            description='Files containing special characters in filename',
-            unit='file',
-            results=special_char_files,
-        )
-
-        # Check missing file extension and write to db
-        self.checklist_result_writer.write(
-            check_id='missing_file_extensions',
-            check_name='File names missing extensions',
-            description='Files without proper file extensions',
-            unit='file',
-            results=missing_ext_files,
-        )
-
-        # Check README files and write to db
-        self.checklist_result_writer.write(
-            check_id='readme_files',
-            check_name='File names for README',
-            description='README files detected in the dataset',
-            unit='file',
-            results=readme_files,
-        )
 
     def check_file_open(self) -> None:
         """Check if the file can be opened."""
@@ -453,7 +403,9 @@ class Checker:
     def run_checks(self) -> None:
         """Run all the checks."""
         logger.info('Running the checks...')
-        self.check_file_name_format()
+        self.file_name_checker.check_file_name_with_special_char()
+        self.file_name_checker.check_file_missing_extension()
+        self.file_name_checker.check_readme_file()
         self.check_file_open()
         self.check_common_file_format()
         self.check_missing_metadata()
