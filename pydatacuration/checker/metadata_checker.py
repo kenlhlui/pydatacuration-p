@@ -175,7 +175,7 @@ class MetadataChecker:
         try:
             self.checklist_result_writer.write(
                 check_name='Related Datasets',
-                check_id='related_datasets_entires',
+                check_id='related_datasets_entries',
                 description='Check if related datasets are present in the dataset metadata',  # noqa: E501
                 unit='related dataset',
                 results=related_datasets,
@@ -192,7 +192,7 @@ class MetadataChecker:
         try:
             self.checklist_result_writer.write(
                 check_name='Data Sources',
-                check_id='data_sources_entires',
+                check_id='data_sources_entries',
                 description='Check if data sources are present in the dataset metadata',  # noqa: E501
                 unit='data source',
                 results=data_sources,
@@ -209,7 +209,7 @@ class MetadataChecker:
         try:
             self.checklist_result_writer.write(
                 check_name='Related Publications',
-                check_id='related_publications_entires',
+                check_id='related_publications_entries',
                 description='Check if related publications are present in the dataset',
                 unit='publication',
                 results=related_publications,

@@ -66,7 +66,7 @@ class FileNameChecker:
         return file, True
 
     @staticmethod
-    def check_readme_file_existence(file: str) -> tuple:
+    def _check_readme_file_existence(file: str) -> tuple:
         """Check if the file is a README file.
 
         Args:
@@ -126,7 +126,7 @@ class FileNameChecker:
             file_name = file.get('dataFile', {}).get('originalFileName') or file.get('dataFile', {}).get('filename')
             file_rel_path = Path(file.get('directoryLabel', ''), file_name)
 
-            if self.check_readme_file_existence(file_name)[1] is True:
+            if self._check_readme_file_existence(file_name)[1] is True:
                 logger.info(f'README file found: {file_rel_path}')
                 readme_files.append(str(file_rel_path))
 

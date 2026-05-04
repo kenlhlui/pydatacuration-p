@@ -349,7 +349,7 @@ checklist:
       - Related Publication field
       - DOI/PID references
       - Title/Description fields
-    automated_check_ids: ["related_publications_entires"]
+    automated_check_ids: ["related_publications_entries"]
     check_type: "Manual"
 
   - id: "4.10"
@@ -374,7 +374,7 @@ checklist:
       - Description field
       - Notes field
       - Dataset documentation
-    automated_check_ids: ["related_datasets_entires"]
+    automated_check_ids: ["related_datasets_entries"]
     check_type: "Manual"
 
   - id: "4.11"
@@ -395,7 +395,7 @@ checklist:
       * Description field  
       * Notes field  
       * Dataset documentation
-    automated_check_ids: ["data_sources_entires"]
+    automated_check_ids: ["data_sources_entries"]
     check_type: "Manual"
 
   - id: "5.1"
