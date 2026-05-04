@@ -252,13 +252,6 @@ class Checker:
             results=uncommon_format_files,
         )
 
-    def check_missing_metadata(self) -> None:
-        """Check for missing metadata."""
-        self.metadata_checker.check_missing_required_fields()
-        self.metadata_checker.check_missing_author_affiliation()
-        self.metadata_checker.check_missing_author_identifier()
-        self.metadata_checker.check_missing_author_identifier_scheme()
-
     def check_spelling(self) -> None:
         """Check for spelling mistakes in the metadata."""
         potential_typos = []
@@ -408,7 +401,6 @@ class Checker:
         self.file_name_checker.check_readme_file()
         self.check_file_open()
         self.check_common_file_format()
-        self.check_missing_metadata()
         self.check_spelling()
         self.check_depositor_record()
         self.check_ds_tree_info()
@@ -420,3 +412,8 @@ class Checker:
         self.metadata_checker.check_related_publications()
         self.metadata_checker.check_related_datasets()
         self.metadata_checker.check_data_sources()
+
+        self.metadata_checker.check_missing_required_fields()
+        self.metadata_checker.check_missing_author_affiliation()
+        self.metadata_checker.check_missing_author_identifier()
+        self.metadata_checker.check_missing_author_identifier_scheme()
