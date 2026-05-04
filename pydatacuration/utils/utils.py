@@ -16,6 +16,7 @@ from tenacity import RetryError
 from pydatacuration.exceptions import DatasetAccessError
 from pydatacuration.exceptions import DatasetNotFoundError
 from pydatacuration.exceptions import DatasetUnauthorizedError
+from pydatacuration.services.api_calls.call_dv import DVAPICalls
 from pydatacuration.services.api_calls.httpx_client import HTTPXClient
 
 
@@ -104,26 +105,30 @@ def check_ds_read_access(pid: str, base_url: str, api_token: str) -> None:
     """
     httpx_client = HTTPXClient(base_url, api_token)
 
-    http_success_codes = {200, 201, 202, 204}
+    http_ok = 200
+    http_not_found = 404
     http_unauthorized_codes = {401, 403}
-    http_not_found_codes = {404}
 
     try:
         # Check whether the user has access to the dataset
-        response = httpx_client.sync_get(f'api/datasets/:persistentId/?persistentId={pid}', raise_for_status=False)
+        code: int = DVAPICalls(httpx_client).get_ds_access_status(pid)
 
-        if response.status_code in http_unauthorized_codes:
+        if code in http_unauthorized_codes:
             msg = 'You do not have read access to the dataset. Please check your API token or permissions.'
             logger.error(f'❌{msg}')
             raise DatasetUnauthorizedError(msg)
 
-        if response.status_code in http_not_found_codes:
+        if code == http_not_found:
             msg = 'The dataset does not exist. Please check the PID input.'
             logger.error(f'❌{msg}')
             raise DatasetNotFoundError(msg)
 
-        if response.status_code in http_success_codes:
+        if code == http_ok:
             logger.info('✅ Dataset access verified.')
+        else:
+            msg = f'Unexpected response (HTTP {code}) while checking dataset access.'
+            logger.error(f'❌{msg}')
+            raise DatasetAccessError(msg)
 
     except RetryError as e:
         error_msg = (
