@@ -12,5 +12,5 @@ __all__ = [
     'MetadataChecker',
     'SpellCheckerCustomized',
     'FilesOpener',
-    'FileNameFormatChecker',
+    'FileNameChecker',
 ]
