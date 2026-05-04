@@ -233,3 +233,48 @@ class MetadataChecker:
             unit='keyword',
             results=keyword_list,
         )
+
+    def check_license(self) -> None:
+        """Check if the terms of use and license are present."""
+        license_name = self.metadata.get('data', {}).get('latestVersion', {}).get('license', {}).get('name', None)
+
+        self.checklist_result_writer.write(
+            check_id='license',
+            check_name='License of the Dataset',
+            description='License information in the dataset',
+            unit='license',
+            results=[
+                license_name,
+            ],
+        )
+
+        if license_name == 'CC0 1.0':
+            logger.info('The license is CC0 1.0')
+
+    def check_terms_of_access(self) -> None:
+        """Check if the terms of access are present."""
+        terms_of_access = self.metadata.get('data', {}).get('latestVersion', {}).get('termsOfAccess', None)
+
+        self.checklist_result_writer.write(
+            check_id='termsOfAccess',
+            check_name='Terms of Access of the Dataset',
+            description='Terms of Access information in the dataset',
+            unit='term of access',
+            results=[
+                terms_of_access,  # FIXME: might need to update the model to accept None object, and also need to handle the rendering part.  # noqa: E501
+            ],
+        )
+
+    def check_terms_of_use(self) -> None:
+        """Check if the terms of use are present."""
+        terms_of_use = self.metadata.get('data', {}).get('latestVersion', {}).get('termsOfUse', None)
+
+        self.checklist_result_writer.write(
+            check_id='termsOfUse',
+            check_name='Terms of Use of the Dataset',
+            description='Terms of Use information in the dataset',
+            unit='terms of use',
+            results=[
+                terms_of_use,  # FIXME: might need to update the model to accept None object, and also need to handle the rendering part.  # noqa: E501
+            ],
+        )
