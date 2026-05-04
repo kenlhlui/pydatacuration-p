@@ -18,7 +18,8 @@ from pydatacuration.checker.metadata_checker import MetadataChecker
 from pydatacuration.checker.services.dataset_tree_info import DatasetTreeInfo
 from pydatacuration.checker.spell_checker import SpellCheckerCustomized
 from pydatacuration.db.base import DatabaseBackend
-from pydatacuration.httpx_client import HTTPXClient
+from pydatacuration.services.api_calls.call_dv import DVAPICalls
+from pydatacuration.services.api_calls.httpx_client import HTTPXClient
 
 # Verify downloaded files
 from pydatacuration.services.verify_download_files import VerifyDownloadFiles
@@ -64,6 +65,10 @@ class Checker:
         # Dataset tree information service
         self.dv_tree_info = DatasetTreeInfo(dv_tree=dv_tree)
 
+        # API calls service
+        self.httpx_client = HTTPXClient(self.base_url, self.api_token)
+        self.dv_api_calls = DVAPICalls(httpx_client=self.httpx_client)
+
         self.db_instance = db_instance
         self.sqlmodels = self.db_instance.models
         self.checklist_result = self.sqlmodels.check_results()
@@ -76,7 +81,6 @@ class Checker:
         self.files_opener = FilesOpener
         self.metadata_checker = MetadataChecker(self.ds_metadata, self.checklist_result_writer)
         self.spell_checker = SpellCheckerCustomized()
-        self.httpx_client = HTTPXClient(self.base_url, self.api_token)
 
         self.file_name_checker = FileNameChecker(self.file_list_metadata, self.checklist_result_writer)
         self.common_file_format_tuple = self._read_common_file_format()
@@ -243,25 +247,14 @@ class Checker:
         depositor: str | None = jmespath.search(query_string, self.ds_metadata)
 
         if isinstance(depositor, str) and depositor.strip():  # Check if depositor is a non-empty string
-            # Check if the depositor has record by search API
-            # See https://github.com/IQSS/dataverse/issues/2038 for fq field;
-            # Note that fq supports searching the fields of the database schema
-            # i.e. The fields in the Native JSON export of a dataset
-            # The schema can be found inside the .tsv files for each metadata block: https://github.com/IQSS/dataverse/tree/master/scripts/api/data/metadatablocks
-            if self.collection_alias:  # Only check the specified collection
-                response = self.httpx_client.sync_get(
-                    f'/api/search?q=*&type=dataset&per_page=1000&subtree={self.collection_alias}&fq=depositor:"{depositor}"'
-                )  # noqa: E501
-            else:
-                # If no collection_alias is provided, search in all dataverses
-                response = self.httpx_client.sync_get(
-                    f'/api/search?q=*&type=dataset&per_page=1000&fq=depositor:"{depositor}"'
-                )  # noqa: E501
-            if response and response.json():
+            response_json = self.dv_api_calls.get_depositor_record(
+                depositor=depositor, collection_alias=self.collection_alias
+            )
+            if response_json:
                 dataset_publish_history = (
                     jmespath.search(
                         'data.items[*].{name: name, url: url, name_of_dataverse: name_of_dataverse}',
-                        response.json(),
+                        response_json,
                     )
                     or []
                 )

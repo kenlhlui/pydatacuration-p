@@ -14,8 +14,8 @@ from pydatacuration.checker import Checker
 from pydatacuration.checklist.utils import get_checklist_content
 from pydatacuration.db import DatabaseBackend
 from pydatacuration.db import get_database
-from pydatacuration.downloads import Downloads
 from pydatacuration.exceptions import DirectoryExistsError
+from pydatacuration.services.api_calls.downloads import Downloads
 from pydatacuration.utils import directory_manager
 from pydatacuration.utils.utils import DatasetAccessError
 from pydatacuration.utils.utils import DatasetNotFoundError

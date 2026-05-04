@@ -9,10 +9,9 @@ import jmespath
 from loguru import logger
 
 from pydatacuration.backend.models.setup_form import SetupForm
+from pydatacuration.services.api_calls.httpx_client import HTTPXClient
 from pydatacuration.utils.directory_manager import DirectoryManager
 from pydatacuration.utils.utils import orjson_export
-
-from .httpx_client import HTTPXClient
 
 
 class Downloads:

@@ -16,7 +16,7 @@ from tenacity import RetryError
 from pydatacuration.exceptions import DatasetAccessError
 from pydatacuration.exceptions import DatasetNotFoundError
 from pydatacuration.exceptions import DatasetUnauthorizedError
-from pydatacuration.httpx_client import HTTPXClient
+from pydatacuration.services.api_calls.httpx_client import HTTPXClient
 
 
 def compare_files_and_metadata(dl_files_checksums: list, metadata_file_checksums: list, work_dir: Path) -> bool:
