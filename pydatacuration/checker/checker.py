@@ -16,12 +16,12 @@ from pydatacuration.checker.file_name_checker import FileNameChecker
 from pydatacuration.checker.files_open_checker import FilesOpener
 from pydatacuration.checker.metadata_checker import MetadataChecker
 from pydatacuration.checker.spell_checker import SpellCheckerCustomized
-from pydatacuration.checksum import Checksum
 from pydatacuration.db.base import DatabaseBackend
 from pydatacuration.httpx_client import HTTPXClient
+
+# Verify downloaded files
+from pydatacuration.services.verify_download_files import VerifyDownloadFiles
 from pydatacuration.utils.unzip import Unzipper
-from pydatacuration.utils.utils import compare_files_and_metadata
-from pydatacuration.utils.utils import parse_file_list_metadata
 
 
 RES_DIR = Path('res')
@@ -55,6 +55,11 @@ class Checker:
         self.check_zip = setup_form_instance.check_zip
         self.collection_alias = setup_form_instance.collection_alias
 
+        # Verify the downloaded files
+        self.verify_download_files_service = VerifyDownloadFiles(target_dir=workdir, ds_metadata=ds_metadata)
+        self.file_list_metadata = self.verify_download_files_service.file_list_metadata
+        self.verify_download_files_service.verify(workdir)
+
         self.db_instance = db_instance
         self.sqlmodels = self.db_instance.models
         self.checklist_result = self.sqlmodels.check_results()
@@ -64,12 +69,11 @@ class Checker:
         self.curator_email = setup_form_instance.curator_email
         self.checklist_type = setup_form_instance.checklist
 
-        self.checksums = Checksum()
         self.files_opener = FilesOpener
         self.metadata_checker = MetadataChecker(self.ds_metadata, self.checklist_result_writer)
         self.spell_checker = SpellCheckerCustomized()
         self.httpx_client = HTTPXClient(self.base_url, self.api_token)
-        self.file_list_metadata = self._gen_file_list_metadata()
+
         self.file_name_checker = FileNameChecker(self.file_list_metadata, self.checklist_result_writer)
         self.common_file_format_tuple = self._read_common_file_format()
 
@@ -148,23 +152,6 @@ class Checker:
             # Handle the case where the file is not found
             logger.error('common_file_formats.yaml file not found in the res directory.')
             return None
-
-    def _gen_file_list_metadata(self) -> list:
-        """Generate the file list metadata.
-
-        Returns:
-            list: The file list metadata.
-        """
-        # Check the checksum of the downloaded files
-        dl_file_checksum_nested_list = self.checksums.gen_ds_files_checksum(self.workdir)
-
-        file_list_metadata = self.ds_metadata['data']['latestVersion']['files']
-
-        file_list_metadata_nested_list = parse_file_list_metadata(file_list_metadata)
-
-        compare_files_and_metadata(dl_file_checksum_nested_list, file_list_metadata_nested_list, self.workdir)
-
-        return file_list_metadata
 
     def check_file_open(self) -> None:
         """Check if the file can be opened."""

@@ -3,7 +3,6 @@
 import os
 import re
 from pathlib import Path
-from pathlib import PurePosixPath
 from urllib.parse import urlencode
 from urllib.parse import urljoin
 
@@ -66,29 +65,6 @@ def gen_tree_diagram(target_dir: Path, save_dir: Path) -> None:
     except Exception as e:
         logger.info(f'Error: {e}')
         logger.info('An error occurred while generating the folder tree diagram.')
-
-
-def parse_file_list_metadata(file_list_metadata: list) -> list:
-    """Parse the file list metadata.
-
-    Args:
-        file_list_metadata (list): The list of file metadata.
-
-    Returns:
-        list: The parsed file list metadata.
-    """
-    file_list_metadata_nested_list = []
-    for file_meta in file_list_metadata:
-        filename = file_meta.get('dataFile', {}).get('originalFileName') or file_meta.get('dataFile', {}).get(
-            'filename'
-        )  # noqa: E501
-        directory_label = file_meta.get('directoryLabel', '')
-        file_full_path_obj = Path(directory_label, filename)
-        file_list_metadata_nested_list.append(
-            {'file': str(PurePosixPath(file_full_path_obj)), 'md5_checksum': file_meta['dataFile']['md5']}
-        )
-
-    return file_list_metadata_nested_list
 
 
 def check_project_num_input(project_number: str) -> str:
