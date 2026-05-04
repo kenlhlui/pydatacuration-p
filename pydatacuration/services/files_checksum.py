@@ -5,7 +5,7 @@ from pathlib import Path
 from pathlib import PurePosixPath
 
 
-class Checksum:
+class FilesChecksum:
     """This class is used to generate the checksum of the files in the dataset directory."""
 
     @staticmethod

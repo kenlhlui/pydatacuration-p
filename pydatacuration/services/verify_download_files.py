@@ -6,7 +6,7 @@ from pathlib import PurePosixPath
 import deepdiff
 from loguru import logger
 
-from pydatacuration.checksum import Checksum
+from pydatacuration.services.files_checksum import FilesChecksum
 
 
 class VerifyDownloadFiles:
@@ -25,7 +25,7 @@ class VerifyDownloadFiles:
 
         self.file_list_metadata_nested_list: list = self.parse_file_list_metadata(self.file_list_metadata)
 
-        self.checksum_generator = Checksum()
+        self.checksum_generator = FilesChecksum()
 
     @staticmethod
     def parse_file_list_metadata(file_list_metadata: list) -> list:
