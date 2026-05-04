@@ -11,10 +11,11 @@ from pydatacuration.backend.models.setup_form import SetupForm
 # Write to db module
 from pydatacuration.checker.check_result_writer import CheckResultWriter
 from pydatacuration.checker.file_name_checker import FileNameChecker
-
-# Checker
 from pydatacuration.checker.files_open_checker import FilesOpener
 from pydatacuration.checker.metadata_checker import MetadataChecker
+
+# Services
+from pydatacuration.checker.services.dataset_tree_info import DatasetTreeInfo
 from pydatacuration.checker.spell_checker import SpellCheckerCustomized
 from pydatacuration.db.base import DatabaseBackend
 from pydatacuration.httpx_client import HTTPXClient
@@ -60,6 +61,9 @@ class Checker:
         self.file_list_metadata = self.verify_download_files_service.file_list_metadata
         self.verify_download_files_service.verify(workdir)
 
+        # Dataset tree information service
+        self.dv_tree_info = DatasetTreeInfo(dv_tree=dv_tree)
+
         self.db_instance = db_instance
         self.sqlmodels = self.db_instance.models
         self.checklist_result = self.sqlmodels.check_results()
@@ -81,53 +85,6 @@ class Checker:
             'data.latestVersion.metadataBlocks.citation.fields[?typeName == `title`].value | [0]', self.ds_metadata
         )
         self.dataset_id = self.ds_metadata.get('data', {}).get('latestVersion', {}).get('id')
-
-    def _get_ds_tree_info(self, identifier_of_dataverse: str) -> dict:
-        """Get the dataset tree information in the Dataverse repository.
-
-        Args:
-            identifier_of_dataverse(str): The identifier of the dataverse parent dataverse.
-
-        Returns:
-            dict: A dictionary containing the path to the target node, empty if none.
-        """
-
-        def _process(data: dict, id_list: list, alias_list: list, name_list: list) -> dict:
-            # Append the current node's alias and name to the respective lists
-            # Create new lists with current node's information
-            current_id_list = id_list + [data.get('id')]
-            current_alias_list = alias_list + [data.get('alias')]
-            current_name_list = name_list + [data.get('name')]
-
-            # Check if the current node is the target
-            if data.get('alias') == identifier_of_dataverse:
-                result = {
-                    'id': current_id_list,
-                    'alias': current_alias_list,
-                    'depth': data.get('depth'),
-                    'name': current_name_list,
-                }
-                # Combine the paths with '/' separator
-                result['path'] = '/'.join(current_name_list)
-                # Turn the id, alias and name from list to tuple
-                result['id'] = tuple(result['id'])
-                result['alias'] = tuple(result['alias'])
-                result['name'] = tuple(result['name'])
-                return result
-
-            # Recursively search through any children
-            for child in data.get('children', []):
-                result = _process(child, current_id_list, current_alias_list, current_name_list)
-                if result:  # This is correct - if a non-empty result is returned from any child, pass it up
-                    return result  # Return the result immediately when found
-
-            # If we get here, no match was found in this branch
-            return {}
-
-        # Read the root node from the JSON once
-        root = self.dv_tree.get('data', {}) if self.dv_tree.get('status') == 'OK' else {}
-        result = _process(root, [], [], [])
-        return result
 
     def _read_common_file_format(self) -> tuple | None:
         """Reads the common_file_format.yaml file and returns it as a dictionary.
@@ -348,7 +305,7 @@ class Checker:
                 identifier_of_dataverse = (
                     response.json().get('data', {}).get('items', [{}])[0].get('identifier_of_dataverse', None)
                 )  # noqa: E501
-                tree_info = self._get_ds_tree_info(identifier_of_dataverse)
+                tree_info = self.dv_tree_info.get_ds_tree_info(identifier_of_dataverse)
                 path: str | None = tree_info.get('path', '')
                 dataset_path = ''  # Placeholder to prevent error
                 if path:
