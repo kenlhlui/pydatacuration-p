@@ -60,7 +60,7 @@ class VerifyDownloadFiles:
             work_dir (Path): The working directory.
 
         Returns:
-            bool: True if the downloaded files and the metadata JSON file checksums are different, False otherwise.
+            bool: True if the downloaded files and the metadata JSON file checksums are the same, False otherwise.
         """
         diff = deepdiff.DeepDiff(dl_files_checksums, metadata_file_checksums, ignore_order=True)
         if diff:
@@ -88,7 +88,7 @@ class VerifyDownloadFiles:
         Returns:
             list: A list of dictionaries containing the file path and the checksum.
         """
-        return self.ds_metadata['data']['latestVersion']['files']
+        return self.ds_metadata.get('data', {}).get('latestVersion', {}).get('files', [])
 
     def verify(self, work_dir: Path) -> list | None:
         """Verify the downloaded files against the metadata JSON file.
@@ -97,8 +97,8 @@ class VerifyDownloadFiles:
             work_dir (Path): The working directory.
 
         Returns:
-            bool: True if the downloaded files and the metadata JSON file checksums are different, False otherwise.
-        """
+            list | None: A list of dictionaries containing the file path and the checksum if the verification is successful, None otherwise.
+        """  # noqa: E501
         if self.compare_files_and_metadata(
             self.generate_dl_files_checksums(), self.file_list_metadata_nested_list, work_dir
         ):

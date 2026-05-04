@@ -247,7 +247,7 @@ class Checker:
         depositor: str | None = jmespath.search(query_string, self.ds_metadata)
 
         if isinstance(depositor, str) and depositor.strip():  # Check if depositor is a non-empty string
-            response_json = self.dv_api_calls.get_depositor_record(
+            response_json = self.dv_api_calls.search_depositor_record(
                 depositor=depositor, collection_alias=self.collection_alias
             )
             if response_json:
@@ -282,21 +282,14 @@ class Checker:
         """Check the path of the dataset in the dataverse Repository."""
         ds_version_id = self.ds_metadata.get('data', {}).get('latestVersion', {}).get('id')
         if ds_version_id:
-            # See https://github.com/IQSS/dataverse/issues/2038 for fq field;
-            # Also check the source code the the available fq fields https://github.com/IQSS/dataverse/blob/develop/src/main/java/edu/harvard/iq/dataverse/search/SearchFields.java
-            # Use 'datasetVersionId' here; in ds_metadata it is data.latestVersion.id
-            # Don't mess up with data.id or data.latestVersion.datasetId which are the same and is the persistent id in the dataverse system  # noqa: E501
-            # FIXME: Move this business logic out of the checker.
-            response = self.httpx_client.sync_get(
-                f'/api/search?q=*&type=dataset&per_page=1&fq=datasetVersionId:{ds_version_id}'
-            )  # noqa: E501
-            if response and response.json():
+            response_json = self.dv_api_calls.search_dataset_by_version_id(ds_version_id=ds_version_id)
+            if response_json:
                 # Get the name_of_dataverse from the response
-                name_of_dataverse = response.json().get('data', {}).get('items', [{}])[0].get('name_of_dataverse', None)  # noqa: E501
+                name_of_dataverse = response_json.get('data', {}).get('items', [{}])[0].get('name_of_dataverse', None)  # noqa: E501
 
                 # Get the path of the dataverse from the response
                 identifier_of_dataverse = (
-                    response.json().get('data', {}).get('items', [{}])[0].get('identifier_of_dataverse', None)
+                    response_json.get('data', {}).get('items', [{}])[0].get('identifier_of_dataverse', None)
                 )  # noqa: E501
                 tree_info = self.dv_tree_info.get_ds_tree_info(identifier_of_dataverse)
                 path: str | None = tree_info.get('path', '')

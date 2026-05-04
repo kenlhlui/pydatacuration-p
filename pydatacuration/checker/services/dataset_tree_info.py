@@ -8,8 +8,8 @@ class DatasetTreeInfo:
         """Initialize the DatasetTreeInfo class."""
         self.dv_tree = dv_tree
 
-    def get_dv_identifier(self) -> str | None:
-        pass
+    # def get_dv_identifier(self) -> str | None:
+    #     pass
 
     def get_ds_tree_info(self, identifier_of_dataverse: str) -> dict:
         """Get the dataset tree information in the Dataverse repository.

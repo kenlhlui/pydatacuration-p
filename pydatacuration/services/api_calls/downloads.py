@@ -9,6 +9,7 @@ import jmespath
 from loguru import logger
 
 from pydatacuration.backend.models.setup_form import SetupForm
+from pydatacuration.services.api_calls.call_dv import DVAPICalls
 from pydatacuration.services.api_calls.httpx_client import HTTPXClient
 from pydatacuration.utils.directory_manager import DirectoryManager
 from pydatacuration.utils.utils import orjson_export
@@ -43,6 +44,7 @@ class Downloads:
         self.success_code = 200
 
         self.httpx_client = HTTPXClient(self.base_url, self.api_token)
+        self.dv_api_calls = DVAPICalls(self.httpx_client)
         self.semaphore = asyncio.Semaphore(5)
         self.directory_manager = DirectoryManager(self.project_number, self.download_dir)
 
@@ -149,29 +151,6 @@ class Downloads:
         logger.info(f'Finished downloading files: {successful}')
         return successful
 
-    def _get_dv_tree(self) -> dict:
-        """Get the tree structure of the dataverse repository.
-
-        Returns:
-            dict: Tree structure of the dataverse repository
-        """
-        url = f'{self.base_url}/api/info/metrics/tree'
-
-        try:
-            logger.info(f'Fetching dataverse tree structure from {url}...')
-            response = self.httpx_client.sync_get(url)
-            response.raise_for_status()
-            if response.status_code == self.success_code and response.json():
-                return response.json()
-            logger.error(f'Error: {response.status_code} - {response.text}')
-            return {}
-        except httpx.HTTPStatusError as e:
-            logger.error(f'HTTP error occurred: {e}')
-            return {}
-        except Exception as e:
-            logger.error(f'An error occurred: {e}')
-            return {}
-
     def _get_ds_metadata(self) -> dict:
         """Get metadata of a dataset.
 
@@ -207,11 +186,11 @@ class Downloads:
     async def downloader(self) -> None:
         """Download the dataset as a zip file asynchronously."""
         # Get the dataset metadata (sync HTTP — offloaded to thread to avoid blocking event loop)
-        ds_metadata = await asyncio.to_thread(self._get_ds_metadata)
+        ds_metadata = self.dv_api_calls.get_ds_metadata(self.pid)
         self.export_metadata('ds_metadata.json', ds_metadata)
 
         # Get the tree structure of the whole dataverse repository (sync HTTP — can be slow for large repos)
-        dv_tree = await asyncio.to_thread(self._get_dv_tree)
+        dv_tree = self.dv_api_calls.get_dv_tree()
         self.export_metadata('dv_tree.json', dv_tree)
 
         # Download the data files using async method
