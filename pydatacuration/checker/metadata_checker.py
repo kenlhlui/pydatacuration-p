@@ -1,9 +1,14 @@
 """MetadataChecker class for checking dataset metadata."""
 
-import jmespath
 from loguru import logger
 
 from pydatacuration.checker.check_result_writer import CheckResultWriter
+from pydatacuration.utils.search_ds_meta import get_author_cm_field
+from pydatacuration.utils.search_ds_meta import get_data_sources
+from pydatacuration.utils.search_ds_meta import get_keywords
+from pydatacuration.utils.search_ds_meta import get_metadata_cm_field
+from pydatacuration.utils.search_ds_meta import get_related_dataset
+from pydatacuration.utils.search_ds_meta import get_related_publication
 
 
 class MetadataChecker:
@@ -19,61 +24,7 @@ class MetadataChecker:
         self.metadata = metadata
         self.checklist_result_writer = checklist_result_writer
 
-        self.author_info_dict = self.get_author_cm_field()
-
-    def _get_metadata_cm_field(self, field: str, subfield: str | None = None) -> str | None:
-        """Get the value of a metadata field from the metadata JSON file.
-
-        Args:
-            field (str): Metadata field to check.
-            subfield (str, optional): Subfield to check. Defaults to None.
-
-        Returns:
-            result (str | None): Value of the metadata field or None if it doesn't exist
-        """
-        if subfield:
-            query_string = (
-                f'data.latestVersion.metadataBlocks.citation.fields[?typeName==`{field}`].value[].[{subfield}][].value'  # noqa: E501
-            )
-            result = jmespath.search(query_string, self.metadata)
-        else:
-            query_string = f'data.latestVersion.metadataBlocks.citation.fields[?typeName==`{field}`].value[]'
-            result = jmespath.search(query_string, self.metadata)
-        return result
-
-    def get_metadata_cm_field(self, field: str) -> tuple[str | None, bool]:
-        r"""Get the value of a metadata field from the metadata JSON file.
-
-        Args:
-            field (str): Metadata field to check.\n
-            Use '.' to specify subfields; e.g. "title", "author.authorName"
-
-        Returns:
-            result (str | None): Value of the metadata field or None if it doesn't exist
-            exists (bool): True if the metadata field exists, False otherwise
-        """
-        # Check the input of field has . in it and split it into field and subfield
-        if '.' in field:
-            field, subfield = field.split('.')
-        else:
-            subfield = None
-
-        result = self._get_metadata_cm_field(field, subfield)
-        if result:
-            return result, True
-
-        return None, False
-
-    def get_author_cm_field(self) -> list[dict]:
-        r"""Get the author metadata fields from the metadata JSON file.
-
-        Returns:
-            result (list[dict]): List of dictionaries containing author metadata fields
-        """
-        query_string = 'data.latestVersion.metadataBlocks.citation.fields[?typeName==`author`].value[].{authorName:authorName.value, authorAffiliation: authorAffiliation.value, authorIdentifierScheme: authorIdentifierScheme.value, authorIdentifier:authorIdentifier.value}'  # noqa: E501
-        result = jmespath.search(query_string, self.metadata)
-
-        return result or []
+        self.author_info_dict = get_author_cm_field(self.metadata)
 
     def check_missing_required_fields(self) -> None:
         """Check for missing required metadata fields."""
@@ -82,7 +33,7 @@ class MetadataChecker:
         required_fields = ['title', 'dsDescription', 'subject']
 
         for field in required_fields:
-            return_value = self.get_metadata_cm_field(field)
+            return_value = get_metadata_cm_field(self.metadata, field)
             if return_value[1] is False:
                 logger.info(f'Missing metadata found in the {field}')
                 missing_required_fields.append(field)
@@ -168,8 +119,7 @@ class MetadataChecker:
 
     def check_related_datasets(self) -> None:
         """Check if the related datasets are present."""
-        query_string = 'data.latestVersion.metadataBlocks.citation.fields[?typeName==`relatedDatasets`].value[*][]'  # noqa: E501
-        related_datasets = jmespath.search(query_string, self.metadata)
+        related_datasets = get_related_dataset(self.metadata)
         if isinstance(related_datasets, list):
             logger.info(f'Related datasets found in the metadata: {related_datasets}')
         try:
@@ -185,8 +135,7 @@ class MetadataChecker:
 
     def check_data_sources(self) -> None:
         """Check if the data sources are present."""
-        query_string = 'data.latestVersion.metadataBlocks.citation.fields[?typeName==`dataSources`].value[*][]'  # noqa: E501
-        data_sources = jmespath.search(query_string, self.metadata)
+        data_sources = get_data_sources(self.metadata)
         if isinstance(data_sources, list):
             logger.info(f'Data sources found in the metadata: {data_sources}')
         try:
@@ -202,8 +151,7 @@ class MetadataChecker:
 
     def check_related_publications(self) -> None:
         """Check if the related publications are present."""
-        query_string = 'data.latestVersion.metadataBlocks.citation.fields[?typeName==`publication`].value[*].publicationCitation[].value'  # noqa: E501
-        related_publications = jmespath.search(query_string, self.metadata)
+        related_publications = get_related_publication(self.metadata)
         if isinstance(related_publications, list):
             logger.info(f'Related publications found in the metadata: {related_publications}')
         try:
@@ -219,10 +167,8 @@ class MetadataChecker:
 
     def check_keywords(self) -> None:
         """Check if the keywords are present."""
-        query_string = (
-            'data.latestVersion.metadataBlocks.citation.fields[?typeName==`keyword`].value[*].keywordValue.value[]'  # noqa: E501
-        )
-        keyword_list = jmespath.search(query_string, self.metadata)
+        keyword_list = get_keywords(self.metadata)
+
         if isinstance(keyword_list, list):
             logger.info(f'Keywords found in the metadata: {keyword_list}')
 

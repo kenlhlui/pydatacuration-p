@@ -31,9 +31,13 @@ from pydatacuration.services.api_calls.httpx_client import HTTPXClient
 
 # Verify downloaded files
 from pydatacuration.services.verify_download_files import VerifyDownloadFiles
+from pydatacuration.utils.search_ds_meta import get_depositor_record
 
 # utils
 from pydatacuration.utils.search_ds_meta import get_ds_title
+
+# Search dataset metadata utils
+from pydatacuration.utils.search_ds_meta import get_metadata_cm_field
 from pydatacuration.utils.unzip import Unzipper
 
 
@@ -174,7 +178,7 @@ class Checker:
 
         field_list = ['title', 'subtitle', 'alternativeTitle', 'dsDescription.dsDescriptionValue', 'notesText']
         for field in field_list:
-            return_value, field_exists = self.metadata_checker.get_metadata_cm_field(field)
+            return_value, field_exists = get_metadata_cm_field(self.ds_metadata, field)
 
             if field_exists:
                 typos, has_typos = self.spell_checker.check_spelling(return_value[0])
@@ -211,10 +215,9 @@ class Checker:
         """  # noqa: E501
         depositor_history = []
 
-        query_string = 'data.latestVersion.metadataBlocks.citation.fields[?typeName==`depositor`].value|[0]'  # noqa: E501
-        depositor: str = jmespath.search(query_string, self.ds_metadata)
+        depositor = get_depositor_record(self.ds_metadata)
 
-        if isinstance(depositor, str) and depositor.strip():  # Check if depositor is a non-empty string
+        if isinstance(depositor, str) and depositor.strip():
             response_json = self.dv_api_calls.search_depositor_record(
                 depositor=depositor, collection_alias=self.collection_alias
             )
