@@ -21,6 +21,9 @@ from pydatacuration.checker.files_open_checker import FilesOpener
 # Metadata Checker
 from pydatacuration.checker.metadata_checker import MetadataChecker
 
+# Misc Checker
+from pydatacuration.checker.misc_checker import MiscChecker
+
 # Services
 from pydatacuration.checker.services.dataset_tree_info import DatasetTreeInfo
 from pydatacuration.checker.spell_checker import SpellCheckerCustomized
@@ -30,14 +33,12 @@ from pydatacuration.services.api_calls.httpx_client import HTTPXClient
 
 # Verify downloaded files
 from pydatacuration.services.verify_download_files import VerifyDownloadFiles
-from pydatacuration.utils.search_ds_meta import get_depositor_record
 
 # utils
 from pydatacuration.utils.search_ds_meta import get_ds_title
 
 # Search dataset metadata utils
 from pydatacuration.utils.search_ds_meta import get_metadata_cm_field
-from pydatacuration.utils.search_result_utils import get_search_result
 
 # Unzip utility
 from pydatacuration.utils.unzip import Unzipper
@@ -100,6 +101,14 @@ class Checker:
         self.spell_checker = SpellCheckerCustomized()
 
         self.file_name_checker = FileNameChecker(self.file_list_metadata, self.checklist_result_writer)
+
+        # Misc checker for checks that do not fit into other categories
+        self.misc_checker = MiscChecker(
+            base_url=self.base_url,
+            api_token=self.api_token,
+            ds_metadata=self.ds_metadata,
+            check_result_writer=self.checklist_result_writer,
+        )
 
         # File format checker
         self.file_format_checker = FileFormatChecker(
@@ -209,40 +218,6 @@ class Checker:
             results=potential_typos,
         )
 
-    def check_depositor_record(self) -> None:
-        """Check if the depositor has deposited data in the dataverse collection.
-
-        Note: This check only works if the depositor inputs their name in a consistent way across all datasets. By default, the dataset initial creator will be listed as the depositor in the metadata, with the format (LAST NAME, FIRST NAME). But anyone with edit access to the dataset can change the depositor information, so the information might be in accurate.  # noqa: E501
-
-        """  # noqa: E501
-        depositor_history = []
-
-        depositor = get_depositor_record(self.ds_metadata)
-
-        if isinstance(depositor, str) and depositor.strip():
-            response_json = self.dv_api_calls.search_depositor_record(
-                depositor=depositor, collection_alias=self.collection_alias
-            )
-            if response_json:
-                dataset_publish_history = get_search_result(response_json)
-
-                # Extend the string to the depositor_history list
-                depositor_history.extend(
-                    f'{depositor}: {dataset.get("name")} ({dataset.get("url")}) - Dataverse Name: {dataset.get("name_of_dataverse")}'  # noqa: E501
-                    for dataset in dataset_publish_history
-                )
-
-            self.checklist_result_writer.write(
-                check_id='depositor_history',
-                check_name='Depositor history',
-                description='Previous datasets depositor in this Dataverse collection',
-                unit='depositor record',
-                results=depositor_history,
-            )
-
-        else:
-            logger.info('No valid depositor provided.')
-
     def check_restricted_files(self) -> None:
         """Check for restricted files."""
         restricted_files = []
@@ -272,8 +247,9 @@ class Checker:
         self.check_file_open()
         self.file_format_checker.check_common_file_format()
         self.check_spelling()
-        self.check_depositor_record()
+
         self.check_restricted_files()
+        self.misc_checker.check_depositor_record(collection_alias=self.collection_alias)
         self.metadata_checker.check_terms_of_use()
         self.metadata_checker.check_terms_of_access()
         self.metadata_checker.check_keywords()
