@@ -158,3 +158,18 @@ def get_file_list(ds_metadata: dict) -> list[tuple[int, str]]:
         file_path = Path(directory_label, file_name)
         file_list.append((file_id, str(file_path)))
     return file_list
+
+
+def get_directory_set(ds_metadata: dict) -> set[str] | None:
+    """Get the dataset directory set from the dataset metadata.
+
+    Args:
+        ds_metadata (dict): The dataset metadata dictionary.
+
+    Returns:
+        set[str] | None: A set of dataset directories. If no directories are found in the metadata, returns None.
+    """
+    query_string = 'data.latestVersion.files[].directoryLabel'
+    dir_list = jmespath.search(query_string, ds_metadata)
+
+    return set(dir_list) or None

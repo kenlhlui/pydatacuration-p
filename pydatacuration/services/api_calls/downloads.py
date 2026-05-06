@@ -5,13 +5,13 @@ from pathlib import Path
 from urllib.parse import urljoin
 
 import httpx
-import jmespath
 from loguru import logger
 
 from pydatacuration.backend.models.setup_form import SetupForm
 from pydatacuration.services.api_calls.call_dv import DVAPICalls
 from pydatacuration.services.api_calls.httpx_client import HTTPXClient
 from pydatacuration.utils.directory_manager import DirectoryManager
+from pydatacuration.utils.search_ds_meta import get_directory_set
 from pydatacuration.utils.search_ds_meta import get_file_list
 from pydatacuration.utils.utils import orjson_export
 
@@ -69,31 +69,22 @@ class Downloads:
             project_number=setup_form.project_number,
         )
 
-    @staticmethod
-    def _get_dir_list(metadata: dict) -> list:
-        """Get the directory list of the dataset.
-
-        Args:
-            metadata (dict): Metadata of the dataset
-
-        Returns:
-            dir_list (list): List of directories
-        """
-        query_string = 'data.latestVersion.files[].directoryLabel'
-        dir_list = jmespath.search(query_string, metadata)
-        return dir_list
-
     def make_dir_structure(self, metadata: dict) -> None:
         """Make the directory structure for the dataset.
 
         Args:
             metadata (dict): Metadata of the dataset
+
         """
-        dir_list = self._get_dir_list(metadata)
-        if dir_list:
-            dir_set = set(dir_list)
-            for directory in dir_set:
-                Path.mkdir(Path(self.directory_manager.files_dir, directory), parents=True, exist_ok=True)
+        dir_set = get_directory_set(metadata)
+
+        if not dir_set:
+            return
+
+        base_path = Path(self.directory_manager.files_dir)
+
+        for directory in dir_set:
+            (base_path / directory).mkdir(parents=True, exist_ok=True)
 
     async def _get_data_file_async(self, file_id: str, file_path: str) -> Path | None:
         """Get the data file of the dataset asynchronously."""
