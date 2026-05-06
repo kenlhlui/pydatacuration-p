@@ -104,10 +104,9 @@ class Checker:
 
         # Misc checker for checks that do not fit into other categories
         self.misc_checker = MiscChecker(
-            base_url=self.base_url,
-            api_token=self.api_token,
             ds_metadata=self.ds_metadata,
             check_result_writer=self.check_result_writer,
+            dv_api_calls_instance=self.dv_api_calls,
         )
 
         # File format checker
