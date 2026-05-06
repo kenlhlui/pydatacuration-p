@@ -14,15 +14,15 @@ from pydatacuration.utils.search_ds_meta import get_related_publication
 class MetadataChecker:
     """Class for checking dataset metadata."""
 
-    def __init__(self, metadata: dict, checklist_result_writer: CheckResultWriter) -> None:
+    def __init__(self, metadata: dict, check_result_writer: CheckResultWriter) -> None:
         """Initialize the MetadataChecker class.
 
         Args:
             metadata (dict): Metadata from the JSON file.
-            checklist_result_writer (CheckResultWriter): Writer for storing check results.
+            check_result_writer (CheckResultWriter): Writer for storing check results.
         """
         self.metadata = metadata
-        self.checklist_result_writer = checklist_result_writer
+        self.check_result_writer = check_result_writer
 
         self.author_info_dict = get_author_cm_field(self.metadata)
 
@@ -38,7 +38,7 @@ class MetadataChecker:
                 logger.info(f'Missing metadata found in the {field}')
                 missing_required_fields.append(field)
 
-        self.checklist_result_writer.write(
+        self.check_result_writer.write(
             check_id='missing_required_fields',
             check_name='Missing Required Metadata Fields',
             description='Required metadata fields that are empty or missing',
@@ -56,7 +56,7 @@ class MetadataChecker:
                 logger.info(f'Missing metadata found in authorAffiliation field for author: {author_name}')
                 authors_missing_affiliation.append(author_name)
 
-        self.checklist_result_writer.write(
+        self.check_result_writer.write(
             check_id='authors_missing_affiliation',
             check_name='Author affiliation field',
             description='Authors missing institutional affiliation information',
@@ -74,7 +74,7 @@ class MetadataChecker:
                 logger.info(f'Missing metadata found in authorIdentifier field for author: {author_name}')
                 authors_missing_identifier.append(author_name)
 
-        self.checklist_result_writer.write(
+        self.check_result_writer.write(
             check_id='authors_missing_identifier',
             check_name='Author Research ID field',
             description='Authors missing personal identifier (ORCID, etc.)',
@@ -92,7 +92,7 @@ class MetadataChecker:
                 logger.info(f'Missing metadata found in authorIdentifierScheme field for author: {author_name}')
                 authors_missing_scheme.append(author_name)
 
-        self.checklist_result_writer.write(
+        self.check_result_writer.write(
             check_id='authors_missing_scheme',
             check_name='Authors Research Identifier Scheme',
             description='Authors missing identifier scheme information',
@@ -123,7 +123,7 @@ class MetadataChecker:
         if isinstance(related_datasets, list):
             logger.info(f'Related datasets found in the metadata: {related_datasets}')
         try:
-            self.checklist_result_writer.write(
+            self.check_result_writer.write(
                 check_name='Related Datasets',
                 check_id='related_datasets_entries',
                 description='Check if related datasets are present in the dataset metadata',  # noqa: E501
@@ -139,7 +139,7 @@ class MetadataChecker:
         if isinstance(data_sources, list):
             logger.info(f'Data sources found in the metadata: {data_sources}')
         try:
-            self.checklist_result_writer.write(
+            self.check_result_writer.write(
                 check_name='Data Sources',
                 check_id='data_sources_entries',
                 description='Check if data sources are present in the dataset metadata',  # noqa: E501
@@ -155,7 +155,7 @@ class MetadataChecker:
         if isinstance(related_publications, list):
             logger.info(f'Related publications found in the metadata: {related_publications}')
         try:
-            self.checklist_result_writer.write(
+            self.check_result_writer.write(
                 check_name='Related Publications',
                 check_id='related_publications_entries',
                 description='Check if related publications are present in the dataset',
@@ -172,7 +172,7 @@ class MetadataChecker:
         if isinstance(keyword_list, list):
             logger.info(f'Keywords found in the metadata: {keyword_list}')
 
-        self.checklist_result_writer.write(
+        self.check_result_writer.write(
             check_name='Keywords',
             check_id='keywords_existence',
             description='Check if keywords are present in the dataset',
@@ -184,7 +184,7 @@ class MetadataChecker:
         """Check if the terms of use and license are present."""
         license_name = self.metadata.get('data', {}).get('latestVersion', {}).get('license', {}).get('name', None)
 
-        self.checklist_result_writer.write(
+        self.check_result_writer.write(
             check_id='license',
             check_name='License of the Dataset',
             description='License information in the dataset',
@@ -201,7 +201,7 @@ class MetadataChecker:
         """Check if the terms of access are present."""
         terms_of_access = self.metadata.get('data', {}).get('latestVersion', {}).get('termsOfAccess', None)
 
-        self.checklist_result_writer.write(
+        self.check_result_writer.write(
             check_id='termsOfAccess',
             check_name='Terms of Access of the Dataset',
             description='Terms of Access information in the dataset',
@@ -215,7 +215,7 @@ class MetadataChecker:
         """Check if the terms of use are present."""
         terms_of_use = self.metadata.get('data', {}).get('latestVersion', {}).get('termsOfUse', None)
 
-        self.checklist_result_writer.write(
+        self.check_result_writer.write(
             check_id='termsOfUse',
             check_name='Terms of Use of the Dataset',
             description='Terms of Use information in the dataset',

@@ -165,7 +165,7 @@ def check_curation(body: SetupForm) -> None:
         )
 
         # Setup writes — before checks run
-        write_project_metadata_to_db(db, checker, dataset_path)
+        write_project_metadata_to_db(db, checker, dataset_path, body)
         write_checklist_metadata_to_db(db, checklist_content)
         write_checklist_items_to_db(db, checklist_content)
 

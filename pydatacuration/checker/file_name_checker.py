@@ -11,10 +11,10 @@ from pydatacuration.checker.check_result_writer import CheckResultWriter
 class FileNameChecker:
     """This class is used to check the file name format."""
 
-    def __init__(self, file_list_metadata: list, checklist_result_writer: CheckResultWriter) -> None:
+    def __init__(self, file_list_metadata: list, check_result_writer: CheckResultWriter) -> None:
         """Initialize the class."""
         self.file_list_metadata = file_list_metadata
-        self.checklist_result_writer = checklist_result_writer
+        self.check_result_writer = check_result_writer
 
     @staticmethod
     def _check_special_char(file: str) -> tuple:
@@ -91,7 +91,7 @@ class FileNameChecker:
                 special_char_files.append(str(file_rel_path))
 
         # Check special characters in file names and write to db
-        self.checklist_result_writer.write(
+        self.check_result_writer.write(
             check_id='filename_special_chars',
             check_name='File names with Special Characters',
             description='Files containing special characters in filename',
@@ -111,7 +111,7 @@ class FileNameChecker:
                 missing_ext_files.append(str(file_rel_path))
 
         # Check missing file extension and write to db
-        self.checklist_result_writer.write(
+        self.check_result_writer.write(
             check_id='missing_file_extensions',
             check_name='File names missing extensions',
             description='Files without proper file extensions',
@@ -131,7 +131,7 @@ class FileNameChecker:
                 readme_files.append(str(file_rel_path))
 
         # Check README files and write to db
-        self.checklist_result_writer.write(
+        self.check_result_writer.write(
             check_id='readme_files',
             check_name='File names for README',
             description='README files detected in the dataset',

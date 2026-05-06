@@ -22,20 +22,17 @@ def get_ds_title(ds_metadata: dict) -> str:
     )
 
 
-def get_depositor_record(ds_metadata: dict) -> str:
+def get_depositor_record(ds_metadata: dict) -> str | None:
     """Get the dataset depositor from the dataset metadata.
 
     Args:
         ds_metadata (dict): The dataset metadata dictionary.
 
     Returns:
-        str: The dataset depositor. If no depositor is provided, returns 'Unknown Depositor'.
+        str | None: The dataset depositor. If no depositor is provided, returns None.
     """
-    return (
-        jmespath.search(
-            'data.latestVersion.metadataBlocks.citation.fields[?typeName==`depositor`].value|[0]', ds_metadata
-        )
-        or 'Unknown Depositor'
+    return jmespath.search(
+        'data.latestVersion.metadataBlocks.citation.fields[?typeName==`depositor`].value|[0]', ds_metadata
     )
 
 

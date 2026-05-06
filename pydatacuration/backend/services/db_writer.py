@@ -2,6 +2,7 @@
 
 from loguru import logger
 
+from pydatacuration.backend.models.setup_form import SetupForm
 from pydatacuration.checker.checker import Checker
 from pydatacuration.checklist.checklist_model import ChecklistYAML
 from pydatacuration.db import DatabaseBackend
@@ -9,14 +10,16 @@ from pydatacuration.utils.utils import parse_dataset_url
 
 
 # The below writes the to the database database
-def write_project_metadata_to_db(db_instance: DatabaseBackend, checker: Checker, dataset_path: str) -> None:
+def write_project_metadata_to_db(
+    db_instance: DatabaseBackend, checker: Checker, dataset_path: str, setup_form_instance: SetupForm
+) -> None:
     """Write the project metadata to the database.
 
     Args:
         db_instance (DatabaseBackend): The database instance to write to.
         checker (Checker): The Checker instance containing the dataset metadata.
         dataset_path (str): The path of the dataset.
-
+        setup_form_instance (SetupForm): The setup form instance containing the project information.
     """
     try:
         # Get the project metadata schema from the database instance
@@ -24,8 +27,8 @@ def write_project_metadata_to_db(db_instance: DatabaseBackend, checker: Checker,
 
         # Extract the necessary metadata from the checker instance
         project_number = db_instance.schema_name
-        curator_name: str | None = checker.curator_name
-        curator_email: str | None = checker.curator_email
+        curator_name: str | None = setup_form_instance.curator_name
+        curator_email: str | None = setup_form_instance.curator_email
         dataset_title = checker.ds_title
         dataset_pid = checker.ds_metadata.get('data', {}).get('latestVersion', {}).get('datasetPersistentId', 'No ID')
         datasetid = checker.ds_metadata.get('data', {}).get('latestVersion', {}).get('datasetId', 'No ID')
@@ -42,7 +45,7 @@ def write_project_metadata_to_db(db_instance: DatabaseBackend, checker: Checker,
                 datasetid=datasetid,
                 dataset_url=dataset_url,
                 dataset_path=dataset_path,
-                checklist_type=checker.checklist_type,
+                checklist_type=setup_form_instance.checklist,
             )
         )
     except Exception as e:

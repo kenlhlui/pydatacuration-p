@@ -9,6 +9,9 @@ from pydatacuration.backend.models.setup_form import SetupForm
 # Write to db module
 from pydatacuration.checker.check_result_writer import CheckResultWriter
 
+# File access checker
+from pydatacuration.checker.file_access_checker import FileAccessChecker
+
 # File Format Checker
 from pydatacuration.checker.file_format_checker import FileFormatChecker
 
@@ -90,30 +93,31 @@ class Checker:
         self.db_instance = db_instance
         self.sqlmodels = self.db_instance.models
         self.checklist_result = self.sqlmodels.check_results()
-        self.checklist_result_writer = CheckResultWriter(db_instance=self.db_instance)
+        self.check_result_writer = CheckResultWriter(db_instance=self.db_instance)
 
         self.curator_name = setup_form_instance.curator_name
         self.curator_email = setup_form_instance.curator_email
         self.checklist_type = setup_form_instance.checklist
 
         self.files_opener = FilesOpener
-        self.metadata_checker = MetadataChecker(self.ds_metadata, self.checklist_result_writer)
+        self.metadata_checker = MetadataChecker(self.ds_metadata, self.check_result_writer)
         self.spell_checker = SpellCheckerCustomized()
 
-        self.file_name_checker = FileNameChecker(self.file_list_metadata, self.checklist_result_writer)
+        self.file_name_checker = FileNameChecker(self.file_list_metadata, self.check_result_writer)
+        self.file_access_checker = FileAccessChecker(self.check_result_writer)
 
         # Misc checker for checks that do not fit into other categories
         self.misc_checker = MiscChecker(
             base_url=self.base_url,
             api_token=self.api_token,
             ds_metadata=self.ds_metadata,
-            check_result_writer=self.checklist_result_writer,
+            check_result_writer=self.check_result_writer,
         )
 
         # File format checker
         self.file_format_checker = FileFormatChecker(
             self.file_list_metadata,
-            self.checklist_result_writer,
+            self.check_result_writer,
             res_dir=RES_DIR,
             workdir=self.workdir,
         )
@@ -167,7 +171,7 @@ class Checker:
                     logger.info(f'File is not a supported file format (not checked by the script): {file_abs_path}')  # noqa: E501
                     unsupported_files.append(str(file_rel_path))
 
-        self.checklist_result_writer.write(
+        self.check_result_writer.write(
             check_id='file_accessibility',
             check_name='File accessibility report',
             description='Files that cannot be opened or read by the validation tool',
@@ -175,7 +179,7 @@ class Checker:
             results=inaccessible_files,
         )
 
-        self.checklist_result_writer.write(
+        self.check_result_writer.write(
             check_id='unsupported_files',
             check_name='Files in unsupported formats by the validation tool',
             description='Files in formats not supported by the validation tool',
@@ -210,7 +214,7 @@ class Checker:
                             }
                         )
 
-        self.checklist_result_writer.write(
+        self.check_result_writer.write(
             check_name='Fields for Title, Subtitle, Alternative Title, Description, and Notes',
             check_id='potential_typos',
             description='Fields for Title, Subtitle, Alternative Title, Description, and Notes',  # noqa: E501
@@ -229,7 +233,7 @@ class Checker:
                 logger.info(f'Restricted file found: {file_path}')
                 restricted_files.append(str(file_path))
 
-        self.checklist_result_writer.write(
+        self.check_result_writer.write(
             check_id='restricted_files',
             check_name='Restricted file names',
             description='files with access restrictions in the dataset',
@@ -244,12 +248,10 @@ class Checker:
         self.file_name_checker.check_file_missing_extension()
         self.file_name_checker.check_readme_file()
 
-        self.check_file_open()
         self.file_format_checker.check_common_file_format()
         self.check_spelling()
+        self.check_file_open()
 
-        self.check_restricted_files()
-        self.misc_checker.check_depositor_record(collection_alias=self.collection_alias)
         self.metadata_checker.check_terms_of_use()
         self.metadata_checker.check_terms_of_access()
         self.metadata_checker.check_keywords()
@@ -262,3 +264,6 @@ class Checker:
         self.metadata_checker.check_missing_author_affiliation()
         self.metadata_checker.check_missing_author_identifier()
         self.metadata_checker.check_missing_author_identifier_scheme()
+
+        self.file_access_checker.check_restricted_files(self.ds_metadata)
+        self.misc_checker.check_depositor_record(collection_alias=self.collection_alias)
