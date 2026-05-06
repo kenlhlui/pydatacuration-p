@@ -130,40 +130,49 @@ def check_curation(body: SetupForm) -> None:
 
     res_dir = Path(body.res_dir) if body.res_dir else None
 
-    with Path(dirs.metadata_dir, 'ds_metadata.json').open('rb') as f:
-        ds_metadata = orjson.loads(f.read())
+    try:
+        # Get the checklist content
+        checklist_content = get_checklist_content(body.checklist, res_dir)
 
-    with Path(dirs.metadata_dir, 'dv_tree.json').open('rb') as f:
-        dv_tree = orjson.loads(f.read())
+        # Read the dataset metadata and dataverse tree from the downloaded files
+        with Path(dirs.metadata_dir, 'ds_metadata.json').open('rb') as f:
+            ds_metadata = orjson.loads(f.read())
 
-    dataset_search_result = dv_api_calls.search_dataset_by_version_id(
-        ds_metadata.get('data', {}).get('latestVersion', {}).get('id')
-    )
+        # Read the dataverse tree file
+        with Path(dirs.metadata_dir, 'dv_tree.json').open('rb') as f:
+            dv_tree = orjson.loads(f.read())
 
-    dataset_identifier = DatasetTreeInfo.get_dataset_identifier_from_search_result(dataset_search_result)
+        dataset_search_result = dv_api_calls.search_dataset_by_version_id(
+            ds_metadata.get('data', {}).get('latestVersion', {}).get('id')
+        )
 
-    tree_info = DatasetTreeInfo(dv_tree=dv_tree).get_ds_tree_info(dataset_identifier)
+        dataset_identifier = DatasetTreeInfo.get_dataset_identifier_from_search_result(dataset_search_result)
 
-    dataset_path = DatasetTreeInfo.get_ds_path(tree_info, get_ds_title(ds_metadata))
+        tree_info = DatasetTreeInfo(dv_tree=dv_tree).get_ds_tree_info(dataset_identifier)
 
-    checker = Checker(
-        ds_metadata=ds_metadata,
-        dv_tree=dv_tree,
-        workdir=dirs.project_dir,
-        db_instance=db,
-        setup_form_instance=body,
-    )
+        dataset_path = DatasetTreeInfo.get_ds_path(tree_info, get_ds_title(ds_metadata))
 
-    # Get the checklist content
-    checklist_content = get_checklist_content(body.checklist, res_dir)
+        checker = Checker(
+            ds_metadata=ds_metadata,
+            dv_tree=dv_tree,
+            workdir=dirs.project_dir,
+            db_instance=db,
+            setup_form_instance=body,
+        )
 
-    # Setup writes — before checks run
-    write_project_metadata_to_db(db, checker, dataset_path)
-    write_checklist_metadata_to_db(db, checklist_content)
-    write_checklist_items_to_db(db, checklist_content)
+        # Setup writes — before checks run
+        write_project_metadata_to_db(db, checker, dataset_path)
+        write_checklist_metadata_to_db(db, checklist_content)
+        write_checklist_items_to_db(db, checklist_content)
 
-    checker.run_checks()
-    logger.info('Checks completed')
+        checker.run_checks()
+        logger.info('Checks completed')
+    except Exception as exc:
+        db.drop_schema(body.project_number)
+        dirs.delete_dir(dirs.project_dir)
+        error_message = f'Error occurred during checks: {exc}'
+        logger.error(error_message)
+        raise Exception(error_message) from exc
 
 
 async def run_curation(body: SetupForm) -> None:
