@@ -5,7 +5,6 @@ from loguru import logger
 
 from pydatacuration.checker.check_result_writer import CheckResultWriter
 from pydatacuration.services.api_calls.call_dv import DVAPICalls
-from pydatacuration.services.api_calls.httpx_client import HTTPXClient
 from pydatacuration.utils.search_ds_meta import get_depositor_record
 from pydatacuration.utils.search_result_utils import get_search_result
 
@@ -13,17 +12,16 @@ from pydatacuration.utils.search_result_utils import get_search_result
 class MiscChecker:
     """Misc checker for checks that do not fit into other categories."""
 
-    def __init__(self, base_url: str, api_token: str, ds_metadata: dict, check_result_writer: CheckResultWriter):
-        self.base_url = base_url
-        self.api_token = api_token
+    def __init__(
+        self, ds_metadata: dict, check_result_writer: CheckResultWriter, dv_api_calls_instance: DVAPICalls
+    ) -> None:
         self.ds_metadata = ds_metadata
 
         # The check result writer instance to write the check results to the database
         self.check_result_writer = check_result_writer
 
         # API calls service
-        self.httpx_client = HTTPXClient(self.base_url, self.api_token)
-        self.dv_api_calls = DVAPICalls(httpx_client=self.httpx_client)
+        self.dv_api_calls = dv_api_calls_instance
 
     def check_depositor_record(self, collection_alias: str | None = None) -> None:
         """Check if the depositor has deposited data in the dataverse collection.

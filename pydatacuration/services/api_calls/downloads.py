@@ -161,11 +161,11 @@ class Downloads:
     async def downloader(self) -> None:
         """Download the dataset as a zip file asynchronously."""
         # Get the dataset metadata (sync HTTP — offloaded to thread to avoid blocking event loop)
-        ds_metadata = self.dv_api_calls.get_ds_metadata(self.pid)
+        ds_metadata = await asyncio.to_thread(self.dv_api_calls.get_ds_metadata, self.pid)
         self.export_metadata('ds_metadata.json', ds_metadata)
 
         # Get the tree structure of the whole dataverse repository (sync HTTP — can be slow for large repos)
-        dv_tree = self.dv_api_calls.get_dv_tree()
+        dv_tree = await asyncio.to_thread(self.dv_api_calls.get_dv_tree)
         self.export_metadata('dv_tree.json', dv_tree)
 
         # Download the data files using async method
