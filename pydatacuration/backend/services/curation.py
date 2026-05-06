@@ -108,13 +108,17 @@ async def fetch_curation(body: SetupForm) -> None:
         body (SetupForm): The setup form containing the necessary information for fetching the dataset.
     """
     dirs = get_dirs(body.project_number, Path(body.main_dir))
+    db = get_db(schema_name=dirs.project_number, db_file=dirs.db_path)
 
-    await asyncio.to_thread(_ensure_dataset_read_access, body)
-
-    downloader = Downloads.from_setup_form(body, dirs.project_dir)
-    await downloader.downloader()
-
-    logger.info(f'Downloaded dataset for PID {body.pid} to {dirs.project_dir}')
+    try:
+        await asyncio.to_thread(_ensure_dataset_read_access, body)
+        downloader = Downloads.from_setup_form(body, dirs.project_dir)
+        await downloader.downloader()
+        logger.info(f'Downloaded dataset for PID {body.pid} to {dirs.project_dir}')
+    except Exception:
+        db.drop_schema(body.project_number)
+        dirs.delete_dir(dirs.project_dir)
+        raise
 
 
 def check_curation(body: SetupForm) -> None:
