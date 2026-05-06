@@ -1,5 +1,7 @@
 """A collection of functions that outputs the values of the nested dataset metadata file."""
 
+from pathlib import Path
+
 import jmespath
 
 
@@ -131,3 +133,28 @@ def get_keywords(ds_metadata: dict) -> list[str] | None:
     )
 
     return jmespath.search(query_string, ds_metadata) or None
+
+
+def get_file_list(ds_metadata: dict) -> list[tuple[int, str]]:
+    """Get the dataset file list from the dataset metadata.
+
+    Args:
+        ds_metadata (dict): The dataset metadata dictionary.
+
+    Returns:
+        list[tuple[int, str]]: A list of (file_id, file_path) tuples. Empty if no files found.
+    """
+    file_list = []
+
+    query_string = 'data.latestVersion.files[*].{file_id:dataFile.id, file_name:dataFile.filename, originalFileName:dataFile.originalFileName, directoryLabel: directoryLabel, md5: dataFile.md5}'  # noqa: E501
+    temp_file_list = jmespath.search(query_string, ds_metadata)
+    if not temp_file_list:
+        return []
+
+    for item in temp_file_list:
+        file_id = item.get('file_id')
+        directory_label = item.get('directoryLabel') or ''
+        file_name = item.get('originalFileName') or item.get('file_name')
+        file_path = Path(directory_label, file_name)
+        file_list.append((file_id, str(file_path)))
+    return file_list

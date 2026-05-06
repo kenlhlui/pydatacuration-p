@@ -12,6 +12,7 @@ from pydatacuration.backend.models.setup_form import SetupForm
 from pydatacuration.services.api_calls.call_dv import DVAPICalls
 from pydatacuration.services.api_calls.httpx_client import HTTPXClient
 from pydatacuration.utils.directory_manager import DirectoryManager
+from pydatacuration.utils.search_ds_meta import get_file_list
 from pydatacuration.utils.utils import orjson_export
 
 
@@ -69,23 +70,6 @@ class Downloads:
         )
 
     @staticmethod
-    def _get_file_list(metadata: dict) -> list:
-        file_list = []
-
-        query_string = 'data.latestVersion.files[*].{file_id:dataFile.id, file_name:dataFile.filename, originalFileName:dataFile.originalFileName, directoryLabel: directoryLabel, md5: dataFile.md5}'  # noqa: E501
-        temp_file_list = jmespath.search(query_string, metadata)
-        if not temp_file_list:
-            return []
-
-        for item in temp_file_list:
-            file_id = item.get('file_id')
-            directory_label = item.get('directoryLabel', None) or ''
-            file_name = item.get('originalFileName', None) or item.get('file_name')
-            file_path = Path(directory_label, file_name)
-            file_list.append((file_id, str(file_path)))
-        return file_list
-
-    @staticmethod
     def _get_dir_list(metadata: dict) -> list:
         """Get the directory list of the dataset.
 
@@ -141,7 +125,7 @@ class Downloads:
             file_list (list): List of files to download
 
         Returns:
-            list: List of downloaded files
+            list[tuple[str, str]]: List of downloaded files
         """
         logger.info(f'Starting download of {len(file_list)} files...')
         tasks = [self._get_data_file_async(file_id, file_path) for file_id, file_path in file_list]
@@ -194,6 +178,6 @@ class Downloads:
         self.export_metadata('dv_tree.json', dv_tree)
 
         # Download the data files using async method
-        file_list = await asyncio.to_thread(self._get_file_list, ds_metadata)
+        file_list = get_file_list(ds_metadata)
         await asyncio.to_thread(self.make_dir_structure, ds_metadata)
         await self.save_files_async(file_list)
