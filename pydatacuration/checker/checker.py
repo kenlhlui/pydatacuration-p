@@ -183,9 +183,9 @@ class Checker:
             return_value, field_exists = get_metadata_cm_field(self.ds_metadata, field)
 
             if field_exists:
-                typos, has_typos = self.spell_checker.check_spelling(return_value[0])
-                if has_typos:
-                    typo_messages = [f'{field}: `{item}`' for item in typos]
+                typos = self.spell_checker.check_spelling(return_value[0])
+                if typos:
+                    typo_messages = {f'{field}: `{item}`' for item in typos}
                     for message in typo_messages:
                         logger.info(f'Spelling mistake found in the {field}: {message}')
 

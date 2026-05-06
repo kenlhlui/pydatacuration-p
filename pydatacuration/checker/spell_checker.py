@@ -2,7 +2,6 @@
 
 import re
 from pathlib import Path
-from typing import Union
 
 from spellchecker import SpellChecker
 
@@ -20,7 +19,7 @@ class SpellCheckerCustomized:
     # TODO: Add a function/amend clean_text function to remove the html tags, if appeared.
     # TODO: Error handling if the input is not a string/list.
 
-    def _clean_text(self, text: Union[str, list]) -> list:
+    def _clean_text(self, text: str | list) -> list:
         """Clean the text by removing special characters, numbers, and stop words.
 
         Args:
@@ -52,16 +51,16 @@ class SpellCheckerCustomized:
 
         return cleaned_sentences
 
-    def check_spelling(self, list_of_words: Union[str, list]) -> tuple:
+    def check_spelling(self, list_of_words: str | list) -> set[str] | None:
         """Check the spelling of the text.
 
         Args:
             list_of_words (str | list): The string or list of words to check the spelling.
 
         Returns:
-            tuple: A tuple containing the misspelled words in list and a boolean value indicating if there are misspelled words.
+            set[str] | None: A set of misspelled words or None if no misspelled words are found.
         """
         list_of_words = self._clean_text(list_of_words)
         misspelled_words = self.spell.unknown(list_of_words)  # Returns a set of misspelled words.
 
-        return list(misspelled_words), bool(misspelled_words)
+        return misspelled_words or None
