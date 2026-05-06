@@ -95,10 +95,6 @@ class Checker:
         self.checklist_result = self.sqlmodels.check_results()
         self.check_result_writer = CheckResultWriter(db_instance=self.db_instance)
 
-        self.curator_name = setup_form_instance.curator_name
-        self.curator_email = setup_form_instance.curator_email
-        self.checklist_type = setup_form_instance.checklist
-
         self.files_opener = FilesOpener
         self.metadata_checker = MetadataChecker(self.ds_metadata, self.check_result_writer)
         self.spell_checker = SpellCheckerCustomized()
