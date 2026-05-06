@@ -31,6 +31,9 @@ from pydatacuration.services.api_calls.httpx_client import HTTPXClient
 
 # Verify downloaded files
 from pydatacuration.services.verify_download_files import VerifyDownloadFiles
+
+# utils
+from pydatacuration.utils.search_ds_meta import get_ds_title
 from pydatacuration.utils.unzip import Unzipper
 
 
@@ -100,9 +103,7 @@ class Checker:
             workdir=self.workdir,
         )
 
-        self.ds_title = jmespath.search(
-            'data.latestVersion.metadataBlocks.citation.fields[?typeName == `title`].value | [0]', self.ds_metadata
-        )
+        self.ds_title = get_ds_title(self.ds_metadata)
         self.dataset_id = self.ds_metadata.get('data', {}).get('latestVersion', {}).get('id')
 
     def check_file_open(self) -> None:
@@ -211,7 +212,7 @@ class Checker:
         depositor_history = []
 
         query_string = 'data.latestVersion.metadataBlocks.citation.fields[?typeName==`depositor`].value|[0]'  # noqa: E501
-        depositor: str | None = jmespath.search(query_string, self.ds_metadata)
+        depositor: str = jmespath.search(query_string, self.ds_metadata)
 
         if isinstance(depositor, str) and depositor.strip():  # Check if depositor is a non-empty string
             response_json = self.dv_api_calls.search_depositor_record(
@@ -245,32 +246,6 @@ class Checker:
         else:
             logger.info('No valid depositor provided.')
 
-    def check_ds_tree_info(self) -> str | None:
-        """Check the path of the dataset in the dataverse Repository."""
-        ds_version_id = self.ds_metadata.get('data', {}).get('latestVersion', {}).get('id')
-        if ds_version_id:
-            response_json = self.dv_api_calls.search_dataset_by_version_id(ds_version_id=ds_version_id)
-            if response_json:
-                # Get the name_of_dataverse from the response
-                name_of_dataverse = response_json.get('data', {}).get('items', [{}])[0].get('name_of_dataverse', None)  # noqa: E501
-
-                # Get the path of the dataverse from the response
-                identifier_of_dataverse = (
-                    response_json.get('data', {}).get('items', [{}])[0].get('identifier_of_dataverse', None)
-                )  # noqa: E501
-                tree_info = self.dv_tree_info.get_ds_tree_info(identifier_of_dataverse)
-                path: str | None = tree_info.get('path', '')
-                dataset_path = ''  # Placeholder to prevent error
-                if path:
-                    # Add the dataset title to the end of the path
-                    ds_title = self.ds_title if self.ds_title else 'Unknown Dataset Title'
-                    # Join the Path
-                    dataset_path = f'{path}/{ds_title}'
-                    logger.debug(f'Dataset path in the dataverse repository: {dataset_path}')  # noqa: E501
-
-                return dataset_path
-        return None
-
     def check_restricted_files(self) -> None:
         """Check for restricted files."""
         restricted_files = []
@@ -301,7 +276,6 @@ class Checker:
         self.file_format_checker.check_common_file_format()
         self.check_spelling()
         self.check_depositor_record()
-        self.check_ds_tree_info()
         self.check_restricted_files()
         self.metadata_checker.check_terms_of_use()
         self.metadata_checker.check_terms_of_access()

@@ -11,12 +11,16 @@ from pydatacuration.backend.services.db_writer import write_checklist_items_to_d
 from pydatacuration.backend.services.db_writer import write_checklist_metadata_to_db
 from pydatacuration.backend.services.db_writer import write_project_metadata_to_db
 from pydatacuration.checker import Checker
+from pydatacuration.checker.services.dataset_tree_info import DatasetTreeInfo
 from pydatacuration.checklist.utils import get_checklist_content
 from pydatacuration.db import DatabaseBackend
 from pydatacuration.db import get_database
 from pydatacuration.exceptions import DirectoryExistsError
+from pydatacuration.services.api_calls.call_dv import DVAPICalls
 from pydatacuration.services.api_calls.downloads import Downloads
+from pydatacuration.services.api_calls.httpx_client import HTTPXClient
 from pydatacuration.utils import directory_manager
+from pydatacuration.utils.search_ds_meta import get_ds_title
 from pydatacuration.utils.utils import DatasetAccessError
 from pydatacuration.utils.utils import DatasetNotFoundError
 from pydatacuration.utils.utils import DatasetUnauthorizedError
@@ -121,6 +125,8 @@ def check_curation(body: SetupForm) -> None:
     """
     dirs = get_dirs(body.project_number, Path(body.main_dir), res_dir=Path(body.res_dir))
     db = get_db(schema_name=dirs.project_number, db_file=dirs.db_path)
+    httpx_client = HTTPXClient(str(body.base_url), str(body.api_token))
+    dv_api_calls = DVAPICalls(httpx_client=httpx_client)
 
     res_dir = Path(body.res_dir) if body.res_dir else None
 
@@ -129,6 +135,16 @@ def check_curation(body: SetupForm) -> None:
 
     with Path(dirs.metadata_dir, 'dv_tree.json').open('rb') as f:
         dv_tree = orjson.loads(f.read())
+
+    dataset_search_result = dv_api_calls.search_dataset_by_version_id(
+        ds_metadata.get('data', {}).get('latestVersion', {}).get('id')
+    )
+
+    dataset_identifier = DatasetTreeInfo.get_dataset_identifier_from_search_result(dataset_search_result)
+
+    tree_info = DatasetTreeInfo(dv_tree=dv_tree).get_ds_tree_info(dataset_identifier)
+
+    dataset_path = DatasetTreeInfo.get_ds_path(tree_info, get_ds_title(ds_metadata))
 
     checker = Checker(
         ds_metadata=ds_metadata,
@@ -142,7 +158,7 @@ def check_curation(body: SetupForm) -> None:
     checklist_content = get_checklist_content(body.checklist, res_dir)
 
     # Setup writes — before checks run
-    write_project_metadata_to_db(db, checker)
+    write_project_metadata_to_db(db, checker, dataset_path)
     write_checklist_metadata_to_db(db, checklist_content)
     write_checklist_items_to_db(db, checklist_content)
 

@@ -9,12 +9,13 @@ from pydatacuration.utils.utils import parse_dataset_url
 
 
 # The below writes the to the database database
-def write_project_metadata_to_db(db_instance: DatabaseBackend, checker: Checker) -> None:
+def write_project_metadata_to_db(db_instance: DatabaseBackend, checker: Checker, dataset_path: str) -> None:
     """Write the project metadata to the database.
 
     Args:
         db_instance (DatabaseBackend): The database instance to write to.
         checker (Checker): The Checker instance containing the dataset metadata.
+        dataset_path (str): The path of the dataset.
 
     """
     try:
@@ -25,11 +26,10 @@ def write_project_metadata_to_db(db_instance: DatabaseBackend, checker: Checker)
         project_number = db_instance.schema_name
         curator_name: str | None = checker.curator_name
         curator_email: str | None = checker.curator_email
-        dataset_title = checker.ds_title if checker.ds_title else 'No Title'
+        dataset_title = checker.ds_title
         dataset_pid = checker.ds_metadata.get('data', {}).get('latestVersion', {}).get('datasetPersistentId', 'No ID')
         datasetid = checker.ds_metadata.get('data', {}).get('latestVersion', {}).get('datasetId', 'No ID')
         dataset_url = parse_dataset_url(checker.base_url, dataset_pid)
-        dataset_path = checker.check_ds_tree_info()
 
         db_instance.merge_records_to_table(
             project_metadata_schema(

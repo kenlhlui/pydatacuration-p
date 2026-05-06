@@ -1,5 +1,7 @@
 """Module to provide dataset tree information."""
 
+from loguru import logger
+
 
 class DatasetTreeInfo:
     """Class to provide dataset tree information."""
@@ -7,9 +9,6 @@ class DatasetTreeInfo:
     def __init__(self, dv_tree: dict) -> None:
         """Initialize the DatasetTreeInfo class."""
         self.dv_tree = dv_tree
-
-    # def get_dv_identifier(self) -> str | None:
-    #     pass
 
     def get_ds_tree_info(self, identifier_of_dataverse: str) -> dict:
         """Get the dataset tree information in the Dataverse repository.
@@ -57,3 +56,39 @@ class DatasetTreeInfo:
         root = self.dv_tree.get('data', {}) if self.dv_tree.get('status') == 'OK' else {}
         result = _process(root, [], [], [])
         return result
+
+    @staticmethod
+    def get_ds_path(tree_info: dict, dataset_title: str) -> str:
+        """Get the dataset path in the Dataverse repository.
+
+        Args:
+            tree_info (dict): The dataset tree information dictionary.
+            dataset_title (str): The title of the dataset.
+
+        Returns:
+            str: The dataset path in the Dataverse repository. If no valid path is provided, returns the dataset title.
+
+        """
+        path: str = tree_info.get('path', '')
+
+        if path:
+            dataset_path = str(path) + '/' + str(dataset_title)
+            logger.debug(
+                'Dataset path in the dataverse repository: %s',
+                dataset_path,
+            )
+            return dataset_path
+
+        return dataset_title
+
+    @staticmethod
+    def get_dataset_identifier_from_search_result(dataset_search_result: dict) -> str:
+        """Get the dataset identifier from the search result.
+
+        Args:
+            dataset_search_result (dict): The search result from the Dataverse API.
+
+        Returns:
+            str: The dataset identifier, empty if not found.
+        """
+        return dataset_search_result.get('data', {}).get('items', [{}])[0].get('identifier_of_dataverse', None)
