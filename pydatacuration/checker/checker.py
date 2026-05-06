@@ -2,7 +2,6 @@
 
 from pathlib import Path
 
-import jmespath
 from loguru import logger
 
 from pydatacuration.backend.models.setup_form import SetupForm
@@ -38,6 +37,9 @@ from pydatacuration.utils.search_ds_meta import get_ds_title
 
 # Search dataset metadata utils
 from pydatacuration.utils.search_ds_meta import get_metadata_cm_field
+from pydatacuration.utils.search_result_utils import get_search_result
+
+# Unzip utility
 from pydatacuration.utils.unzip import Unzipper
 
 
@@ -222,21 +224,13 @@ class Checker:
                 depositor=depositor, collection_alias=self.collection_alias
             )
             if response_json:
-                dataset_publish_history = (
-                    jmespath.search(
-                        'data.items[*].{name: name, url: url, name_of_dataverse: name_of_dataverse}',
-                        response_json,
-                    )
-                    or []
-                )
+                dataset_publish_history = get_search_result(response_json)
 
                 # Extend the string to the depositor_history list
                 depositor_history.extend(
                     f'{depositor}: {dataset.get("name")} ({dataset.get("url")}) - Dataverse Name: {dataset.get("name_of_dataverse")}'  # noqa: E501
                     for dataset in dataset_publish_history
                 )
-
-            # TODO: Add error handling for the case when the response is None or empty; or HTTP error
 
             self.checklist_result_writer.write(
                 check_id='depositor_history',
