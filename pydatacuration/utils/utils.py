@@ -1,6 +1,5 @@
 """Utility functions."""
 
-import os
 import re
 from pathlib import Path
 from urllib.parse import urlencode
@@ -137,13 +136,6 @@ def check_ds_read_access(pid: str, base_url: str, api_token: str) -> None:
         )
         logger.error(error_msg)
         raise DatasetAccessError(error_msg) from e
-
-
-def validate_api_token(value: str) -> str | None:
-    """Validate API token to prevent empty strings from overriding environment values."""
-    if value == '' and os.getenv('API_TOKEN'):
-        return os.getenv('API_TOKEN')
-    return value
 
 
 def orjson_export(file_path: Path | str, obj: dict) -> None:
