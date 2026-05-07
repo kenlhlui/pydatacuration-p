@@ -53,7 +53,6 @@ class VerifyDownloadFiles:
         Args:
             dl_files_checksums (list): A list of dictionaries containing the file path and the checksum.
             metadata_file_checksums (list): A list of dictionaries containing the file path and the checksum.
-            output_dir (Path): The output directory of the log file if differences are found.
 
         Returns:
             bool: True if the downloaded files and the metadata JSON file checksums are the same, False otherwise.
