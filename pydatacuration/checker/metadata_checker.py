@@ -6,9 +6,12 @@ from pydatacuration.checker.check_result_writer import CheckResultWriter
 from pydatacuration.utils.search_ds_meta import get_author_cm_field
 from pydatacuration.utils.search_ds_meta import get_data_sources
 from pydatacuration.utils.search_ds_meta import get_keywords
+from pydatacuration.utils.search_ds_meta import get_license_name
 from pydatacuration.utils.search_ds_meta import get_metadata_cm_field
 from pydatacuration.utils.search_ds_meta import get_related_dataset
 from pydatacuration.utils.search_ds_meta import get_related_publication
+from pydatacuration.utils.search_ds_meta import get_terms_of_access
+from pydatacuration.utils.search_ds_meta import get_terms_of_use
 
 
 class MetadataChecker:
@@ -172,45 +175,36 @@ class MetadataChecker:
 
     def check_license(self) -> None:
         """Check if the terms of use and license are present."""
-        license_name = self.metadata.get('data', {}).get('latestVersion', {}).get('license', {}).get('name', None)
+        license_name = get_license_name(self.metadata)
 
         self.check_result_writer.write(
             check_id='license',
             check_name='License of the Dataset',
             description='License information in the dataset',
             unit='license',
-            results=[
-                license_name,
-            ],
+            results=[license_name] if license_name is not None else None,
         )
-
-        if license_name == 'CC0 1.0':
-            logger.info('The license is CC0 1.0')
 
     def check_terms_of_access(self) -> None:
         """Check if the terms of access are present."""
-        terms_of_access = self.metadata.get('data', {}).get('latestVersion', {}).get('termsOfAccess', None)
+        terms_of_access = get_terms_of_access(self.metadata)
 
         self.check_result_writer.write(
             check_id='termsOfAccess',
             check_name='Terms of Access of the Dataset',
             description='Terms of Access information in the dataset',
             unit='term of access',
-            results=[
-                terms_of_access,  # FIXME: might need to update the model to accept None object, and also need to handle the rendering part.  # noqa: E501
-            ],
+            results=[terms_of_access] if terms_of_access is not None else None,
         )
 
     def check_terms_of_use(self) -> None:
         """Check if the terms of use are present."""
-        terms_of_use = self.metadata.get('data', {}).get('latestVersion', {}).get('termsOfUse', None)
+        terms_of_use = get_terms_of_use(self.metadata)
 
         self.check_result_writer.write(
             check_id='termsOfUse',
             check_name='Terms of Use of the Dataset',
             description='Terms of Use information in the dataset',
             unit='terms of use',
-            results=[
-                terms_of_use,  # FIXME: might need to update the model to accept None object, and also need to handle the rendering part.  # noqa: E501
-            ],
+            results=[terms_of_use] if terms_of_use is not None else None,
         )

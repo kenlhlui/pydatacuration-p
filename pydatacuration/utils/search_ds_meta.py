@@ -179,3 +179,39 @@ def get_file_list_metadata(ds_metadata: dict) -> list:
         list: A list of dictionaries containing the file path and the checksum.
     """
     return ds_metadata.get('data', {}).get('latestVersion', {}).get('files', [])
+
+
+def get_license_name(ds_metadata: dict) -> str | None:
+    """Get the dataset license name from the dataset metadata.
+
+    Args:
+        ds_metadata (dict): The dataset metadata dictionary.
+
+    Returns:
+        str | None: The dataset license name. If no license information is provided, returns None.
+    """
+    return ds_metadata.get('data', {}).get('latestVersion', {}).get('license', {}).get('name', None) or None
+
+
+def get_terms_of_access(ds_metadata: dict) -> str | None:
+    """Get the dataset terms of access from the dataset metadata.
+
+    Args:
+        ds_metadata (dict): The dataset metadata dictionary.
+
+    Returns:
+        str | None: The dataset terms of access. If no terms of access information is provided
+    """
+    return ds_metadata.get('data', {}).get('latestVersion', {}).get('termsOfAccess', None)
+
+
+def get_terms_of_use(ds_metadata: dict) -> str | None:
+    """Get the dataset terms of use from the dataset metadata.
+
+    Args:
+        ds_metadata (dict): The dataset metadata dictionary.
+
+    Returns:
+        str | None: The dataset terms of use. If no terms of use information is provided, returns None.
+    """
+    return ds_metadata.get('data', {}).get('latestVersion', {}).get('termsOfUse', None) or None
