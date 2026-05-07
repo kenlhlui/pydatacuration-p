@@ -56,10 +56,10 @@ class Checker:
         self.dv_api_calls = DVAPICalls(httpx_client=self.httpx_client)
 
         self.db_instance = db_instance
-        self.sqlmodels = self.db_instance.models
         self.check_result_writer = CheckResultWriter(db_instance=self.db_instance)
 
         self.files_opener = FilesOpener
+
         self.metadata_checker = MetadataChecker(self.ds_metadata, self.check_result_writer)
 
         self.file_name_checker = FileNameChecker(self.file_list_metadata, self.check_result_writer)
