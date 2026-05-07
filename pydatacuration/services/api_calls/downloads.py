@@ -36,18 +36,13 @@ class Downloads:
             project_number (str): The project number for the dataset, used for directory organization
         """
         self.base_url = base_url
-        self.api_token = api_token
-        self.pid = pid
-        self.download_dir = main_dir
-        self.project_number = project_number
+        self.pid: str = pid
 
-        self.success_code = 200
-
-        self.httpx_client = HTTPXClient(self.base_url, self.api_token)
+        self.httpx_client = HTTPXClient(base_url, api_token)
         self.dv_api_calls = DataverseClient(self.httpx_client)
         self.directory_manager = DirectoryManager(
-            main_dir=self.download_dir,
-            project_number=self.project_number,
+            main_dir=main_dir,
+            project_number=project_number,
         )
 
     @classmethod
