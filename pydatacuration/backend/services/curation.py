@@ -19,6 +19,7 @@ from pydatacuration.exceptions import DirectoryExistsError
 from pydatacuration.services.api_calls.call_dv import DVAPICalls
 from pydatacuration.services.api_calls.downloads import Downloads
 from pydatacuration.services.api_calls.httpx_client import HTTPXClient
+from pydatacuration.services.verify_download_files import VerifyDownloadFiles
 from pydatacuration.utils import directory_manager
 from pydatacuration.utils.search_ds_meta import get_ds_title
 from pydatacuration.utils.utils import DatasetAccessError
@@ -113,8 +114,12 @@ async def fetch_curation(body: SetupForm) -> None:
     try:
         await asyncio.to_thread(_ensure_dataset_read_access, body)
         downloader = Downloads.from_setup_form(body, dirs.project_dir)
-        await downloader.downloader()
+        ds_metadata = await downloader.downloader()
         logger.info(f'Downloaded dataset for PID {body.pid} to {dirs.project_dir}')
+
+        verify_download_files_service = VerifyDownloadFiles(target_dir=dirs.project_dir, ds_metadata=ds_metadata)
+        verify_download_files_service.verify(dirs.project_dir)
+
     except Exception:
         db.drop_schema(body.project_number)
         dirs.delete_dir(dirs.project_dir)

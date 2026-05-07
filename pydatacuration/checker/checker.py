@@ -5,45 +5,21 @@ from pathlib import Path
 from loguru import logger
 
 from pydatacuration.backend.models.setup_form import SetupForm
-
-# Write to db module
 from pydatacuration.checker.check_result_writer import CheckResultWriter
-
-# File access checker
 from pydatacuration.checker.file_access_checker import FileAccessChecker
-
-# File Format Checker
 from pydatacuration.checker.file_format_checker import FileFormatChecker
-
-# File Name Checker
 from pydatacuration.checker.file_name_checker import FileNameChecker
-
-# File Open Checker
 from pydatacuration.checker.files_open_checker import FilesOpener
-
-# Metadata Checker
 from pydatacuration.checker.metadata_checker import MetadataChecker
-
-# Misc Checker
 from pydatacuration.checker.misc_checker import MiscChecker
-
-# Services
 from pydatacuration.checker.services.dataset_tree_info import DatasetTreeInfo
 from pydatacuration.checker.spell_checker import SpellCheckerCustomized
 from pydatacuration.db.base import DatabaseBackend
 from pydatacuration.services.api_calls.call_dv import DVAPICalls
 from pydatacuration.services.api_calls.httpx_client import HTTPXClient
-
-# Verify downloaded files
-from pydatacuration.services.verify_download_files import VerifyDownloadFiles
-
-# utils
 from pydatacuration.utils.search_ds_meta import get_ds_title
-
-# Search dataset metadata utils
+from pydatacuration.utils.search_ds_meta import get_file_list_metadata
 from pydatacuration.utils.search_ds_meta import get_metadata_cm_field
-
-# Unzip utility
 from pydatacuration.utils.unzip import Unzipper
 
 
@@ -78,10 +54,7 @@ class Checker:
         self.check_zip = setup_form_instance.check_zip
         self.collection_alias = setup_form_instance.collection_alias
 
-        # Verify the downloaded files
-        self.verify_download_files_service = VerifyDownloadFiles(target_dir=workdir, ds_metadata=ds_metadata)
-        self.file_list_metadata = self.verify_download_files_service.file_list_metadata
-        self.verify_download_files_service.verify(workdir)
+        self.file_list_metadata = get_file_list_metadata(self.ds_metadata)
 
         # Dataset tree information service
         self.dv_tree_info = DatasetTreeInfo(dv_tree=dv_tree)

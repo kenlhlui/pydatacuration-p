@@ -7,6 +7,7 @@ import deepdiff
 from loguru import logger
 
 from pydatacuration.services.files_checksum import FilesChecksum
+from pydatacuration.utils.search_ds_meta import get_file_list_metadata
 
 
 class VerifyDownloadFiles:
@@ -21,7 +22,7 @@ class VerifyDownloadFiles:
         self.target_dir = target_dir
         self.ds_metadata = ds_metadata
 
-        self.file_list_metadata: list = self.get_file_list_metadata()
+        self.file_list_metadata: list = get_file_list_metadata(self.ds_metadata)
 
         self.file_list_metadata_nested_list: list = self.parse_file_list_metadata(self.file_list_metadata)
 
@@ -82,25 +83,17 @@ class VerifyDownloadFiles:
         """
         return self.checksum_generator.gen_ds_files_checksum(self.target_dir)
 
-    def get_file_list_metadata(self) -> list:
-        """Get the file list metadata from the dataset metadata.
-
-        Returns:
-            list: A list of dictionaries containing the file path and the checksum.
-        """
-        return self.ds_metadata.get('data', {}).get('latestVersion', {}).get('files', [])
-
-    def verify(self, work_dir: Path) -> list | None:
+    def verify(self, project_dir: Path) -> list | None:
         """Verify the downloaded files against the metadata JSON file.
 
         Args:
-            work_dir (Path): The working directory.
+            project_dir (Path): The top level project directory where the downloaded files are located. (e.g. /CUR-999/dataset/files), and CUR-999 is the dir to be passed in.
 
         Returns:
             list | None: A list of dictionaries containing the file path and the checksum if the verification is successful, None otherwise.
         """  # noqa: E501
         if self.compare_files_and_metadata(
-            self.generate_dl_files_checksums(), self.file_list_metadata_nested_list, work_dir
+            self.generate_dl_files_checksums(), self.file_list_metadata_nested_list, project_dir
         ):
             logger.info('Verification successful: The downloaded files match the metadata JSON file.')
             return self.file_list_metadata_nested_list

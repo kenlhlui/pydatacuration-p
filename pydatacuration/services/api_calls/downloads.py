@@ -135,7 +135,7 @@ class Downloads:
         except Exception as e:
             logger.error(f'An error occurred: {e}')
 
-    async def downloader(self) -> None:
+    async def downloader(self) -> dict:
         """Download the dataset as a zip file asynchronously."""
         # Get the dataset metadata (sync HTTP — offloaded to thread to avoid blocking event loop)
         ds_metadata = await asyncio.to_thread(self.dv_api_calls.get_ds_metadata, self.pid)
@@ -149,3 +149,5 @@ class Downloads:
         file_list = get_file_list(ds_metadata)
         await asyncio.to_thread(self.make_dir_structure, ds_metadata)
         await self.save_files_async(file_list)
+
+        return ds_metadata

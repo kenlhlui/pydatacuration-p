@@ -170,3 +170,12 @@ def get_directory_set(ds_metadata: dict) -> set[str] | None:
     dir_list = jmespath.search(query_string, ds_metadata)
 
     return set(dir_list) or None
+
+
+def get_file_list_metadata(ds_metadata: dict) -> list:
+    """Get the file list metadata from the dataset metadata.
+
+    Returns:
+        list: A list of dictionaries containing the file path and the checksum.
+    """
+    return ds_metadata.get('data', {}).get('latestVersion', {}).get('files', [])
