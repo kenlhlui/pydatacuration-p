@@ -61,7 +61,7 @@ class VerifyDownloadFiles:
         diff = deepdiff.DeepDiff(dl_files_checksums, metadata_file_checksums, ignore_order=True)
         if diff:
             logger.warning('The downloaded files and the file list metadata are different.')
-            diff_log_path = Path(self.dir_manager_instance.log_files_dir / 'diff.txt').resolve()
+            diff_log_path = Path(self.dir_manager_instance.log_dir / 'diff.txt').resolve()
             with diff_log_path.open('w', encoding='utf-8') as f:
                 f.write(str(diff))
             logger.warning(f'See the {str(diff_log_path)} file for the differences.')

@@ -43,7 +43,7 @@ def init_curation(body: SetupForm) -> None:
         raise DirectoryExistsError(msg)
 
     dir_manager_instance.delete_dir(dir_manager_instance.project_dir)
-    dir_manager_instance.make_dirs()
+    dir_manager_instance.make_project_dir()
 
     db = get_database(schema_name=body.project_number, db_file=dir_manager_instance.db_path)
     db.create_database()
