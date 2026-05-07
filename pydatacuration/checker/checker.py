@@ -217,25 +217,6 @@ class Checker:
             results=potential_typos,
         )
 
-    def check_restricted_files(self) -> None:
-        """Check for restricted files."""
-        restricted_files = []
-
-        for item in self.file_list_metadata:
-            if item.get('restricted') is True:
-                file_name = item.get('dataFile', {}).get('originalFileName') or item.get('dataFile', {}).get('filename')
-                file_path = Path(item.get('directoryLabel', ''), file_name)
-                logger.info(f'Restricted file found: {file_path}')
-                restricted_files.append(str(file_path))
-
-        self.check_result_writer.write(
-            check_id='restricted_files',
-            check_name='Restricted file names',
-            description='files with access restrictions in the dataset',
-            unit='file',
-            results=restricted_files,
-        )
-
     def run_checks(self) -> None:
         """Run all the checks."""
         logger.info('Running the checks...')
