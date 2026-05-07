@@ -6,6 +6,7 @@ import yaml
 from loguru import logger
 
 from pydatacuration.checker.check_result_writer import CheckResultWriter
+from pydatacuration.utils.search_ds_meta import get_file_list_metadata
 
 
 class FileFormatChecker:
@@ -13,13 +14,13 @@ class FileFormatChecker:
 
     def __init__(
         self,
-        file_list_metadata: list,
+        ds_metadata: dict,
         check_result_writer: CheckResultWriter,
         res_dir: Path,
         workdir: Path,
     ) -> None:
         """Initialize the class."""
-        self.file_list_metadata = file_list_metadata
+        self.file_list_metadata = get_file_list_metadata(ds_metadata)
         self.check_result_writer = check_result_writer
         self.workdir = workdir
         self.common_file_format_tuple = self._read_common_file_format(res_dir)

@@ -15,35 +15,37 @@ from pydatacuration.utils.unzip import Unzipper
 class FileOpenChecker:
     """Class for checking if files in the dataset can be opened."""
 
-    def __init__(self, check_result_writer: CheckResultWriter) -> None:
+    def __init__(
+        self, ds_metadata: dict, check_zip: bool, workdir: Path, check_result_writer: CheckResultWriter
+    ) -> None:
         """Initialize the class."""
+        self.file_list_metadata = get_file_list_metadata(ds_metadata)
+        self.check_zip = check_zip
+        self.workdir = workdir
         self.check_result_writer = check_result_writer
         self.files_opener = FilesOpener
 
-    def check_file_open(self, ds_metadata: dict, check_zip: bool, workdir: Path) -> None:
+    def check_file_open(self) -> None:
         """Check if the file can be opened."""
         file_list = []
         inaccessible_files = []
         unsupported_files = []
-        # Get the file list metadata from the dataset metadata
-        file_list_metadata = get_file_list_metadata(ds_metadata)
-
         # To generate paths for the relative files in the dataset
-        for file in file_list_metadata:
+        for file in self.file_list_metadata:
             file_name = get_file_name_from_file_list_metadata(file)
             file_rel_path = get_file_rel_path_from_file_list_metadata(file, file_name)
             file_list.append(file_rel_path)
 
         # Unzip the files and append the unzipped files to the file_list
         zip_file_extensions = {'.tar', '.tar.gz', '.tar.bz2', '.tar.xz', '.gz', '.bz2', '.xz', '.7z', '.zip'}
-        if check_zip:
+        if self.check_zip:
             for file_rel_path in file_list[:]:  # Iterate over a copy of the list
                 if file_rel_path.suffix in zip_file_extensions:
                     # Upper case the suffix and remove the leading dot
                     extracted_file_rel_paths = Unzipper(
-                        zip_file=Path(workdir, 'dataset', 'files', file_rel_path),
+                        zip_file=Path(self.workdir, 'dataset', 'files', file_rel_path),
                         output_dir=Path(
-                            workdir,
+                            self.workdir,
                             'dataset',
                             'files',
                             '__UNZIPED_FILES__',
@@ -52,13 +54,13 @@ class FileOpenChecker:
                     ).main()
                     file_list.extend(extracted_file_rel_paths)
         # Only show the message if there's zip file(s) in the dataset
-        elif not check_zip and any(file_rel_path.suffix in zip_file_extensions for file_rel_path in file_list):
+        elif not self.check_zip and any(file_rel_path.suffix in zip_file_extensions for file_rel_path in file_list):
             logger.info(
                 'Skipping the unzipping of zip file(s). The zip file(s) and the content inside will not be checked.'
             )  # noqa: E501
 
         for file_rel_path in file_list:
-            file_abs_path = Path(workdir, 'dataset', 'files', file_rel_path)
+            file_abs_path = Path(self.workdir, 'dataset', 'files', file_rel_path)
             # Pass if the file is a zip file
             if file_rel_path.suffix not in zip_file_extensions:
                 result, *_ = self.files_opener(file_abs_path).open_file()

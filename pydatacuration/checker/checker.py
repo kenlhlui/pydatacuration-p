@@ -15,7 +15,6 @@ from pydatacuration.checker.misc_checker import MiscChecker
 from pydatacuration.db.base import DatabaseBackend
 from pydatacuration.services.api_calls.call_dv import DVAPICalls
 from pydatacuration.services.api_calls.httpx_client import HTTPXClient
-from pydatacuration.utils.search_ds_meta import get_file_list_metadata
 
 
 RES_DIR = Path('res')
@@ -46,8 +45,6 @@ class Checker:
         self.check_zip = setup_form_instance.check_zip
         self.collection_alias = setup_form_instance.collection_alias
 
-        self.file_list_metadata = get_file_list_metadata(self.ds_metadata)
-
         # API calls service
         self.httpx_client = HTTPXClient(self.base_url, self.api_token)
         self.dv_api_calls = DVAPICalls(httpx_client=self.httpx_client)
@@ -57,11 +54,16 @@ class Checker:
 
         self.metadata_checker = MetadataChecker(self.ds_metadata, self.check_result_writer)
 
-        self.file_name_checker = FileNameChecker(self.file_list_metadata, self.check_result_writer)
+        self.file_name_checker = FileNameChecker(self.ds_metadata, self.check_result_writer)
 
-        self.file_access_checker = FileAccessChecker(self.check_result_writer)
+        self.file_access_checker = FileAccessChecker(self.ds_metadata, self.check_result_writer)
 
-        self.file_open_checker = FileOpenChecker(self.check_result_writer)
+        self.file_open_checker = FileOpenChecker(
+            ds_metadata=self.ds_metadata,
+            check_zip=self.check_zip,
+            workdir=self.workdir,
+            check_result_writer=self.check_result_writer,
+        )
 
         # Misc checker for checks that do not fit into other categories
         self.misc_checker = MiscChecker(
@@ -72,7 +74,7 @@ class Checker:
 
         # File format checker
         self.file_format_checker = FileFormatChecker(
-            self.file_list_metadata,
+            self.ds_metadata,
             self.check_result_writer,
             res_dir=RES_DIR,
             workdir=self.workdir,
@@ -88,7 +90,7 @@ class Checker:
 
         self.file_format_checker.check_common_file_format()
 
-        self.file_open_checker.check_file_open(self.ds_metadata, self.check_zip, self.workdir)
+        self.file_open_checker.check_file_open()
 
         self.metadata_checker.check_terms_of_use()
         self.metadata_checker.check_terms_of_access()
@@ -103,6 +105,6 @@ class Checker:
         self.metadata_checker.check_missing_author_identifier()
         self.metadata_checker.check_missing_author_identifier_scheme()
 
-        self.file_access_checker.check_restricted_files(self.ds_metadata)
+        self.file_access_checker.check_restricted_files()
         self.misc_checker.check_depositor_record(collection_alias=self.collection_alias)
         self.misc_checker.check_spelling()

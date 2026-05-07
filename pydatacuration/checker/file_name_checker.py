@@ -6,6 +6,7 @@ from pathlib import Path
 from loguru import logger
 
 from pydatacuration.checker.check_result_writer import CheckResultWriter
+from pydatacuration.utils.search_ds_meta import get_file_list_metadata
 from pydatacuration.utils.search_ds_meta import get_file_name_from_file_list_metadata
 from pydatacuration.utils.search_ds_meta import get_file_rel_path_from_file_list_metadata
 
@@ -13,9 +14,9 @@ from pydatacuration.utils.search_ds_meta import get_file_rel_path_from_file_list
 class FileNameChecker:
     """This class is used to check the file name format."""
 
-    def __init__(self, file_list_metadata: list, check_result_writer: CheckResultWriter) -> None:
+    def __init__(self, ds_metadata: dict, check_result_writer: CheckResultWriter) -> None:
         """Initialize the class."""
-        self.file_list_metadata = file_list_metadata
+        self.file_list_metadata = get_file_list_metadata(ds_metadata)
         self.check_result_writer = check_result_writer
 
     @staticmethod
