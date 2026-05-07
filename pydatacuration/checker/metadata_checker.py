@@ -46,58 +46,48 @@ class MetadataChecker:
             results=missing_required_fields,
         )
 
-    def check_missing_author_affiliation(self) -> None:
-        """Check for missing author affiliation."""
-        authors_missing_affiliation = []
+    def _check_missing_author_field(self, field: str, check_id: str, check_name: str, description: str) -> None:
+        authors_missing_field = []
 
         for item in self.author_info_dict:
-            if item.get('authorAffiliation') is None:
+            if item.get(field) is None:
                 author_name = item.get('authorName')
-                logger.info(f'Missing metadata found in authorAffiliation field for author: {author_name}')
-                authors_missing_affiliation.append(author_name)
+                logger.info(f'Missing metadata found in {field} field for author: {author_name}')
+                authors_missing_field.append(author_name)
 
         self.check_result_writer.write(
+            check_id=check_id,
+            check_name=check_name,
+            description=description,
+            unit='author',
+            results=authors_missing_field,
+        )
+
+    def check_missing_author_affiliation(self) -> None:
+        """Check for missing author affiliation."""
+        self._check_missing_author_field(
+            field='authorAffiliation',
             check_id='authors_missing_affiliation',
             check_name='Author affiliation field',
             description='Authors missing institutional affiliation information',
-            unit='author',
-            results=authors_missing_affiliation,
         )
 
     def check_missing_author_identifier(self) -> None:
         """Check for missing author identifier."""
-        authors_missing_identifier = []
-
-        for item in self.author_info_dict:
-            if item.get('authorIdentifier') is None:
-                author_name = item.get('authorName')
-                logger.info(f'Missing metadata found in authorIdentifier field for author: {author_name}')
-                authors_missing_identifier.append(author_name)
-
-        self.check_result_writer.write(
+        self._check_missing_author_field(
+            field='authorIdentifier',
             check_id='authors_missing_identifier',
             check_name='Author Research ID field',
             description='Authors missing personal identifier (ORCID, etc.)',
-            unit='author',
-            results=authors_missing_identifier,
         )
 
     def check_missing_author_identifier_scheme(self) -> None:
         """Check for missing author identifier scheme."""
-        authors_missing_scheme = []
-
-        for item in self.author_info_dict:
-            if item.get('authorIdentifierScheme') is None:
-                author_name = item.get('authorName')
-                logger.info(f'Missing metadata found in authorIdentifierScheme field for author: {author_name}')
-                authors_missing_scheme.append(author_name)
-
-        self.check_result_writer.write(
+        self._check_missing_author_field(
+            field='authorIdentifierScheme',
             check_id='authors_missing_scheme',
             check_name='Authors Research Identifier Scheme',
             description='Authors missing identifier scheme information',
-            unit='author',
-            results=authors_missing_scheme,
         )
 
     def check_missing_institutional_affiliation(self) -> None:
