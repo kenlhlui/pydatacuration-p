@@ -2,8 +2,9 @@
 
 from pathlib import Path
 from shutil import rmtree
+from typing import Self
 
-from .custom_logging import logger
+from loguru import logger
 
 
 class DirectoryManager:
@@ -36,6 +37,30 @@ class DirectoryManager:
             'outputs': 'outputs',
             'outputs/reports': 'outputs/reports',
         }
+
+    @classmethod
+    def get_dir_manager_instance(
+        cls,
+        project_number: str,
+        main_dir: Path,
+        res_dir: Path | None = None,
+    ) -> Self:
+        """Create a directory manager for a project.
+
+        Args:
+            project_number (str): The project number.
+            main_dir (Path): The main directory.
+            res_dir (Path | None): Optional resource directory.
+
+        Returns:
+            Self: A directory manager instance.
+
+        """
+        return cls(
+            main_dir=main_dir,
+            project_number=project_number,
+            res_dir=res_dir,
+        )
 
     def _define_project_dir(self) -> Path:
         """Define the project directory.
@@ -234,3 +259,27 @@ class DirectoryManager:
     def main_dir_path(self) -> Path:
         """Get main directory path."""
         return Path(self.main_dir).resolve()
+
+    @classmethod
+    def from_project(
+        cls,
+        project_number: str,
+        main_dir: Path,
+        res_dir: Path | None = None,
+    ) -> Self:
+        """Create a directory manager for a project.
+
+        Args:
+            project_number (str): The project number for the curation process.
+            main_dir (Path): The main directory where the project directory will be created.
+            res_dir (Path | None): Optional path to the resource directory.
+
+        Returns:
+            Self: A directory manager instance.
+
+        """
+        return cls(
+            main_dir=main_dir,
+            project_number=project_number,
+            res_dir=res_dir,
+        )

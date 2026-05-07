@@ -15,8 +15,6 @@ from pydatacuration.backend.models.setup_form import SetupDefaults
 
 # Import the utility function to mount static files for the frontend
 from pydatacuration.frontend.utils import mount_static_files
-
-# Import the typer app for CLI command execution
 from pydatacuration.utils.custom_logging import setup_logging
 
 

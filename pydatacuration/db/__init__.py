@@ -27,11 +27,12 @@ For standalone (non-Docker) usage, set ``POSTGRES_HOST=localhost`` instead.
 
 from pathlib import Path
 
+from loguru import logger
+
 from pydatacuration.db.base import DatabaseBackend
 from pydatacuration.db.settings import DBSettings
 from pydatacuration.db.settings import DBType
 from pydatacuration.db.sqlmodels import DBModels
-from pydatacuration.utils.custom_logging import logger
 
 
 # Re-export key symbols for convenient imports

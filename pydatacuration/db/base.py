@@ -8,14 +8,13 @@ from datetime import timedelta
 from typing import Any
 from typing import Literal
 
+from loguru import logger
 from sqlalchemy import ScalarResult
 from sqlmodel import SQLModel
 from sqlmodel import func
 from sqlmodel import inspect
 from sqlmodel import select
 from sqlmodel import text
-
-from pydatacuration.utils.custom_logging import logger
 
 
 class DatabaseBackend(ABC):  # noqa: PLR0904

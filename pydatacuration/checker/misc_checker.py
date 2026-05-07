@@ -15,7 +15,7 @@ class MiscChecker:
     """Misc checker for checks that do not fit into other categories."""
 
     def __init__(
-        self, ds_metadata: dict, check_result_writer: CheckResultWriter, dv_api_calls_instance: DataverseClient
+        self, ds_metadata: dict, check_result_writer: CheckResultWriter, dataverse_client_instance: DataverseClient
     ) -> None:
         """Initialize the MiscChecker class."""
         self.ds_metadata = ds_metadata
@@ -24,7 +24,7 @@ class MiscChecker:
         self.check_result_writer = check_result_writer
 
         # API calls service
-        self.dv_api_calls = dv_api_calls_instance
+        self.dataverse_client = dataverse_client_instance
 
         # Spell checker instance
         self.spell_checker = SpellCheckerCustomized()
@@ -44,7 +44,7 @@ class MiscChecker:
 
         if isinstance(depositor, str) and depositor.strip():
             logger.debug(f'Checking depositor history for depositor: {depositor} in collection: {collection_alias}')
-            response_json = self.dv_api_calls.search_depositor_record(
+            response_json = self.dataverse_client.search_depositor_record(
                 depositor=depositor, collection_alias=collection_alias
             )
             if response_json:

@@ -7,6 +7,7 @@ from datetime import timedelta
 from pathlib import Path
 from typing import Any
 
+from loguru import logger
 from nicegui import app
 from nicegui import ui
 from sqlmodel import SQLModel
@@ -17,7 +18,6 @@ from pydatacuration.db import DBModels
 from pydatacuration.db import get_database
 from pydatacuration.db import get_db_type
 from pydatacuration.services.exporter import Exporter
-from pydatacuration.utils.custom_logging import logger
 from pydatacuration.utils.directory_manager import DirectoryManager
 
 

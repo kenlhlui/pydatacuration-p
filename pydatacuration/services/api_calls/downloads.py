@@ -49,7 +49,6 @@ class Downloads:
     def from_setup_form(
         cls,
         setup_form: SetupForm,
-        main_dir: Path,
     ) -> 'Downloads':
         """Create a Downloads instance from a SetupForm instance.
 
@@ -61,7 +60,7 @@ class Downloads:
             base_url=str(setup_form.base_url) if setup_form.base_url else '',
             api_token=str(setup_form.api_token) if setup_form.api_token else '',
             pid=setup_form.pid,
-            main_dir=main_dir,
+            main_dir=setup_form.main_dir,
             project_number=setup_form.project_number,
         )
 

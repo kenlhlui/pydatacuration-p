@@ -1,7 +1,5 @@
 """The checker module provides functions to check the validity of data files and metadata."""
 
-from pathlib import Path
-
 from loguru import logger
 
 from pydatacuration.backend.models.setup_form import SetupForm
@@ -16,9 +14,6 @@ from pydatacuration.db.base import DatabaseBackend
 from pydatacuration.services.api_calls.dataverse_client import DataverseClient
 from pydatacuration.services.api_calls.httpx_client import HTTPXClient
 from pydatacuration.utils.directory_manager import DirectoryManager
-
-
-RES_DIR = Path('res')
 
 
 class Checker:
@@ -39,48 +34,44 @@ class Checker:
             setup_form_instance (SetupForm | None): An instance of the setup form.
             directory_manager_instance (DirectoryManager): An instance of the directory manager.
         """
-        self.base_url = str(setup_form_instance.base_url) if setup_form_instance.base_url else ''
-        self.api_token = str(setup_form_instance.api_token) if setup_form_instance.api_token else ''
+        self.base_url = str(setup_form_instance.base_url)
+        self.api_token = str(setup_form_instance.api_token)
         self.ds_metadata = ds_metadata
-        self.check_zip = setup_form_instance.check_zip
         self.collection_alias = setup_form_instance.collection_alias
-        self.project_number = setup_form_instance.project_number
 
         # Initialize the directory manager
         self.directory_manager = directory_manager_instance
 
         # API calls service
-        self.httpx_client = HTTPXClient(self.base_url, self.api_token)
-        self.dv_api_calls = DataverseClient(httpx_client=self.httpx_client)
+        self.dataverse_client = DataverseClient(HTTPXClient(self.base_url, self.api_token))
 
         # Initialize the check result writer
-        self.db_instance = db_instance
-        self.check_result_writer = CheckResultWriter(db_instance=self.db_instance)
+        self.check_result_writer = CheckResultWriter(db_instance)
 
-        self.metadata_checker = MetadataChecker(self.ds_metadata, self.check_result_writer)
+        self.metadata_checker = MetadataChecker(ds_metadata, self.check_result_writer)
 
-        self.file_name_checker = FileNameChecker(self.ds_metadata, self.check_result_writer)
+        self.file_name_checker = FileNameChecker(ds_metadata, self.check_result_writer)
 
-        self.file_access_checker = FileAccessChecker(self.ds_metadata, self.check_result_writer)
+        self.file_access_checker = FileAccessChecker(ds_metadata, self.check_result_writer)
 
         self.file_open_checker = FileOpenChecker(
-            ds_metadata=self.ds_metadata,
-            check_zip=self.check_zip,
+            ds_metadata=ds_metadata,
+            check_zip=setup_form_instance.check_zip,
             check_result_writer=self.check_result_writer,
             directory_manager=self.directory_manager,
         )
 
         # Misc checker for checks that do not fit into other categories
         self.misc_checker = MiscChecker(
-            ds_metadata=self.ds_metadata,
+            ds_metadata=ds_metadata,
             check_result_writer=self.check_result_writer,
-            dv_api_calls_instance=self.dv_api_calls,
+            dataverse_client_instance=self.dataverse_client,
         )
 
         # File format checker
         self.file_format_checker = FileFormatChecker(
-            ds_metadata=self.ds_metadata,
-            res_dir=RES_DIR,
+            ds_metadata=ds_metadata,
+            res_dir=setup_form_instance.res_dir,
             check_result_writer=self.check_result_writer,
             directory_manager=self.directory_manager,
         )

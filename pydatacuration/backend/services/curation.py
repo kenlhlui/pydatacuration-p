@@ -12,7 +12,6 @@ from pydatacuration.backend.services.db_writer import write_checklist_metadata_t
 from pydatacuration.backend.services.db_writer import write_project_metadata_to_db
 from pydatacuration.checker import Checker
 from pydatacuration.checklist.utils import get_checklist_content
-from pydatacuration.db import DatabaseBackend
 from pydatacuration.db import get_database
 from pydatacuration.exceptions import DatasetAccessError
 from pydatacuration.exceptions import DatasetNotFoundError
@@ -23,38 +22,10 @@ from pydatacuration.services.api_calls.downloads import Downloads
 from pydatacuration.services.api_calls.httpx_client import HTTPXClient
 from pydatacuration.services.dataset_tree_info import DatasetTreeInfo
 from pydatacuration.services.verify_download_files import VerifyDownloadFiles
-from pydatacuration.utils import directory_manager
+from pydatacuration.utils.directory_manager import DirectoryManager
 from pydatacuration.utils.search_ds_meta import get_dataset_id
 from pydatacuration.utils.search_ds_meta import get_ds_title
 from pydatacuration.utils.utils import check_ds_read_access
-
-
-def get_dirs(project_number: str, main_dir: Path, res_dir: Path | None = None) -> directory_manager.DirectoryManager:
-    """Returns a DirectoryManager instance for the given project number and main directory.
-
-    Args:
-        project_number (str): The project number for the curation process.
-        main_dir (Path): The main directory where the project directory will be created.
-        res_dir (Path | None): Optional path to the resource directory containing checklist files.
-
-    Returns:
-        DirectoryManager: An instance of the DirectoryManager class.
-
-    """
-    return directory_manager.DirectoryManager(main_dir=str(main_dir), project_number=project_number, res_dir=res_dir)
-
-
-def get_db(schema_name: str, db_file: Path) -> DatabaseBackend:
-    """Returns a DatabaseBackend instance for the given schema name and database file.
-
-    Args:
-        schema_name (str): The name of the schema.
-        db_file (Path): The path to the database file.
-
-    Returns:
-        DatabaseBackend: An instance of the DatabaseBackend class.
-    """
-    return get_database(schema_name=schema_name, db_file=db_file)
 
 
 def init_curation(body: SetupForm) -> None:
@@ -66,22 +37,24 @@ def init_curation(body: SetupForm) -> None:
     Raises:
         DirectoryExistsError: If the working directory already exists and force_delete is not set to True.
     """
-    dirs = get_dirs(body.project_number, Path(body.main_dir))
+    dir_manager_instance = DirectoryManager.get_dir_manager_instance(body.project_number, Path(body.main_dir))
 
-    if dirs.project_dir.exists() and not body.force_delete:
-        msg = f"Directory {dirs.project_dir} already exists. Use 'force_delete=True' to overwrite."
+    if dir_manager_instance.project_dir.exists() and not body.force_delete:
+        msg = f"Directory {dir_manager_instance.project_dir} already exists. Use 'force_delete=True' to overwrite."
         logger.error(msg)
         raise DirectoryExistsError(msg)
 
-    dirs.delete_dir(dirs.project_dir)
-    dirs.make_dirs()
+    dir_manager_instance.delete_dir(dir_manager_instance.project_dir)
+    dir_manager_instance.make_dirs()
 
-    db = get_db(schema_name=body.project_number, db_file=dirs.db_path)
+    db = get_database(schema_name=body.project_number, db_file=dir_manager_instance.db_path)
     db.create_database()
     db.drop_schema(body.project_number)
     db.create_schema()
 
-    logger.debug(f'Initialized working directory and database for project {body.project_number} at {dirs.project_dir}')
+    logger.debug(
+        f'Initialized working directory and database for project {body.project_number} at {dir_manager_instance.project_dir}'
+    )
 
 
 def _ensure_dataset_read_access(body: SetupForm) -> None:
@@ -108,21 +81,23 @@ async def fetch_curation(body: SetupForm) -> None:
     Args:
         body (SetupForm): The setup form containing the necessary information for fetching the dataset.
     """
-    dirs = get_dirs(body.project_number, Path(body.main_dir))
-    db = get_db(schema_name=body.project_number, db_file=dirs.db_path)
+    dir_manager_instance = DirectoryManager.get_dir_manager_instance(body.project_number, Path(body.main_dir))
+    db = get_database(schema_name=body.project_number, db_file=dir_manager_instance.db_path)
 
     try:
         await asyncio.to_thread(_ensure_dataset_read_access, body)
-        downloader = Downloads.from_setup_form(body, dirs.project_dir)
+        downloader = Downloads.from_setup_form(body)
         ds_metadata = await downloader.downloader()
-        logger.info(f'Downloaded dataset for PID {body.pid} to {dirs.project_dir}')
+        logger.info(f'Downloaded dataset for PID {body.pid} to {dir_manager_instance.project_dir}')
 
-        verify_download_files_service = VerifyDownloadFiles(target_dir=dirs.project_dir, ds_metadata=ds_metadata)
-        verify_download_files_service.verify(dirs.project_dir)
+        verify_download_files_service = VerifyDownloadFiles(
+            target_dir=dir_manager_instance.project_dir, ds_metadata=ds_metadata
+        )
+        verify_download_files_service.verify(dir_manager_instance.project_dir)
 
     except Exception:
         db.drop_schema(body.project_number)
-        dirs.delete_dir(dirs.project_dir)
+        dir_manager_instance.delete_dir(dir_manager_instance.project_dir)
         raise
 
 
@@ -132,10 +107,12 @@ def check_curation(body: SetupForm) -> None:
     Args:
         body (SetupForm): The setup form containing the necessary information for running the checks.
     """
-    directory_manager = get_dirs(body.project_number, Path(body.main_dir), res_dir=Path(body.res_dir))
-    db = get_db(schema_name=body.project_number, db_file=directory_manager.db_path)
+    dir_manager_instance = DirectoryManager.get_dir_manager_instance(
+        body.project_number, Path(body.main_dir), res_dir=Path(body.res_dir)
+    )
+    db = get_database(schema_name=body.project_number, db_file=dir_manager_instance.db_path)
     httpx_client = HTTPXClient(str(body.base_url), str(body.api_token))
-    dv_api_calls = DataverseClient(httpx_client=httpx_client)
+    dataverse_client = DataverseClient(httpx_client=httpx_client)
 
     res_dir = Path(body.res_dir) if body.res_dir else None
 
@@ -144,14 +121,14 @@ def check_curation(body: SetupForm) -> None:
         checklist_content = get_checklist_content(body.checklist, res_dir)
 
         # Read the dataset metadata and dataverse tree from the downloaded files
-        with Path(directory_manager.metadata_dir, 'ds_metadata.json').open('rb') as f:
+        with Path(dir_manager_instance.metadata_dir, 'ds_metadata.json').open('rb') as f:
             ds_metadata = orjson.loads(f.read())
 
         # Read the dataverse tree file
-        with Path(directory_manager.metadata_dir, 'dv_tree.json').open('rb') as f:
+        with Path(dir_manager_instance.metadata_dir, 'dv_tree.json').open('rb') as f:
             dv_tree = orjson.loads(f.read())
 
-        dataset_search_result = dv_api_calls.search_dataset_by_version_id(
+        dataset_search_result = dataverse_client.search_dataset_by_version_id(
             get_dataset_id(ds_metadata),
         )
 
@@ -165,7 +142,7 @@ def check_curation(body: SetupForm) -> None:
             ds_metadata=ds_metadata,
             db_instance=db,
             setup_form_instance=body,
-            directory_manager_instance=directory_manager,
+            directory_manager_instance=dir_manager_instance,
         )
 
         # Setup writes — before checks run
@@ -177,7 +154,7 @@ def check_curation(body: SetupForm) -> None:
         logger.info('Checks completed')
     except Exception as exc:
         db.drop_schema(body.project_number)
-        directory_manager.delete_dir(directory_manager.project_dir)
+        dir_manager_instance.delete_dir(dir_manager_instance.project_dir)
         error_message = f'Error occurred during checks: {exc}'
         logger.error(error_message)
         raise Exception(error_message) from exc
