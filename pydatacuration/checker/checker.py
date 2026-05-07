@@ -9,9 +9,9 @@ from pydatacuration.checker.check_result_writer import CheckResultWriter
 from pydatacuration.checker.file_access_checker import FileAccessChecker
 from pydatacuration.checker.file_format_checker import FileFormatChecker
 from pydatacuration.checker.file_name_checker import FileNameChecker
-from pydatacuration.checker.files_open_checker import FilesOpener
 from pydatacuration.checker.metadata_checker import MetadataChecker
 from pydatacuration.checker.misc_checker import MiscChecker
+from pydatacuration.checker.services.files_opener import FilesOpener
 from pydatacuration.db.base import DatabaseBackend
 from pydatacuration.services.api_calls.call_dv import DVAPICalls
 from pydatacuration.services.api_calls.httpx_client import HTTPXClient
