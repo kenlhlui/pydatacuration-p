@@ -4,7 +4,6 @@ import asyncio
 from pathlib import Path
 from urllib.parse import urljoin
 
-import httpx
 from loguru import logger
 
 from pydatacuration.backend.models.setup_form import SetupForm
@@ -125,28 +124,6 @@ class Downloads:
         successful = [r for r in results if r is not None]
         logger.info(f'Finished downloading files: {successful}')
         return successful
-
-    def _get_ds_metadata(self) -> dict:
-        """Get metadata of a dataset.
-
-        Returns:
-            dict: Metadata of the dataset
-        """
-        url = f'{self.base_url}/api/datasets/:persistentId/?persistentId={self.pid}'
-
-        try:
-            logger.info(f'Fetching dataset metadata from {url}...')
-            response = self.httpx_client.sync_get(url)
-            response.raise_for_status()
-            if response.status_code == self.success_code and response.json():
-                return response.json()
-            return {}
-        except httpx.HTTPStatusError as e:
-            logger.info(f'HTTP error occurred: {e}')
-            return {}
-        except Exception as e:
-            logger.info(f'An error occurred: {e}')
-            return {}
 
     def export_metadata(self, file_name: str, dictionary: dict) -> None:
         """Save the dataset metadata to a JSON file."""
