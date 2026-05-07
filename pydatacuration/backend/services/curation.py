@@ -22,9 +22,9 @@ from pydatacuration.services.api_calls.httpx_client import HTTPXClient
 from pydatacuration.services.verify_download_files import VerifyDownloadFiles
 from pydatacuration.utils import directory_manager
 from pydatacuration.utils.search_ds_meta import get_ds_title
-from pydatacuration.utils.utils import DatasetAccessError
-from pydatacuration.utils.utils import DatasetNotFoundError
-from pydatacuration.utils.utils import DatasetUnauthorizedError
+from pydatacuration.exceptions import DatasetAccessError
+from pydatacuration.exceptions import DatasetNotFoundError
+from pydatacuration.exceptions import DatasetUnauthorizedError
 from pydatacuration.utils.utils import check_ds_read_access
 
 
