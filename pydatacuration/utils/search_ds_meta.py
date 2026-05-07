@@ -223,11 +223,11 @@ def get_file_name_from_file_list_metadata(file_list_metadata: dict) -> str:
     Args:
         file_list_metadata (list[dict]): The file list metadata.
 
-    Note: This start from the file, not the full dataset metadata dict
+    Note: This start from the file, not the full dataset metadata dict. It will prefer the 'originalFileName' if it exists, otherwise it will use 'filename'.
 
     Returns:
         str: The file name.
-    """
+    """  # noqa: E501
     file_name = file_list_metadata.get('dataFile', {}).get('originalFileName') or file_list_metadata.get(
         'dataFile', {}
     ).get('filename')

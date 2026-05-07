@@ -8,6 +8,8 @@ from loguru import logger
 from pydatacuration.checker.check_result_writer import CheckResultWriter
 from pydatacuration.utils.directory_manager import DirectoryManager
 from pydatacuration.utils.search_ds_meta import get_file_list_metadata
+from pydatacuration.utils.search_ds_meta import get_file_name_from_file_list_metadata
+from pydatacuration.utils.search_ds_meta import get_file_rel_path_from_file_list_metadata
 
 
 class FileFormatChecker:
@@ -99,8 +101,8 @@ class FileFormatChecker:
 
         if self.common_file_format_tuple:
             for file in self.file_list_metadata:
-                file_name = file.get('dataFile', {}).get('originalFileName') or file.get('dataFile', {}).get('filename')
-                file_rel_path = Path(file.get('directoryLabel', ''), file_name)
+                file_name = get_file_name_from_file_list_metadata(file)
+                file_rel_path = get_file_rel_path_from_file_list_metadata(file, file_name)
                 file_ext = file_rel_path.suffix
                 if file_ext.startswith('.') and file_ext not in self.common_file_format_tuple:
                     file_abs_path = Path(self.directory_manager.files_dir, file_rel_path)
