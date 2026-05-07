@@ -35,7 +35,7 @@ class MiscChecker:
         Args:
             collection_alias (str | None): The alias of the dataverse collection to check. If None, it will check the depositor history across all dataverse collections.
 
-        Note: This check only works if the depositor inputs their name in a consistent way across all datasets. By default, the dataset initial creator will be listed as the depositor in the metadata, with the format (LAST NAME, FIRST NAME). But anyone with edit access to the dataset can change the depositor information, so the information might be in accurate.  # noqa: E501
+        Note: This check only works if the depositor inputs their name in a consistent way across all datasets. By default, the dataset initial creator will be listed as the depositor in the metadata, with the format (LAST NAME, FIRST NAME). But anyone with edit access to the dataset can change the depositor information, so the information might be inaccurate.  # noqa: E501
 
         """  # noqa: E501
         depositor_history = []
@@ -56,16 +56,13 @@ class MiscChecker:
                     for dataset in dataset_publish_history
                 )
 
-            self.check_result_writer.write(
-                check_id='depositor_history',
-                check_name='Depositor history',
-                description='Previous datasets depositor in this Dataverse collection',
-                unit='depositor record',
-                results=depositor_history,
-            )
-
-        else:
-            logger.debug('No valid depositor found from the dataset metadata. Skipping depositor history check.')
+        self.check_result_writer.write(
+            check_id='depositor_history',
+            check_name='Depositor history',
+            description='Previous datasets depositor in this Dataverse collection',
+            unit='depositor record',
+            results=depositor_history,
+        )
 
     def check_spelling(self) -> None:
         """Check for spelling mistakes in the metadata."""
