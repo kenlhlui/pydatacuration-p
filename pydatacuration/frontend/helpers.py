@@ -16,7 +16,7 @@ from pydatacuration.db import DatabaseBackend
 from pydatacuration.db import DBModels
 from pydatacuration.db import get_database
 from pydatacuration.db import get_db_type
-from pydatacuration.exporter import Exporter
+from pydatacuration.services.exporter import Exporter
 from pydatacuration.utils.custom_logging import logger
 from pydatacuration.utils.directory_manager import DirectoryManager
 

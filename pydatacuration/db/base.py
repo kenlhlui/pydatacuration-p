@@ -175,7 +175,7 @@ class DatabaseBackend(ABC):  # noqa: PLR0904
         model_class = self.models.check_results()
         return {'check_results': self.read_table_records(model_class, mode=mode)}
 
-    def read_checklist(self):
+    def read_checklist(self) -> list[SQLModel]:
         """Read checklist table, returning model instances.
 
         Objects are expunged from the session so they remain usable after

@@ -15,7 +15,7 @@ from pydatacuration.exceptions import DatasetAccessError
 from pydatacuration.exceptions import DatasetNotFoundError
 from pydatacuration.exceptions import DatasetUnauthorizedError
 from pydatacuration.exceptions import DirectoryExistsError
-from pydatacuration.exporter import Exporter
+from pydatacuration.services.exporter import Exporter
 
 
 router = APIRouter()
