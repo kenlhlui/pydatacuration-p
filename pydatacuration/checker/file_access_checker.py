@@ -13,7 +13,7 @@ class FileAccessChecker:
 
     def __init__(self, check_result_writer: CheckResultWriter) -> None:
         """Initialize the class."""
-        self.checklist_result_writer = check_result_writer
+        self.check_result_writer = check_result_writer
 
     def check_restricted_files(self, ds_metadata: dict) -> None:
         """Check for restricted files in the dataset metadata.
@@ -33,7 +33,7 @@ class FileAccessChecker:
                     logger.info(f'Restricted file found: {file_rel_path}')
                     restricted_files.append(str(file_rel_path))
 
-        self.checklist_result_writer.write(
+        self.check_result_writer.write(
             check_id='restricted_files',
             check_name='Restricted file names',
             description='files with access restrictions in the dataset',
