@@ -1,6 +1,5 @@
 """Utility functions."""
 
-import re
 from pathlib import Path
 from urllib.parse import urlencode
 from urllib.parse import urljoin
@@ -8,7 +7,6 @@ from urllib.parse import urljoin
 import deepdiff
 import orjson
 import seedir as sd
-import typer
 from loguru import logger
 from tenacity import RetryError
 
@@ -65,28 +63,6 @@ def gen_tree_diagram(target_dir: Path, save_dir: Path) -> None:
     except Exception as e:
         logger.info(f'Error: {e}')
         logger.info('An error occurred while generating the folder tree diagram.')
-
-
-def check_project_num_input(project_number: str) -> str:
-    """Check if the project number is without any special characters or spaces.
-
-    Args:
-        project_number (str): The project number to check.
-
-    Returns:
-        str: The validated project number.
-    """
-    # Check if the project number is empty
-    if not project_number:
-        msg = 'Project number cannot be empty.'
-        raise typer.BadParameter(msg)
-
-    # Check if the project number contains any special characters or spaces
-    if re.search(r'[^a-zA-Z0-9_\-]', project_number):
-        msg = '⚠️ Project number must only contain letters, numbers, hyphens, and underscores.'
-        raise typer.BadParameter(msg)
-
-    return project_number
 
 
 def check_ds_read_access(pid: str, base_url: str, api_token: str) -> None:
