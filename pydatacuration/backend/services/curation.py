@@ -17,9 +17,7 @@ from pydatacuration.exceptions import DatasetAccessError
 from pydatacuration.exceptions import DatasetNotFoundError
 from pydatacuration.exceptions import DatasetUnauthorizedError
 from pydatacuration.exceptions import DirectoryExistsError
-from pydatacuration.services.api_calls.dataverse_client import DataverseClient
 from pydatacuration.services.api_calls.downloads import Downloads
-from pydatacuration.services.api_calls.httpx_client import HTTPXClient
 from pydatacuration.services.dataset_tree_info import DatasetTreeInfo
 from pydatacuration.services.verify_download_files import VerifyDownloadFiles
 from pydatacuration.utils.directory_manager import DirectoryManager
@@ -108,8 +106,6 @@ def check_curation(body: SetupForm) -> None:
         body.project_number, Path(body.main_dir), res_dir=Path(body.res_dir)
     )
     db = get_database(schema_name=body.project_number, db_file=dir_manager_instance.db_path)
-    httpx_client = HTTPXClient(str(body.base_url), str(body.api_token))
-    dataverse_client = DataverseClient(httpx_client=httpx_client)
 
     res_dir = Path(body.res_dir) if body.res_dir else None
 
@@ -125,7 +121,13 @@ def check_curation(body: SetupForm) -> None:
         with Path(dir_manager_instance.metadata_dir, 'dv_tree.json').open('rb') as f:
             dv_tree = orjson.loads(f.read())
 
-        dataset_search_result = dataverse_client.search_dataset_by_version_id(
+        checker = Checker(
+            ds_metadata=ds_metadata,
+            db_instance=db,
+            setup_form_instance=body,
+            directory_manager_instance=dir_manager_instance,
+        )
+        dataset_search_result = checker.dataverse_client.search_dataset_by_version_id(
             get_dataset_id(ds_metadata),
         )
 
@@ -134,13 +136,6 @@ def check_curation(body: SetupForm) -> None:
         tree_info = DatasetTreeInfo(dv_tree=dv_tree).get_ds_tree_info(dataset_identifier)
 
         dataset_path = DatasetTreeInfo.get_ds_path(tree_info, get_ds_title(ds_metadata))
-
-        checker = Checker(
-            ds_metadata=ds_metadata,
-            db_instance=db,
-            setup_form_instance=body,
-            directory_manager_instance=dir_manager_instance,
-        )
 
         # Setup writes — before checks run
         write_project_metadata_to_db(db, checker, dataset_path, body)
