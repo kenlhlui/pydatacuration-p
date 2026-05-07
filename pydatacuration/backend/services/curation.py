@@ -11,7 +11,6 @@ from pydatacuration.backend.services.db_writer import write_checklist_items_to_d
 from pydatacuration.backend.services.db_writer import write_checklist_metadata_to_db
 from pydatacuration.backend.services.db_writer import write_project_metadata_to_db
 from pydatacuration.checker import Checker
-from pydatacuration.checker.services.dataset_tree_info import DatasetTreeInfo
 from pydatacuration.checklist.utils import get_checklist_content
 from pydatacuration.db import DatabaseBackend
 from pydatacuration.db import get_database
@@ -22,6 +21,7 @@ from pydatacuration.exceptions import DirectoryExistsError
 from pydatacuration.services.api_calls.dataverse_client import DataverseClient
 from pydatacuration.services.api_calls.downloads import Downloads
 from pydatacuration.services.api_calls.httpx_client import HTTPXClient
+from pydatacuration.services.dataset_tree_info import DatasetTreeInfo
 from pydatacuration.services.verify_download_files import VerifyDownloadFiles
 from pydatacuration.utils import directory_manager
 from pydatacuration.utils.search_ds_meta import get_dataset_id
