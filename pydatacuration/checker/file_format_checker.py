@@ -75,13 +75,12 @@ class FileFormatChecker:
                 # Open the file and read its content
                 with res_dir.joinpath('common_file_formats.yaml').open(encoding='utf-8') as file:
                     common_file_format_dict = yaml.safe_load(file)
-                    logger.debug(f'common_file_formats.yaml content: {common_file_format_dict}')
 
                     file_formats = set()
                     for _category, extensions in common_file_format_dict['file_formats'].items():
                         file_formats.update(extensions)  # Use set to avoid duplicates
 
-                    return tuple(file_formats)  # Convert set to tuple for immutability
+                    return tuple(file_formats)
 
         except FileNotFoundError:
             # Handle the case where the file is not found

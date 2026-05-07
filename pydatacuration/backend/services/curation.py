@@ -90,10 +90,7 @@ async def fetch_curation(body: SetupForm) -> None:
         ds_metadata = await downloader.downloader()
         logger.info(f'Downloaded dataset for PID {body.pid} to {dir_manager_instance.project_dir}')
 
-        verify_download_files_service = VerifyDownloadFiles(
-            target_dir=dir_manager_instance.project_dir, ds_metadata=ds_metadata
-        )
-        verify_download_files_service.verify(dir_manager_instance.project_dir)
+        VerifyDownloadFiles(ds_metadata=ds_metadata, directory_manager_instance=dir_manager_instance).verify()
 
     except Exception:
         db.drop_schema(body.project_number)
