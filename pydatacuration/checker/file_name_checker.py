@@ -12,7 +12,13 @@ from pydatacuration.utils.search_ds_meta import get_file_rel_path_from_file_list
 
 
 class FileNameChecker:
-    """This class is used to check the file name format."""
+    """This class is used to check the file name format.
+
+    Note: For checks with bool return:
+        - True means the file pass the check (i.e. has no issue/no need follow up with curation action)
+        - False means the file fail the check (i.e. has issue/need follow up with curation action.)
+
+    """  # noqa: E501
 
     def __init__(self, ds_metadata: dict, check_result_writer: CheckResultWriter) -> None:
         """Initialize the class."""
@@ -20,7 +26,7 @@ class FileNameChecker:
         self.check_result_writer = check_result_writer
 
     @staticmethod
-    def _check_special_char(file: str) -> tuple:
+    def _check_special_char(file: str) -> bool:
         r"""Check if the file name contains special characters.
 
         <>:"/\|?* `CR` `LF` are absolutely forbidden in file names.
@@ -33,14 +39,12 @@ class FileNameChecker:
             file (str): The path to the file.
 
         Returns:
-            tuple: The file path and a boolean value.
+            bool: True if the file name DOES NOT contain special characters, False otherwise.
         """
-        if re.search(r'[<>:"/\\|?*,@$~\r\n]', Path(file).stem):
-            return file, True
-        return file, False
+        return not bool(re.search(r'[<>:"/\\|?*,@$~\r\n]', Path(file).stem))
 
     @staticmethod
-    def _check_file_name_len(file: str, file_name_max_len: int) -> tuple:
+    def _check_file_name_len(file: str, file_name_max_len: int) -> bool:
         """Check if the file name is longer than the maximum length.
 
         Args:
@@ -48,39 +52,33 @@ class FileNameChecker:
             file_name_max_len (int): The maximum length of the file name.
 
         Returns:
-            tuple: The file path and a boolean value.
+            bool: True if the file name is shorter than or equal to the maximum length, False otherwise.
         """
-        if len(Path(file).stem) > file_name_max_len:
-            return file, True
-        return file, False
+        return len(Path(file).stem) <= file_name_max_len
 
     @staticmethod
-    def _check_file_ext(file: str) -> tuple:
+    def _check_file_ext(file: str) -> bool:
         """Check if the file has an extension.
 
         Args:
             file (str): The path to the file.
 
         Returns:
-            tuple: The file path and a boolean value.
+            bool: True if the file has an extension, False otherwise.
         """
-        if Path(file).suffix:
-            return file, False  # TODO: unify the logic for returns
-        return file, True
+        return bool(Path(file).suffix)
 
     @staticmethod
-    def _check_readme_file_existence(file: str) -> tuple:
+    def _check_readme_file_existence(file: str) -> bool:
         """Check if the file is a README file.
 
         Args:
             file (str): The path to the file.
 
         Returns:
-            tuple: The file path and a boolean value.
+            bool: True if the file is a README file, False otherwise.
         """
-        if re.search(r'readme', file, re.IGNORECASE):
-            return file, True
-        return file, False
+        return bool(re.search(r'readme', file, re.IGNORECASE))
 
     def check_file_name_with_special_char(self) -> None:
         """Check if the file name contains special characters."""
@@ -89,7 +87,7 @@ class FileNameChecker:
             file_name = get_file_name_from_file_list_metadata(file)
             file_rel_path = get_file_rel_path_from_file_list_metadata(file, file_name)
 
-            if self._check_special_char(file_name)[1] is True:
+            if not self._check_special_char(file_name):
                 logger.info(f'Special characters found in the filename: {file_rel_path}')
                 special_char_files.append(str(file_rel_path))
 
@@ -109,7 +107,7 @@ class FileNameChecker:
             file_name = get_file_name_from_file_list_metadata(file)
             file_rel_path = get_file_rel_path_from_file_list_metadata(file, file_name)
 
-            if self._check_file_ext(file_name)[1] is True:
+            if not self._check_file_ext(file_name):
                 logger.info(f'File extension does not found: {file_rel_path}')
                 missing_ext_files.append(str(file_rel_path))
 
@@ -129,7 +127,8 @@ class FileNameChecker:
             file_name = get_file_name_from_file_list_metadata(file)
             file_rel_path = get_file_rel_path_from_file_list_metadata(file, file_name)
 
-            if self._check_readme_file_existence(file_name)[1] is True:
+            # Note: Don't use `not here since if README file exist, it will return True and we want to add it to the list. # noqa: E501
+            if self._check_readme_file_existence(file_name):
                 logger.info(f'README file found: {file_rel_path}')
                 readme_files.append(str(file_rel_path))
 
