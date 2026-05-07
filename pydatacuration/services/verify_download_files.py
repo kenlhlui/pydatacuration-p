@@ -6,7 +6,7 @@ from pathlib import PurePosixPath
 import deepdiff
 from loguru import logger
 
-from pydatacuration.services.files_checksum import FilesChecksum
+from pydatacuration.utils.files_checksum import FilesChecksum
 from pydatacuration.utils.search_ds_meta import get_file_list_metadata
 
 
@@ -81,7 +81,7 @@ class VerifyDownloadFiles:
         Returns:
             list: A list of dictionaries containing the file path and the checksum.
         """
-        return self.checksum_generator.gen_ds_files_checksum(self.target_dir)
+        return self.checksum_generator.gen_ds_files_checksum(Path(self.target_dir / 'dataset' / 'files'))
 
     def verify(self, project_dir: Path) -> list | None:
         """Verify the downloaded files against the metadata JSON file.
