@@ -67,14 +67,13 @@ def init_curation(body: SetupForm) -> None:
         DirectoryExistsError: If the working directory already exists and force_delete is not set to True.
     """
     dirs = get_dirs(body.project_number, Path(body.main_dir))
-    workdir_path = dirs.project_dir
 
-    if workdir_path.exists() and not body.force_delete:
-        msg = f"Directory {workdir_path} already exists. Use 'force_delete=True' to overwrite."
+    if dirs.project_dir.exists() and not body.force_delete:
+        msg = f"Directory {dirs.project_dir} already exists. Use 'force_delete=True' to overwrite."
         logger.error(msg)
         raise DirectoryExistsError(msg)
 
-    dirs.delete_dir(workdir_path)
+    dirs.delete_dir(dirs.project_dir)
     dirs.make_dirs()
 
     db = get_db(schema_name=body.project_number, db_file=dirs.db_path)
@@ -82,7 +81,7 @@ def init_curation(body: SetupForm) -> None:
     db.drop_schema(body.project_number)
     db.create_schema()
 
-    logger.debug(f'Initialized working directory and database for project {body.project_number} at {workdir_path}')
+    logger.debug(f'Initialized working directory and database for project {body.project_number} at {dirs.project_dir}')
 
 
 def _ensure_dataset_read_access(body: SetupForm) -> None:
@@ -133,8 +132,8 @@ def check_curation(body: SetupForm) -> None:
     Args:
         body (SetupForm): The setup form containing the necessary information for running the checks.
     """
-    dirs = get_dirs(body.project_number, Path(body.main_dir), res_dir=Path(body.res_dir))
-    db = get_db(schema_name=dirs.project_number, db_file=dirs.db_path)
+    directory_manager = get_dirs(body.project_number, Path(body.main_dir), res_dir=Path(body.res_dir))
+    db = get_db(schema_name=directory_manager.project_number, db_file=directory_manager.db_path)
     httpx_client = HTTPXClient(str(body.base_url), str(body.api_token))
     dv_api_calls = DataverseClient(httpx_client=httpx_client)
 
@@ -145,11 +144,11 @@ def check_curation(body: SetupForm) -> None:
         checklist_content = get_checklist_content(body.checklist, res_dir)
 
         # Read the dataset metadata and dataverse tree from the downloaded files
-        with Path(dirs.metadata_dir, 'ds_metadata.json').open('rb') as f:
+        with Path(directory_manager.metadata_dir, 'ds_metadata.json').open('rb') as f:
             ds_metadata = orjson.loads(f.read())
 
         # Read the dataverse tree file
-        with Path(dirs.metadata_dir, 'dv_tree.json').open('rb') as f:
+        with Path(directory_manager.metadata_dir, 'dv_tree.json').open('rb') as f:
             dv_tree = orjson.loads(f.read())
 
         dataset_search_result = dv_api_calls.search_dataset_by_version_id(
@@ -164,9 +163,9 @@ def check_curation(body: SetupForm) -> None:
 
         checker = Checker(
             ds_metadata=ds_metadata,
-            workdir=dirs.project_dir,
             db_instance=db,
             setup_form_instance=body,
+            directory_manager_instance=directory_manager,
         )
 
         # Setup writes — before checks run
@@ -178,7 +177,7 @@ def check_curation(body: SetupForm) -> None:
         logger.info('Checks completed')
     except Exception as exc:
         db.drop_schema(body.project_number)
-        dirs.delete_dir(dirs.project_dir)
+        directory_manager.delete_dir(directory_manager.project_dir)
         error_message = f'Error occurred during checks: {exc}'
         logger.error(error_message)
         raise Exception(error_message) from exc

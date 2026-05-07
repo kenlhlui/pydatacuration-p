@@ -15,6 +15,7 @@ from pydatacuration.checker.misc_checker import MiscChecker
 from pydatacuration.db.base import DatabaseBackend
 from pydatacuration.services.api_calls.dataverse_client import DataverseClient
 from pydatacuration.services.api_calls.httpx_client import HTTPXClient
+from pydatacuration.utils.directory_manager import DirectoryManager
 
 
 RES_DIR = Path('res')
@@ -26,29 +27,33 @@ class Checker:
     def __init__(
         self,
         ds_metadata: dict,
-        workdir: Path,
         db_instance: DatabaseBackend,
         setup_form_instance: SetupForm,
+        directory_manager_instance: DirectoryManager,
     ) -> None:
         """Initialize the Checker class.
 
         Args:
             ds_metadata (dict): The dataset metadata.
-            workdir (Path): The working directory.
             db_instance (DatabaseBackend): A database backend instance for database operations.
             setup_form_instance (SetupForm | None): An instance of the setup form.
+            directory_manager_instance (DirectoryManager): An instance of the directory manager.
         """
         self.base_url = str(setup_form_instance.base_url) if setup_form_instance.base_url else ''
         self.api_token = str(setup_form_instance.api_token) if setup_form_instance.api_token else ''
         self.ds_metadata = ds_metadata
-        self.workdir = workdir
         self.check_zip = setup_form_instance.check_zip
         self.collection_alias = setup_form_instance.collection_alias
+        self.project_number = setup_form_instance.project_number
+
+        # Initialize the directory manager
+        self.directory_manager = directory_manager_instance
 
         # API calls service
         self.httpx_client = HTTPXClient(self.base_url, self.api_token)
         self.dv_api_calls = DataverseClient(httpx_client=self.httpx_client)
 
+        # Initialize the check result writer
         self.db_instance = db_instance
         self.check_result_writer = CheckResultWriter(db_instance=self.db_instance)
 
@@ -61,8 +66,8 @@ class Checker:
         self.file_open_checker = FileOpenChecker(
             ds_metadata=self.ds_metadata,
             check_zip=self.check_zip,
-            workdir=self.workdir,
             check_result_writer=self.check_result_writer,
+            directory_manager=self.directory_manager,
         )
 
         # Misc checker for checks that do not fit into other categories
@@ -74,10 +79,10 @@ class Checker:
 
         # File format checker
         self.file_format_checker = FileFormatChecker(
-            self.ds_metadata,
-            self.check_result_writer,
+            ds_metadata=self.ds_metadata,
             res_dir=RES_DIR,
-            workdir=self.workdir,
+            check_result_writer=self.check_result_writer,
+            directory_manager=self.directory_manager,
         )
 
     def run_checks(self) -> None:

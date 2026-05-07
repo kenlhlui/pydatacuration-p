@@ -9,8 +9,15 @@ class FilesChecksum:
     """This class is used to generate the checksum of the files in the dataset directory."""
 
     @staticmethod
-    def _get_md5(file_path: Path) -> str:
-        """Generate the MD5 checksum for a given file."""
+    def _get_md5(file_path: Path | str) -> str:
+        """Generate the MD5 checksum for a given file.
+
+        Args:
+            file_path (Path | str): The path to the file for which to generate the checksum
+
+        Returns:
+            str: The MD5 checksum of the file.
+        """
         with Path(file_path).open('rb') as f:
             return hashlib.md5(f.read()).hexdigest()
 

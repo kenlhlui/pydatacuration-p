@@ -6,6 +6,7 @@ from loguru import logger
 
 from pydatacuration.checker.check_result_writer import CheckResultWriter
 from pydatacuration.checker.services.files_opener import FilesOpener
+from pydatacuration.utils.directory_manager import DirectoryManager
 from pydatacuration.utils.search_ds_meta import get_file_list_metadata
 from pydatacuration.utils.search_ds_meta import get_file_name_from_file_list_metadata
 from pydatacuration.utils.search_ds_meta import get_file_rel_path_from_file_list_metadata
@@ -16,12 +17,16 @@ class FileOpenChecker:
     """Class for checking if files in the dataset can be opened."""
 
     def __init__(
-        self, ds_metadata: dict, check_zip: bool, workdir: Path, check_result_writer: CheckResultWriter
+        self,
+        ds_metadata: dict,
+        check_zip: bool,
+        check_result_writer: CheckResultWriter,
+        directory_manager: DirectoryManager,
     ) -> None:
         """Initialize the class."""
         self.file_list_metadata = get_file_list_metadata(ds_metadata)
         self.check_zip = check_zip
-        self.workdir = workdir
+        self.directory_manager = directory_manager
         self.check_result_writer = check_result_writer
         self.files_opener = FilesOpener
 
@@ -43,11 +48,9 @@ class FileOpenChecker:
                 if file_rel_path.suffix in zip_file_extensions:
                     # Upper case the suffix and remove the leading dot
                     extracted_file_rel_paths = Unzipper(
-                        zip_file=Path(self.workdir, 'dataset', 'files', file_rel_path),
+                        zip_file=Path(self.directory_manager.files_dir, file_rel_path),
                         output_dir=Path(
-                            self.workdir,
-                            'dataset',
-                            'files',
+                            self.directory_manager.files_dir,
                             '__UNZIPED_FILES__',
                             f'{file_rel_path.stem}_{file_rel_path.suffix[1:].upper()}',
                         ),
@@ -60,7 +63,7 @@ class FileOpenChecker:
             )  # noqa: E501
 
         for file_rel_path in file_list:
-            file_abs_path = Path(self.workdir, 'dataset', 'files', file_rel_path)
+            file_abs_path = Path(self.directory_manager.files_dir, file_rel_path)
             # Pass if the file is a zip file
             if file_rel_path.suffix not in zip_file_extensions:
                 result, *_ = self.files_opener(file_abs_path).open_file()

@@ -6,6 +6,7 @@ import yaml
 from loguru import logger
 
 from pydatacuration.checker.check_result_writer import CheckResultWriter
+from pydatacuration.utils.directory_manager import DirectoryManager
 from pydatacuration.utils.search_ds_meta import get_file_list_metadata
 
 
@@ -15,14 +16,14 @@ class FileFormatChecker:
     def __init__(
         self,
         ds_metadata: dict,
-        check_result_writer: CheckResultWriter,
         res_dir: Path,
-        workdir: Path,
+        check_result_writer: CheckResultWriter,
+        directory_manager: DirectoryManager,
     ) -> None:
         """Initialize the class."""
         self.file_list_metadata = get_file_list_metadata(ds_metadata)
         self.check_result_writer = check_result_writer
-        self.workdir = workdir
+        self.directory_manager = directory_manager
         self.common_file_format_tuple = self._read_common_file_format(res_dir)
 
     @staticmethod
@@ -103,7 +104,7 @@ class FileFormatChecker:
                 file_rel_path = Path(file.get('directoryLabel', ''), file_name)
                 file_ext = file_rel_path.suffix
                 if file_ext.startswith('.') and file_ext not in self.common_file_format_tuple:
-                    file_abs_path = Path(self.workdir, 'dataset', 'files', file_rel_path)
+                    file_abs_path = Path(self.directory_manager.files_dir, file_rel_path)
                     logger.info(f'File is not a common file format: {file_abs_path}')
                     uncommon_format_files.append(str(file_rel_path))
         else:
