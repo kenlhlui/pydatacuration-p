@@ -45,7 +45,10 @@ class Downloads:
 
         self.httpx_client = HTTPXClient(self.base_url, self.api_token)
         self.dv_api_calls = DataverseClient(self.httpx_client)
-        self.directory_manager = DirectoryManager(self.project_number, self.download_dir)
+        self.directory_manager = DirectoryManager(
+            main_dir=self.download_dir,
+            project_number=self.project_number,
+        )
 
     @classmethod
     def from_setup_form(

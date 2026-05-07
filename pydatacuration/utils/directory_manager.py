@@ -13,17 +13,18 @@ class DirectoryManager:
     DB_FILE_NAME = 'db.duckdb'
     DB_SUBDIR = 'db'
 
-    def __init__(self, project_number: str, main_dir: str | Path, res_dir: str | Path | None = None) -> None:
+    def __init__(
+        self, main_dir: str | Path, project_number: str | None = None, res_dir: str | Path | None = None
+    ) -> None:
         """Initialize the class.
 
         Args:
-            project_number (str): The project number, also the name of the working directory.
             main_dir (str | Path): The main directory that contains /db and the /projects directories.
+            project_number (str | None): The project number, also the name of the working directory.
             res_dir (str | Path | None): The resource directory path.
         """
         self.project_number = project_number
         self.main_dir = main_dir
-        self.project_dir = self._define_project_dir()
         self.res_dir = res_dir
 
         # Pre-defined directory structure
@@ -184,6 +185,14 @@ class DirectoryManager:
                 logger.warning(f'Directory does not exist: {dir}')
         except KeyError as e:
             logger.error(f'Error deleting directory: {e}')
+
+    @property
+    def project_dir(self) -> Path:
+        """Get project directory path. Requires project_number to be set."""
+        if self.project_number is None:
+            msg = 'project_number is required for project-level directory access'
+            raise ValueError(msg)
+        return self._define_project_dir()
 
     # Backward compatibility properties
     @property

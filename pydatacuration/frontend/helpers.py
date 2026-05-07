@@ -415,7 +415,7 @@ class NiceGUIHelper:  # noqa: PLR0904
 
             """
             try:
-                dir_manager = DirectoryManager(project_number, main_dir)
+                dir_manager = DirectoryManager(main_dir=main_dir, project_number=project_number)
                 dir_manager.delete_dir(main_dir / 'projects' / project_number)
             except Exception as e:
                 logger.error(f'Error deleting project directory for {project_number}: {e}')

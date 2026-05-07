@@ -41,7 +41,7 @@ def get_dirs(project_number: str, main_dir: Path, res_dir: Path | None = None) -
         DirectoryManager: An instance of the DirectoryManager class.
 
     """
-    return directory_manager.DirectoryManager(project_number, str(main_dir), res_dir=res_dir)
+    return directory_manager.DirectoryManager(main_dir=str(main_dir), project_number=project_number, res_dir=res_dir)
 
 
 def get_db(schema_name: str, db_file: Path) -> DatabaseBackend:
