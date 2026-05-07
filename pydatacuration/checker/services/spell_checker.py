@@ -19,7 +19,8 @@ class SpellCheckerCustomized:
     # TODO: Add a function/amend clean_text function to remove the html tags, if appeared.
     # TODO: Error handling if the input is not a string/list.
 
-    def _clean_text(self, text: str | list) -> list:
+    @staticmethod
+    def _clean_text(text: str | list) -> list:
         """Clean the text by removing special characters, numbers, and stop words.
 
         Args:
@@ -40,7 +41,11 @@ class SpellCheckerCustomized:
             # Split each sentence into words
             words = sentence.split()
 
-            # Keep the first word (even if it starts with a capital letter) and filter out other capitalized words, and append them to cleaned_sentences
+            # Skip empty sentences and punctuation-only (e.g. ...) sentences
+            if not words:
+                continue
+
+            # Keep the first word (even if it starts with a capital letter) and filter out other capitalized words, and append them to cleaned_sentences # noqa: E501
             cleaned_words = [words[0]] + [word for word in words[1:] if not word[0].isupper()]
             # Extend the cleaned_words to cleaned_sentences
             cleaned_sentences.extend(cleaned_words)
