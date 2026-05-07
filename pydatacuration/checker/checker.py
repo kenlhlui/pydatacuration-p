@@ -15,7 +15,6 @@ from pydatacuration.checker.services.files_opener import FilesOpener
 from pydatacuration.db.base import DatabaseBackend
 from pydatacuration.services.api_calls.call_dv import DVAPICalls
 from pydatacuration.services.api_calls.httpx_client import HTTPXClient
-from pydatacuration.utils.search_ds_meta import get_ds_title
 from pydatacuration.utils.search_ds_meta import get_file_list_metadata
 from pydatacuration.utils.search_ds_meta import get_file_name_from_file_list_metadata
 from pydatacuration.utils.search_ds_meta import get_file_rel_path_from_file_list_metadata
@@ -81,9 +80,6 @@ class Checker:
             res_dir=RES_DIR,
             workdir=self.workdir,
         )
-
-        self.ds_title = get_ds_title(self.ds_metadata)
-        self.dataset_id = self.ds_metadata.get('data', {}).get('latestVersion', {}).get('id')
 
     def check_file_open(self) -> None:
         """Check if the file can be opened."""

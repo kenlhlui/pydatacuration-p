@@ -6,6 +6,10 @@ from pydatacuration.backend.models.setup_form import SetupForm
 from pydatacuration.checker.checker import Checker
 from pydatacuration.checklist.checklist_model import ChecklistYAML
 from pydatacuration.db import DatabaseBackend
+from pydatacuration.utils.search_ds_meta import get_dataset_id
+from pydatacuration.utils.search_ds_meta import get_dataset_pid
+from pydatacuration.utils.search_ds_meta import get_datasetId
+from pydatacuration.utils.search_ds_meta import get_ds_title
 from pydatacuration.utils.utils import parse_dataset_url
 
 
@@ -29,9 +33,10 @@ def write_project_metadata_to_db(
         project_number = db_instance.schema_name
         curator_name: str | None = setup_form_instance.curator_name
         curator_email: str | None = setup_form_instance.curator_email
-        dataset_title = checker.ds_title
-        dataset_pid = checker.ds_metadata.get('data', {}).get('latestVersion', {}).get('datasetPersistentId', 'No ID')
-        datasetid = checker.ds_metadata.get('data', {}).get('latestVersion', {}).get('datasetId', 'No ID')
+        dataset_title = get_ds_title(checker.ds_metadata)
+        dataset_pid = get_dataset_pid(checker.ds_metadata)
+        dataset_id = get_dataset_id(checker.ds_metadata)
+        datasetid = get_datasetId(checker.ds_metadata)
         dataset_url = parse_dataset_url(checker.base_url, dataset_pid)
 
         db_instance.merge_records_to_table(
@@ -41,7 +46,7 @@ def write_project_metadata_to_db(
                 project_number=project_number,
                 dataset_title=dataset_title,
                 dataset_pid=dataset_pid,
-                dataset_id=checker.dataset_id,
+                dataset_id=dataset_id,
                 datasetid=datasetid,
                 dataset_url=dataset_url,
                 dataset_path=dataset_path,

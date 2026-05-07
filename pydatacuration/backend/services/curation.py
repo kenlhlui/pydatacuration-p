@@ -24,6 +24,7 @@ from pydatacuration.services.api_calls.downloads import Downloads
 from pydatacuration.services.api_calls.httpx_client import HTTPXClient
 from pydatacuration.services.verify_download_files import VerifyDownloadFiles
 from pydatacuration.utils import directory_manager
+from pydatacuration.utils.search_ds_meta import get_dataset_id
 from pydatacuration.utils.search_ds_meta import get_ds_title
 from pydatacuration.utils.utils import check_ds_read_access
 
@@ -152,7 +153,7 @@ def check_curation(body: SetupForm) -> None:
             dv_tree = orjson.loads(f.read())
 
         dataset_search_result = dv_api_calls.search_dataset_by_version_id(
-            ds_metadata.get('data', {}).get('latestVersion', {}).get('id')
+            get_dataset_id(ds_metadata),
         )
 
         dataset_identifier = DatasetTreeInfo.get_dataset_identifier_from_search_result(dataset_search_result)

@@ -249,3 +249,33 @@ def get_file_rel_path_from_file_list_metadata(file_list_metadata: dict, file_nam
         Path: The file relative path object.
     """
     return Path(file_list_metadata.get('directoryLabel', ''), file_name)
+
+
+def get_dataset_pid(ds_metadata: dict) -> str:
+    """Get the dataset persistent identifier (PID) from the dataset metadata.
+
+    Args:
+        ds_metadata (dict): The dataset metadata dictionary.
+
+    Returns:
+        str: The dataset persistent identifier (PID).
+    """
+    return ds_metadata.get('data', {}).get('latestVersion', {}).get('datasetPersistentId', 'No PID')
+
+
+def get_datasetId(ds_metadata: dict) -> int:  # noqa: N802
+    """Get the dataset identifier from the dataset metadata (persistent in the system).
+
+    Args:
+        ds_metadata (dict): The dataset metadata dictionary.
+    """
+    return ds_metadata.get('data', {}).get('latestVersion', {}).get('datasetId')
+
+
+def get_dataset_id(ds_metadata: dict) -> int:
+    """Get the dataset identifier from the dataset metadata (versioned).
+
+    Args:
+        ds_metadata (dict): The dataset metadata dictionary.
+    """
+    return ds_metadata.get('data', {}).get('latestVersion', {}).get('id')
