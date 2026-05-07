@@ -12,7 +12,7 @@ from tenacity import RetryError
 from pydatacuration.exceptions import DatasetAccessError
 from pydatacuration.exceptions import DatasetNotFoundError
 from pydatacuration.exceptions import DatasetUnauthorizedError
-from pydatacuration.services.api_calls.call_dv import DVAPICalls
+from pydatacuration.services.api_calls.dataverse_client import DataverseClient
 from pydatacuration.services.api_calls.httpx_client import HTTPXClient
 
 
@@ -61,7 +61,7 @@ def check_ds_read_access(pid: str, base_url: str, api_token: str) -> None:
 
     try:
         # Check whether the user has access to the dataset
-        code: int = DVAPICalls(httpx_client).get_ds_access_status(pid)
+        code: int = DataverseClient(httpx_client).get_ds_access_status(pid)
 
         if code in http_unauthorized_codes:
             msg = 'You do not have read access to the dataset. Please check your API token or permissions.'

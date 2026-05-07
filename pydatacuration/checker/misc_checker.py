@@ -5,7 +5,7 @@ from loguru import logger
 
 from pydatacuration.checker.check_result_writer import CheckResultWriter
 from pydatacuration.checker.services.spell_checker import SpellCheckerCustomized
-from pydatacuration.services.api_calls.call_dv import DVAPICalls
+from pydatacuration.services.api_calls.dataverse_client import DataverseClient
 from pydatacuration.utils.search_ds_meta import get_depositor_record
 from pydatacuration.utils.search_ds_meta import get_metadata_cm_field
 from pydatacuration.utils.search_result_utils import get_search_result
@@ -15,7 +15,7 @@ class MiscChecker:
     """Misc checker for checks that do not fit into other categories."""
 
     def __init__(
-        self, ds_metadata: dict, check_result_writer: CheckResultWriter, dv_api_calls_instance: DVAPICalls
+        self, ds_metadata: dict, check_result_writer: CheckResultWriter, dv_api_calls_instance: DataverseClient
     ) -> None:
         """Initialize the MiscChecker class."""
         self.ds_metadata = ds_metadata

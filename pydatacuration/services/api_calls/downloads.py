@@ -7,7 +7,7 @@ from urllib.parse import urljoin
 from loguru import logger
 
 from pydatacuration.backend.models.setup_form import SetupForm
-from pydatacuration.services.api_calls.call_dv import DVAPICalls
+from pydatacuration.services.api_calls.dataverse_client import DataverseClient
 from pydatacuration.services.api_calls.httpx_client import HTTPXClient
 from pydatacuration.utils.directory_manager import DirectoryManager
 from pydatacuration.utils.search_ds_meta import get_directory_set
@@ -44,7 +44,7 @@ class Downloads:
         self.success_code = 200
 
         self.httpx_client = HTTPXClient(self.base_url, self.api_token)
-        self.dv_api_calls = DVAPICalls(self.httpx_client)
+        self.dv_api_calls = DataverseClient(self.httpx_client)
         self.directory_manager = DirectoryManager(self.project_number, self.download_dir)
 
     @classmethod

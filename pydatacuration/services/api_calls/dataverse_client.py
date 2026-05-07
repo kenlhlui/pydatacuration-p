@@ -5,11 +5,11 @@ from loguru import logger
 from pydatacuration.services.api_calls.httpx_client import HTTPXClient
 
 
-class DVAPICalls:
+class DataverseClient:
     """Class to call the Dataverse API."""
 
     def __init__(self, httpx_client: HTTPXClient) -> None:
-        """Initialize the DVAPICalls class."""
+        """Initialize the DataverseClient class."""
         self.httpx_client = httpx_client
 
     def get_ds_metadata(self, pid: str) -> dict:

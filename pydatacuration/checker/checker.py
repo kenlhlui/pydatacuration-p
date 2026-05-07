@@ -13,7 +13,7 @@ from pydatacuration.checker.file_open_checker import FileOpenChecker
 from pydatacuration.checker.metadata_checker import MetadataChecker
 from pydatacuration.checker.misc_checker import MiscChecker
 from pydatacuration.db.base import DatabaseBackend
-from pydatacuration.services.api_calls.call_dv import DVAPICalls
+from pydatacuration.services.api_calls.dataverse_client import DataverseClient
 from pydatacuration.services.api_calls.httpx_client import HTTPXClient
 
 
@@ -47,7 +47,7 @@ class Checker:
 
         # API calls service
         self.httpx_client = HTTPXClient(self.base_url, self.api_token)
-        self.dv_api_calls = DVAPICalls(httpx_client=self.httpx_client)
+        self.dv_api_calls = DataverseClient(httpx_client=self.httpx_client)
 
         self.db_instance = db_instance
         self.check_result_writer = CheckResultWriter(db_instance=self.db_instance)

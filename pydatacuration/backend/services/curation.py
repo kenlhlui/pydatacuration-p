@@ -19,7 +19,7 @@ from pydatacuration.exceptions import DatasetAccessError
 from pydatacuration.exceptions import DatasetNotFoundError
 from pydatacuration.exceptions import DatasetUnauthorizedError
 from pydatacuration.exceptions import DirectoryExistsError
-from pydatacuration.services.api_calls.call_dv import DVAPICalls
+from pydatacuration.services.api_calls.dataverse_client import DataverseClient
 from pydatacuration.services.api_calls.downloads import Downloads
 from pydatacuration.services.api_calls.httpx_client import HTTPXClient
 from pydatacuration.services.verify_download_files import VerifyDownloadFiles
@@ -136,7 +136,7 @@ def check_curation(body: SetupForm) -> None:
     dirs = get_dirs(body.project_number, Path(body.main_dir), res_dir=Path(body.res_dir))
     db = get_db(schema_name=dirs.project_number, db_file=dirs.db_path)
     httpx_client = HTTPXClient(str(body.base_url), str(body.api_token))
-    dv_api_calls = DVAPICalls(httpx_client=httpx_client)
+    dv_api_calls = DataverseClient(httpx_client=httpx_client)
 
     res_dir = Path(body.res_dir) if body.res_dir else None
 
