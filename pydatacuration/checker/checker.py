@@ -12,13 +12,13 @@ from pydatacuration.checker.file_name_checker import FileNameChecker
 from pydatacuration.checker.metadata_checker import MetadataChecker
 from pydatacuration.checker.misc_checker import MiscChecker
 from pydatacuration.checker.services.files_opener import FilesOpener
-from pydatacuration.checker.services.utils import get_file_name_from_file_list_metadata
-from pydatacuration.checker.services.utils import get_file_rel_path_from_file_list_metadata
 from pydatacuration.db.base import DatabaseBackend
 from pydatacuration.services.api_calls.call_dv import DVAPICalls
 from pydatacuration.services.api_calls.httpx_client import HTTPXClient
 from pydatacuration.utils.search_ds_meta import get_ds_title
 from pydatacuration.utils.search_ds_meta import get_file_list_metadata
+from pydatacuration.utils.search_ds_meta import get_file_name_from_file_list_metadata
+from pydatacuration.utils.search_ds_meta import get_file_rel_path_from_file_list_metadata
 from pydatacuration.utils.unzip import Unzipper
 
 

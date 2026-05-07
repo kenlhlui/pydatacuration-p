@@ -215,3 +215,37 @@ def get_terms_of_use(ds_metadata: dict) -> str | None:
         str | None: The dataset terms of use. If no terms of use information is provided, returns None.
     """
     return ds_metadata.get('data', {}).get('latestVersion', {}).get('termsOfUse', None) or None
+
+
+def get_file_name_from_file_list_metadata(file_list_metadata: dict) -> str:
+    """Get the file name from the file list metadata.
+
+    Args:
+        file_list_metadata (list[dict]): The file list metadata.
+
+    Note: This start from the file, not the full dataset metadata dict
+
+    Returns:
+        str: The file name.
+    """
+    file_name = file_list_metadata.get('dataFile', {}).get('originalFileName') or file_list_metadata.get(
+        'dataFile', {}
+    ).get('filename')
+
+    return file_name
+
+
+def get_file_rel_path_from_file_list_metadata(file_list_metadata: dict, file_name: str) -> Path:
+    """Get the file relative path from the file list metadata.
+
+    Args:
+        file_list_metadata (list[dict]): The file list metadata.
+        file_name (str): The file name.
+
+
+    Note: This start from the file, not the full dataset metadata dict
+
+    Returns:
+        Path: The file relative path object.
+    """
+    return Path(file_list_metadata.get('directoryLabel', ''), file_name)

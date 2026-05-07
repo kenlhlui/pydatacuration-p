@@ -3,8 +3,8 @@
 from loguru import logger
 
 from pydatacuration.checker.check_result_writer import CheckResultWriter
-from pydatacuration.checker.services.utils import get_file_name_from_file_list_metadata
-from pydatacuration.checker.services.utils import get_file_rel_path_from_file_list_metadata
+from pydatacuration.utils.search_ds_meta import get_file_name_from_file_list_metadata
+from pydatacuration.utils.search_ds_meta import get_file_rel_path_from_file_list_metadata
 
 
 class FileAccessChecker:
