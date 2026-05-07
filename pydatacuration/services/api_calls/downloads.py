@@ -45,7 +45,6 @@ class Downloads:
 
         self.httpx_client = HTTPXClient(self.base_url, self.api_token)
         self.dv_api_calls = DVAPICalls(self.httpx_client)
-        self.semaphore = asyncio.Semaphore(5)
         self.directory_manager = DirectoryManager(self.project_number, self.download_dir)
 
     @classmethod
