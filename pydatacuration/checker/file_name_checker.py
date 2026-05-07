@@ -6,6 +6,8 @@ from pathlib import Path
 from loguru import logger
 
 from pydatacuration.checker.check_result_writer import CheckResultWriter
+from pydatacuration.checker.services.utils import get_file_name_from_file_list_metadata
+from pydatacuration.checker.services.utils import get_file_rel_path_from_file_list_metadata
 
 
 class FileNameChecker:
@@ -83,8 +85,8 @@ class FileNameChecker:
         """Check if the file name contains special characters."""
         special_char_files = []
         for file in self.file_list_metadata:
-            file_name = file.get('dataFile', {}).get('originalFileName') or file.get('dataFile', {}).get('filename')
-            file_rel_path = Path(file.get('directoryLabel', ''), file_name)
+            file_name = get_file_name_from_file_list_metadata(file)
+            file_rel_path = get_file_rel_path_from_file_list_metadata(file, file_name)
 
             if self._check_special_char(file_name)[1] is True:
                 logger.info(f'Special characters found in the filename: {file_rel_path}')
@@ -103,8 +105,8 @@ class FileNameChecker:
         """Check if the file name is without extension."""
         missing_ext_files = []
         for file in self.file_list_metadata:
-            file_name = file.get('dataFile', {}).get('originalFileName') or file.get('dataFile', {}).get('filename')
-            file_rel_path = Path(file.get('directoryLabel', ''), file_name)
+            file_name = get_file_name_from_file_list_metadata(file)
+            file_rel_path = get_file_rel_path_from_file_list_metadata(file, file_name)
 
             if self._check_file_ext(file_name)[1] is True:
                 logger.info(f'File extension does not found: {file_rel_path}')
@@ -123,8 +125,8 @@ class FileNameChecker:
         """Check if the README file exists."""
         readme_files = []
         for file in self.file_list_metadata:
-            file_name = file.get('dataFile', {}).get('originalFileName') or file.get('dataFile', {}).get('filename')
-            file_rel_path = Path(file.get('directoryLabel', ''), file_name)
+            file_name = get_file_name_from_file_list_metadata(file)
+            file_rel_path = get_file_rel_path_from_file_list_metadata(file, file_name)
 
             if self._check_readme_file_existence(file_name)[1] is True:
                 logger.info(f'README file found: {file_rel_path}')

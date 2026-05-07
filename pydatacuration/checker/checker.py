@@ -12,6 +12,8 @@ from pydatacuration.checker.file_name_checker import FileNameChecker
 from pydatacuration.checker.metadata_checker import MetadataChecker
 from pydatacuration.checker.misc_checker import MiscChecker
 from pydatacuration.checker.services.files_opener import FilesOpener
+from pydatacuration.checker.services.utils import get_file_name_from_file_list_metadata
+from pydatacuration.checker.services.utils import get_file_rel_path_from_file_list_metadata
 from pydatacuration.db.base import DatabaseBackend
 from pydatacuration.services.api_calls.call_dv import DVAPICalls
 from pydatacuration.services.api_calls.httpx_client import HTTPXClient
@@ -91,8 +93,8 @@ class Checker:
 
         # To generate paths for the relative files in the dataset
         for file in self.file_list_metadata:
-            file_name = file.get('dataFile', {}).get('originalFileName') or file.get('dataFile', {}).get('filename')
-            file_rel_path = Path(file.get('directoryLabel', ''), file_name)
+            file_name = get_file_name_from_file_list_metadata(file)
+            file_rel_path = get_file_rel_path_from_file_list_metadata(file, file_name)
             file_list.append(file_rel_path)
 
         # Unzip the files and append the unzipped files to the file_list

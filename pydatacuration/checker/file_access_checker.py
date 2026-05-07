@@ -1,16 +1,17 @@
 """Class for checking file access and permissions."""
 
-from pathlib import Path
-
 from loguru import logger
 
 from pydatacuration.checker.check_result_writer import CheckResultWriter
+from pydatacuration.checker.services.utils import get_file_name_from_file_list_metadata
+from pydatacuration.checker.services.utils import get_file_rel_path_from_file_list_metadata
 
 
 class FileAccessChecker:
     """Class for checking file access and permissions."""
 
-    def __init__(self, check_result_writer: CheckResultWriter):
+    def __init__(self, check_result_writer: CheckResultWriter) -> None:
+        """Initialize the class."""
         self.checklist_result_writer = check_result_writer
 
     def check_restricted_files(self, ds_metadata: dict) -> None:
@@ -26,12 +27,10 @@ class FileAccessChecker:
         if file_list:
             for file in file_list:
                 if file.get('restricted') is True:
-                    file_name = file.get('dataFile', {}).get('originalFileName') or file.get('dataFile', {}).get(
-                        'filename'
-                    )
-                    file_path = Path(file.get('directoryLabel', ''), file_name)
-                    logger.info(f'Restricted file found: {file_path}')
-                    restricted_files.append(str(file_path))
+                    file_name = get_file_name_from_file_list_metadata(file)
+                    file_rel_path = get_file_rel_path_from_file_list_metadata(file, file_name)
+                    logger.info(f'Restricted file found: {file_rel_path}')
+                    restricted_files.append(str(file_rel_path))
 
         self.checklist_result_writer.write(
             check_id='restricted_files',
