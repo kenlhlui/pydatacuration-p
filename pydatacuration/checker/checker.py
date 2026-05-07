@@ -12,13 +12,11 @@ from pydatacuration.checker.file_name_checker import FileNameChecker
 from pydatacuration.checker.files_open_checker import FilesOpener
 from pydatacuration.checker.metadata_checker import MetadataChecker
 from pydatacuration.checker.misc_checker import MiscChecker
-from pydatacuration.checker.spell_checker import SpellCheckerCustomized
 from pydatacuration.db.base import DatabaseBackend
 from pydatacuration.services.api_calls.call_dv import DVAPICalls
 from pydatacuration.services.api_calls.httpx_client import HTTPXClient
 from pydatacuration.utils.search_ds_meta import get_ds_title
 from pydatacuration.utils.search_ds_meta import get_file_list_metadata
-from pydatacuration.utils.search_ds_meta import get_metadata_cm_field
 from pydatacuration.utils.unzip import Unzipper
 
 
@@ -31,7 +29,6 @@ class Checker:
     def __init__(
         self,
         ds_metadata: dict,
-        dv_tree: dict,
         workdir: Path,
         db_instance: DatabaseBackend,
         setup_form_instance: SetupForm,
@@ -40,7 +37,6 @@ class Checker:
 
         Args:
             ds_metadata (dict): The dataset metadata.
-            dv_tree (dict): The Dataverse tree metadata.
             workdir (Path): The working directory.
             db_instance (DatabaseBackend): A database backend instance for database operations.
             setup_form_instance (SetupForm | None): An instance of the setup form.
@@ -64,9 +60,9 @@ class Checker:
 
         self.files_opener = FilesOpener
         self.metadata_checker = MetadataChecker(self.ds_metadata, self.check_result_writer)
-        self.spell_checker = SpellCheckerCustomized()
 
         self.file_name_checker = FileNameChecker(self.file_list_metadata, self.check_result_writer)
+
         self.file_access_checker = FileAccessChecker(self.check_result_writer)
 
         # Misc checker for checks that do not fit into other categories
@@ -149,41 +145,6 @@ class Checker:
             results=unsupported_files,
         )
 
-    def check_spelling(self) -> None:
-        """Check for spelling mistakes in the metadata."""
-        potential_typos = []
-
-        field_list = ['title', 'subtitle', 'alternativeTitle', 'dsDescription.dsDescriptionValue', 'notesText']
-        for field in field_list:
-            return_value, field_exists = get_metadata_cm_field(self.ds_metadata, field)
-
-            if field_exists:
-                typos = self.spell_checker.check_spelling(return_value[0])
-                if typos:
-                    typo_messages = {f'{field}: `{item}`' for item in typos}
-                    for message in typo_messages:
-                        logger.info(f'Spelling mistake found in the {field}: {message}')
-
-                    # Collect typos for new structure
-                    for typo in typos:
-                        potential_typos.append(
-                            {
-                                'field': field,
-                                'typo': typo,
-                                'context': return_value[0][:100] + '...'
-                                if len(return_value[0]) > 100
-                                else return_value[0],
-                            }
-                        )
-
-        self.check_result_writer.write(
-            check_name='Fields for Title, Subtitle, Alternative Title, Description, and Notes',
-            check_id='potential_typos',
-            description='Fields for Title, Subtitle, Alternative Title, Description, and Notes',  # noqa: E501
-            unit='typo',
-            results=potential_typos,
-        )
-
     def run_checks(self) -> None:
         """Run all the checks."""
         logger.info('Running the checks...')
@@ -192,7 +153,6 @@ class Checker:
         self.file_name_checker.check_readme_file()
 
         self.file_format_checker.check_common_file_format()
-        self.check_spelling()
         self.check_file_open()
 
         self.metadata_checker.check_terms_of_use()
@@ -210,3 +170,4 @@ class Checker:
 
         self.file_access_checker.check_restricted_files(self.ds_metadata)
         self.misc_checker.check_depositor_record(collection_alias=self.collection_alias)
+        self.misc_checker.check_spelling()

@@ -15,6 +15,9 @@ from pydatacuration.checker.services.dataset_tree_info import DatasetTreeInfo
 from pydatacuration.checklist.utils import get_checklist_content
 from pydatacuration.db import DatabaseBackend
 from pydatacuration.db import get_database
+from pydatacuration.exceptions import DatasetAccessError
+from pydatacuration.exceptions import DatasetNotFoundError
+from pydatacuration.exceptions import DatasetUnauthorizedError
 from pydatacuration.exceptions import DirectoryExistsError
 from pydatacuration.services.api_calls.call_dv import DVAPICalls
 from pydatacuration.services.api_calls.downloads import Downloads
@@ -22,9 +25,6 @@ from pydatacuration.services.api_calls.httpx_client import HTTPXClient
 from pydatacuration.services.verify_download_files import VerifyDownloadFiles
 from pydatacuration.utils import directory_manager
 from pydatacuration.utils.search_ds_meta import get_ds_title
-from pydatacuration.exceptions import DatasetAccessError
-from pydatacuration.exceptions import DatasetNotFoundError
-from pydatacuration.exceptions import DatasetUnauthorizedError
 from pydatacuration.utils.utils import check_ds_read_access
 
 
@@ -163,7 +163,6 @@ def check_curation(body: SetupForm) -> None:
 
         checker = Checker(
             ds_metadata=ds_metadata,
-            dv_tree=dv_tree,
             workdir=dirs.project_dir,
             db_instance=db,
             setup_form_instance=body,
