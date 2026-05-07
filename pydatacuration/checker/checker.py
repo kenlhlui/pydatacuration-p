@@ -12,7 +12,6 @@ from pydatacuration.checker.file_name_checker import FileNameChecker
 from pydatacuration.checker.files_open_checker import FilesOpener
 from pydatacuration.checker.metadata_checker import MetadataChecker
 from pydatacuration.checker.misc_checker import MiscChecker
-from pydatacuration.checker.services.dataset_tree_info import DatasetTreeInfo
 from pydatacuration.checker.spell_checker import SpellCheckerCustomized
 from pydatacuration.db.base import DatabaseBackend
 from pydatacuration.services.api_calls.call_dv import DVAPICalls
@@ -49,15 +48,11 @@ class Checker:
         self.base_url = str(setup_form_instance.base_url) if setup_form_instance.base_url else ''
         self.api_token = str(setup_form_instance.api_token) if setup_form_instance.api_token else ''
         self.ds_metadata = ds_metadata
-        self.dv_tree = dv_tree
         self.workdir = workdir
         self.check_zip = setup_form_instance.check_zip
         self.collection_alias = setup_form_instance.collection_alias
 
         self.file_list_metadata = get_file_list_metadata(self.ds_metadata)
-
-        # Dataset tree information service
-        self.dv_tree_info = DatasetTreeInfo(dv_tree=dv_tree)
 
         # API calls service
         self.httpx_client = HTTPXClient(self.base_url, self.api_token)
@@ -65,7 +60,6 @@ class Checker:
 
         self.db_instance = db_instance
         self.sqlmodels = self.db_instance.models
-        self.checklist_result = self.sqlmodels.check_results()
         self.check_result_writer = CheckResultWriter(db_instance=self.db_instance)
 
         self.files_opener = FilesOpener

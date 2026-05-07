@@ -4,7 +4,6 @@ from pathlib import Path
 from urllib.parse import urlencode
 from urllib.parse import urljoin
 
-import deepdiff
 import orjson
 import seedir as sd
 from loguru import logger
@@ -15,30 +14,6 @@ from pydatacuration.exceptions import DatasetNotFoundError
 from pydatacuration.exceptions import DatasetUnauthorizedError
 from pydatacuration.services.api_calls.call_dv import DVAPICalls
 from pydatacuration.services.api_calls.httpx_client import HTTPXClient
-
-
-def compare_files_and_metadata(dl_files_checksums: list, metadata_file_checksums: list, work_dir: Path) -> bool:
-    """Compare the downloaded files checksums and the metadata JSON file checksums.
-
-    Args:
-        dl_files_checksums (list): A list of dictionaries containing the file path and the checksum.
-        metadata_file_checksums (list): A list of dictionaries containing the file path and the checksum.
-        work_dir (Path): The working directory.
-
-    Returns:
-        bool: True if the downloaded files and the metadata JSON file checksums are different, False otherwise.
-    """
-    diff = deepdiff.DeepDiff(dl_files_checksums, metadata_file_checksums, ignore_order=True)
-    if diff:
-        logger.warning('The downloaded files and the file list metadata are different.')
-        diff_log_path = Path(work_dir, 'logs', 'diff.txt').resolve()
-        with diff_log_path.open('w', encoding='utf-8') as f:
-            f.write(str(diff))
-        logger.warning(f'See the {str(diff_log_path)} file for the differences.')
-        return True
-
-    logger.info('The downloaded files and the file list metadata are the same.')
-    return False
 
 
 def gen_tree_diagram(target_dir: Path, save_dir: Path) -> None:
