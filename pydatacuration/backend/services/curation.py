@@ -109,7 +109,7 @@ async def fetch_curation(body: SetupForm) -> None:
         body (SetupForm): The setup form containing the necessary information for fetching the dataset.
     """
     dirs = get_dirs(body.project_number, Path(body.main_dir))
-    db = get_db(schema_name=dirs.project_number, db_file=dirs.db_path)
+    db = get_db(schema_name=body.project_number, db_file=dirs.db_path)
 
     try:
         await asyncio.to_thread(_ensure_dataset_read_access, body)
@@ -133,7 +133,7 @@ def check_curation(body: SetupForm) -> None:
         body (SetupForm): The setup form containing the necessary information for running the checks.
     """
     directory_manager = get_dirs(body.project_number, Path(body.main_dir), res_dir=Path(body.res_dir))
-    db = get_db(schema_name=directory_manager.project_number, db_file=directory_manager.db_path)
+    db = get_db(schema_name=body.project_number, db_file=directory_manager.db_path)
     httpx_client = HTTPXClient(str(body.base_url), str(body.api_token))
     dv_api_calls = DataverseClient(httpx_client=httpx_client)
 
