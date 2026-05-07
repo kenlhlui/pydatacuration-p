@@ -14,13 +14,13 @@ class FileFormatChecker:
     def __init__(
         self,
         file_list_metadata: list,
-        checklist_result_writer: CheckResultWriter,
+        check_result_writer: CheckResultWriter,
         res_dir: Path,
         workdir: Path,
     ) -> None:
         """Initialize the class."""
         self.file_list_metadata = file_list_metadata
-        self.checklist_result_writer = checklist_result_writer
+        self.check_result_writer = check_result_writer
         self.workdir = workdir
         self.common_file_format_tuple = self._read_common_file_format(res_dir)
 
@@ -108,7 +108,7 @@ class FileFormatChecker:
         else:
             logger.error('No common file format found in the res directory. Skipping this check.')
 
-        self.checklist_result_writer.write(
+        self.check_result_writer.write(
             check_id='uncommon_file_formats',
             check_name='Files with uncommon formats',
             description='Files using uncommon or proprietary file formats',
