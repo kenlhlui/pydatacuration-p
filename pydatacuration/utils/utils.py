@@ -94,7 +94,7 @@ def check_ticket_num_input(ticket_number: str) -> str:
         msg = 'Ticket number cannot be empty.'
         raise typer.BadParameter(msg)
 
-    if re.search(r'[^a-zA-Z0-9_-]', ticket_number):
+    if not re.fullmatch(r'[A-Za-z0-9][A-Za-z0-9_-]*', ticket_number):
         msg = 'Ticket number must only contain letters, numbers, hyphens, and underscores.'
         raise typer.BadParameter(msg)
 
@@ -226,7 +226,10 @@ def get_name_initials(fullname: str) -> str:
 
 
 def validate_api_token(value: str | None) -> str | None:
-    """Validate API token to prevent empty strings from overriding environment values."""
+    """Validate API token to prevent empty strings from overriding environment values.
+
+    Note: None values are treated as intentionally unset and are returned unchanged.
+    """
     if value == '' and os.getenv('API_TOKEN'):
         return os.getenv('API_TOKEN')
     return value

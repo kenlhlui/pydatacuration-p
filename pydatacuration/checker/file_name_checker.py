@@ -155,7 +155,7 @@ class FileNameChecker:
 
             _, is_missing_ext = self._check_file_ext(file_name)
             if is_missing_ext:
-                logger.info(f'File extension does not found: {file_rel_path}')
+                logger.info(f'File extension not found: {file_rel_path}')
                 missing_ext_files.append(str(file_rel_path))
 
         # Check missing file extension and write to db
