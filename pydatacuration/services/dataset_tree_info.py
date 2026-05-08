@@ -73,10 +73,7 @@ class DatasetTreeInfo:
 
         if path:
             dataset_path = str(path) + '/' + str(dataset_title)
-            logger.debug(
-                'Dataset path in the dataverse repository: %s',
-                dataset_path,
-            )
+            logger.debug(f'Dataset path in the dataverse repository: {dataset_path}')
             return dataset_path
 
         return dataset_title
