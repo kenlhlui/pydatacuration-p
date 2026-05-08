@@ -94,7 +94,7 @@ def check_ticket_num_input(ticket_number: str) -> str:
         msg = 'Ticket number cannot be empty.'
         raise typer.BadParameter(msg)
 
-    if re.search(r'[^a-zA-Z0-9_\\-]', ticket_number):
+    if re.search(r'[^a-zA-Z0-9_-]', ticket_number):
         msg = 'Ticket number must only contain letters, numbers, hyphens, and underscores.'
         raise typer.BadParameter(msg)
 

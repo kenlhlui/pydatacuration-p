@@ -39,7 +39,7 @@ class FileNameChecker:
             file (str): The path to the file.
 
         Returns:
-            tuple[str, bool]: The file path and a boolean value.
+            tuple[str, bool]: The file path and a boolean value (True when special characters are found).
         """
         if re.search(r'[<>:"/\\|?*,@$~\r\n]', Path(file).stem):
             return file, True
@@ -112,8 +112,8 @@ class FileNameChecker:
             tuple[str, bool]: The file path and a boolean value.
         """
 
-        def load_preferred_file_formats_list(preferred_file_formats_config: str) -> list:
-            """Load the list of preferred file formats from the configuration .txt file."""
+        def load_preferred_file_formats(preferred_file_formats_config: str) -> list:
+            """Load the preferred file formats from the configuration .txt file."""
             try:
                 with Path(preferred_file_formats_config).open(encoding='utf-8') as f:
                     return [line.strip() for line in f.readlines()]
@@ -121,7 +121,7 @@ class FileNameChecker:
                 logger.error(f'Error: {e}')
                 raise SystemExit(1) from e
 
-        if Path(file).suffix in load_preferred_file_formats_list(preferred_file_formats_config):
+        if Path(file).suffix in load_preferred_file_formats(preferred_file_formats_config):
             return file, True
         return file, False
 
