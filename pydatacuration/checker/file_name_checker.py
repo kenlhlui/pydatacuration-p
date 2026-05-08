@@ -26,7 +26,7 @@ class FileNameChecker:
         self.check_result_writer = check_result_writer
 
     @staticmethod
-    def _check_special_char(file: str) -> bool:
+    def _check_special_char(file: str) -> tuple[str, bool]:
         r"""Check if the file name contains special characters.
 
         <>:"/\|?* `CR` `LF` are absolutely forbidden in file names.
@@ -39,12 +39,14 @@ class FileNameChecker:
             file (str): The path to the file.
 
         Returns:
-            bool: True if the file name DOES NOT contain special characters, False otherwise.
+            tuple[str, bool]: The file path and a boolean value.
         """
-        return not bool(re.search(r'[<>:"/\\|?*,@$~\r\n]', Path(file).stem))
+        if re.search(r'[<>:"/\\|?*,@$~\r\n]', Path(file).stem):
+            return file, True
+        return file, False
 
     @staticmethod
-    def _check_file_name_len(file: str, file_name_max_len: int) -> bool:
+    def _check_file_name_len(file: str, file_name_max_len: int) -> tuple[str, bool]:
         """Check if the file name is longer than the maximum length.
 
         Args:
@@ -52,33 +54,76 @@ class FileNameChecker:
             file_name_max_len (int): The maximum length of the file name.
 
         Returns:
-            bool: True if the file name is shorter than or equal to the maximum length, False otherwise.
+            tuple[str, bool]: The file path and a boolean value.
         """
-        return len(Path(file).stem) <= file_name_max_len
+        if len(Path(file).stem) > file_name_max_len:
+            return file, True
+        return file, False
 
     @staticmethod
-    def _check_file_ext(file: str) -> bool:
+    def _check_file_ext(file: str) -> tuple[str, bool]:
         """Check if the file has an extension.
 
         Args:
             file (str): The path to the file.
 
         Returns:
-            bool: True if the file has an extension, False otherwise.
+            tuple[str, bool]: The file path and a boolean value.
         """
-        return bool(Path(file).suffix)
+        if Path(file).suffix:
+            return file, False
+        return file, True
 
     @staticmethod
-    def _check_readme_file_existence(file: str) -> bool:
+    def _check_readme_file_existence(file: str) -> tuple[str, bool]:
         """Check if the file is a README file.
 
         Args:
             file (str): The path to the file.
 
         Returns:
-            bool: True if the file is a README file, False otherwise.
+            tuple[str, bool]: The file path and a boolean value.
         """
-        return bool(re.search(r'readme', file, re.IGNORECASE))
+        if re.search(r'readme', file, re.IGNORECASE):
+            return file, True
+        return file, False
+
+    @staticmethod
+    def check_file_ext(file: str) -> tuple[str, bool]:
+        """Check if the file has an extension.
+
+        Args:
+            file (str): The path to the file.
+
+        Returns:
+            tuple[str, bool]: The file path and a boolean value.
+        """
+        return FileNameChecker._check_file_ext(file)
+
+    @staticmethod
+    def check_file_preferred_format(file: str, preferred_file_formats_config: str) -> tuple[str, bool]:
+        """Check if the file format is in the preferred file formats list.
+
+        Args:
+            file (str): The path to the file.
+            preferred_file_formats_config (str): The path to the configuration .txt file.
+
+        Returns:
+            tuple[str, bool]: The file path and a boolean value.
+        """
+
+        def load_preferred_file_formats_list(preferred_file_formats_config: str) -> list:
+            """Load the list of preferred file formats from the configuration .txt file."""
+            try:
+                with Path(preferred_file_formats_config).open(encoding='utf-8') as f:
+                    return [line.strip() for line in f.readlines()]
+            except FileNotFoundError as e:
+                logger.error(f'Error: {e}')
+                raise SystemExit(1) from e
+
+        if Path(file).suffix in load_preferred_file_formats_list(preferred_file_formats_config):
+            return file, True
+        return file, False
 
     def check_file_name_with_special_char(self) -> None:
         """Check if the file name contains special characters."""
@@ -87,7 +132,8 @@ class FileNameChecker:
             file_name = get_file_name_from_file_list_metadata(file)
             file_rel_path = get_file_rel_path_from_file_list_metadata(file, file_name)
 
-            if not self._check_special_char(file_name):
+            _, has_special_char = self._check_special_char(file_name)
+            if has_special_char:
                 logger.info(f'Special characters found in the filename: {file_rel_path}')
                 special_char_files.append(str(file_rel_path))
 
@@ -107,7 +153,8 @@ class FileNameChecker:
             file_name = get_file_name_from_file_list_metadata(file)
             file_rel_path = get_file_rel_path_from_file_list_metadata(file, file_name)
 
-            if not self._check_file_ext(file_name):
+            _, is_missing_ext = self._check_file_ext(file_name)
+            if is_missing_ext:
                 logger.info(f'File extension does not found: {file_rel_path}')
                 missing_ext_files.append(str(file_rel_path))
 
@@ -128,7 +175,8 @@ class FileNameChecker:
             file_rel_path = get_file_rel_path_from_file_list_metadata(file, file_name)
 
             # Note: Don't use `not here since if README file exist, it will return True and we want to add it to the list. # noqa: E501
-            if self._check_readme_file_existence(file_name):
+            _, is_readme = self._check_readme_file_existence(file_name)
+            if is_readme:
                 logger.info(f'README file found: {file_rel_path}')
                 readme_files.append(str(file_rel_path))
 

@@ -1,11 +1,16 @@
 """Utility functions."""
 
+import os
+import re
 from pathlib import Path
+from pathlib import PurePosixPath
 from urllib.parse import urlencode
 from urllib.parse import urljoin
 
+import deepdiff
 import orjson
 import seedir as sd
+import typer
 from loguru import logger
 from tenacity import RetryError
 
@@ -14,6 +19,86 @@ from pydatacuration.exceptions import DatasetNotFoundError
 from pydatacuration.exceptions import DatasetUnauthorizedError
 from pydatacuration.services.api_calls.dataverse_client import DataverseClient
 from pydatacuration.services.api_calls.httpx_client import HTTPXClient
+from pydatacuration.utils.search_ds_meta import get_file_name_from_file_list_metadata
+from pydatacuration.utils.search_ds_meta import get_file_rel_path_from_file_list_metadata
+
+
+def check_readme_file_existence(file: str) -> tuple[str, bool]:
+    """Check if the file is a README file.
+
+    Args:
+        file (str): The path to the file.
+
+    Returns:
+        tuple[str, bool]: The file path and a boolean value.
+    """
+    if re.search(r'readme', file, re.IGNORECASE):
+        return file, True
+    return file, False
+
+
+def compare_files_and_metadata(dl_files_checksums: list, metadata_file_checksums: list, work_dir: Path) -> bool:
+    """Compare the downloaded files checksums and the metadata JSON file checksums.
+
+    Args:
+        dl_files_checksums (list): A list of dictionaries containing the file path and the checksum.
+        metadata_file_checksums (list): A list of dictionaries containing the file path and the checksum.
+        work_dir (Path): The working directory.
+
+    Returns:
+        bool: True if the downloaded files and the metadata JSON file checksums are different, False otherwise.
+    """
+    diff = deepdiff.DeepDiff(dl_files_checksums, metadata_file_checksums, ignore_order=True)
+    if diff:
+        logger.warning('The downloaded files and the file list metadata are different.')
+        diff_log_path = Path(work_dir, 'logs', 'diff.txt').resolve()
+        with diff_log_path.open('w', encoding='utf-8') as f:
+            f.write(str(diff))
+        logger.warning(f'See the {str(diff_log_path)} file for the differences.')
+        raise SystemExit(1)
+
+    logger.info('The downloaded files and the file list metadata are the same.')
+    return False
+
+
+def parse_file_list_metadata(file_list_metadata: list) -> list:
+    """Parse the file list metadata.
+
+    Args:
+        file_list_metadata (list): The list of file metadata.
+
+    Returns:
+        list: The parsed file list metadata.
+    """
+    file_list_metadata_nested_list = []
+    for file_meta in file_list_metadata:
+        filename = get_file_name_from_file_list_metadata(file_meta)
+        file_full_path_obj = get_file_rel_path_from_file_list_metadata(file_meta, filename)
+        file_list_metadata_nested_list.append(
+            {'file': str(PurePosixPath(file_full_path_obj)), 'md5_checksum': file_meta['dataFile']['md5']}
+        )
+
+    return file_list_metadata_nested_list
+
+
+def check_ticket_num_input(ticket_number: str) -> str:
+    """Check if the ticket number is without any special characters or spaces.
+
+    Args:
+        ticket_number (str): The ticket number to check.
+
+    Returns:
+        str: The validated ticket number.
+    """
+    if not ticket_number:
+        msg = 'Ticket number cannot be empty.'
+        raise typer.BadParameter(msg)
+
+    if re.search(r'[^a-zA-Z0-9_\\-]', ticket_number):
+        msg = 'Ticket number must only contain letters, numbers, hyphens, and underscores.'
+        raise typer.BadParameter(msg)
+
+    return ticket_number
 
 
 def gen_tree_diagram(target_dir: Path, save_dir: Path) -> None:
@@ -35,6 +120,7 @@ def gen_tree_diagram(target_dir: Path, save_dir: Path) -> None:
                 logger.info(f'Folder tree diagram text file saved at: {str(ds_tree_file_path)}')
         else:
             logger.warning(f'Target directory does not exist: {str(target_dir)} - skipping tree diagram generation.')
+            raise SystemExit(1)
     except Exception as e:
         logger.info(f'Error: {e}')
         logger.info('An error occurred while generating the folder tree diagram.')
@@ -137,3 +223,10 @@ def get_name_initials(fullname: str) -> str:
         str: The initials of the name.
     """
     return ''.join([x[0].upper() for x in fullname.split(' ')])
+
+
+def validate_api_token(value: str | None) -> str | None:
+    """Validate API token to prevent empty strings from overriding environment values."""
+    if value == '' and os.getenv('API_TOKEN'):
+        return os.getenv('API_TOKEN')
+    return value
