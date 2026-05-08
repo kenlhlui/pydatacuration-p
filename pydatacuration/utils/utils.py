@@ -88,7 +88,7 @@ def check_ticket_num_input(ticket_number: str) -> str:
         ticket_number (str): The ticket number to check.
 
     Returns:
-        str: The validated ticket number.
+        str: The validated ticket number (must start with an alphanumeric character).
     """
     if not ticket_number:
         msg = 'Ticket number cannot be empty.'
@@ -230,6 +230,7 @@ def validate_api_token(value: str | None) -> str | None:
 
     Note: None values are treated as intentionally unset and are returned unchanged.
     """
-    if value == '' and os.getenv('API_TOKEN'):
-        return os.getenv('API_TOKEN')
+    env_token = os.getenv('API_TOKEN')
+    if value == '' and env_token:
+        return env_token
     return value

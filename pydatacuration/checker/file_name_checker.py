@@ -54,7 +54,7 @@ class FileNameChecker:
             file_name_max_len (int): The maximum length of the file name.
 
         Returns:
-            tuple[str, bool]: The file path and a boolean value.
+            tuple[str, bool]: The file path and a boolean value (True when the name exceeds the limit).
         """
         if len(Path(file).stem) > file_name_max_len:
             return file, True
@@ -68,7 +68,7 @@ class FileNameChecker:
             file (str): The path to the file.
 
         Returns:
-            tuple[str, bool]: The file path and a boolean value.
+            tuple[str, bool]: The file path and a boolean value (True when the extension is missing).
         """
         if Path(file).suffix:
             return file, False
@@ -82,11 +82,21 @@ class FileNameChecker:
             file (str): The path to the file.
 
         Returns:
-            tuple[str, bool]: The file path and a boolean value.
+            tuple[str, bool]: The file path and a boolean value (True when a README is detected).
         """
         if re.search(r'readme', file, re.IGNORECASE):
             return file, True
         return file, False
+
+    @staticmethod
+    def _load_preferred_file_formats(preferred_file_formats_config: str) -> list:
+        """Load the preferred file formats from the configuration .txt file."""
+        try:
+            with Path(preferred_file_formats_config).open(encoding='utf-8') as f:
+                return [line.strip() for line in f.readlines()]
+        except FileNotFoundError as e:
+            logger.error(f'Error: {e}')
+            raise SystemExit(1) from e
 
     @staticmethod
     def check_file_ext(file: str) -> tuple[str, bool]:
@@ -112,16 +122,7 @@ class FileNameChecker:
             tuple[str, bool]: The file path and a boolean value.
         """
 
-        def load_preferred_file_formats(preferred_file_formats_config: str) -> list:
-            """Load the preferred file formats from the configuration .txt file."""
-            try:
-                with Path(preferred_file_formats_config).open(encoding='utf-8') as f:
-                    return [line.strip() for line in f.readlines()]
-            except FileNotFoundError as e:
-                logger.error(f'Error: {e}')
-                raise SystemExit(1) from e
-
-        if Path(file).suffix in load_preferred_file_formats(preferred_file_formats_config):
+        if Path(file).suffix in FileNameChecker._load_preferred_file_formats(preferred_file_formats_config):
             return file, True
         return file, False
 
