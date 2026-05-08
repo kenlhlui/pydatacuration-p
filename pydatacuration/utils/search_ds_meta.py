@@ -169,7 +169,8 @@ def get_directory_set(ds_metadata: dict) -> set[str] | None:
     query_string = 'data.latestVersion.files[].directoryLabel'
     dir_list = jmespath.search(query_string, ds_metadata)
 
-    return set(dir_list) or None
+    # Remove None values from the list and convert to a set. If the resulting set is empty, return None.
+    return {d for d in dir_list if d is not None} or None
 
 
 def get_file_list_metadata(ds_metadata: dict) -> list:
