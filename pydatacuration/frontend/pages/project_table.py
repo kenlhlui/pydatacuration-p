@@ -31,7 +31,7 @@ async def render_project_table(
         return
 
     # Filters
-    with form_section('Filters'), ui.row().classes('gap-4').style('align-items: flex-end;'):
+    with form_section('Filters'), ui.row().classes('gap-4').style('align-items: flex-end; flex-wrap: wrap;'):
         # Search filter
         with ui.element('div').classes('pdc-form-group').style('flex: 1; margin-bottom: 0;'):
             ui.label('Search').classes('pdc-form-label')
@@ -76,7 +76,7 @@ async def render_project_table(
             )
 
             # Render table
-            with ui.element('table').classes('pdc-checklist-table'):
+            with ui.element('table').classes('pdc-checklist-table pdc-project-table'):
                 # Table Header
                 with ui.element('thead'), ui.element('tr'):
                     headers = ['Project Number', 'Dataset Information', 'Curator', 'Project Last Modified']

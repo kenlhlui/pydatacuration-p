@@ -182,7 +182,7 @@ async def checklist_page(project_number: str, view_only: bool = False) -> None:
         # Status and time dashboard with view-only toggle
         @ui.refreshable
         def status_progress_ui() -> None:
-            with ui.row().classes('w-full items-end'):
+            with ui.row().classes('w-full items-end flex-wrap'):
                 helpers.render_status_progress(color_map=status_color_map)
                 helpers.render_comment_input_counter()
                 with ui.column().classes('flex-1 items-center gap-1'):
@@ -209,7 +209,7 @@ async def checklist_page(project_number: str, view_only: bool = False) -> None:
         toggle_btn = _btn_ref[0]
 
         # Filters Section
-        with form_section('Filters'), ui.row().classes('gap-4').style('align-items: flex-end;'):
+        with form_section('Filters'), ui.row().classes('gap-4').style('align-items: flex-end; flex-wrap: wrap;'):
             status_filter = dropdown_menu('Filter by Status', status_options)
             priority_filter = dropdown_menu('Filter by Priority', priority_options)
             # Clear filters button
@@ -460,14 +460,14 @@ async def render_checklist_table(  # noqa: PLR0913, PLR0912, PLR0915, C901, PLR0
                     # Time Spent with Timer
                     with (
                         ui.element('td'),
-                        ui.row().classes('gap-1').style('align-items: center;'),
+                        ui.column().style('align-items: center; gap: 4px;'),
                     ):
                         time_input = (
                             ui.input(value=item.time_spent or '', placeholder='MM:SS')
                             .classes('pdc-time-input')
                             .on('change', lambda e, iid=item.id: helpers.handle_time_change(iid, e.sender.value))
                             .props('maxlength=5')
-                            .style('flex: 1; min-width: 60px;')
+                            .style('width: 100%;')
                         )
                         if view_only:
                             time_input.props('readonly')

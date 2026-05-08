@@ -71,7 +71,7 @@ code, pre,
 }
 
 .pdc-container-narrow {
-    max-width: 50%;
+    max-width: min(90%, 600px);
     width: 100%;
     margin: 0 auto;
     background-color: #ffffff;
@@ -200,32 +200,33 @@ code, pre,
    ======================================================================== */
 .pdc-checklist-table {
     width: 100%;
+    min-width: 800px;
     border-collapse: collapse;
     margin-bottom: 30px;
     table-layout: fixed;
 }
 
-/* Column widths: ID, Action Item, Info Location, Priority, Comments, Status, Time */
+/* Column widths: ID(5) + Action(23) + InfoLoc(21) + Priority(7) + Comments(24) + Status(12) + Time(8) = 100% */
 .pdc-checklist-table th:nth-child(1),
-.pdc-checklist-table td:nth-child(1) { width: 3%; }
+.pdc-checklist-table td:nth-child(1) { width: 5%; }
 
 .pdc-checklist-table th:nth-child(2),
-.pdc-checklist-table td:nth-child(2) { width: 25%; }
+.pdc-checklist-table td:nth-child(2) { width: 23%; }
 
 .pdc-checklist-table th:nth-child(3),
-.pdc-checklist-table td:nth-child(3) { width: 25%; }
+.pdc-checklist-table td:nth-child(3) { width: 21%; }
 
 .pdc-checklist-table th:nth-child(4),
-.pdc-checklist-table td:nth-child(4) { width: 8%; }
+.pdc-checklist-table td:nth-child(4) { width: 7%; }
 
 .pdc-checklist-table th:nth-child(5),
-.pdc-checklist-table td:nth-child(5) { width: 25%; }
+.pdc-checklist-table td:nth-child(5) { width: 24%; }
 
 .pdc-checklist-table th:nth-child(6),
-.pdc-checklist-table td:nth-child(6) { width: 10%; overflow: hidden; }
+.pdc-checklist-table td:nth-child(6) { width: 12%; overflow: hidden; }
 
 .pdc-checklist-table th:nth-child(7),
-.pdc-checklist-table td:nth-child(7) { width: 5%; }
+.pdc-checklist-table td:nth-child(7) { width: 8%; }
 
 /* Prevent table from forcing horizontal scroll */
 .pdc-checklist-table td,
@@ -244,9 +245,20 @@ code, pre,
 .pdc-checklist-table th {
     background-color: #f8f9fa;
     font-weight: bold;
+    font-size: 13px;
+    white-space: nowrap;
+    overflow: hidden;
     position: sticky;
     top: 0;
     z-index: 10;
+}
+
+/* Prevent markdown <p> tags inside headers from re-wrapping */
+.pdc-checklist-table th p {
+    margin: 0;
+    white-space: nowrap;
+    overflow: hidden;
+    text-overflow: ellipsis;
 }
 
 /* Clickable table rows (for resume work page) */
@@ -268,7 +280,6 @@ code, pre,
 
 .pdc-item-id {
     font-weight: bold;
-    width: 60px;
 }
 
 .pdc-action-item {
@@ -381,7 +392,6 @@ code, pre,
 }
 
 .pdc-time-input {
-    width: 70px;
     font-family: ui-monospace, SFMono-Regular, 'SF Mono', Menlo, Consolas, 'Liberation Mono', monospace;
     font-size: 12px;
     transition: border-color 0.2s ease, box-shadow 0.2s ease;
@@ -569,13 +579,55 @@ code, pre,
     margin-bottom: 20px;
 }
 
-========================================================================
+/* ========================================================================
    Responsive Design
    ======================================================================== */
-@media (max-width: 768px) {
+
+/* Small mobile (≤ 480px) */
+@media (max-width: 480px) {
+    body {
+        margin: 8px;
+    }
+
+    .pdc-container {
+        padding: 15px;
+        margin: 8px;
+    }
+
+    .pdc-container-narrow {
+        padding: 15px;
+        margin: 8px;
+    }
+
+    .pdc-header {
+        font-size: 1.4rem;
+    }
+
+    .pdc-form-section-title {
+        font-size: 16px;
+    }
+
     .pdc-info-grid {
         grid-template-columns: 1fr;
-        gap: 15px;
+        gap: 10px;
+    }
+
+    .pdc-actions {
+        display: flex;
+        flex-wrap: wrap;
+        justify-content: center;
+        gap: 8px;
+    }
+
+    .pdc-btn {
+        margin: 0;
+    }
+}
+
+/* Tablet / large mobile (≤ 768px) */
+@media (max-width: 768px) {
+    body {
+        margin: 12px;
     }
 
     .pdc-container {
@@ -583,8 +635,26 @@ code, pre,
         margin: 10px;
     }
 
+    .pdc-container-narrow {
+        padding: 20px;
+        margin: 10px;
+    }
+
+    .pdc-info-grid {
+        grid-template-columns: 1fr;
+        gap: 15px;
+    }
+
     .pdc-comments-input {
         min-width: 100%;
+    }
+
+    .pdc-status-list {
+        gap: 12px;
+    }
+
+    .pdc-form-helper {
+        font-size: 13px;
     }
 }
 
@@ -762,6 +832,14 @@ code, pre,
     display: block;
 }
 
+/* ========================================================================
+   Project Table (resume / delete pages) — content-driven column widths
+   ======================================================================== */
+.pdc-project-table.pdc-checklist-table {
+    table-layout: auto;
+    min-width: 600px;
+}
+
 </style>
 """
 
@@ -842,11 +920,39 @@ MAIN_PAGE_HEAD_CSS: str = """
             max-width: 600px;
         }
         @media (max-width: 768px) {
+            .main-container {
+                width: 95%;
+                padding: 25px 20px;
+            }
             .options-grid {
                 grid-template-columns: 1fr;
+                gap: 15px;
             }
             .resume-card {
                 width: 100%;
+            }
+        }
+        @media (max-width: 480px) {
+            .main-container {
+                width: 100%;
+                padding: 20px 15px;
+                border-radius: 8px;
+            }
+            .nicegui-content {
+                padding: 10px !important;
+            }
+            .option-card {
+                padding: 20px;
+            }
+            .option-title {
+                font-size: 1.1rem;
+            }
+            .option-description {
+                font-size: 0.9rem;
+            }
+            .icon {
+                font-size: 2rem;
+                margin-bottom: 10px;
             }
         }
     </style>
@@ -1023,7 +1129,7 @@ def create_status_select(
         value=current_value,
         with_input=False,
         clearable=True,
-    ).classes('pdc-input')
+    ).classes('pdc-input status-select')
 
     # Apply status-specific styling via inline styles
     def update_status_style(value: str) -> None:

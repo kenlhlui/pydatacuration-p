@@ -292,7 +292,7 @@ class NiceGUIHelper:  # noqa: PLR0904
             app.storage.user.clear()
             ui.navigate.to('/')
 
-        with ui.dialog() as dialog, ui.card().style('min-width: 400px;'):
+        with ui.dialog() as dialog, ui.card().style('min-width: min(400px, 90vw);'):
             ui.label('This will redirect to the new dataset page. Continue?').classes('text-xl font-semibold')
             with ui.row().classes('w-full justify-end gap-2').style('margin-top: 20px;'):
                 ui.button('Continue', color='red', on_click=lambda: [dialog.close(), handle_confirm()]).classes(
