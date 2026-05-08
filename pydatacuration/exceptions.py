@@ -1,4 +1,4 @@
-"""Raised when there are issues accessing a dataset."""
+"""Custom exceptions for the package."""
 
 
 class DatasetAccessError(Exception):
@@ -15,3 +15,7 @@ class DatasetNotFoundError(DatasetAccessError):
 
 class DirectoryExistsError(Exception):
     """Raised when the working directory already exists and force_delete is not set."""
+
+
+class FileMatchError(Exception):
+    """Raised when the downloaded files do not match the metadata JSON file."""

@@ -6,6 +6,7 @@ from pathlib import PurePosixPath
 import deepdiff
 from loguru import logger
 
+from pydatacuration.exceptions import FileMatchError
 from pydatacuration.utils.directory_manager import DirectoryManager
 from pydatacuration.utils.files_checksum import FilesChecksum
 from pydatacuration.utils.search_ds_meta import get_file_list_metadata
@@ -89,5 +90,5 @@ class VerifyDownloadFiles:
         if self.compare_files_and_metadata(self._generate_dl_files_checksums(), self.file_list_metadata_nested_list):
             logger.info('Verification successful: The downloaded files match the metadata JSON file.')
             return self.file_list_metadata_nested_list
-        logger.error('Verification failed: The downloaded files do not match the metadata JSON file.')
-        return None
+        msg = 'Downloaded files do not match metadata checksums — aborting checklist generation.'
+        raise FileMatchError(msg)
