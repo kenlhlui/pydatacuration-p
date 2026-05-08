@@ -249,7 +249,8 @@ def get_file_rel_path_from_file_list_metadata(file_list_metadata: dict, file_nam
     Returns:
         Path: The file relative path object.
     """
-    return Path(file_list_metadata.get('directoryLabel', ''), file_name)
+    directory = file_list_metadata.get('directoryLabel') or ''
+    return Path(directory, file_name)
 
 
 def get_dataset_pid(ds_metadata: dict) -> str:

@@ -88,4 +88,4 @@ class DatasetTreeInfo:
         Returns:
             str: The dataset identifier, empty if not found.
         """
-        return dataset_search_result.get('data', {}).get('items', [{}])[0].get('identifier_of_dataverse', None)
+        return dataset_search_result.get('data', {}).get('items', [{}])[0].get('identifier_of_dataverse', '')
