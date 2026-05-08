@@ -6,7 +6,7 @@ from sys import exit
 from loguru import logger
 from pydantic import ValidationError
 
-from pydatacuration.checklist.utils import validate_checklist_yaml
+from .utils import validate_checklist_yaml
 
 
 def main() -> None:
