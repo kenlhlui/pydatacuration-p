@@ -71,7 +71,7 @@ code, pre,
 }
 
 .pdc-container-narrow {
-    max-width: min(90%, 600px);
+    max-width: min(90%, 1000px);
     width: 100%;
     margin: 0 auto;
     background-color: #ffffff;
