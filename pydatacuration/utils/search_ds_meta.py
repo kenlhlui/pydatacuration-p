@@ -263,7 +263,7 @@ def get_dataset_pid(ds_metadata: dict) -> str:
     return ds_metadata.get('data', {}).get('latestVersion', {}).get('datasetPersistentId', 'No PID')
 
 
-def get_datasetId(ds_metadata: dict) -> int:  # noqa: N802
+def get_dataset_persistent_id(ds_metadata: dict) -> int:  # noqa: N802
     """Get the dataset identifier from the dataset metadata (persistent in the system).
 
     Args:

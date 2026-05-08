@@ -7,8 +7,8 @@ from pydatacuration.checker.checker import Checker
 from pydatacuration.checklist.checklist_model import ChecklistYAML
 from pydatacuration.db import DatabaseBackend
 from pydatacuration.utils.search_ds_meta import get_dataset_id
+from pydatacuration.utils.search_ds_meta import get_dataset_persistent_id
 from pydatacuration.utils.search_ds_meta import get_dataset_pid
-from pydatacuration.utils.search_ds_meta import get_datasetId
 from pydatacuration.utils.search_ds_meta import get_ds_title
 from pydatacuration.utils.utils import parse_dataset_url
 
@@ -36,7 +36,7 @@ def write_project_metadata_to_db(
         dataset_title = get_ds_title(checker.ds_metadata)
         dataset_pid = get_dataset_pid(checker.ds_metadata)
         dataset_id = get_dataset_id(checker.ds_metadata)
-        datasetid = get_datasetId(checker.ds_metadata)
+        datasetid = get_dataset_persistent_id(checker.ds_metadata)
         dataset_url = parse_dataset_url(checker.base_url, dataset_pid)
 
         db_instance.merge_records_to_table(
