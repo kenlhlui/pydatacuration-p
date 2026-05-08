@@ -34,8 +34,8 @@ class Checker:
             setup_form_instance (SetupForm | None): An instance of the setup form.
             directory_manager_instance (DirectoryManager): An instance of the directory manager.
         """
-        self.base_url = str(setup_form_instance.base_url)
-        self.api_token = str(setup_form_instance.api_token)
+        self.base_url = str(setup_form_instance.base_url) if setup_form_instance.base_url else ''
+        self.api_token = str(setup_form_instance.api_token) if setup_form_instance.api_token else ''
         self.ds_metadata = ds_metadata
         self.collection_alias = setup_form_instance.collection_alias
 
