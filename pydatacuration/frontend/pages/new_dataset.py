@@ -16,6 +16,7 @@ from pydatacuration.exceptions import DatasetAccessError
 from pydatacuration.exceptions import DatasetNotFoundError
 from pydatacuration.exceptions import DatasetUnauthorizedError
 from pydatacuration.exceptions import DirectoryExistsError
+from pydatacuration.exceptions import FileMatchError
 
 # Import reusable UI elements
 from pydatacuration.frontend.reusable_elements import form_section
@@ -114,6 +115,9 @@ async def handle_setup_submit(  # noqa: PLR0913, PLR0917
             restore_buttons()
         elif isinstance(exc, DatasetAccessError):
             ui.notify(str(exc), type='negative')
+            restore_buttons()
+        elif isinstance(exc, FileMatchError):
+            ui.notify('File verification failed: downloaded files do not match metadata checksums.', type='negative')
             restore_buttons()
         else:
             error_msg.set_text(f'Error: {exc}')

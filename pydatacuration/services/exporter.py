@@ -6,10 +6,10 @@ from typing import Any
 
 import yaml
 from docxtpl import DocxTemplate
+from loguru import logger
 from sqlmodel import SQLModel
 
 from pydatacuration.db.base import DatabaseBackend
-from pydatacuration.utils.custom_logging import logger
 from pydatacuration.utils.directory_manager import DirectoryManager
 from pydatacuration.utils.utils import get_name_initials
 

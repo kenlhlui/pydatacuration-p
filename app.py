@@ -15,8 +15,6 @@ from pydatacuration.backend.models.setup_form import SetupDefaults
 
 # Import the utility function to mount static files for the frontend
 from pydatacuration.frontend.utils import mount_static_files
-
-# Import the typer app for CLI command execution
 from pydatacuration.utils.custom_logging import setup_logging
 
 
@@ -27,10 +25,6 @@ setup_defaults = SetupDefaults()
 # Include the API router in the NiceGUI app with a prefix of /api
 app.include_router(api_router, prefix='/api')
 
-
-# Load environment variables
-MAIN_DIR: Path = Path(app_settings.main_dir)
-RES_DIR = Path(app_settings.res_dir)
 
 # Setup logging with your custom style
 setup_logging(log_file_dir=Path(app_settings.main_dir) / 'logs', log_level=app_settings.log_level)

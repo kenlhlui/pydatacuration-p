@@ -17,20 +17,20 @@ from tenacity import RetryError
 from pydatacuration.exceptions import DatasetAccessError
 from pydatacuration.exceptions import DatasetNotFoundError
 from pydatacuration.exceptions import DatasetUnauthorizedError
-from pydatacuration.httpx_client import HTTPXClient
+from pydatacuration.services.api_calls.dataverse_client import DataverseClient
+from pydatacuration.services.api_calls.httpx_client import HTTPXClient
+from pydatacuration.utils.search_ds_meta import get_file_name_from_file_list_metadata
+from pydatacuration.utils.search_ds_meta import get_file_rel_path_from_file_list_metadata
 
 
-# Logger is imported directly from loguru
-
-
-def check_readme_file_existence(file: str) -> tuple:
+def check_readme_file_existence(file: str) -> tuple[str, bool]:
     """Check if the file is a README file.
 
     Args:
         file (str): The path to the file.
 
     Returns:
-        tuple: The file path and a boolean value.
+        tuple[str, bool]: The file path and a boolean value.
     """
     if re.search(r'readme', file, re.IGNORECASE):
         return file, True
@@ -55,10 +55,50 @@ def compare_files_and_metadata(dl_files_checksums: list, metadata_file_checksums
         with diff_log_path.open('w', encoding='utf-8') as f:
             f.write(str(diff))
         logger.warning(f'See the {str(diff_log_path)} file for the differences.')
-        return True
+        raise SystemExit(1)
 
     logger.info('The downloaded files and the file list metadata are the same.')
     return False
+
+
+def parse_file_list_metadata(file_list_metadata: list) -> list:
+    """Parse the file list metadata.
+
+    Args:
+        file_list_metadata (list): The list of file metadata.
+
+    Returns:
+        list: The parsed file list metadata.
+    """
+    file_list_metadata_nested_list = []
+    for file_meta in file_list_metadata:
+        filename = get_file_name_from_file_list_metadata(file_meta)
+        file_full_path_obj = get_file_rel_path_from_file_list_metadata(file_meta, filename)
+        file_list_metadata_nested_list.append(
+            {'file': str(PurePosixPath(file_full_path_obj)), 'md5_checksum': file_meta['dataFile']['md5']}
+        )
+
+    return file_list_metadata_nested_list
+
+
+def check_ticket_num_input(ticket_number: str) -> str:
+    """Check if the ticket number is without any special characters or spaces.
+
+    Args:
+        ticket_number (str): The ticket number to check.
+
+    Returns:
+        str: The validated ticket number (must start with an alphanumeric character).
+    """
+    if not ticket_number:
+        msg = 'Ticket number cannot be empty.'
+        raise typer.BadParameter(msg)
+
+    if not re.fullmatch(r'[A-Za-z0-9][A-Za-z0-9_-]*', ticket_number):
+        msg = 'Ticket number must only contain letters, numbers, hyphens, and underscores.'
+        raise typer.BadParameter(msg)
+
+    return ticket_number
 
 
 def gen_tree_diagram(target_dir: Path, save_dir: Path) -> None:
@@ -80,54 +120,10 @@ def gen_tree_diagram(target_dir: Path, save_dir: Path) -> None:
                 logger.info(f'Folder tree diagram text file saved at: {str(ds_tree_file_path)}')
         else:
             logger.warning(f'Target directory does not exist: {str(target_dir)} - skipping tree diagram generation.')
+            raise SystemExit(1)
     except Exception as e:
         logger.info(f'Error: {e}')
         logger.info('An error occurred while generating the folder tree diagram.')
-
-
-def parse_file_list_metadata(file_list_metadata: list) -> list:
-    """Parse the file list metadata.
-
-    Args:
-        file_list_metadata (list): The list of file metadata.
-
-    Returns:
-        list: The parsed file list metadata.
-    """
-    file_list_metadata_nested_list = []
-    for file_meta in file_list_metadata:
-        filename = file_meta.get('dataFile', {}).get('originalFileName') or file_meta.get('dataFile', {}).get(
-            'filename'
-        )  # noqa: E501
-        directory_label = file_meta.get('directoryLabel', '')
-        file_full_path_obj = Path(directory_label, filename)
-        file_list_metadata_nested_list.append(
-            {'file': str(PurePosixPath(file_full_path_obj)), 'md5_checksum': file_meta['dataFile']['md5']}
-        )
-
-    return file_list_metadata_nested_list
-
-
-def check_project_num_input(project_number: str) -> str:
-    """Check if the project number is without any special characters or spaces.
-
-    Args:
-        project_number (str): The project number to check.
-
-    Returns:
-        str: The validated project number.
-    """
-    # Check if the project number is empty
-    if not project_number:
-        msg = 'Project number cannot be empty.'
-        raise typer.BadParameter(msg)
-
-    # Check if the project number contains any special characters or spaces
-    if re.search(r'[^a-zA-Z0-9_\-]', project_number):
-        msg = '⚠️ Project number must only contain letters, numbers, hyphens, and underscores.'
-        raise typer.BadParameter(msg)
-
-    return project_number
 
 
 def check_ds_read_access(pid: str, base_url: str, api_token: str) -> None:
@@ -145,26 +141,30 @@ def check_ds_read_access(pid: str, base_url: str, api_token: str) -> None:
     """
     httpx_client = HTTPXClient(base_url, api_token)
 
-    http_success_codes = {200, 201, 202, 204}
+    http_ok = 200
+    http_not_found = 404
     http_unauthorized_codes = {401, 403}
-    http_not_found_codes = {404}
 
     try:
         # Check whether the user has access to the dataset
-        response = httpx_client.sync_get(f'api/datasets/:persistentId/?persistentId={pid}', raise_for_status=False)
+        code: int = DataverseClient(httpx_client).get_ds_access_status(pid)
 
-        if response.status_code in http_unauthorized_codes:
+        if code in http_unauthorized_codes:
             msg = 'You do not have read access to the dataset. Please check your API token or permissions.'
             logger.error(f'❌{msg}')
             raise DatasetUnauthorizedError(msg)
 
-        if response.status_code in http_not_found_codes:
+        if code == http_not_found:
             msg = 'The dataset does not exist. Please check the PID input.'
             logger.error(f'❌{msg}')
             raise DatasetNotFoundError(msg)
 
-        if response.status_code in http_success_codes:
+        if code == http_ok:
             logger.info('✅ Dataset access verified.')
+        else:
+            msg = f'Unexpected response (HTTP {code}) while checking dataset access.'
+            logger.error(f'❌{msg}')
+            raise DatasetAccessError(msg)
 
     except RetryError as e:
         error_msg = (
@@ -173,13 +173,6 @@ def check_ds_read_access(pid: str, base_url: str, api_token: str) -> None:
         )
         logger.error(error_msg)
         raise DatasetAccessError(error_msg) from e
-
-
-def validate_api_token(value: str) -> str | None:
-    """Validate API token to prevent empty strings from overriding environment values."""
-    if value == '' and os.getenv('API_TOKEN'):
-        return os.getenv('API_TOKEN')
-    return value
 
 
 def orjson_export(file_path: Path | str, obj: dict) -> None:
@@ -230,3 +223,14 @@ def get_name_initials(fullname: str) -> str:
         str: The initials of the name.
     """
     return ''.join([x[0].upper() for x in fullname.split(' ')])
+
+
+def validate_api_token(value: str | None) -> str | None:
+    """Validate API token to prevent empty strings from overriding environment values.
+
+    Note: None values are treated as intentionally unset and are returned unchanged.
+    """
+    env_token = os.getenv('API_TOKEN')
+    if value == '' and env_token:
+        return env_token
+    return value

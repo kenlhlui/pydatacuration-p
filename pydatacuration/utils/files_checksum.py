@@ -5,12 +5,19 @@ from pathlib import Path
 from pathlib import PurePosixPath
 
 
-class Checksum:
+class FilesChecksum:
     """This class is used to generate the checksum of the files in the dataset directory."""
 
     @staticmethod
-    def _get_md5(file_path: Path) -> str:
-        """Generate the MD5 checksum for a given file."""
+    def _get_md5(file_path: Path | str) -> str:
+        """Generate the MD5 checksum for a given file.
+
+        Args:
+            file_path (Path | str): The path to the file for which to generate the checksum
+
+        Returns:
+            str: The MD5 checksum of the file.
+        """
         with Path(file_path).open('rb') as f:
             return hashlib.md5(f.read()).hexdigest()
 
@@ -18,15 +25,14 @@ class Checksum:
         """Generate the checksum of the files in the dataset directory.
 
         Args:
-            target_dir (Path): The path to the dataset directory.
+            target_dir (Path): The path to directory containing the files.
 
         Returns:
             list: A list of dictionaries containing the file path and the checksum.
         """
         dl_file_checksum_nested_list = []
 
-        # Join the workdir with 'dataset' and 'files' to get the target directory, and resolve to an absolute path
-        target_dir_path = Path(target_dir, 'dataset', 'files').resolve()
+        target_dir_path = target_dir.resolve()
 
         # Iterate through all files in the directory and subdirectories
         for file_path in target_dir_path.rglob('*'):

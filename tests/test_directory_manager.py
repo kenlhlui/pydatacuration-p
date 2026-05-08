@@ -106,7 +106,7 @@ def test_get_dir(tmp_path: Path, dir_name: str, should_succeed: bool) -> None:
         if dir_name == 'db':
             assert dir_path == tmp_path / 'db'
         else:
-            expected_path = dir_manager.project_dir / dir_manager._directory_structure[dir_name]
+            expected_path = dir_manager.project_dir / dir_manager._project_dir_structure[dir_name]
             assert dir_path == expected_path
     else:
         with pytest.raises(KeyError, match=f"Directory '{dir_name}' not found in structure"):
@@ -120,7 +120,7 @@ def test_create_dir_predefined(tmp_path: Path) -> None:
         tmp_path (Path): Pytest fixture for temporary directory.
     """
     dir_manager = DirectoryManager(project_number='TEST-004', main_dir=tmp_path, res_dir=None)
-    created_dir = dir_manager.create_dir('logs')
+    created_dir = dir_manager._create_dir('logs')
 
     assert created_dir.exists()
     assert created_dir.is_dir()
@@ -135,7 +135,7 @@ def test_create_dir_custom_path(tmp_path: Path) -> None:
     """
     dir_manager = DirectoryManager(project_number='TEST-005', main_dir=tmp_path, res_dir=None)
     custom_path = 'custom/nested/dir'
-    created_dir = dir_manager.create_dir('custom_dir', custom_path=custom_path)
+    created_dir = dir_manager._create_dir('custom_dir', custom_path=custom_path)
 
     assert created_dir.exists()
     assert created_dir.is_dir()
@@ -149,8 +149,8 @@ def test_create_dir_already_exists(tmp_path: Path) -> None:
         tmp_path (Path): Pytest fixture for temporary directory.
     """
     dir_manager = DirectoryManager(project_number='TEST-006', main_dir=tmp_path, res_dir=None)
-    created_dir = dir_manager.create_dir('logs')
-    created_dir_again = dir_manager.create_dir('logs')
+    created_dir = dir_manager._create_dir('logs')
+    created_dir_again = dir_manager._create_dir('logs')
 
     assert created_dir == created_dir_again
     assert created_dir.exists()
@@ -164,7 +164,7 @@ def test_create_dirs_predefined(tmp_path: Path) -> None:
     """
     dir_manager = DirectoryManager(project_number='TEST-007', main_dir=tmp_path, res_dir=None)
     dir_names = ['logs', 'outputs', 'dataset/files']
-    created_dirs = dir_manager.create_dirs(dir_names=dir_names)
+    created_dirs = dir_manager._create_dirs(dir_names=dir_names)
 
     assert len(created_dirs) == 3
     for name in dir_names:
@@ -181,7 +181,7 @@ def test_create_dirs_custom(tmp_path: Path) -> None:
     """
     dir_manager = DirectoryManager(project_number='TEST-008', main_dir=tmp_path, res_dir=None)
     custom_dirs = {'custom1': 'path1', 'custom2': 'path2/nested'}
-    created_dirs = dir_manager.create_dirs(custom_dirs=custom_dirs)
+    created_dirs = dir_manager._create_dirs(custom_dirs=custom_dirs)
 
     assert len(created_dirs) == 2
     assert created_dirs['custom1'] == dir_manager.project_dir / 'path1'
@@ -199,7 +199,7 @@ def test_create_dirs_mixed(tmp_path: Path) -> None:
     dir_manager = DirectoryManager(project_number='TEST-009', main_dir=tmp_path, res_dir=None)
     dir_names = ['logs', 'outputs']
     custom_dirs = {'custom': 'custom/path'}
-    created_dirs = dir_manager.create_dirs(dir_names=dir_names, custom_dirs=custom_dirs)
+    created_dirs = dir_manager._create_dirs(dir_names=dir_names, custom_dirs=custom_dirs)
 
     assert len(created_dirs) == 3
     assert all(dir_path.exists() for dir_path in created_dirs.values())
@@ -212,7 +212,7 @@ def test_make_dirs(tmp_path: Path) -> None:
         tmp_path (Path): Pytest fixture for temporary directory.
     """
     dir_manager = DirectoryManager(project_number='TEST-010', main_dir=tmp_path, res_dir=None)
-    created_dirs = dir_manager.make_dirs()
+    created_dirs = dir_manager.make_project_dir()
 
     expected_dirs = ['logs', 'dataset/files', 'dataset/metadata', 'dataset/temp', 'outputs', 'db']
     assert len(created_dirs) == len(expected_dirs)
@@ -230,13 +230,13 @@ def test_add_directory(tmp_path: Path) -> None:
         tmp_path (Path): Pytest fixture for temporary directory.
     """
     dir_manager = DirectoryManager(project_number='TEST-011', main_dir=tmp_path, res_dir=None)
-    initial_count = len(dir_manager._directory_structure)
+    initial_count = len(dir_manager._project_dir_structure)
 
     dir_manager.add_directory('new_dir', 'path/to/new_dir')
 
-    assert len(dir_manager._directory_structure) == initial_count + 1
-    assert 'new_dir' in dir_manager._directory_structure
-    assert dir_manager._directory_structure['new_dir'] == 'path/to/new_dir'
+    assert len(dir_manager._project_dir_structure) == initial_count + 1
+    assert 'new_dir' in dir_manager._project_dir_structure
+    assert dir_manager._project_dir_structure['new_dir'] == 'path/to/new_dir'
 
 
 def test_list_directories(tmp_path: Path) -> None:
@@ -260,7 +260,7 @@ def test_list_directories(tmp_path: Path) -> None:
     assert directories == expected_dirs
     # Verify it returns a copy, not the original
     directories['test'] = 'test'
-    assert 'test' not in dir_manager._directory_structure
+    assert 'test' not in dir_manager._project_dir_structure
 
 
 def test_delete_dir_exists(tmp_path: Path) -> None:
@@ -314,7 +314,7 @@ def test_property_log_files_dir(tmp_path: Path) -> None:
         tmp_path (Path): Pytest fixture for temporary directory.
     """
     dir_manager = DirectoryManager(project_number='TEST-013', main_dir=tmp_path, res_dir=None)
-    assert dir_manager.log_files_dir == dir_manager.project_dir / 'logs'
+    assert dir_manager.log_dir == dir_manager.project_dir / 'logs'
 
 
 def test_property_logs_dir(tmp_path: Path) -> None:
@@ -324,7 +324,7 @@ def test_property_logs_dir(tmp_path: Path) -> None:
         tmp_path (Path): Pytest fixture for temporary directory.
     """
     dir_manager = DirectoryManager(project_number='TEST-014', main_dir=tmp_path, res_dir=None)
-    assert dir_manager.logs_dir == dir_manager.project_dir / 'logs'
+    assert dir_manager.log_dir == dir_manager.project_dir / 'logs'
 
 
 def test_property_db_dir(tmp_path: Path) -> None:

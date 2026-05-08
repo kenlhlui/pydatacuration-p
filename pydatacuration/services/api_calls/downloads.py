@@ -4,15 +4,15 @@ import asyncio
 from pathlib import Path
 from urllib.parse import urljoin
 
-import httpx
-import jmespath
 from loguru import logger
 
 from pydatacuration.backend.models.setup_form import SetupForm
+from pydatacuration.services.api_calls.dataverse_client import DataverseClient
+from pydatacuration.services.api_calls.httpx_client import HTTPXClient
 from pydatacuration.utils.directory_manager import DirectoryManager
+from pydatacuration.utils.search_ds_meta import get_directory_set
+from pydatacuration.utils.search_ds_meta import get_file_list
 from pydatacuration.utils.utils import orjson_export
-
-from .httpx_client import HTTPXClient
 
 
 class Downloads:
@@ -36,22 +36,19 @@ class Downloads:
             project_number (str): The project number for the dataset, used for directory organization
         """
         self.base_url = base_url
-        self.api_token = api_token
-        self.pid = pid
-        self.download_dir = main_dir
-        self.project_number = project_number
+        self.pid: str = pid
 
-        self.success_code = 200
-
-        self.httpx_client = HTTPXClient(self.base_url, self.api_token)
-        self.semaphore = asyncio.Semaphore(5)
-        self.directory_manager = DirectoryManager(self.project_number, self.download_dir)
+        self.httpx_client = HTTPXClient(base_url, api_token)
+        self.dv_api_calls = DataverseClient(self.httpx_client)
+        self.directory_manager = DirectoryManager(
+            main_dir=main_dir,
+            project_number=project_number,
+        )
 
     @classmethod
     def from_setup_form(
         cls,
         setup_form: SetupForm,
-        main_dir: Path,
     ) -> 'Downloads':
         """Create a Downloads instance from a SetupForm instance.
 
@@ -63,52 +60,26 @@ class Downloads:
             base_url=str(setup_form.base_url) if setup_form.base_url else '',
             api_token=str(setup_form.api_token) if setup_form.api_token else '',
             pid=setup_form.pid,
-            main_dir=main_dir,
+            main_dir=setup_form.main_dir,
             project_number=setup_form.project_number,
         )
-
-    @staticmethod
-    def _get_file_list(metadata: dict) -> list:
-        file_list = []
-
-        query_string = 'data.latestVersion.files[*].{file_id:dataFile.id, file_name:dataFile.filename, originalFileName:dataFile.originalFileName, directoryLabel: directoryLabel, md5: dataFile.md5}'  # noqa: E501
-        temp_file_list = jmespath.search(query_string, metadata)
-        if not temp_file_list:
-            return []
-
-        for item in temp_file_list:
-            file_id = item.get('file_id')
-            directory_label = item.get('directoryLabel', None) or ''
-            file_name = item.get('originalFileName', None) or item.get('file_name')
-            file_path = Path(directory_label, file_name)
-            file_list.append((file_id, str(file_path)))
-        return file_list
-
-    @staticmethod
-    def _get_dir_list(metadata: dict) -> list:
-        """Get the directory list of the dataset.
-
-        Args:
-            metadata (dict): Metadata of the dataset
-
-        Returns:
-            dir_list (list): List of directories
-        """
-        query_string = 'data.latestVersion.files[].directoryLabel'
-        dir_list = jmespath.search(query_string, metadata)
-        return dir_list
 
     def make_dir_structure(self, metadata: dict) -> None:
         """Make the directory structure for the dataset.
 
         Args:
             metadata (dict): Metadata of the dataset
+
         """
-        dir_list = self._get_dir_list(metadata)
-        if dir_list:
-            dir_set = set(dir_list)
-            for directory in dir_set:
-                Path.mkdir(Path(self.directory_manager.files_dir, directory), parents=True, exist_ok=True)
+        dir_set = get_directory_set(metadata)
+
+        if not dir_set:
+            return
+
+        base_path = Path(self.directory_manager.files_dir)
+
+        for directory in dir_set:
+            (base_path / directory).mkdir(parents=True, exist_ok=True)
 
     async def _get_data_file_async(self, file_id: str, file_path: str) -> Path | None:
         """Get the data file of the dataset asynchronously."""
@@ -140,7 +111,7 @@ class Downloads:
             file_list (list): List of files to download
 
         Returns:
-            list: List of downloaded files
+            list[tuple[str, str]]: List of downloaded files
         """
         logger.info(f'Starting download of {len(file_list)} files...')
         tasks = [self._get_data_file_async(file_id, file_path) for file_id, file_path in file_list]
@@ -149,51 +120,6 @@ class Downloads:
         successful = [r for r in results if r is not None]
         logger.info(f'Finished downloading files: {successful}')
         return successful
-
-    def _get_dv_tree(self) -> dict:
-        """Get the tree structure of the dataverse repository.
-
-        Returns:
-            dict: Tree structure of the dataverse repository
-        """
-        url = f'{self.base_url}/api/info/metrics/tree'
-
-        try:
-            logger.info(f'Fetching dataverse tree structure from {url}...')
-            response = self.httpx_client.sync_get(url)
-            response.raise_for_status()
-            if response.status_code == self.success_code and response.json():
-                return response.json()
-            logger.error(f'Error: {response.status_code} - {response.text}')
-            return {}
-        except httpx.HTTPStatusError as e:
-            logger.error(f'HTTP error occurred: {e}')
-            return {}
-        except Exception as e:
-            logger.error(f'An error occurred: {e}')
-            return {}
-
-    def _get_ds_metadata(self) -> dict:
-        """Get metadata of a dataset.
-
-        Returns:
-            dict: Metadata of the dataset
-        """
-        url = f'{self.base_url}/api/datasets/:persistentId/?persistentId={self.pid}'
-
-        try:
-            logger.info(f'Fetching dataset metadata from {url}...')
-            response = self.httpx_client.sync_get(url)
-            response.raise_for_status()
-            if response.status_code == self.success_code and response.json():
-                return response.json()
-            return {}
-        except httpx.HTTPStatusError as e:
-            logger.info(f'HTTP error occurred: {e}')
-            return {}
-        except Exception as e:
-            logger.info(f'An error occurred: {e}')
-            return {}
 
     def export_metadata(self, file_name: str, dictionary: dict) -> None:
         """Save the dataset metadata to a JSON file."""
@@ -205,17 +131,19 @@ class Downloads:
         except Exception as e:
             logger.error(f'An error occurred: {e}')
 
-    async def downloader(self) -> None:
+    async def downloader(self) -> dict:
         """Download the dataset as a zip file asynchronously."""
         # Get the dataset metadata (sync HTTP — offloaded to thread to avoid blocking event loop)
-        ds_metadata = await asyncio.to_thread(self._get_ds_metadata)
+        ds_metadata = await asyncio.to_thread(self.dv_api_calls.get_ds_metadata, self.pid)
         self.export_metadata('ds_metadata.json', ds_metadata)
 
         # Get the tree structure of the whole dataverse repository (sync HTTP — can be slow for large repos)
-        dv_tree = await asyncio.to_thread(self._get_dv_tree)
+        dv_tree = await asyncio.to_thread(self.dv_api_calls.get_dv_tree)
         self.export_metadata('dv_tree.json', dv_tree)
 
         # Download the data files using async method
-        file_list = await asyncio.to_thread(self._get_file_list, ds_metadata)
+        file_list = get_file_list(ds_metadata)
         await asyncio.to_thread(self.make_dir_structure, ds_metadata)
         await self.save_files_async(file_list)
+
+        return ds_metadata
