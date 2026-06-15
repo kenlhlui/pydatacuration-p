@@ -26,7 +26,7 @@ class DataverseClient:
         logger.info(f'Fetching dataset metadata from {endpoint}...')
         response = self.httpx_client.sync_get(endpoint)
         response.raise_for_status()
-        if response.status_code == self.httpx_client.httpx_success_status and response.json():
+        if response.is_success and response.json():
             return response.json()
         return {}
 
@@ -41,7 +41,7 @@ class DataverseClient:
         logger.info(f'Fetching dataverse tree structure from {endpoint}...')
         response = self.httpx_client.sync_get(endpoint)
         response.raise_for_status()
-        if response.status_code == self.httpx_client.httpx_success_status and response.json():
+        if response.is_success and response.json():
             return response.json()
         logger.error(f'Error: {response.status_code} - {response.text}')
         return {}

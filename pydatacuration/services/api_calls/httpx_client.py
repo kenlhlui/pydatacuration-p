@@ -25,7 +25,6 @@ class HTTPXClient:
         self.base_url = base_url
         self.api_token = api_token
         self.headers = {'X-Dataverse-key': api_token}
-        self.httpx_success_status = 200
         self.semaphore = asyncio.Semaphore(10)
         self.async_sleep_time = 0  # TODO: make this configurable
 
@@ -66,7 +65,7 @@ class HTTPXClient:
         ) as client:
             try:
                 response = client.get(url)
-                if response.status_code != self.httpx_success_status and raise_for_status:
+                if response.is_error and raise_for_status:
                     logger.error(f'HTTP request Error for {url}: {response.status_code}')
                     response.raise_for_status()
                 return response
@@ -104,7 +103,7 @@ class HTTPXClient:
         """
         try:
             async with self.semaphore, client.stream('GET', url, **kwargs) as response:
-                if response.status_code == self.httpx_success_status:
+                if response.is_success:
                     # Check for empty files
                     content_length = int(response.headers.get('content-length', '-1'))
                     if content_length == 0:
