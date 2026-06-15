@@ -1,5 +1,6 @@
 """Module for calling the Dataverse API."""
 
+import httpx2
 from loguru import logger
 
 from pydatacuration.services.api_calls.httpx_client import HTTPXClient
@@ -84,18 +85,15 @@ class DataverseClient:
         )
         return response.json()
 
-    def get_ds_access_status(self, pid: str) -> int:
+    def get_ds_access_status(self, pid: str) -> httpx2.Response:
         """Check if the user has access to the dataset.
 
         Args:
             pid (str): Persistent identifier of the dataset
 
-
         Returns:
-                int: HTTP status code of the access check
+            httpx2.Response: The HTTP response from the access check
         """
         endpoint = f'/api/datasets/:persistentId/?persistentId={pid}'
 
-        response = self.httpx_client.sync_get(endpoint, raise_for_status=False)
-
-        return response.status_code
+        return self.httpx_client.sync_get(endpoint, raise_for_status=False)
