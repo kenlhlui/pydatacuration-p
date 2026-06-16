@@ -1,5 +1,13 @@
 """Module for calling the Dataverse API."""
 
+from __future__ import annotations
+
+from typing import TYPE_CHECKING
+
+
+if TYPE_CHECKING:
+    import httpx2
+
 from loguru import logger
 
 from pydatacuration.services.api_calls.httpx_client import HTTPXClient
@@ -26,7 +34,7 @@ class DataverseClient:
         logger.info(f'Fetching dataset metadata from {endpoint}...')
         response = self.httpx_client.sync_get(endpoint)
         response.raise_for_status()
-        if response.status_code == self.httpx_client.httpx_success_status and response.json():
+        if response.is_success and response.json():
             return response.json()
         return {}
 
@@ -41,7 +49,7 @@ class DataverseClient:
         logger.info(f'Fetching dataverse tree structure from {endpoint}...')
         response = self.httpx_client.sync_get(endpoint)
         response.raise_for_status()
-        if response.status_code == self.httpx_client.httpx_success_status and response.json():
+        if response.is_success and response.json():
             return response.json()
         logger.error(f'Error: {response.status_code} - {response.text}')
         return {}
@@ -84,18 +92,15 @@ class DataverseClient:
         )
         return response.json()
 
-    def get_ds_access_status(self, pid: str) -> int:
+    def get_ds_access_status(self, pid: str) -> httpx2.Response:
         """Check if the user has access to the dataset.
 
         Args:
             pid (str): Persistent identifier of the dataset
 
-
         Returns:
-                int: HTTP status code of the access check
+            httpx2.Response: The HTTP response from the access check
         """
         endpoint = f'/api/datasets/:persistentId/?persistentId={pid}'
 
-        response = self.httpx_client.sync_get(endpoint, raise_for_status=False)
-
-        return response.status_code
+        return self.httpx_client.sync_get(endpoint, raise_for_status=False)

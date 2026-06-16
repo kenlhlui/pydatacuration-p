@@ -3,7 +3,7 @@
 import time
 from pathlib import Path
 
-import httpx
+import httpx2
 from loguru import logger
 
 from app import app_settings
@@ -14,8 +14,8 @@ from pydatacuration.backend.models.setup_form import SetupForm
 
 def run_curation(setup_form_instance: SetupForm | SetupDefaults, app_settings: AppSettings) -> None:
     start_time = time.time()
-    logger.info(f'Running crawl for {setup_form_instance.pid}')
-    with httpx.Client() as client:
+    logger.info(f'Running crawl for {setup_form_instance.pid} with project number {setup_form_instance.project_number}')
+    with httpx2.Client() as client:
         client.post(
             f'http://localhost:{app_settings.app_port}/api/run-curation',
             json=setup_form_instance.model_dump(mode='json'),

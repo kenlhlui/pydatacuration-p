@@ -8,6 +8,7 @@ from urllib.parse import urlencode
 from urllib.parse import urljoin
 
 import deepdiff
+import httpx2
 import orjson
 import seedir as sd
 import typer
@@ -141,28 +142,23 @@ def check_ds_read_access(pid: str, base_url: str, api_token: str) -> None:
     """
     httpx_client = HTTPXClient(base_url, api_token)
 
-    http_ok = 200
-    http_not_found = 404
-    http_unauthorized_codes = {401, 403}
-
     try:
-        # Check whether the user has access to the dataset
-        code: int = DataverseClient(httpx_client).get_ds_access_status(pid)
+        response = DataverseClient(httpx_client).get_ds_access_status(pid)
 
-        if code in http_unauthorized_codes:
+        if response.status_code in {httpx2.codes.UNAUTHORIZED, httpx2.codes.FORBIDDEN}:
             msg = 'You do not have read access to the dataset. Please check your API token or permissions.'
             logger.error(f'❌{msg}')
             raise DatasetUnauthorizedError(msg)
 
-        if code == http_not_found:
+        if response.status_code == httpx2.codes.NOT_FOUND:
             msg = 'The dataset does not exist. Please check the PID input.'
             logger.error(f'❌{msg}')
             raise DatasetNotFoundError(msg)
 
-        if code == http_ok:
+        if response.is_success:
             logger.info('✅ Dataset access verified.')
         else:
-            msg = f'Unexpected response (HTTP {code}) while checking dataset access.'
+            msg = f'Unexpected response (HTTP {response.status_code}) while checking dataset access.'
             logger.error(f'❌{msg}')
             raise DatasetAccessError(msg)
 
