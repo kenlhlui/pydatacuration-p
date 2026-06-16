@@ -65,8 +65,7 @@ class HTTPXClient:
         ) as client:
             try:
                 response = client.get(url)
-                if response.is_error and raise_for_status:
-                    logger.error(f'HTTP request Error for {url}: {response.status_code}')
+                if raise_for_status:
                     response.raise_for_status()
                 return response
             except httpx2.HTTPStatusError as exc:
