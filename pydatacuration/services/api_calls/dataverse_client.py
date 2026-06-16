@@ -1,6 +1,13 @@
 """Module for calling the Dataverse API."""
 
-import httpx2
+from __future__ import annotations
+
+from typing import TYPE_CHECKING
+
+
+if TYPE_CHECKING:
+    import httpx2
+
 from loguru import logger
 
 from pydatacuration.services.api_calls.httpx_client import HTTPXClient
