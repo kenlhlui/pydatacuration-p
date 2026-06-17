@@ -42,7 +42,6 @@ class DBSettings(BaseSettings, DBType):
                 url = url.replace('postgresql://', 'postgresql+psycopg://', 1)
             return url
         if not all([self.postgres_user, self.postgres_password, self.postgres_db]):
-            raise ValueError(
-                'PostgreSQL backend requires either DATABASE_URL or POSTGRES_USER + POSTGRES_PASSWORD + POSTGRES_DB.'
-            )
+            msg = 'PostgreSQL backend requires either DATABASE_URL or POSTGRES_USER + POSTGRES_PASSWORD + POSTGRES_DB.'
+            raise ValueError(msg)
         return f'postgresql+psycopg://{self.postgres_user}:{self.postgres_password}@{self.postgres_host}:{self.postgres_port}/{self.postgres_db}'

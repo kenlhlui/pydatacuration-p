@@ -33,7 +33,11 @@ PDF_FILE_EXTENSIONS = ['.pdf']
 
 
 class FilesOpener:
-    """Open different file types."""
+    """Open different file types.
+
+    Note: if the file can be correctly opened, return a tuple of (True, file_path). Otherwise, return (False, file_path).
+
+    """
 
     def __init__(self, file: str | Path) -> None:
         """Initialize the FilesOpener class.
@@ -115,7 +119,7 @@ class FilesOpener:
             logger.error(f'Error reading TSV file: {e}')
             return False, self.file
 
-    def _open_dta_file(self):
+    def _open_dta_file(self) -> tuple:
         """Open a DTA (Stata) file.
 
         Returns:

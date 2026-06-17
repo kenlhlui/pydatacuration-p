@@ -4,6 +4,7 @@ import time
 from contextlib import contextmanager
 from pathlib import Path
 
+from loguru import logger
 from sqlmodel import Session
 from sqlmodel import create_engine
 from sqlmodel import text
@@ -11,7 +12,6 @@ from sqlmodel import text
 from pydatacuration.db.base import DatabaseBackend
 from pydatacuration.db.settings import DBType
 from pydatacuration.db.sqlmodels import DBModels
-from pydatacuration.utils.custom_logging import logger
 
 
 class DuckDBBackend(DatabaseBackend):

@@ -4,6 +4,7 @@ from pathlib import Path
 
 import yaml
 from loguru import logger
+
 from pydatacuration.checklist.checklist_model import ChecklistYAML
 
 

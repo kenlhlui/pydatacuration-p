@@ -8,14 +8,13 @@ from datetime import timedelta
 from typing import Any
 from typing import Literal
 
+from loguru import logger
 from sqlalchemy import ScalarResult
 from sqlmodel import SQLModel
 from sqlmodel import func
 from sqlmodel import inspect
 from sqlmodel import select
 from sqlmodel import text
-
-from pydatacuration.utils.custom_logging import logger
 
 
 class DatabaseBackend(ABC):  # noqa: PLR0904
@@ -175,7 +174,7 @@ class DatabaseBackend(ABC):  # noqa: PLR0904
         model_class = self.models.check_results()
         return {'check_results': self.read_table_records(model_class, mode=mode)}
 
-    def read_checklist(self):
+    def read_checklist(self) -> list[SQLModel]:
         """Read checklist table, returning model instances.
 
         Objects are expunged from the session so they remain usable after
@@ -395,6 +394,7 @@ class DatabaseBackend(ABC):  # noqa: PLR0904
         Returns:
             int: The number of rows in the table.
         """
+        # FIXME: move this business logic to new module
         try:
             with self.get_connection() as (session, _engine):
                 checklist_model = self.models.checklist()
@@ -419,6 +419,7 @@ class DatabaseBackend(ABC):  # noqa: PLR0904
         Returns:
             int: The number of rows with time_spent values.
         """
+        # FIXME: move this business logic to new module
         try:
             with self.get_connection() as (session, _engine):
                 checklist_model = self.models.checklist()
@@ -438,6 +439,7 @@ class DatabaseBackend(ABC):  # noqa: PLR0904
         Returns:
             int: The number of rows with comments.
         """
+        # FIXME: move this business logic to new module
         try:
             with self.get_connection() as (session, _engine):
                 checklist_model = self.models.checklist()

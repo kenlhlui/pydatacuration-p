@@ -2,8 +2,9 @@
 
 from pathlib import Path
 from shutil import rmtree
+from typing import Self
 
-from .custom_logging import logger
+from loguru import logger
 
 
 class DirectoryManager:
@@ -13,21 +14,22 @@ class DirectoryManager:
     DB_FILE_NAME = 'db.duckdb'
     DB_SUBDIR = 'db'
 
-    def __init__(self, project_number: str, main_dir: str | Path, res_dir: str | Path | None = None) -> None:
+    def __init__(
+        self, main_dir: str | Path, project_number: str | None = None, res_dir: str | Path | None = None
+    ) -> None:
         """Initialize the class.
 
         Args:
-            project_number (str): The project number, also the name of the working directory.
             main_dir (str | Path): The main directory that contains /db and the /projects directories.
+            project_number (str | None): The project number, also the name of the working directory.
             res_dir (str | Path | None): The resource directory path.
         """
         self.project_number = project_number
         self.main_dir = main_dir
-        self.project_dir = self._define_project_dir()
         self.res_dir = res_dir
 
         # Pre-defined directory structure
-        self._directory_structure = {
+        self._project_dir_structure = {
             'logs': 'logs',
             'dataset/files': 'dataset/files',
             'dataset/metadata': 'dataset/metadata',
@@ -36,20 +38,41 @@ class DirectoryManager:
             'outputs/reports': 'outputs/reports',
         }
 
+    @classmethod
+    def get_dir_manager_instance(
+        cls,
+        project_number: str,
+        main_dir: Path,
+        res_dir: Path | None = None,
+    ) -> Self:
+        """Create a directory manager for a project.
+
+        Args:
+            project_number (str): The project number.
+            main_dir (Path): The main directory.
+            res_dir (Path | None): Optional resource directory.
+
+        Returns:
+            Self: A directory manager instance.
+
+        """
+        return cls(
+            main_dir=main_dir,
+            project_number=project_number,
+            res_dir=res_dir,
+        )
+
     def _define_project_dir(self) -> Path:
         """Define the project directory.
 
         Returns:
             Path: The path object of the project directory.
         """
-        if self.main_dir_path:
-            project_dir = Path(self.main_dir_path)
-            # If project_dir already ends with the project number, use it directly
-            if project_dir.name == self.project_number:
-                return project_dir.resolve()
-            # Otherwise, create the project structure
-            return Path(project_dir, 'projects', self.project_number).resolve()
-        return Path(Path.cwd(), 'workdir', self.project_number).resolve()
+        assert self.project_number is not None
+        project_dir = self.main_dir_path
+        if project_dir.name == self.project_number:
+            return project_dir
+        return (project_dir / 'projects' / self.project_number).resolve()
 
     def _define_db_dir(self) -> Path:
         """Define the database directory.
@@ -81,14 +104,14 @@ class DirectoryManager:
         """
         if dir_name == 'db':
             return self._define_db_dir()
-        if dir_name not in self._directory_structure:
+        if dir_name not in self._project_dir_structure:
             msg = f"Directory '{dir_name}' not found in structure"
             raise KeyError(msg)
 
-        dir_path = self._directory_structure[dir_name]
+        dir_path = self._project_dir_structure[dir_name]
         return (self.project_dir / dir_path).resolve()
 
-    def create_dir(self, dir_name: str, custom_path: str | None = None) -> Path:
+    def _create_dir(self, dir_name: str, custom_path: str | None = None) -> Path:
         """Create a single directory.
 
         Args:
@@ -103,7 +126,7 @@ class DirectoryManager:
         dir_path.mkdir(parents=True, exist_ok=True)
         return dir_path
 
-    def create_dirs(
+    def _create_dirs(
         self, dir_names: list[str] | None = None, custom_dirs: dict[str, str] | None = None
     ) -> dict[str, Path]:
         """Create multiple directories.
@@ -120,17 +143,17 @@ class DirectoryManager:
         # Create predefined directories
         if dir_names:
             for name in dir_names:
-                created_dirs[name] = self.create_dir(name)
+                created_dirs[name] = self._create_dir(name)
 
         # Create custom directories
         if custom_dirs:
             for name, path in custom_dirs.items():
-                created_dirs[name] = self.create_dir(name, path)
+                created_dirs[name] = self._create_dir(name, path)
 
         return created_dirs
 
-    def make_dirs(self) -> dict[str, Path]:
-        """Create the default project directory structure.
+    def make_project_dir(self) -> dict[str, Path]:
+        """Create the project directory structure.
 
         Returns:
             Dict[str, Path]: Dictionary of created directory paths.
@@ -142,10 +165,10 @@ class DirectoryManager:
             'dataset/temp',
             'outputs',
         ]
-        created_dirs = self.create_dirs(default_dirs)
+        created_dirs = self._create_dirs(default_dirs)
 
         # Also create database directory
-        created_dirs['db'] = self.create_dir('db')
+        created_dirs['db'] = self._create_dir('db')
 
         # Setup logging after log directory is created
         logger.info(f'The working directory is: {self.project_dir}')
@@ -159,7 +182,7 @@ class DirectoryManager:
             name (str): The directory name key.
             path (str): The directory path relative to workdir.
         """
-        self._directory_structure[name] = path
+        self._project_dir_structure[name] = path
 
     def list_directories(self) -> dict[str, str]:
         """List all defined directories.
@@ -167,7 +190,7 @@ class DirectoryManager:
         Returns:
             dict[str, str]: Dictionary of directory names and their paths.
         """
-        return self._directory_structure.copy()
+        return self._project_dir_structure.copy()
 
     @staticmethod
     def delete_dir(dir: Path) -> None:
@@ -185,43 +208,58 @@ class DirectoryManager:
         except KeyError as e:
             logger.error(f'Error deleting directory: {e}')
 
-    # Backward compatibility properties
     @property
-    def log_files_dir(self) -> Path:
-        """Get log files directory path."""
-        return self.get_dir('logs')
+    def project_dir(self) -> Path:
+        """Get project directory path. Requires project_number to be set."""
+        if self.project_number is None:
+            msg = 'project_number is required for project-level directory access'
+            raise ValueError(msg)
+        return self._define_project_dir()
 
     @property
-    def logs_dir(self) -> Path:
-        """Get logs directory path."""
+    def log_dir(self) -> Path:
+        """Get log directory of a project path."""
         return self.get_dir('logs')
 
     @property
     def db_dir(self) -> Path:
-        """Get database directory path."""
+        """Get the global database directory path."""
         return self.get_dir('db')
 
     @property
     def db_path(self) -> Path:
-        """Get database file path."""
+        """Get the global database file path."""
         return self._define_db_path()
 
     @property
     def outputs_dir(self) -> Path:
-        """Get outputs directory path."""
+        """Get outputs directory of a project path."""
         return self.get_dir('outputs')
 
     @property
     def metadata_dir(self) -> Path:
-        """Get metadata directory path."""
+        """Get metadata directory of a project path."""
         return self.get_dir('dataset/metadata')
 
     @property
     def files_dir(self) -> Path:
-        """Get files directory path."""
+        """Get files directory of a project path."""
         return self.get_dir('dataset/files')
 
     @property
     def main_dir_path(self) -> Path:
         """Get main directory path."""
         return Path(self.main_dir).resolve()
+
+    @property
+    def res_dir_path(self) -> Path | None:
+        """Get resource directory path."""
+        if not self.res_dir:
+            msg = 'res_dir is not set'
+            raise ValueError(msg)
+        return Path(self.res_dir).resolve()
+
+    @property
+    def global_log_dir(self) -> Path:
+        """Get global log directory path."""
+        return self.main_dir_path / 'logs'

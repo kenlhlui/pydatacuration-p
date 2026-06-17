@@ -27,11 +27,12 @@ For standalone (non-Docker) usage, set ``POSTGRES_HOST=localhost`` instead.
 
 from pathlib import Path
 
+from loguru import logger
+
 from pydatacuration.db.base import DatabaseBackend
 from pydatacuration.db.settings import DBSettings
 from pydatacuration.db.settings import DBType
 from pydatacuration.db.sqlmodels import DBModels
-from pydatacuration.utils.custom_logging import logger
 
 
 # Re-export key symbols for convenient imports
@@ -102,7 +103,7 @@ def get_database(
             DuckDBBackend,  # Note: Import here to avoid unnecessary dependencies when using PostgreSQL
         )
 
-        logger.info(f'Using DuckDB backend with file: {db_file}')
+        logger.debug(f'Using DuckDB backend with file: {db_file}')
 
         return DuckDBBackend(schema_name=schema_name, db_file=db_file)
 
@@ -111,5 +112,5 @@ def get_database(
         PostgreSQLBackend,  # Note: Import here to avoid unnecessary dependencies when using DuckDB
     )
 
-    logger.info(f'Using PostgreSQL backend with host: {db_settings.postgres_host}')
+    logger.debug(f'Using PostgreSQL backend with host: {db_settings.postgres_host}')
     return PostgreSQLBackend(schema_name=schema_name, database_url=db_settings.build_postgres_url())

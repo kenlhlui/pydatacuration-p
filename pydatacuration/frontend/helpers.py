@@ -7,6 +7,7 @@ from datetime import timedelta
 from pathlib import Path
 from typing import Any
 
+from loguru import logger
 from nicegui import app
 from nicegui import ui
 from sqlmodel import SQLModel
@@ -16,8 +17,7 @@ from pydatacuration.db import DatabaseBackend
 from pydatacuration.db import DBModels
 from pydatacuration.db import get_database
 from pydatacuration.db import get_db_type
-from pydatacuration.exporter import Exporter
-from pydatacuration.utils.custom_logging import logger
+from pydatacuration.services.exporter import Exporter
 from pydatacuration.utils.directory_manager import DirectoryManager
 
 
@@ -415,7 +415,7 @@ class NiceGUIHelper:  # noqa: PLR0904
 
             """
             try:
-                dir_manager = DirectoryManager(project_number, main_dir)
+                dir_manager = DirectoryManager(main_dir=main_dir, project_number=project_number)
                 dir_manager.delete_dir(main_dir / 'projects' / project_number)
             except Exception as e:
                 logger.error(f'Error deleting project directory for {project_number}: {e}')

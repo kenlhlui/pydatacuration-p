@@ -8,14 +8,14 @@ from fastapi import HTTPException
 from fastapi import Query
 
 from pydatacuration.backend.models.setup_form import SetupForm
-from pydatacuration.backend.services.curation import get_db
-from pydatacuration.backend.services.curation import get_dirs
+from pydatacuration.backend.services.curation import get_database
 from pydatacuration.backend.services.curation import run_curation
 from pydatacuration.exceptions import DatasetAccessError
 from pydatacuration.exceptions import DatasetNotFoundError
 from pydatacuration.exceptions import DatasetUnauthorizedError
 from pydatacuration.exceptions import DirectoryExistsError
-from pydatacuration.exporter import Exporter
+from pydatacuration.services.exporter import Exporter
+from pydatacuration.utils.directory_manager import DirectoryManager
 
 
 router = APIRouter()
@@ -56,11 +56,11 @@ async def export_word_endpoint(
         main_dir (str): The main working directory where the project data is stored.
         word_template_name (str | None): Optional custom Word template filename.
     """
-    dirs = get_dirs(project_number, Path(main_dir).resolve())
+    dirs = DirectoryManager.get_dir_manager_instance(project_number, Path(main_dir).resolve())
     if not dirs.project_dir.exists():
         raise HTTPException(status_code=404, detail=f'Project directory for project {project_number!r} not found.')
 
-    db = get_db(schema_name=project_number, db_file=dirs.db_path)
+    db = get_database(schema_name=project_number, db_file=dirs.db_path)
     exporter = Exporter(db, dirs)
     await asyncio.to_thread(exporter.export_word, word_template_name)
 

@@ -4,7 +4,7 @@ import asyncio
 from pathlib import Path
 from urllib.parse import urljoin
 
-import httpx
+import httpx2
 from loguru import logger
 from tenacity import RetryError
 from tenacity import retry
@@ -25,22 +25,21 @@ class HTTPXClient:
         self.base_url = base_url
         self.api_token = api_token
         self.headers = {'X-Dataverse-key': api_token}
-        self.httpx_success_status = 200
         self.semaphore = asyncio.Semaphore(10)
         self.async_sleep_time = 0  # TODO: make this configurable
 
         # Create a single AsyncClient with the desired transport settings (IPv4 enforced)
-        transport = httpx.AsyncHTTPTransport(local_address='0.0.0.0')
-        self._async_client = httpx.AsyncClient(
+        transport = httpx2.AsyncHTTPTransport(local_address='0.0.0.0')
+        self._async_client = httpx2.AsyncClient(
             headers=self.headers,
-            timeout=httpx.Timeout(10.0, connect=5.0),
+            timeout=httpx2.Timeout(10.0, connect=5.0),
             follow_redirects=True,
             transport=transport,
-            limits=httpx.Limits(max_keepalive_connections=5, max_connections=10),
+            limits=httpx2.Limits(max_keepalive_connections=5, max_connections=10),
         )
 
     @property
-    def async_client(self) -> httpx.AsyncClient:
+    def async_client(self) -> httpx2.AsyncClient:
         """Return the cached AsyncClient instance."""
         return self._async_client
 
@@ -49,7 +48,7 @@ class HTTPXClient:
         await self._async_client.aclose()
 
     @retry(stop=stop_after_attempt(3), wait=wait_fixed(5))
-    def sync_get(self, api_endpoint: str, raise_for_status: bool = True) -> httpx.Response:
+    def sync_get(self, api_endpoint: str, raise_for_status: bool = True) -> httpx2.Response:
         """Synchronous GET request.
 
         Args:
@@ -59,23 +58,22 @@ class HTTPXClient:
         """
         url = urljoin(self.base_url, api_endpoint)
 
-        limits = httpx.Limits(max_keepalive_connections=5, max_connections=10)
+        limits = httpx2.Limits(max_keepalive_connections=5, max_connections=10)
 
-        with httpx.Client(
-            headers=self.headers, timeout=httpx.Timeout(10.0, connect=5.0), follow_redirects=True, limits=limits
+        with httpx2.Client(
+            headers=self.headers, timeout=httpx2.Timeout(10.0, connect=5.0), follow_redirects=True, limits=limits
         ) as client:
             try:
                 response = client.get(url)
-                if response.status_code != self.httpx_success_status and raise_for_status:
-                    logger.error(f'HTTP request Error for {url}: {response.status_code}')
+                if raise_for_status:
                     response.raise_for_status()
                 return response
-            except httpx.HTTPStatusError as exc:
+            except httpx2.HTTPStatusError as exc:
                 logger.error(f'HTTP request Error for {url}: {exc}')
                 logger.error('Retrying... (max 3 attempts with 5 second delay)')
                 raise exc
 
-            except (httpx.ConnectError, httpx.ConnectTimeout) as exc:
+            except (httpx2.ConnectError, httpx2.ConnectTimeout) as exc:
                 logger.error(f'HTTP Connection error occurred {url}: {exc}')
                 logger.error('Retrying... (max 3 attempts with 5 second delay)')
                 raise exc
@@ -94,17 +92,17 @@ class HTTPXClient:
             f.write(content)
 
     @retry(stop=stop_after_attempt(3), wait=wait_fixed(5))
-    async def async_stream_files(self, url: str, client: httpx.AsyncClient, **kwargs) -> bytes | None:
+    async def async_stream_files(self, url: str, client: httpx2.AsyncClient, **kwargs) -> bytes | None:
         """Asynchronous streaming GET request that returns the full content.
 
         Args:
             url (str): URL to send the GET request to.
-            client (httpx.AsyncClient): The HTTPX AsyncClient instance to use.
+            client (httpx2.AsyncClient): The HTTPX AsyncClient instance to use.
             **kwargs: Additional keyword arguments for the request.
         """
         try:
             async with self.semaphore, client.stream('GET', url, **kwargs) as response:
-                if response.status_code == self.httpx_success_status:
+                if response.is_success:
                     # Check for empty files
                     content_length = int(response.headers.get('content-length', '-1'))
                     if content_length == 0:
@@ -118,11 +116,11 @@ class HTTPXClient:
                     return b''.join(content)
                 return None
 
-        except httpx.HTTPStatusError as exc:
+        except httpx2.HTTPStatusError as exc:
             logger.error(f'HTTP request Error for {url}: {exc}')
             logger.error('Retrying... (max 3 attempts with 5 second delay)')
             raise
-        except (httpx.ConnectError, httpx.ConnectTimeout) as exc:
+        except (httpx2.ConnectError, httpx2.ConnectTimeout) as exc:
             logger.error(f'HTTP Connection error occurred {url}: {exc}')
             logger.error('Retrying... (max 3 attempts with 5 second delay)')
             raise
