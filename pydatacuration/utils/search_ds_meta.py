@@ -63,7 +63,7 @@ def get_metadata_cm_field(ds_metadata: dict, field: str) -> tuple[list | None, b
         exists (bool): True if the metadata field exists, False otherwise
     """
     if '.' in field:
-        field, subfield = field.split('.')
+        field, subfield = field.split('.', 1)
         query_string = (
             f'data.latestVersion.metadataBlocks.citation.fields[?typeName==`{field}`].value[].[{subfield}][].value'  # noqa: E501
         )
