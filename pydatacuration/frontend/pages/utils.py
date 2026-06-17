@@ -20,13 +20,12 @@ def confirm_delete_project(schema: dict, refresh_callback) -> None:
 
     async def handle_delete() -> None:
         success, message = NiceGUIHelper.delete_project(schema.get('project_number'), MAIN_DIR)
+        dialog.close()
         if success:
             ui.notify(message, type='positive')
             await refresh_callback()
-            dialog.close()
         else:
             ui.notify(message, type='negative')
-            dialog.close()
 
     with ui.dialog() as dialog, ui.card().style('min-width: 400px;'):
         ui.label(f'Delete project "{schema["project_number"]}"?').classes('text-xl font-semibold')
