@@ -96,7 +96,7 @@ class FileNameChecker:
                 return [line.strip() for line in f.readlines()]
         except FileNotFoundError as e:
             logger.error(f'Error: {e}')
-            raise SystemExit(1) from e
+            return []
 
     @staticmethod
     def check_file_ext(file: str) -> tuple[str, bool]:
@@ -121,7 +121,6 @@ class FileNameChecker:
         Returns:
             tuple[str, bool]: The file path and a boolean value.
         """
-
         if Path(file).suffix in FileNameChecker._load_preferred_file_formats(preferred_file_formats_config):
             return file, True
         return file, False
