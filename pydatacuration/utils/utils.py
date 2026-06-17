@@ -75,7 +75,7 @@ def parse_file_list_metadata(file_list_metadata: list) -> list:
         filename = get_file_name_from_file_list_metadata(file_meta)
         file_full_path_obj = get_file_rel_path_from_file_list_metadata(file_meta, filename)
         file_list_metadata_nested_list.append(
-            {'file': str(PurePosixPath(file_full_path_obj)), 'md5_checksum': file_meta['dataFile']['md5']}
+            {'file': str(PurePosixPath(file_full_path_obj)), 'checksum': file_meta['dataFile']['md5']}
         )
 
     return file_list_metadata_nested_list

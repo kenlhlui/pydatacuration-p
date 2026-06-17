@@ -40,12 +40,12 @@ def test_compare_files_and_metadata_identical(tmp_path):
     logs_dir.mkdir()
 
     dl_files_checksums = [
-        {'file': 'data/file1.txt', 'md5_checksum': 'abc123'},
-        {'file': 'data/file2.csv', 'md5_checksum': 'def456'},
+        {'file': 'data/file1.txt', 'checksum': 'abc123'},
+        {'file': 'data/file2.csv', 'checksum': 'def456'},
     ]
     metadata_file_checksums = [
-        {'file': 'data/file1.txt', 'md5_checksum': 'abc123'},
-        {'file': 'data/file2.csv', 'md5_checksum': 'def456'},
+        {'file': 'data/file1.txt', 'checksum': 'abc123'},
+        {'file': 'data/file2.csv', 'checksum': 'def456'},
     ]
 
     result = compare_files_and_metadata(dl_files_checksums, metadata_file_checksums, tmp_path)
@@ -59,12 +59,12 @@ def test_compare_files_and_metadata_different(tmp_path):
     logs_dir.mkdir()
 
     dl_files_checksums = [
-        {'file': 'data/file1.txt', 'md5_checksum': 'abc123'},
-        {'file': 'data/file2.csv', 'md5_checksum': 'wrong_checksum'},
+        {'file': 'data/file1.txt', 'checksum': 'abc123'},
+        {'file': 'data/file2.csv', 'checksum': 'wrong_checksum'},
     ]
     metadata_file_checksums = [
-        {'file': 'data/file1.txt', 'md5_checksum': 'abc123'},
-        {'file': 'data/file2.csv', 'md5_checksum': 'def456'},
+        {'file': 'data/file1.txt', 'checksum': 'abc123'},
+        {'file': 'data/file2.csv', 'checksum': 'def456'},
     ]
 
     with pytest.raises(SystemExit) as exc_info:
@@ -83,12 +83,12 @@ def test_compare_files_and_metadata_ignore_order(tmp_path):
     logs_dir.mkdir()
 
     dl_files_checksums = [
-        {'file': 'data/file2.csv', 'md5_checksum': 'def456'},
-        {'file': 'data/file1.txt', 'md5_checksum': 'abc123'},
+        {'file': 'data/file2.csv', 'checksum': 'def456'},
+        {'file': 'data/file1.txt', 'checksum': 'abc123'},
     ]
     metadata_file_checksums = [
-        {'file': 'data/file1.txt', 'md5_checksum': 'abc123'},
-        {'file': 'data/file2.csv', 'md5_checksum': 'def456'},
+        {'file': 'data/file1.txt', 'checksum': 'abc123'},
+        {'file': 'data/file2.csv', 'checksum': 'def456'},
     ]
 
     result = compare_files_and_metadata(dl_files_checksums, metadata_file_checksums, tmp_path)
@@ -164,9 +164,9 @@ def test_parse_file_list_metadata():
     result = parse_file_list_metadata(file_list_metadata)
 
     expected = [
-        {'file': 'folder1/subfolder/data.csv', 'md5_checksum': 'abc123def456'},
-        {'file': 'readme.txt', 'md5_checksum': '789xyz321'},
-        {'file': 'images/image.png', 'md5_checksum': 'img123hash'},
+        {'file': 'folder1/subfolder/data.csv', 'checksum': 'abc123def456'},
+        {'file': 'readme.txt', 'checksum': '789xyz321'},
+        {'file': 'images/image.png', 'checksum': 'img123hash'},
     ]
 
     assert result == expected

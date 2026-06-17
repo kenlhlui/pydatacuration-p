@@ -44,7 +44,7 @@ class FilesChecksum:
 
                 # Append the relative file path and its MD5 checksum to the result list
                 dl_file_checksum_nested_list.append(
-                    {'file': str(PurePosixPath(relative_file_path)), 'md5_checksum': self._get_md5(file_path)}
+                    {'file': str(PurePosixPath(relative_file_path)), 'checksum': self._get_md5(file_path)}
                 )
 
         return dl_file_checksum_nested_list
