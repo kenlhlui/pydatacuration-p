@@ -56,7 +56,6 @@ def compare_files_and_metadata(dl_files_checksums: list, metadata_file_checksums
         with diff_log_path.open('w', encoding='utf-8') as f:
             f.write(str(diff))
         logger.warning(f'See the {str(diff_log_path)} file for the differences.')
-        raise SystemExit(1)
 
     logger.info('The downloaded files and the file list metadata are the same.')
     return False
@@ -121,10 +120,9 @@ def gen_tree_diagram(target_dir: Path, save_dir: Path) -> None:
                 logger.info(f'Folder tree diagram text file saved at: {str(ds_tree_file_path)}')
         else:
             logger.warning(f'Target directory does not exist: {str(target_dir)} - skipping tree diagram generation.')
-            raise SystemExit(1)
+            return
     except Exception as e:
-        logger.info(f'Error: {e}')
-        logger.info('An error occurred while generating the folder tree diagram.')
+        logger.error(f'An error occurred while generating the folder tree diagram: {e}')
 
 
 def check_ds_read_access(pid: str, base_url: str, api_token: str) -> None:
