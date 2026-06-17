@@ -12,6 +12,7 @@ from pydatacuration.utils.files_checksum import FilesChecksum
 from pydatacuration.utils.search_ds_meta import get_file_list_metadata
 from pydatacuration.utils.search_ds_meta import get_file_name_from_file_list_metadata
 from pydatacuration.utils.search_ds_meta import get_file_rel_path_from_file_list_metadata
+from pydatacuration.utils.utils import get_ymdhms_timestamp
 
 
 class VerifyDownloadFiles:
@@ -62,7 +63,9 @@ class VerifyDownloadFiles:
         if diff:
             logger.warning('The downloaded files and the file list metadata are different.')
 
-            diff_log_path = (Path(self.dir_manager_instance.log_dir) / 'diff.txt').resolve()
+            diff_log_path = (
+                Path(self.dir_manager_instance.global_log_dir) / f'diff_{get_ymdhms_timestamp()}.txt'
+            ).resolve()
 
             with diff_log_path.open('w', encoding='utf-8') as file:
                 file.write(str(diff))

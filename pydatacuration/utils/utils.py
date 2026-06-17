@@ -2,6 +2,7 @@
 
 import os
 import re
+from datetime import datetime
 from pathlib import Path
 from pathlib import PurePosixPath
 from urllib.parse import urlencode
@@ -228,3 +229,12 @@ def validate_api_token(value: str | None) -> str | None:
     if value == '' and env_token:
         return env_token
     return value
+
+
+def get_ymdhms_timestamp() -> str:
+    """Get the current timestamp in YYYYMMDD_HHMMSS format.
+
+    Returns:
+        str: The current timestamp as a string.
+    """
+    return datetime.now().strftime('%Y%m%d_%H%M%S')
