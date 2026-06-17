@@ -39,7 +39,7 @@ class DuckDBBackend(DatabaseBackend):
         """
         super().__init__(schema_name)
         self.db_file = db_file
-        self._db_models = DBModels(schema_name, db_type=DBType(db_type='duckdb'))
+        self._db_models = DBModels(self.schema_name, db_type=DBType(db_type='duckdb'))
 
     # ------------------------------------------------------------------
     # Properties

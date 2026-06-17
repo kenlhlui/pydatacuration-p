@@ -40,7 +40,7 @@ class PostgreSQLBackend(DatabaseBackend):
         """
         super().__init__(schema_name)
         self.database_url = database_url
-        self._db_models = DBModels(schema_name, db_type=DBType(db_type='postgresql'))
+        self._db_models = DBModels(self.schema_name, db_type=DBType(db_type='postgresql'))
 
         # Persistent engine with connection pooling
         self._engine = create_engine(

@@ -1571,7 +1571,7 @@ requires-dist = [
     { name = "pyspellchecker", specifier = ">=0.8.1,<0.10" },
     { name = "python-docx", specifier = ">=1.1.2,<2" },
     { name = "python-dotenv", specifier = ">=1.0.1,<2" },
-    { name = "python-multipart", specifier = ">=0.0.26" },
+    { name = "python-multipart", specifier = ">=0.0.27" },
     { name = "pyyaml", specifier = ">=6.0.2,<7" },
     { name = "seedir", specifier = ">=0.5.0,<0.6" },
     { name = "sqlmodel", specifier = ">=0.0.24" },
