@@ -38,7 +38,7 @@ dependencies = [
     "sqlmodel>=0.0.24",
     "duckdb-engine>=0.17.0",
     "deptry>=0.23.1",
-    "nicegui==3.11.0",
+    "nicegui==3.13.0",
     "html-sanitizer>=2.6.0",
     "typer==0.21.1",
     "pydantic[email]>=2",
