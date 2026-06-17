@@ -249,7 +249,7 @@ def validate_project_number(value: str) -> str:
     Returns:
         str: The validated project number.
     """
-    if not re.fullmatch(r'^[A-Za-z0-9_-]+$', value):
+    if value and not re.fullmatch(r'^[A-Za-z0-9_-]+$', value):
         msg = 'Project number must only contain letters, numbers, hyphens, and underscores.'
         raise ValueError(msg)
     return value
