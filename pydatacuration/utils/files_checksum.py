@@ -5,6 +5,8 @@ from pathlib import Path
 from pathlib import PurePosixPath
 
 
+# TODO: make this module supporting more checksum algorithms (e.g. SHA256) in the future. See #465.
+# Note: Keep this as a separate module now to support further expansion of checksum algorithms.
 class FilesChecksum:
     """This class is used to generate the checksum of the files in the dataset directory."""
 

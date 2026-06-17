@@ -48,37 +48,33 @@ class VerifyDownloadFiles:
 
         return file_list_metadata_nested_list
 
-    def compare_files_and_metadata(self, dl_files_checksums: list, metadata_file_checksums: list) -> bool:
-        """Compare the downloaded files checksums and the metadata JSON file checksums.
+    def _validate_files_against_metadata(
+        self,
+        dl_files_checksums: list,
+        metadata_file_checksums: list,
+    ) -> None:
+        diff = deepdiff.DeepDiff(
+            dl_files_checksums,
+            metadata_file_checksums,
+            ignore_order=True,
+        )
 
-        Args:
-            dl_files_checksums (list): A list of dictionaries containing the file path and the checksum.
-            metadata_file_checksums (list): A list of dictionaries containing the file path and the checksum.
-
-        Returns:
-            bool: True if the downloaded files and the metadata JSON file checksums are the same, False otherwise.
-        """
-        diff = deepdiff.DeepDiff(dl_files_checksums, metadata_file_checksums, ignore_order=True)
         if diff:
             logger.warning('The downloaded files and the file list metadata are different.')
-            diff_log_path = Path(self.dir_manager_instance.log_dir / 'diff.txt').resolve()
-            with diff_log_path.open('w', encoding='utf-8') as f:
-                f.write(str(diff))
-            logger.warning(f'See the {str(diff_log_path)} file for the differences.')
-            return False
+
+            diff_log_path = (Path(self.dir_manager_instance.log_dir) / 'diff.txt').resolve()
+
+            with diff_log_path.open('w', encoding='utf-8') as file:
+                file.write(str(diff))
+
+            logger.warning(f'See {diff_log_path} for the differences.')
+
+            msg = 'Downloaded files do not match metadata checksums.'
+            raise FileMatchError(msg)
 
         logger.info('The downloaded files and the file list metadata are the same.')
-        return True
 
-    def _generate_dl_files_checksums(self) -> list:
-        """Generate the checksums of the downloaded files.
-
-        Returns:
-            list: A list of dictionaries containing the file path and the checksum.
-        """
-        return self.checksum_generator.gen_ds_files_checksum(self.dir_manager_instance.files_dir)
-
-    def verify(self) -> list | None:
+    def verify(self) -> list:
         """Verify the downloaded files against the metadata JSON file.
 
         Args:
@@ -87,8 +83,11 @@ class VerifyDownloadFiles:
         Returns:
             list | None: A list of dictionaries containing the file path and the checksum if the verification is successful, None otherwise.
         """  # noqa: E501
-        if self.compare_files_and_metadata(self._generate_dl_files_checksums(), self.file_list_metadata_nested_list):
-            logger.info('Verification successful: The downloaded files match the metadata JSON file.')
-            return self.file_list_metadata_nested_list
-        msg = 'Downloaded files do not match metadata checksums — aborting checklist generation.'
-        raise FileMatchError(msg)
+        self._validate_files_against_metadata(
+            FilesChecksum().gen_ds_files_checksum(self.dir_manager_instance.files_dir),
+            self.file_list_metadata_nested_list,
+        )
+
+        logger.info('Verification successful: The downloaded files match the metadata JSON file.')
+
+        return self.file_list_metadata_nested_list
