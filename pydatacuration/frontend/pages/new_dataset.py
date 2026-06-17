@@ -17,6 +17,7 @@ from pydatacuration.exceptions import DatasetNotFoundError
 from pydatacuration.exceptions import DatasetUnauthorizedError
 from pydatacuration.exceptions import DirectoryExistsError
 from pydatacuration.exceptions import FileMatchError
+from pydatacuration.frontend.helpers import project_number_rule
 
 # Import reusable UI elements
 from pydatacuration.frontend.reusable_elements import form_section
@@ -227,8 +228,8 @@ async def new_dataset_page() -> None:  # noqa: PLR0914
                 form_data=form_data,
                 key='project_number',
                 placeholder='PROJECT-123',
-                validation=validate_setup_form_input(SetupForm, 'project_number', required=True),
-                helper_text='Identifier for the curation report (e.g., CUR-999)',
+                validation=project_number_rule,
+                helper_text='Curation project ID (e.g., CUR-999). Use only letters, numbers, -, and _. No spaces or other characters.',  # noqa: E501
             )
 
         # Curator Information Section

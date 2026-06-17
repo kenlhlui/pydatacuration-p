@@ -238,3 +238,18 @@ def get_ymdhms_timestamp() -> str:
         str: The current timestamp as a string.
     """
     return datetime.now().strftime('%Y%m%d_%H%M%S')
+
+
+def validate_project_number(value: str) -> str:
+    """Validate project number that only allows letters, numbers, hyphens, and underscores.
+
+    Args:
+        value (str): The project number to validate.
+
+    Returns:
+        str: The validated project number.
+    """
+    if not re.fullmatch(r'^[A-Za-z0-9_-]+$', value):
+        msg = 'Project number must only contain letters, numbers, hyphens, and underscores.'
+        raise ValueError(msg)
+    return value
