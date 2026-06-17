@@ -53,9 +53,14 @@ class Exporter:
                         check_name = result.get('check_name', '')
                         row_dict.setdefault('automated_check_results', {})[check_name] = result.get('results')
 
+        checklist_items = [row.model_dump() for row in self.checklist]
+
+        # Sort the checklist items by id, ensuring that items without an id are placed at the end
+        checklist_items.sort(key=lambda x: x['id'])
+
         yaml_data = {
             'project_metadata': self.project_metadata,
-            'checklist': [item.model_dump() for item in self.checklist],
+            'checklist': checklist_items,
         }
 
         return yaml_data
