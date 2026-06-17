@@ -249,7 +249,7 @@ class DatabaseBackend(ABC):  # noqa: PLR0904
                 user_schemas = [
                     schema.split('.', 1)[1].strip('"') if '.' in schema else schema
                     for schema in all_schemas
-                    if schema not in self.system_schemas
+                    if schema.replace('"', '') not in self.system_schemas
                 ]
                 return user_schemas
         except Exception as e:
@@ -263,9 +263,10 @@ class DatabaseBackend(ABC):  # noqa: PLR0904
             schema_name (str): The schema to drop.
         """
         try:
+            normalized = schema_name.replace('.', '_')
             with self.get_connection() as (_session, engine), engine.begin() as conn:
-                conn.execute(text(f'DROP SCHEMA IF EXISTS "{schema_name}" CASCADE;'))
-                logger.info(f'Dropped schema: {schema_name}')
+                conn.execute(text(f'DROP SCHEMA IF EXISTS "{normalized}" CASCADE;'))
+                logger.info(f'Dropped schema: {normalized}')
         except Exception as e:
             logger.error(f'Error dropping schema {schema_name}: {e}')
 
