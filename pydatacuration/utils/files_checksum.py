@@ -5,6 +5,8 @@ from pathlib import Path
 from pathlib import PurePosixPath
 
 
+# TODO: make this module supporting more checksum algorithms (e.g. SHA256) in the future. See #465.
+# Note: Keep this as a separate module now to support further expansion of checksum algorithms.
 class FilesChecksum:
     """This class is used to generate the checksum of the files in the dataset directory."""
 
@@ -42,7 +44,7 @@ class FilesChecksum:
 
                 # Append the relative file path and its MD5 checksum to the result list
                 dl_file_checksum_nested_list.append(
-                    {'file': str(PurePosixPath(relative_file_path)), 'md5_checksum': self._get_md5(file_path)}
+                    {'file': str(PurePosixPath(relative_file_path)), 'checksum': self._get_md5(file_path)}
                 )
 
         return dl_file_checksum_nested_list

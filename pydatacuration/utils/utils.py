@@ -2,6 +2,7 @@
 
 import os
 import re
+from datetime import datetime
 from pathlib import Path
 from pathlib import PurePosixPath
 from urllib.parse import urlencode
@@ -75,7 +76,7 @@ def parse_file_list_metadata(file_list_metadata: list) -> list:
         filename = get_file_name_from_file_list_metadata(file_meta)
         file_full_path_obj = get_file_rel_path_from_file_list_metadata(file_meta, filename)
         file_list_metadata_nested_list.append(
-            {'file': str(PurePosixPath(file_full_path_obj)), 'md5_checksum': file_meta['dataFile']['md5']}
+            {'file': str(PurePosixPath(file_full_path_obj)), 'checksum': file_meta['dataFile']['md5']}
         )
 
     return file_list_metadata_nested_list
@@ -228,3 +229,12 @@ def validate_api_token(value: str | None) -> str | None:
     if value == '' and env_token:
         return env_token
     return value
+
+
+def get_ymdhms_timestamp() -> str:
+    """Get the current timestamp in YYYYMMDD_HHMMSS format.
+
+    Returns:
+        str: The current timestamp as a string.
+    """
+    return datetime.now().strftime('%Y%m%d_%H%M%S')

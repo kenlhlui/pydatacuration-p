@@ -218,32 +218,32 @@ class DirectoryManager:
 
     @property
     def log_dir(self) -> Path:
-        """Get logs directory path."""
+        """Get log directory of a project path."""
         return self.get_dir('logs')
 
     @property
     def db_dir(self) -> Path:
-        """Get database directory path."""
+        """Get the global database directory path."""
         return self.get_dir('db')
 
     @property
     def db_path(self) -> Path:
-        """Get database file path."""
+        """Get the global database file path."""
         return self._define_db_path()
 
     @property
     def outputs_dir(self) -> Path:
-        """Get outputs directory path."""
+        """Get outputs directory of a project path."""
         return self.get_dir('outputs')
 
     @property
     def metadata_dir(self) -> Path:
-        """Get metadata directory path."""
+        """Get metadata directory of a project path."""
         return self.get_dir('dataset/metadata')
 
     @property
     def files_dir(self) -> Path:
-        """Get files directory path."""
+        """Get files directory of a project path."""
         return self.get_dir('dataset/files')
 
     @property
@@ -258,3 +258,8 @@ class DirectoryManager:
             msg = 'res_dir is not set'
             raise ValueError(msg)
         return Path(self.res_dir).resolve()
+
+    @property
+    def global_log_dir(self) -> Path:
+        """Get global log directory path."""
+        return self.main_dir_path / 'logs'
