@@ -11,11 +11,13 @@ from pydantic import HttpUrl
 from pydantic import TypeAdapter
 from pydantic import ValidationError
 from pydantic import field_serializer
+from pydantic import field_validator
 from pydantic_settings import BaseSettings
 from pydantic_settings import SettingsConfigDict
 
 from pydatacuration.backend.models.directory_defaults import MainDir
 from pydatacuration.backend.models.directory_defaults import ResDir
+from pydatacuration.utils.utils import validate_project_number
 
 
 class SetupBase(BaseModel):
@@ -34,6 +36,12 @@ class SetupBase(BaseModel):
     force_delete: bool = False
     check_zip: bool = True
     checklist: str = ''
+
+    @field_validator('project_number')
+    @classmethod
+    def validate_project_number(cls, value: str) -> str:
+        """Validate the project number format."""
+        return validate_project_number(value)
 
 
 class SetupForm(SetupBase, MainDir, ResDir):

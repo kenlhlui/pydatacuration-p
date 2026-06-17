@@ -30,7 +30,8 @@ class DatabaseBackend(ABC):  # noqa: PLR0904
         Args:
             schema_name (str): The name of the schema to use.
         """
-        self.schema_name = schema_name
+        # ponytail: dots split as catalog.schema in duckdb-engine; replace to keep as single identifier.
+        self.schema_name = schema_name.replace('.', '_')
 
     # ------------------------------------------------------------------
     # Properties that subclasses must provide
@@ -243,7 +244,13 @@ class DatabaseBackend(ABC):  # noqa: PLR0904
             with self.get_readonly_connection() as (_session, engine):
                 inspector = inspect(engine)
                 all_schemas = inspector.get_schema_names()
-                user_schemas = [schema for schema in all_schemas if schema not in self.system_schemas]
+                # ponytail: duckdb-engine returns 'catalog."schema"' format; strip both so callers
+                # get bare names that round-trip safely through get_database(schema_name=...).
+                user_schemas = [
+                    schema.split('.', 1)[1].strip('"') if '.' in schema else schema
+                    for schema in all_schemas
+                    if schema.replace('"', '') not in self.system_schemas
+                ]
                 return user_schemas
         except Exception as e:
             logger.error(f'Error fetching schema names: {e}')
@@ -256,9 +263,10 @@ class DatabaseBackend(ABC):  # noqa: PLR0904
             schema_name (str): The schema to drop.
         """
         try:
+            normalized = schema_name.replace('.', '_')
             with self.get_connection() as (_session, engine), engine.begin() as conn:
-                conn.execute(text(f'DROP SCHEMA IF EXISTS "{schema_name}" CASCADE;'))
-                logger.info(f'Dropped schema: {schema_name}')
+                conn.execute(text(f'DROP SCHEMA IF EXISTS "{normalized}" CASCADE;'))
+                logger.info(f'Dropped schema: {normalized}')
         except Exception as e:
             logger.error(f'Error dropping schema {schema_name}: {e}')
 

@@ -30,7 +30,7 @@ def write_project_metadata_to_db(
         project_metadata_schema = db_instance.models.project_metadata_record()
 
         # Extract the necessary metadata from the checker instance
-        project_number = db_instance.schema_name
+        project_number = setup_form_instance.project_number
         curator_name: str | None = setup_form_instance.curator_name
         curator_email: str | None = setup_form_instance.curator_email
         dataset_title = get_ds_title(checker.ds_metadata)

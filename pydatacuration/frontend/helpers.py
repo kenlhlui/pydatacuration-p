@@ -19,6 +19,7 @@ from pydatacuration.db import get_database
 from pydatacuration.db import get_db_type
 from pydatacuration.services.exporter import Exporter
 from pydatacuration.utils.directory_manager import DirectoryManager
+from pydatacuration.utils.utils import validate_project_number
 
 
 # Type alias for checklist items - uses dummy schema for type hints only
@@ -471,3 +472,27 @@ def back_to_main_menu_button() -> None:
     """Create a centered 'Back to Main Menu' button."""
     with ui.row().classes('justify-left my-4'):
         ui.button('← Back', on_click=lambda: ui.navigate.to('/')).classes('pdc-btn')
+
+
+# ============================================================================
+# Validation functions for NiceGUI inputs
+# ============================================================================
+def project_number_rule(v: str) -> str | None:
+    """Validate project number input for NiceGUI forms.
+
+     - Must not be empty
+     - Must match the expected format (validated by validate_project_number)
+
+    Args:
+        v (str): The project number input value.
+
+    Returns:
+        str | None: An error message if validation fails, or None if validation passes.
+    """
+    if not v:
+        return 'This field is required'
+    try:
+        validate_project_number(v)
+        return None
+    except ValueError as e:
+        return str(e)
