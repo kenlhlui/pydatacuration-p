@@ -153,12 +153,6 @@ class NiceGUIHelper:  # noqa: PLR0904
         seconds = total_seconds % 60
         return f'{hours:02d}:{minutes:02d}:{seconds:02d}'
 
-    def calculate_total_time(
-        self,
-    ) -> None:
-        """Calculate total time spent."""
-        ui.notify(f'Total Time Spent: {self.get_total_time_str()}', type='info', position='top')
-
     @staticmethod
     def validate_time_format(time_str: str) -> bool:
         """Validate MM:SS format."""
