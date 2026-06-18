@@ -29,7 +29,7 @@ class ChecklistYAMLItem(BaseModel):
 
     model_config = ConfigDict(extra='forbid')
 
-    id: str = Field(..., description='The unique identifier for the checklist item.')
+    id: int | float = Field(..., description='The unique identifier for the checklist item.')
     action: str = Field(..., description='The action to be taken for the checklist item.')
     instructions: str | None = Field(None, description='Instructions for completing the checklist item.')
     priority: str = Field(..., description='The priority of the checklist item.')
