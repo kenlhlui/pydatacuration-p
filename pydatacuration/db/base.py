@@ -271,7 +271,12 @@ class DatabaseBackend(ABC):  # noqa: PLR0904
             logger.error(f'Error dropping schema {schema_name}: {e}')
 
     def update_checklist_item(
-        self, item_id: str, status: str | None = None, comments: str | None = None, time_spent: timedelta | None = None
+        self,
+        item_id: str,
+        status: str | None = None,
+        comments: str | None = None,
+        time_spent: timedelta | None = None,
+        clear_time_spent: bool = False,
     ) -> bool:
         """Update a checklist item in the database.
 
@@ -280,6 +285,7 @@ class DatabaseBackend(ABC):  # noqa: PLR0904
             status (str, optional): The status value (P, F, TBD, NA).
             comments (str, optional): The comments value.
             time_spent (timedelta, optional): The time spent value.
+            clear_time_spent (bool, optional): If True, sets time_spent to None regardless of the time_spent argument.
 
         Returns:
             bool: True if update was successful, False otherwise.
@@ -303,9 +309,9 @@ class DatabaseBackend(ABC):  # noqa: PLR0904
                     existing_item.comments = comments
                     logger.debug(f'Updated comments for item {item_id}')
 
-                if time_spent is not None and hasattr(existing_item, 'time_spent'):
-                    existing_item.time_spent = time_spent
-                    logger.debug(f'Updated time_spent for item {item_id}: {time_spent}')
+                if (time_spent is not None or clear_time_spent) and hasattr(existing_item, 'time_spent'):
+                    existing_item.time_spent = None if clear_time_spent else time_spent
+                    logger.debug(f'Updated time_spent for item {item_id}: {existing_item.time_spent}')
 
                 if hasattr(existing_item, 'last_modified_datetime'):
                     existing_item.last_modified_datetime = datetime.now()

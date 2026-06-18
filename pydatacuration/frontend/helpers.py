@@ -86,13 +86,14 @@ class NiceGUIHelper:  # noqa: PLR0904
 
     def handle_time_change(self, item_id: str, time_spent_input: str) -> None:
         """Handle time change with validation."""
-        if self.validate_time_format(time_spent_input):
-            # Turn the MM:SS string into a timedelta
-            # Parse MM:SS format directly (e.g., "06:30" = 6 minutes, 30 seconds)
+        if not time_spent_input:
+            self.db.update_checklist_item(item_id=item_id, clear_time_spent=True)
+            ui.notify(f'Time cleared for {item_id}', type='positive', position='top-right', close_button=True)
+            if self.refresh_callback:
+                self.refresh_callback()
+        elif self.validate_time_format(time_spent_input):
             parts = time_spent_input.split(':')
-            minutes = int(parts[0])
-            seconds = int(parts[1])
-            time_spent_delta: timedelta = timedelta(minutes=minutes, seconds=seconds)
+            time_spent_delta: timedelta = timedelta(minutes=int(parts[0]), seconds=int(parts[1]))
             self.db.update_checklist_item(item_id=item_id, time_spent=time_spent_delta)
             ui.notify(f'Time updated for {item_id}', type='positive', position='top-right', close_button=True)
             if self.refresh_callback:
