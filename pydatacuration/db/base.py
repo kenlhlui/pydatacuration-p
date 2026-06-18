@@ -451,11 +451,12 @@ class DatabaseBackend(ABC):  # noqa: PLR0904
         try:
             with self.get_connection() as (session, _engine):
                 checklist_model = self.models.checklist()
-                comment_counts = session.exec(
-                    select(checklist_model.comments).where(checklist_model.comments != None)  # noqa: E711
-                ).all()
-                count = len(comment_counts)
-                logger.debug(f'Comment input count: {count}')
+                count = session.exec(
+                    select(func.count()).where(
+                        checklist_model.comments.is_not(None),
+                        func.trim(checklist_model.comments) != '',  # noqa: PLC1901
+                    )
+                ).one()
                 return count
         except Exception as e:
             logger.error(f'Error getting comment input count: {e}')
