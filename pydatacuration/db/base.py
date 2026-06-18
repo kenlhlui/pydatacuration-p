@@ -431,10 +431,9 @@ class DatabaseBackend(ABC):  # noqa: PLR0904
         try:
             with self.get_connection() as (session, _engine):
                 checklist_model = self.models.checklist()
-                time_spent_counts = session.exec(
-                    select(checklist_model.time_spent).where(checklist_model.time_spent != None)  # noqa: E711
-                ).all()
-                count = len(time_spent_counts)
+                count = session.exec(
+                    select(func.count(checklist_model.time_spent)).where(checklist_model.time_spent != None)  # noqa: E711
+                ).one()
                 logger.debug(f'Time spent input count: {count}')
                 return count
         except Exception as e:
