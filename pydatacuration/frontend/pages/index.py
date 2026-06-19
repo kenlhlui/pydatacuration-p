@@ -1,19 +1,10 @@
-# ruff: noqa: PLR1702
+"""The home page of the application, providing options to start a new project, resume work, or delete a project."""
 
 from nicegui import ui
 
-# Import the API router from the backend module
 from pydatacuration.backend.models.app_settings import AppSettings
 from pydatacuration.frontend.styles import MAIN_PAGE_HEAD_CSS
-
-# Import exceptions for error handling
-# Import styles and styled components
 from pydatacuration.frontend.styles import apply_pdc_styles
-
-
-# Import the typer app for CLI command execution
-
-# Import pydatacuration modules
 
 
 # ============================================================================
