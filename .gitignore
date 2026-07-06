@@ -201,3 +201,6 @@ dataverse/dataverse-sample-data/dvconfig.py
 
 # pgadmin folders
 pgadmin/
+
+# node_modules
+node_modules/
