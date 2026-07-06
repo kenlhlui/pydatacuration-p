@@ -1,0 +1,1 @@
+deno task --eval --quiet commitlint --edit $1
