@@ -1,7 +1,28 @@
 """Module to process OAI-ORE metadata files and get the dataset path."""
 
+from loguru import logger
+from pydantic import BaseModel
+from pydantic import Field
+from pydantic import ValidationError
 
-def _extract_path(node: dict, dataset_name: str | None) -> str:
+
+class OaiOreDescribes(BaseModel):
+    model_config = {'extra': 'allow'}
+
+    schema_name: str | None = Field(alias='schema:name', default=None)
+    schema_is_part_of: dict | None = Field(
+        alias='schema:isPartOf',
+        default=None,
+    )
+
+
+class OaiOre(BaseModel):
+    model_config = {'extra': 'allow'}
+
+    ore_describes: OaiOreDescribes = Field(alias='ore:describes')
+
+
+def _extract_path(node: dict | None, dataset_name: str | None) -> str:
     """Walk schema:isPartOf chain from leaf to root, return ordered path."""
     names = []
     current = node
@@ -14,10 +35,12 @@ def _extract_path(node: dict, dataset_name: str | None) -> str:
 
 def get_path_from_oaiore(oai_ore_metadata: dict) -> str | None:
     """Extract the dataset path from the OAI-ORE metadata, or None if not nested in a collection."""
-    if not isinstance(oai_ore_metadata, dict):
+    try:
+        ore = OaiOre.model_validate(oai_ore_metadata)
+    except ValidationError as e:
+        logger.error(f'Error validating OAI-ORE metadata: {e}. No dataset path can be extracted.')
         return None
-    describes = oai_ore_metadata.get('ore:describes', {})
-    ispartof = describes.get('schema:isPartOf')
-    if not ispartof:
-        return None
-    return _extract_path(ispartof, describes.get('schema:name'))
+
+    describes = ore.ore_describes
+    ispartof = describes.schema_is_part_of
+    return _extract_path(ispartof, describes.schema_name)
