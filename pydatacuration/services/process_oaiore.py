@@ -7,6 +7,8 @@ from pydantic import ValidationError
 
 
 class OaiOreDescribes(BaseModel):
+    """Model for the 'ore:describes' part of OAI-ORE metadata."""
+
     model_config = {'extra': 'allow'}
 
     schema_name: str | None = Field(alias='schema:name', default=None)
@@ -17,6 +19,8 @@ class OaiOreDescribes(BaseModel):
 
 
 class OaiOre(BaseModel):
+    """Model for OAI-ORE metadata."""
+
     model_config = {'extra': 'allow'}
 
     ore_describes: OaiOreDescribes = Field(alias='ore:describes')
