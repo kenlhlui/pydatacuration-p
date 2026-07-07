@@ -137,9 +137,12 @@ class Downloads:
         ds_metadata = await asyncio.to_thread(self.dv_api_calls.get_ds_metadata, self.pid)
         self.export_metadata('ds_metadata.json', ds_metadata)
 
-        # Get the tree structure of the whole dataverse repository (sync HTTP — can be slow for large repos)
-        dv_tree = await asyncio.to_thread(self.dv_api_calls.get_dv_tree)
-        self.export_metadata('dv_tree.json', dv_tree)
+        # Get the oai-ore metadata (sync HTTP — offloaded to thread to avoid blocking event loop)
+        oai_ore_metadata = await asyncio.to_thread(self.dv_api_calls.get_ds_export_metadata, self.pid)
+        if oai_ore_metadata.json():
+            self.export_metadata('oai_ore_metadata.json', oai_ore_metadata.json())
+        else:
+            logger.warning(f'OAI-ORE metadata not found for PID {self.pid}.')
 
         # Download the data files using async method
         file_list = get_file_list(ds_metadata)

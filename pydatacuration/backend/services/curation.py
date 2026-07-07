@@ -18,11 +18,9 @@ from pydatacuration.exceptions import DatasetNotFoundError
 from pydatacuration.exceptions import DatasetUnauthorizedError
 from pydatacuration.exceptions import DirectoryExistsError
 from pydatacuration.services.api_calls.downloads import Downloads
-from pydatacuration.services.dataset_tree_info import DatasetTreeInfo
+from pydatacuration.services.process_oaiore import get_path_from_oaiore
 from pydatacuration.services.verify_download_files import VerifyDownloadFiles
 from pydatacuration.utils.directory_manager import DirectoryManager
-from pydatacuration.utils.search_ds_meta import get_dataset_id
-from pydatacuration.utils.search_ds_meta import get_ds_title
 from pydatacuration.utils.utils import check_ds_read_access
 
 
@@ -110,25 +108,15 @@ def check_curation(body: SetupForm) -> None:
         with Path(dir_manager_instance.metadata_dir, 'ds_metadata.json').open('rb') as f:
             ds_metadata = orjson.loads(f.read())
 
-        # Read the dataverse tree file
-        with Path(dir_manager_instance.metadata_dir, 'dv_tree.json').open('rb') as f:
-            dv_tree = orjson.loads(f.read())
-
         checker = Checker(
             ds_metadata=ds_metadata,
             db_instance=db,
             setup_form_instance=body,
             directory_manager_instance=dir_manager_instance,
         )
-        dataset_search_result = checker.dataverse_client.search_dataset_by_version_id(
-            get_dataset_id(ds_metadata),
-        )
 
-        dataset_identifier = DatasetTreeInfo.get_dataset_identifier_from_search_result(dataset_search_result)
-
-        tree_info = DatasetTreeInfo(dv_tree=dv_tree).get_ds_tree_info(dataset_identifier)
-
-        dataset_path = DatasetTreeInfo.get_ds_path(tree_info, get_ds_title(ds_metadata))
+        oai_ore_metadata = orjson.loads(Path(dir_manager_instance.metadata_dir, 'oai_ore_metadata.json').read_bytes())
+        dataset_path = get_path_from_oaiore(oai_ore_metadata)
 
         # Setup writes — before checks run
         write_project_metadata_to_db(db, checker, dataset_path, body)
