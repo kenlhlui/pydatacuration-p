@@ -132,7 +132,7 @@ class Downloads:
             logger.error(f'An error occurred: {e}')
 
     async def downloader(self) -> dict:
-        """Download the dataset as a zip file asynchronously."""
+        """Download the dataset and accompanying metadata from the Dataverse repository."""
         # Get the dataset metadata (sync HTTP — offloaded to thread to avoid blocking event loop)
         ds_metadata = await asyncio.to_thread(self.dv_api_calls.get_ds_metadata, self.pid)
         self.export_metadata('ds_metadata.json', ds_metadata)
