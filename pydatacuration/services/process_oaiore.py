@@ -24,13 +24,17 @@ class OaiOre(BaseModel):
 
 def _extract_path(node: dict | None, dataset_name: str | None) -> str:
     """Walk schema:isPartOf chain from leaf to root, return ordered path."""
-    names = []
+    names: list[str] = []
     current = node
     while current:
-        names.append(current.get('schema:name'))
+        name = current.get('schema:name')
+        if name:
+            names.append(name)
         current = current.get('schema:isPartOf')
-    collections_path = '/'.join(reversed(names))
-    return f'{collections_path}/{dataset_name}' if dataset_name else collections_path
+    names.reverse()
+    if dataset_name:
+        names.append(dataset_name)
+    return '/'.join(names)
 
 
 def get_path_from_oaiore(oai_ore_metadata: dict) -> str | None:
