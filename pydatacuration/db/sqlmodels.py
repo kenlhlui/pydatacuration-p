@@ -111,9 +111,9 @@ class DBModels:
             dataset_url: str = Field(
                 default='', sa_column=Column(String, nullable=False), description='URL of the dataset'
             )
-            dataset_path: str = Field(
-                default='',
-                sa_column=Column(String, nullable=False),
+            dataset_path: str | None = Field(
+                default=None,
+                sa_column=Column(String, nullable=True),
                 description='Path of the dataset in the repository',
             )
             checklist_type: str = Field(

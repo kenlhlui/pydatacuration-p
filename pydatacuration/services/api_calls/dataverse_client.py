@@ -104,3 +104,22 @@ class DataverseClient:
         endpoint = f'/api/datasets/:persistentId/?persistentId={pid}'
 
         return self.httpx_client.sync_get(endpoint, raise_for_status=False)
+
+    def get_ds_export_metadata(
+        self, pid: str, exporter: str = 'OAI_ORE', version: str | None = ':latest'
+    ) -> httpx2.Response:
+        """Get the exported metadata of a dataset.
+
+        Args:
+            pid (str): Persistent identifier of the dataset
+            exporter (str): The exporter to use for the metadata export
+            version (str | None): The version of the dataset to export
+
+        Returns:
+            httpx2.Response: The HTTP response containing the exported metadata
+        """
+        endpoint = f'/api/datasets/export?exporter={exporter}&persistentId={pid}'
+        if version:
+            endpoint += f'&version={version}'
+
+        return self.httpx_client.sync_get(endpoint, raise_for_status=False)

@@ -15,7 +15,7 @@ from pydatacuration.utils.utils import parse_dataset_url
 
 # The below writes the to the database database
 def write_project_metadata_to_db(
-    db_instance: DatabaseBackend, checker: Checker, dataset_path: str, setup_form_instance: SetupForm
+    db_instance: DatabaseBackend, checker: Checker, dataset_path: str | None, setup_form_instance: SetupForm
 ) -> None:
     """Write the project metadata to the database.
 
