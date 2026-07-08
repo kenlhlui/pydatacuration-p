@@ -115,8 +115,6 @@ def check_curation(body: SetupForm) -> None:
             directory_manager_instance=dir_manager_instance,
         )
 
-        logger.debug(f'The dataset metadata before get_dataset_path: {ds_metadata}')
-
         dataset_path = get_dataset_path(ds_metadata)
 
         # Setup writes — before checks run
