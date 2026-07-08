@@ -18,9 +18,9 @@ from pydatacuration.exceptions import DatasetNotFoundError
 from pydatacuration.exceptions import DatasetUnauthorizedError
 from pydatacuration.exceptions import DirectoryExistsError
 from pydatacuration.services.api_calls.downloads import Downloads
-from pydatacuration.services.process_oaiore import get_path_from_oaiore
 from pydatacuration.services.verify_download_files import VerifyDownloadFiles
 from pydatacuration.utils.directory_manager import DirectoryManager
+from pydatacuration.utils.search_ds_meta import get_dataset_path
 from pydatacuration.utils.utils import check_ds_read_access
 
 
@@ -115,8 +115,7 @@ def check_curation(body: SetupForm) -> None:
             directory_manager_instance=dir_manager_instance,
         )
 
-        oai_ore_metadata = orjson.loads(Path(dir_manager_instance.metadata_dir, 'oai_ore_metadata.json').read_bytes())
-        dataset_path = get_path_from_oaiore(oai_ore_metadata)
+        dataset_path = get_dataset_path(ds_metadata)
 
         # Setup writes — before checks run
         write_project_metadata_to_db(db, checker, dataset_path, body)

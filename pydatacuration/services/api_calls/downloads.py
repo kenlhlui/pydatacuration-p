@@ -137,13 +137,6 @@ class Downloads:
         ds_metadata = await asyncio.to_thread(self.dv_api_calls.get_ds_metadata, self.pid)
         self.export_metadata('ds_metadata.json', ds_metadata)
 
-        # Get the oai-ore metadata (sync HTTP — offloaded to thread to avoid blocking event loop)
-        oai_ore = await asyncio.to_thread(self.dv_api_calls.get_ds_export_metadata, self.pid)
-        if oai_ore.is_success and oai_ore.json():
-            self.export_metadata('oai_ore_metadata.json', oai_ore.json())
-        else:
-            logger.warning(f'OAI-ORE metadata not found for PID {self.pid}.')
-
         # Download the data files using async method
         file_list = get_file_list(ds_metadata)
         await asyncio.to_thread(self.make_dir_structure, ds_metadata)
