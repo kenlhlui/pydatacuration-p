@@ -1,5 +1,6 @@
 """A collection of functions that outputs the values of the nested dataset metadata file."""
 
+from collections.abc import Mapping
 from pathlib import Path
 
 import jmespath
@@ -284,3 +285,38 @@ def get_dataset_id(ds_metadata: dict) -> int:
         ds_metadata (dict): The dataset metadata dictionary.
     """
     return ds_metadata.get('data', {}).get('latestVersion', {}).get('id')
+
+
+def get_dataset_path(ds_metadata: dict) -> str | None:
+    """Get the dataset path from a nested isPartOf chain.
+
+    Args:
+        ds_metadata (dict): Dataset metadata containing
+            the nested isPartOf chain.
+
+    Returns:
+        str | None: The dataset path, or None if it cannot be built.
+    """
+    current = ds_metadata.get('data', {}).get('isPartOf')
+    if not isinstance(current, Mapping):
+        return None
+
+    names: list[str] = []
+
+    while isinstance(current, Mapping):
+        display_name = current.get('displayName')
+        if isinstance(display_name, str) and display_name:
+            names.append(display_name)
+
+        next_node = current.get('isPartOf')
+        if not isinstance(next_node, Mapping):
+            break
+
+        current = next_node
+
+    if not names:
+        return None
+
+    if title := get_ds_title(ds_metadata):
+        names.insert(0, title)
+    return '/'.join(reversed(names))

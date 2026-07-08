@@ -20,16 +20,18 @@ class DataverseClient:
         """Initialize the DataverseClient class."""
         self.httpx_client = httpx_client
 
-    def get_ds_metadata(self, pid: str) -> dict:
+    def get_ds_metadata(self, pid: str, return_owners: bool = True) -> dict:
         """Get metadata of a dataset.
 
         Args:
             pid (str): Persistent identifier of the dataset
+            return_owners (bool): Whether to return owner (i.e. dataverse collection path) information
 
         Returns:
             dict: Metadata of the dataset
         """
         endpoint = f'/api/datasets/:persistentId/?persistentId={pid}'
+        endpoint += '&returnOwners=true' if return_owners else ''
 
         logger.info(f'Fetching dataset metadata from {endpoint}...')
         response = self.httpx_client.sync_get(endpoint)
