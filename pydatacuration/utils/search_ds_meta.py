@@ -317,6 +317,5 @@ def get_dataset_path(ds_metadata: dict) -> str | None:
     if not names:
         return None
 
-    if title := get_ds_title(ds_metadata):
-        names.insert(0, title)
+    names.insert(0, get_ds_title(ds_metadata))
     return '/'.join(reversed(names))
