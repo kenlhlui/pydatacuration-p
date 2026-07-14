@@ -122,6 +122,22 @@ def floating_menu(
         position (PageStickyPositions): The position of the floating menu.
 
     """
-    with ui.page_sticky(position=position), ui.fab(icon='menu', direction='up', label=menu_label):
+    with (
+        ui.page_sticky(position=position).classes('pdc-show-on-scroll'),
+        ui.fab(icon='menu', direction='up', label=menu_label),
+    ):
         for label, action in actions.items():
             ui.fab_action(icon='', label=label, on_click=action)
+    ui.add_head_html("""<script>
+    var pdcScrollTimer;
+    document.addEventListener('scroll', () => {
+        document.querySelectorAll('.pdc-show-on-scroll').forEach(el => el.classList.add('pdc-scrolling'));
+        clearTimeout(pdcScrollTimer);
+        pdcScrollTimer = setTimeout(() => {
+            document.querySelectorAll('.pdc-show-on-scroll').forEach(el => {
+                if (!el.querySelector('.q-fab--opened'))  // keep visible while the menu is open
+                    el.classList.remove('pdc-scrolling');
+            });
+        }, 1500);
+    }, {capture: true, passive: true});
+    </script>""")
