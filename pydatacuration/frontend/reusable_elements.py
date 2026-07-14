@@ -123,7 +123,7 @@ def floating_menu(
 
     """
     with (
-        ui.page_sticky(position=position).classes('pdc-show-on-scroll'),
+        ui.page_sticky(position=position, y_offset=20).classes('pdc-show-on-scroll'),
         ui.fab(icon='menu', direction='up', label=menu_label),
     ):
         for label, action in actions.items():
