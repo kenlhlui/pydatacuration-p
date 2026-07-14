@@ -102,7 +102,7 @@ class NiceGUIHelper:  # noqa: PLR0904
         else:
             ui.notify('Please enter time in MM:SS format', type='negative')
 
-    def render_status_progress(self, color_map: dict[str, tuple[str, str]] | None = None) -> None:
+    def render_status_progress(self, color_map: dict[str, str] | None = None) -> None:
         """Render circular progress indicators for each status count."""
         status_counts = self.db.get_status_count()
         total = sum(status_counts.values())
@@ -117,8 +117,7 @@ class NiceGUIHelper:  # noqa: PLR0904
         for status, count in status_counts.items():
             label = status or 'No Status'
             value = round((count / total * 100), 1) if total > 0 else 0
-            # color_map maps status label → (bg_color, text_color); fall back to 'primary'
-            color = color_map[label][0] if (color_map and label in color_map) else 'primary'
+            color = color_map[label] if (color_map and label in color_map) else 'primary'
             with ui.column().classes('flex-1 items-center gap-1'):
                 with ui.element('div').classes('relative'):
                     ui.circular_progress(

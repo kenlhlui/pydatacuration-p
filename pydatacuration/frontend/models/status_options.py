@@ -22,13 +22,13 @@ class StatusOptions(BaseModel):
     )
     NA: str = Field('Not Applicable', alias='Not Applicable', description='Checklist item is not applicable.')
 
-    def color_map(self) -> dict[str, tuple[str, str]]:
-        """Map each label to (background_color, text_color)."""
+    def color_map(self) -> dict[str, str]:
+        """Map each label to text_color."""
         return {
-            self.Pass: ('#556B2F', '#ffffff00'),
-            self.Follow_up: ('#C8102E', '#ffffff00'),
-            self.TBD: ('#E35205', '#ffffff00'),
-            self.NA: ('#333333', '#ffffff00'),
+            self.Pass: ('#556B2F'),
+            self.Follow_up: ('#C8102E'),
+            self.TBD: ('#E35205'),
+            self.NA: ('#222222'),
         }
 
 
@@ -37,9 +37,9 @@ class CustomStatusOptions(RootModel[dict[str, str]]):
 
     root: dict[str, str]
 
-    def color_map(self) -> dict[str, tuple[str, str]]:
+    def color_map(self) -> dict[str, str]:
         """Neutral fallback color for all custom labels."""
-        return dict.fromkeys(self.root.values(), ('#e2e3e5', '#383d41'))
+        return dict.fromkeys(self.root.values(), ('#e2e3e5'))
 
 
 def load_status_options(res_dir: str | Path) -> StatusOptions | CustomStatusOptions:

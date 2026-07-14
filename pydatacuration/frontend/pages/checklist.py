@@ -297,7 +297,7 @@ async def render_checklist_table(  # noqa: PLR0913, PLR0912, PLR0915, C901, PLR0
     check_results: dict[str, str],
     project_number: str,
     status_options: list,
-    status_color_map: dict[str, tuple[str, str]] | None = None,
+    status_color_map: dict[str, str] | None = None,
     helpers: NiceGUIHelper | None = None,
     item_rows: dict | None = None,
     section_header_rows: dict | None = None,
