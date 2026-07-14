@@ -5,6 +5,7 @@ from collections.abc import Callable
 from collections.abc import Generator
 
 from nicegui import ui
+from nicegui.elements.page_sticky import PageStickyPositions
 
 
 @contextlib.contextmanager
@@ -110,13 +111,17 @@ def dropdown_menu(label: str, options: list) -> ui.select:
         return value
 
 
-def floating_menu(actions: dict[str, Callable[[], None]]) -> None:
+def floating_menu(
+    actions: dict[str, Callable[[], None]], menu_label: str = '', position: PageStickyPositions = 'bottom'
+) -> None:
     """Create a floating menu with a button that opens a dropdown menu.
 
     Args:
         actions: Mapping of menu label to click callback.
+        menu_label: The label for the floating menu button.
+        position (PageStickyPositions): The position of the floating menu.
 
     """
-    with ui.page_sticky(position='bottom'), ui.fab(icon='menu'):
+    with ui.page_sticky(position=position), ui.fab(icon='menu', direction='up', label=menu_label):
         for label, action in actions.items():
             ui.fab_action(icon='', label=label, on_click=action)

@@ -277,11 +277,14 @@ async def checklist_page(project_number: str, view_only: bool = False) -> None:
         priority_filter.on('update:model-value', apply_filters)
 
         # Floating menu
-        floating_menu({
-            'Save Curation Log (Word)': lambda: NiceGUIHelper.export_word(db, dir_manager),
-            'Export YAML': lambda: NiceGUIHelper.export_yaml_button(db, dir_manager),
-            'New Dataset': helpers.confirm_new_dataset,
-        })
+        floating_menu(
+            {
+                'Save Curation Log (Word)': lambda: NiceGUIHelper.export_word(db, dir_manager),
+                'Export YAML': lambda: NiceGUIHelper.export_yaml_button(db, dir_manager),
+                'New Dataset': helpers.confirm_new_dataset,
+            },
+            'Actions',
+        )
 
 
 async def render_checklist_table(  # noqa: PLR0913, PLR0912, PLR0915, C901, PLR0917
