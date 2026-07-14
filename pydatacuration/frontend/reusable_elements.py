@@ -108,3 +108,15 @@ def dropdown_menu(label: str, options: list) -> ui.select:
         ui.label(label).classes('pdc-form-label')
         value = ui.select(options, value=None, with_input=False).classes('pdc-input').style('width: 100%;')
         return value
+
+
+def floating_menu(actions: dict[str, Callable[[], None]]) -> None:
+    """Create a floating menu with a button that opens a dropdown menu.
+
+    Args:
+        actions: Mapping of menu label to click callback.
+
+    """
+    with ui.page_sticky(position='bottom'), ui.fab(icon='menu'):
+        for label, action in actions.items():
+            ui.fab_action(icon='', label=label, on_click=action)

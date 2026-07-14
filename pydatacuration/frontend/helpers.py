@@ -340,14 +340,12 @@ class NiceGUIHelper:  # noqa: PLR0904
 
                 except Exception as e:
                     logger.error(f'Could not get metadata for schema {schema_name}: {e}')
-                    project_metadata_schema.append(
-                        {
-                            'project_number': schema_name.replace('duckdb.', '').replace('"', ''),
-                            'name': schema_name,
-                            'last_modified': 'Unknown',
-                            'has_metadata': False,
-                        }
-                    )
+                    project_metadata_schema.append({
+                        'project_number': schema_name.replace('duckdb.', '').replace('"', ''),
+                        'name': schema_name,
+                        'last_modified': 'Unknown',
+                        'has_metadata': False,
+                    })
 
             # Sort by last modified (most recent first)
             project_metadata_schema.sort(key=lambda x: x['last_modified'], reverse=True)
@@ -421,9 +419,7 @@ class NiceGUIHelper:  # noqa: PLR0904
         return True, f'Project {schema_name_pruned} deleted successfully'
 
     @staticmethod
-    def export_word_button(
-        db: DatabaseBackend, dir_manager: DirectoryManager, word_template_name: str | None = None
-    ) -> None:
+    def export_word(db: DatabaseBackend, dir_manager: DirectoryManager, word_template_name: str | None = None) -> None:
         """Save curation report to Word."""
         exporter = Exporter(db, dir_manager)
         exporter.export_word(word_template_name=word_template_name)

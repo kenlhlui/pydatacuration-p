@@ -19,6 +19,7 @@ from pydatacuration.frontend.models.status_options import load_status_options
 # Import the reusable elements
 from pydatacuration.frontend.reusable_elements import action_button
 from pydatacuration.frontend.reusable_elements import dropdown_menu
+from pydatacuration.frontend.reusable_elements import floating_menu
 from pydatacuration.frontend.reusable_elements import form_section
 
 # Import reusable components
@@ -81,7 +82,8 @@ async def checklist_page(project_number: str, view_only: bool = False) -> None:
 
     # Sticky view-only banner — outside pdc-container so fixed positioning works correctly
     with (
-        ui.element('div')
+        ui
+        .element('div')
         .classes('warning-banner')
         .style(
             'position: fixed; top: 0; left: 0; right: 0; z-index: 1000; '
@@ -177,7 +179,6 @@ async def checklist_page(project_number: str, view_only: bool = False) -> None:
                     el.props(remove='readonly')
             for btn in timer_buttons:
                 btn.set_visibility(not active)
-            action_button_div.set_visibility(not active)
 
         # Status and time dashboard with view-only toggle
         @ui.refreshable
@@ -275,13 +276,12 @@ async def checklist_page(project_number: str, view_only: bool = False) -> None:
         status_filter.on('update:model-value', apply_filters)
         priority_filter.on('update:model-value', apply_filters)
 
-        # Action Buttons — always rendered so toggle_view_only can show/hide
-        with ui.element('div').classes('pdc-actions') as action_button_div:
-            action_button('Save Curation Log (Word)', lambda: NiceGUIHelper.export_word_button(db, dir_manager))
-            # action_button('Calculate Time Spent', lambda: helpers.calculate_total_time)
-            action_button('Export YAML', lambda: NiceGUIHelper.export_yaml_button(db, dir_manager))
-            action_button('New Dataset', helpers.confirm_new_dataset)
-        action_button_div.set_visibility(not view_only)
+        # Floating menu
+        floating_menu({
+            'Save Curation Log (Word)': lambda: NiceGUIHelper.export_word(db, dir_manager),
+            'Export YAML': lambda: NiceGUIHelper.export_yaml_button(db, dir_manager),
+            'New Dataset': helpers.confirm_new_dataset,
+        })
 
 
 async def render_checklist_table(  # noqa: PLR0913, PLR0912, PLR0915, C901, PLR0917
@@ -463,7 +463,8 @@ async def render_checklist_table(  # noqa: PLR0913, PLR0912, PLR0915, C901, PLR0
                         ui.row().classes('gap-1').style('align-items: center;'),
                     ):
                         time_input = (
-                            ui.input(value=item.time_spent or '', placeholder='MM:SS')
+                            ui
+                            .input(value=item.time_spent or '', placeholder='MM:SS')
                             .classes('pdc-time-input')
                             .on('change', lambda e, iid=item.id: helpers.handle_time_change(iid, e.sender.value))
                             .props('maxlength=5')
@@ -475,7 +476,8 @@ async def render_checklist_table(  # noqa: PLR0913, PLR0912, PLR0915, C901, PLR0
                         # Single toggle timer button — always rendered, visibility toggled
                         def create_timer_callback(item_id: str, time_inp: ui.input) -> ui.button:
                             timer_btn = (
-                                ui.button(icon='play_arrow')
+                                ui
+                                .button(icon='play_arrow')
                                 .props('flat dense round size=sm color=positive')
                                 .tooltip('Start/Stop Timer')
                             )
