@@ -762,6 +762,11 @@ code, pre,
     display: block;
 }
 
+.pdc-show-on-scroll {opacity: 0; visibility: hidden; transition: opacity .3s, visibility .3s}
+
+.pdc-show-on-scroll.pdc-scrolling {opacity: 1; visibility: visible}
+
+
 </style>
 """
 
