@@ -13,13 +13,14 @@ from pydantic import RootModel
 class StatusOptions(BaseModel):
     """Default status options with full metadata."""
 
-    Pass: str = Field('Pass', description='Checklist item is complete and meets all requirements.')
-    Follow_up: str = Field('Follow-up', description='Checklist item requires follow-up action.')
+    Pass: str = Field('Pass', alias='Pass', description='Checklist item is complete and meets all requirements.')
+    Follow_up: str = Field('Follow-up', alias='Follow-up', description='Checklist item requires follow-up action.')
     TBD: str = Field(
         'To Be Determined',
+        alias='To Be Determined',
         description='Checklist item status is pending determination.',
     )
-    NA: str = Field('Not Applicable', description='Checklist item is not applicable.')
+    NA: str = Field('Not Applicable', alias='Not Applicable', description='Checklist item is not applicable.')
 
     def color_map(self) -> dict[str, tuple[str, str]]:
         """Map each label to (background_color, text_color)."""
@@ -57,8 +58,11 @@ def load_status_options(res_dir: str | Path) -> StatusOptions | CustomStatusOpti
 
     # Safely get the first match for supported extensions, or None if no file found
     file_path = next(
-        (p for ext in ('status_options.yaml', 'status_options.yml', 'status_options.json')
-         if (p := res_dir / ext).exists()),
+        (
+            p
+            for ext in ('status_options.yaml', 'status_options.yml', 'status_options.json')
+            if (p := res_dir / ext).exists()
+        ),
         None,
     )
 

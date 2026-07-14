@@ -17,6 +17,7 @@ from pydatacuration.db import DatabaseBackend
 from pydatacuration.db import DBModels
 from pydatacuration.db import get_database
 from pydatacuration.db import get_db_type
+from pydatacuration.frontend.models.status_options import StatusOptions
 from pydatacuration.services.exporter import Exporter
 from pydatacuration.utils.directory_manager import DirectoryManager
 from pydatacuration.utils.utils import validate_project_number
@@ -105,6 +106,9 @@ class NiceGUIHelper:  # noqa: PLR0904
         """Render circular progress indicators for each status count."""
         status_counts = self.db.get_status_count()
         total = sum(status_counts.values())
+
+        # Reorder status_counts to match the order of StatusOptions model fields, and fill in missing statuses with 0
+        status_counts = {f.alias: status_counts.get(f.alias, 0) for f in StatusOptions.model_fields.values()}
 
         for status, count in status_counts.items():
             label = status or 'No Status'
