@@ -284,6 +284,10 @@ async def checklist_page(project_number: str, view_only: bool = False) -> None:
                 'New Dataset': helpers.confirm_new_dataset,
             },
             'Actions',
+            position='bottom',
+            y_offset=20,
+            direction='up',
+            show_on_scroll=True,
         )
 
 
