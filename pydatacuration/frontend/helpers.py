@@ -17,6 +17,7 @@ from pydatacuration.db import DatabaseBackend
 from pydatacuration.db import DBModels
 from pydatacuration.db import get_database
 from pydatacuration.db import get_db_type
+from pydatacuration.frontend.models.status_options import StatusOptions
 from pydatacuration.services.exporter import Exporter
 from pydatacuration.utils.directory_manager import DirectoryManager
 from pydatacuration.utils.utils import validate_project_number
@@ -101,19 +102,37 @@ class NiceGUIHelper:  # noqa: PLR0904
         else:
             ui.notify('Please enter time in MM:SS format', type='negative')
 
-    def render_status_progress(self, color_map: dict[str, tuple[str, str]] | None = None) -> None:
+    def render_status_progress(self, color_map: dict[str, str] | None = None) -> None:
         """Render circular progress indicators for each status count."""
         status_counts = self.db.get_status_count()
         total = sum(status_counts.values())
 
+        # Reorder status_counts to match the order of StatusOptions model fields (None = 'No Status' last),
+        # and fill in missing statuses with 0
+        keys = [f.alias for f in StatusOptions.model_fields.values()] + [None]
+        status_counts = {k: status_counts.get(k, 0) for k in keys}
+
+        logger.debug(f'The status_counts are: {status_counts}')
+
         for status, count in status_counts.items():
             label = status or 'No Status'
             value = round((count / total * 100), 1) if total > 0 else 0
-            # color_map maps status label → (bg_color, text_color); fall back to 'primary'
-            color = color_map[label][0] if (color_map and label in color_map) else 'primary'
+            color = color_map[label] if (color_map and label in color_map) else 'primary'
             with ui.column().classes('flex-1 items-center gap-1'):
-                ui.circular_progress(value=value, min=0, max=100, size='120px', color=color)
-                ui.label(f'{label} ({count})').classes('text-sm text-center')
+                with ui.element('div').classes('relative'):
+                    ui.circular_progress(
+                        value=value,
+                        min=0,
+                        max=100,
+                        size='120px',
+                        color=color,
+                    ).props('show-value=false')  # if supported by your version
+
+                    ui.label(f'{count}').classes(
+                        'absolute inset-0 flex items-center justify-center text-2xl font-bold'
+                    ).style(f'color: {color}')
+
+                ui.label(f'{label} ({value}%)').classes('text-sm text-center')
 
     def render_comment_input_counter(self) -> None:
         """Render comment input counter."""

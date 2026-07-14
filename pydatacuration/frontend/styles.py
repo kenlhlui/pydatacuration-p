@@ -1009,7 +1009,7 @@ def create_status_select(
     status_options: list,
     current_value: str | None = None,
     on_change: Callable | None = None,
-    color_map: dict[str, tuple[str, str]] | None = None,
+    color_map: dict[str, str] | None = None,
 ):
     """Create a status select dropdown with proper styling.
 
@@ -1018,7 +1018,7 @@ def create_status_select(
         status_options: List of available status options
         current_value: Current status value
         on_change: Callback function for value changes
-        color_map: Optional mapping of label → (bg_color, text_color)
+        color_map: Optional mapping of label → text_color
 
     Returns:
         NiceGUI select element
@@ -1033,8 +1033,7 @@ def create_status_select(
     # Apply status-specific styling via inline styles
     def update_status_style(value: str) -> None:
         if color_map and value and value in color_map:
-            bg, fg = color_map[value]
-            select.style(f'background-color: {bg}; color: {fg};')
+            select.style(f'color: {color_map[value]};')
         else:
             select.style('')
 
