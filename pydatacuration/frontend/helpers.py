@@ -107,8 +107,12 @@ class NiceGUIHelper:  # noqa: PLR0904
         status_counts = self.db.get_status_count()
         total = sum(status_counts.values())
 
-        # Reorder status_counts to match the order of StatusOptions model fields, and fill in missing statuses with 0
-        status_counts = {f.alias: status_counts.get(f.alias, 0) for f in StatusOptions.model_fields.values()}
+        # Reorder status_counts to match the order of StatusOptions model fields (None = 'No Status' last),
+        # and fill in missing statuses with 0
+        keys = [f.alias for f in StatusOptions.model_fields.values()] + [None]
+        status_counts = {k: status_counts.get(k, 0) for k in keys}
+
+        logger.debug(f'The status_counts are: {status_counts}')
 
         for status, count in status_counts.items():
             label = status or 'No Status'
@@ -116,8 +120,20 @@ class NiceGUIHelper:  # noqa: PLR0904
             # color_map maps status label → (bg_color, text_color); fall back to 'primary'
             color = color_map[label][0] if (color_map and label in color_map) else 'primary'
             with ui.column().classes('flex-1 items-center gap-1'):
-                ui.circular_progress(value=value, min=0, max=100, size='120px', color=color)
-                ui.label(f'{label} ({count})').classes('text-sm text-center')
+                with ui.element('div').classes('relative'):
+                    ui.circular_progress(
+                        value=value,
+                        min=0,
+                        max=100,
+                        size='120px',
+                        color=color,
+                    ).props('show-value=false')  # if supported by your version
+
+                    ui.label(f'{count}').classes(
+                        'absolute inset-0 flex items-center justify-center text-2xl font-bold'
+                    ).style(f'color: {color}')
+
+                ui.label(f'{label} ({value}%)').classes('text-sm text-center')
 
     def render_comment_input_counter(self) -> None:
         """Render comment input counter."""
