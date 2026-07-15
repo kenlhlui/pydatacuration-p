@@ -43,5 +43,18 @@ just clean
 ```
 This will delete the `./workdir`, `./new_dir/` and `./pgadmin/` folders,
 
-### 🧪 Testing the Checklist Validator
+## 🧪 Testing the Checklist Validator
 See the [Checklist Validator CLI Guide](docs/checklist/README.md) for instructions on how to test the checklist validator using the command line interface (CLI).
+
+## ⬆️ Bump the version
+Prerequisites:
+1. [Commitizen](https://commitizen-tools.github.io/commitizen/)
+
+This repository has set up [Commitizen](https://commitizen-tools.github.io/commitizen/) for automatic version bumping. To bump the version, run the following command in the main branch:
+```sh
+cz bump
+```
+Test the version bumping by running:
+```sh
+cz bump --dry-run
+```
