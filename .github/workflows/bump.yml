@@ -18,16 +18,17 @@ jobs:
         with:
           fetch-depth: 0
           fetch-tags: true
-      - uses: commitizen-tools/setup-cz@main
-        with:
-          python-version: "3.x"
+      - name: Set up uv
+        uses: astral-sh/setup-uv@v8.3.2
+      
+      - name: Install Commitizen with uv tools
+        run: |
+          uv tool install commitizen
       
       - name: Get the new version
         id: get-version
         run: |
-          echo "$(cz version -p)"
           echo "new_version=$(cz version -p)" >> $GITHUB_OUTPUT
-          echo "$(cz version -p --tag)"
           echo "new_version_tag=$(cz version -p --tag)" >> $GITHUB_OUTPUT
       - name: Build changelog for Release
         env:
@@ -35,7 +36,7 @@ jobs:
         # The following command might not be the best way to get the latest changelog. 
         run: |
           awk '/^## /{c++} c==1' CHANGELOG.md > .changelog.md
-      - name: Release
+      - name: GitHub Release
         if: steps.get-version.outputs.new_version != ''
         env:
           GH_TOKEN: ${{ github.token }}
