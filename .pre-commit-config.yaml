@@ -1,7 +1,7 @@
 ---
 repos:
   - repo: https://github.com/commitizen-tools/commitizen
-    rev: master # Replace with latest tag
+    rev: v4.16.4 # Replace with latest tag
     hooks:
       - id: commitizen
       - id: commitizen-branch
