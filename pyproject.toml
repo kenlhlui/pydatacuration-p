@@ -58,6 +58,12 @@ dev = [
 package = false
 constraint-dependencies = []
 
+[tool.commitizen]
+name = "cz_conventional_commits"
+tag_format = "$version"
+version_scheme = "semver2"
+version_provider = "uv"
+update_changelog_on_bump = true
 [build-system]
 requires = ["hatchling"]
 build-backend = "hatchling.build"
