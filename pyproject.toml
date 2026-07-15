@@ -1,6 +1,6 @@
 [project]
 name = "pydatacuration"
-version = "0.0.0"
+version = "0.1.0"
 description = ""
 authors = [{ name = "Ken Lui" }]
 requires-python = "==3.12.12"
