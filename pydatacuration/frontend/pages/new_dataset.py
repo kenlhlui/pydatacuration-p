@@ -17,6 +17,7 @@ from pydatacuration.exceptions import DatasetNotFoundError
 from pydatacuration.exceptions import DatasetUnauthorizedError
 from pydatacuration.exceptions import DirectoryExistsError
 from pydatacuration.exceptions import FileMatchError
+from pydatacuration.frontend.helpers import create_checklist_select
 from pydatacuration.frontend.helpers import project_number_rule
 
 # Import reusable UI elements
@@ -26,7 +27,6 @@ from pydatacuration.frontend.reusable_elements import text_input_box
 
 # Import styles and custom components
 from pydatacuration.frontend.styles import apply_pdc_styles
-from pydatacuration.frontend.styles import create_checklist_select
 
 
 app_settings = AppSettings()
@@ -269,7 +269,7 @@ async def new_dataset_page() -> None:  # noqa: PLR0914
                 res_dir=RES_DIR,
                 current_value=form_data.get('checklist', 'default'),
                 on_change=lambda e: form_data.update({'checklist': e.value}),
-            ).style('width: 100%')
+            ).bind_value(form_data, 'checklist').style('width: 100%')
             ui.label('Checklist used for this curation project').classes('pdc-form-helper')
 
         # Processing Options Section

@@ -4,11 +4,8 @@ Replicates the exact look and feel from styles.css.
 """
 
 from collections.abc import Callable
-from pathlib import Path
 
 from nicegui import ui
-
-from pydatacuration.frontend.helpers import checklist_options
 
 
 # ============================================================================
@@ -1046,32 +1043,6 @@ def create_status_select(
         select.on_value_change(lambda e: [update_status_style(e.value), on_change(e)])
     else:
         select.on_value_change(lambda e: update_status_style(e.value))
-
-    return select
-
-
-def create_checklist_select(res_dir: Path, current_value: str, on_change=None) -> ui.select:
-    """Create a checklist selection list with proper styling.
-
-    Args:
-        res_dir (Path): Path to the resources directory
-        current_value (str): Current checklist
-        on_change: Callback function for value changes
-
-    Returns:
-        NiceGUI select element
-    """
-    # TODO: consider whether this should be read from a database, rather than a yaml file.
-    # Create label outside the select
-    ui.label('Checklist').classes('pdc-form-label')
-
-    # Create select without internal label - display capitalized but use lowercase values
-    select = (
-        ui.select(options=checklist_options(res_dir), value=current_value).classes('pdc-input').style('width: 100%')
-    )
-
-    if on_change:
-        select.on_value_change(on_change)
 
     return select
 
