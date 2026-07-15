@@ -484,6 +484,32 @@ def back_to_main_menu_button() -> None:
         ui.button('← Back', on_click=lambda: ui.navigate.to('/')).classes('pdc-btn')
 
 
+def create_checklist_select(res_dir: Path, current_value: str, on_change=None) -> ui.select:
+    """Create a checklist selection list with proper styling.
+
+    Args:
+        res_dir (Path): Path to the resources directory
+        current_value (str): Current checklist
+        on_change: Callback function for value changes
+
+    Returns:
+        NiceGUI select element
+    """
+    # TODO: consider whether this should be read from a database, rather than a yaml file.
+    # Create label outside the select
+    ui.label('Checklist').classes('pdc-form-label')
+
+    # Create select without internal label - display capitalized but use lowercase values
+    select = (
+        ui.select(options=checklist_options(res_dir), value=current_value).classes('pdc-input').style('width: 100%')
+    )
+
+    if on_change:
+        select.on_value_change(on_change)
+
+    return select
+
+
 # ============================================================================
 # Validation functions for NiceGUI inputs
 # ============================================================================
