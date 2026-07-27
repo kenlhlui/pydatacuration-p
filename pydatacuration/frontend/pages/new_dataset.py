@@ -4,7 +4,6 @@ import asyncio
 from pathlib import Path
 from urllib.parse import quote
 
-from nicegui import app
 from nicegui import ui
 
 from pydatacuration.backend.models.app_settings import AppSettings
@@ -19,6 +18,7 @@ from pydatacuration.exceptions import DirectoryExistsError
 from pydatacuration.exceptions import FileMatchError
 from pydatacuration.frontend.helpers import create_checklist_select
 from pydatacuration.frontend.helpers import project_number_rule
+from pydatacuration.frontend.reusable_elements import action_button
 
 # Import reusable UI elements
 from pydatacuration.frontend.reusable_elements import form_section
@@ -166,19 +166,12 @@ async def new_dataset_page() -> None:  # noqa: PLR0914
         error_msg = ui.label().classes('hidden')
         success_msg = ui.label().classes('hidden')
 
-        # Form state - automatically persisted
+        # Form state - fresh defaults on every visit to this page.
         # Initialize with environment variable defaults, but strip api_token so
         # the secret is never sent to the browser — resolved server-side at submit.
         default_form_data = default_form.model_dump()
         default_form_data['api_token'] = ''
-
-        # Get existing form data or create new
-        form_data = app.storage.tab.setdefault('setup_form', default_form_data)
-
-        # Update empty fields with environment variable defaults
-        for key, default_value in default_form_data.items():
-            if key not in form_data or not form_data.get(key):
-                form_data[key] = default_value
+        form_data = dict(default_form_data)
 
         # Dataset Information Section
         with form_section('Dataset Information'):
@@ -299,7 +292,7 @@ async def new_dataset_page() -> None:  # noqa: PLR0914
 
         # Action buttons
         with ui.element('div').classes('pdc-actions'):
-            start_button = ui.button(
+            start_button = action_button(
                 'Start Curation Process',
                 on_click=lambda: handle_setup_submit(
                     form_data,
@@ -312,12 +305,10 @@ async def new_dataset_page() -> None:  # noqa: PLR0914
                     reset_button,
                     back_button,
                 ),
-            ).classes('pdc-btn')
-
-            reset_button = ui.button(
-                'Reset Form', on_click=lambda: reset_form(form_data, default_form_data, reset_button)
-            ).classes('pdc-btn')
-
-            back_button = ui.button('Back', on_click=lambda: handle_back_navigation(back_button), color='red').classes(
-                'pdc-btn'
             )
+
+            reset_button = action_button(
+                'Reset Form', on_click=lambda: reset_form(form_data, default_form_data, reset_button)
+            )
+
+            back_button = action_button('Back', on_click=lambda: handle_back_navigation(back_button), color='red')
