@@ -36,7 +36,8 @@ async def render_project_table(
         with ui.element('div').classes('pdc-form-group').style('flex: 1; margin-bottom: 0;'):
             ui.label('Search').classes('pdc-form-label')
             search_input: Input = (
-                ui.input(placeholder='Search Project Number, Title, PID, ID (Versioned), URL')
+                ui
+                .input(placeholder='Search Project Number, Title, PID, ID (Versioned), URL')
                 .classes('pdc-input')
                 .style('width: 100%;')
             )
@@ -137,11 +138,11 @@ async def render_project_table(
                             # Action column (only for delete mode)
                             if mode == 'delete':
                                 with ui.element('td').style('text-align: center; vertical-align: middle;'):
-                                    ui.button(
+                                    action_button(
                                         '🗑️ Delete',
-                                        color='red',
                                         on_click=lambda s=schema: confirm_delete_project(s, refresh_callback),
-                                    ).props('unelevated no-caps').classes('pdc-btn')
+                                        color='red',
+                                    )
 
     # Define clear filters function
     def clear_filters(search_inp: ui.input, curator_sel: ui.select) -> None:

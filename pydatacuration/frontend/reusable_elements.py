@@ -81,21 +81,22 @@ def scroll_to_top_button(text: str = '↑') -> None:
         ui.button(text).classes('pdc-btn pdc-btn--lg')
 
 
-def action_button(label: str, on_click, *, color: str | None = None) -> ui.button:
+def action_button(label: str, on_click, *, icon: str | None = None, color: str | None = None) -> ui.button:
     """Create a standardized action button.
 
     Args:
         label (str): The text to display on the button.
         on_click: The callback function to execute when the button is clicked.
-        color (str | None): Optional color for the button.
+        icon (str | None): Optional icon for the button.
+        color (str | None): Optional color for the button (will override the default style).
 
     Returns:
         ui.button: The created button component.
 
     """
     if color:
-        return ui.button(label, on_click=on_click, color=color).classes('pdc-btn')
-    return ui.button(label, on_click=on_click).classes('pdc-btn')
+        return ui.button(label, on_click=on_click, icon=icon, color=color).classes('pdc-btn')
+    return ui.button(label, on_click=on_click, icon=icon).classes('pdc-btn')
 
 
 def dropdown_menu(label: str, options: list) -> ui.select:

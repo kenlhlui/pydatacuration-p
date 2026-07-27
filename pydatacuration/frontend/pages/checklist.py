@@ -197,11 +197,11 @@ async def checklist_page(project_number: str, view_only: bool = False) -> None:
 
         def _render_toggle_btn() -> None:
             _btn_ref.append(
-                ui.button(
+                action_button(
                     'Edit' if view_only else 'View Only',
                     icon='edit' if view_only else 'lock',
                     on_click=toggle_view_only,
-                ).classes('pdc-btn')
+                )
             )
 
         with form_section('Status and Time Dashboard', header_slot=_render_toggle_btn):
