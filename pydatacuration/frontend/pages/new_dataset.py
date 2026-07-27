@@ -18,6 +18,7 @@ from pydatacuration.exceptions import DirectoryExistsError
 from pydatacuration.exceptions import FileMatchError
 from pydatacuration.frontend.helpers import create_checklist_select
 from pydatacuration.frontend.helpers import project_number_rule
+from pydatacuration.frontend.reusable_elements import action_button
 
 # Import reusable UI elements
 from pydatacuration.frontend.reusable_elements import form_section
@@ -291,7 +292,7 @@ async def new_dataset_page() -> None:  # noqa: PLR0914
 
         # Action buttons
         with ui.element('div').classes('pdc-actions'):
-            start_button = ui.button(
+            start_button = action_button(
                 'Start Curation Process',
                 on_click=lambda: handle_setup_submit(
                     form_data,
@@ -304,12 +305,10 @@ async def new_dataset_page() -> None:  # noqa: PLR0914
                     reset_button,
                     back_button,
                 ),
-            ).classes('pdc-btn')
-
-            reset_button = ui.button(
-                'Reset Form', on_click=lambda: reset_form(form_data, default_form_data, reset_button)
-            ).classes('pdc-btn')
-
-            back_button = ui.button('Back', on_click=lambda: handle_back_navigation(back_button), color='red').classes(
-                'pdc-btn'
             )
+
+            reset_button = action_button(
+                'Reset Form', on_click=lambda: reset_form(form_data, default_form_data, reset_button)
+            )
+
+            back_button = action_button('Back', on_click=lambda: handle_back_navigation(back_button), color='red')
