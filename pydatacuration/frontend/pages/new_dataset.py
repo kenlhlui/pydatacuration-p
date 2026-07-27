@@ -4,7 +4,6 @@ import asyncio
 from pathlib import Path
 from urllib.parse import quote
 
-from nicegui import app
 from nicegui import ui
 
 from pydatacuration.backend.models.app_settings import AppSettings
@@ -47,8 +46,6 @@ def handle_back_navigation(back_button: ui.button) -> None:
     """Handle back button navigation."""
     # Disable button during navigation
     back_button.set_enabled(False)
-    # Leaving the page — clear so /new reloads with defaults next time
-    app.storage.tab.pop('setup_form', None)
     ui.navigate.to('/')
 
 
@@ -106,8 +103,6 @@ async def handle_setup_submit(  # noqa: PLR0913, PLR0917
         poll_timer[0].cancel()
         exc = task.exception()
         if exc is None:
-            # Leaving the page — clear so /new reloads with defaults next time
-            app.storage.tab.pop('setup_form', None)
             ui.navigate.to(f'/checklist?project_number={quote(form_data["project_number"])}')
         elif isinstance(exc, DirectoryExistsError):
             ui.notify(str(exc), type='warning')
@@ -170,19 +165,12 @@ async def new_dataset_page() -> None:  # noqa: PLR0914
         error_msg = ui.label().classes('hidden')
         success_msg = ui.label().classes('hidden')
 
-        # Form state - automatically persisted
+        # Form state - fresh defaults on every visit to this page.
         # Initialize with environment variable defaults, but strip api_token so
         # the secret is never sent to the browser — resolved server-side at submit.
         default_form_data = default_form.model_dump()
         default_form_data['api_token'] = ''
-
-        # Get existing form data or create new
-        form_data = app.storage.tab.setdefault('setup_form', default_form_data)
-
-        # Update empty fields with environment variable defaults
-        for key, default_value in default_form_data.items():
-            if key not in form_data or not form_data.get(key):
-                form_data[key] = default_value
+        form_data = dict(default_form_data)
 
         # Dataset Information Section
         with form_section('Dataset Information'):
