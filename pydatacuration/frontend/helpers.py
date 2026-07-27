@@ -18,6 +18,7 @@ from pydatacuration.db import DBModels
 from pydatacuration.db import get_database
 from pydatacuration.db import get_db_type
 from pydatacuration.frontend.models.status_options import StatusOptions
+from pydatacuration.frontend.reusable_elements import action_button
 from pydatacuration.services.exporter import Exporter
 from pydatacuration.utils.directory_manager import DirectoryManager
 from pydatacuration.utils.utils import validate_project_number
@@ -310,10 +311,8 @@ class NiceGUIHelper:  # noqa: PLR0904
         with ui.dialog() as dialog, ui.card().style('min-width: 400px;'):
             ui.label('This will redirect to the new dataset page. Continue?').classes('text-xl font-semibold')
             with ui.row().classes('w-full justify-end gap-2').style('margin-top: 20px;'):
-                ui.button('Continue', color='red', on_click=lambda: [dialog.close(), handle_confirm()]).classes(
-                    'pdc-btn'
-                )
-                ui.button('Cancel', on_click=dialog.close).classes('pdc-btn')
+                action_button('Continue', on_click=lambda: [dialog.close(), handle_confirm()], color='red')
+                action_button('Cancel', on_click=dialog.close)
         dialog.open()
 
     @staticmethod
@@ -481,7 +480,7 @@ def checklist_options(res_dir: Path) -> dict[str, str]:
 def back_to_main_menu_button() -> None:
     """Create a centered 'Back to Main Menu' button."""
     with ui.row().classes('justify-left my-4'):
-        ui.button('← Back', on_click=lambda: ui.navigate.to('/')).classes('pdc-btn')
+        action_button('← Back', on_click=lambda: ui.navigate.to('/'))
 
 
 def create_checklist_select(res_dir: Path, current_value: str, on_change=None) -> ui.select:
