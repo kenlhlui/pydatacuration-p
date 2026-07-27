@@ -47,6 +47,8 @@ def handle_back_navigation(back_button: ui.button) -> None:
     """Handle back button navigation."""
     # Disable button during navigation
     back_button.set_enabled(False)
+    # Leaving the page — clear so /new reloads with defaults next time
+    app.storage.tab.pop('setup_form', None)
     ui.navigate.to('/')
 
 
@@ -104,6 +106,8 @@ async def handle_setup_submit(  # noqa: PLR0913, PLR0917
         poll_timer[0].cancel()
         exc = task.exception()
         if exc is None:
+            # Leaving the page — clear so /new reloads with defaults next time
+            app.storage.tab.pop('setup_form', None)
             ui.navigate.to(f'/checklist?project_number={quote(form_data["project_number"])}')
         elif isinstance(exc, DirectoryExistsError):
             ui.notify(str(exc), type='warning')
