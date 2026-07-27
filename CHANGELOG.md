@@ -1,3 +1,13 @@
+## 0.1.2 (2026-07-27)
+
+### Fix
+
+- refresh (erase) the form input when the back button is clicked and it's redirected to the checklist page (#501)
+
+### Refactor
+
+- apply unified action button across modules (#502)
+
 ## 0.1.1 (2026-07-15)
 
 ### Fix
