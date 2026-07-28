@@ -1,0 +1,73 @@
+{
+  "status": "OK",
+  "data": {
+    "q": "toronto",
+    "total_count": 560,
+    "start": 0,
+    "spelling_alternatives": {},
+    "items": [
+      {
+        "name": "Sample Dataset Alpha",
+        "type": "dataset",
+        "url": "https://doi.org/10.0000/example.alpha",
+        "global_id": "doi:10.0000/example.alpha",
+        "description": "Synthetic example record for testing purposes.",
+        "published_at": "2026-01-15T12:00:00Z",
+        "publisher": "Example University Dataverse",
+        "citationHtml": "Smith, Alex, 2026, \"Sample Dataset Alpha\", <a href=\"https://doi.org/10.0000/example.alpha\" target=\"_blank\">https://doi.org/10.0000/example.alpha</a>, Example Repository, V1",
+        "identifier_of_dataverse": "example",
+        "name_of_dataverse": "Example University Dataverse",
+        "citation": "Smith, Alex, 2026, \"Sample Dataset Alpha\", https://doi.org/10.0000/example.alpha, Example Repository, V1",
+        "publicationStatuses": ["Published"],
+        "storageIdentifier": "s3://example/example.alpha",
+        "subjects": ["Agricultural Sciences"],
+        "fileCount": 0,
+        "versionId": 10001,
+        "versionState": "RELEASED",
+        "majorVersion": 1,
+        "minorVersion": 0,
+        "createdAt": "2026-01-15T11:58:00Z",
+        "updatedAt": "2026-01-15T12:00:00Z",
+        "contacts": [
+          {
+            "name": "Smith, Alex",
+            "affiliation": "Example University"
+          }
+        ],
+        "publications": [{}],
+        "authors": ["Smith, Alex"]
+      },
+      {
+        "name": "Sample Dataset Beta",
+        "type": "dataset",
+        "url": "https://doi.org/10.0000/example.beta",
+        "global_id": "doi:10.0000/example.beta",
+        "description": "Synthetic metadata record for demonstration.",
+        "published_at": "2026-02-20T12:00:00Z",
+        "publisher": "Example University Dataverse",
+        "citationHtml": "Jones, Taylor, 2026, \"Sample Dataset Beta\", <a href=\"https://doi.org/10.0000/example.beta\" target=\"_blank\">https://doi.org/10.0000/example.beta</a>, Example Repository, V1",
+        "identifier_of_dataverse": "example",
+        "name_of_dataverse": "Example University Dataverse",
+        "citation": "Jones, Taylor, 2026, \"Sample Dataset Beta\", https://doi.org/10.0000/example.beta, Example Repository, V1",
+        "publicationStatuses": ["Published"],
+        "storageIdentifier": "s3://example/example.beta",
+        "subjects": ["Other"],
+        "fileCount": 0,
+        "versionId": 10002,
+        "versionState": "RELEASED",
+        "majorVersion": 1,
+        "minorVersion": 1,
+        "createdAt": "2026-02-20T11:55:00Z",
+        "updatedAt": "2026-02-20T12:00:00Z",
+        "contacts": [
+          {
+            "name": "Jones, Taylor",
+            "affiliation": "Example Institute"
+          }
+        ],
+        "authors": ["Jones, Taylor"]
+      }
+    ],
+    "count_in_response": 10
+  }
+}
