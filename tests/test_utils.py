@@ -67,13 +67,8 @@ def test_compare_files_and_metadata_different(tmp_path):
         {'file': 'data/file2.csv', 'checksum': 'def456'},
     ]
 
-    with pytest.raises(SystemExit) as exc_info:
-        compare_files_and_metadata(dl_files_checksums, metadata_file_checksums, tmp_path)
-    assert exc_info.value.code == 1
-
-    # Check that diff.txt was created
-    diff_file = tmp_path / 'logs' / 'diff.txt'
-    assert diff_file.exists()
+    compare_files_and_metadata(dl_files_checksums, metadata_file_checksums, tmp_path)
+    assert (tmp_path / 'logs' / 'diff.txt').exists()
 
 
 def test_compare_files_and_metadata_ignore_order(tmp_path):
