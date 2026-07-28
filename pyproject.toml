@@ -58,6 +58,9 @@ dev = [
 package = false
 constraint-dependencies = []
 
+[tool.pytest.ini_options]
+pythonpath = ["."]
+
 [tool.commitizen]
 name = "cz_conventional_commits"
 tag_format = "$version"
