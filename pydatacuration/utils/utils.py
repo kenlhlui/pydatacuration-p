@@ -75,9 +75,10 @@ def parse_file_list_metadata(file_list_metadata: list) -> list:
     for file_meta in file_list_metadata:
         filename = get_file_name_from_file_list_metadata(file_meta)
         file_full_path_obj = get_file_rel_path_from_file_list_metadata(file_meta, filename)
-        file_list_metadata_nested_list.append(
-            {'file': str(PurePosixPath(file_full_path_obj)), 'checksum': file_meta['dataFile']['md5']}
-        )
+        file_list_metadata_nested_list.append({
+            'file': str(PurePosixPath(file_full_path_obj)),
+            'checksum': file_meta['dataFile']['md5'],
+        })
 
     return file_list_metadata_nested_list
 
@@ -217,7 +218,7 @@ def get_name_initials(fullname: str) -> str:
     Returns:
         str: The initials of the name.
     """
-    return ''.join([x[0].upper() for x in fullname.split(' ')])
+    return ''.join(x[0].upper() for x in fullname.split())
 
 
 def validate_api_token(value: str | None) -> str | None:

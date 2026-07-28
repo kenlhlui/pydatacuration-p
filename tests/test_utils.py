@@ -10,6 +10,7 @@ from pydatacuration.utils import check_readme_file_existence
 from pydatacuration.utils import check_ticket_num_input
 from pydatacuration.utils import compare_files_and_metadata
 from pydatacuration.utils import gen_tree_diagram
+from pydatacuration.utils import get_name_initials
 from pydatacuration.utils import orjson_export
 from pydatacuration.utils import parse_dataset_url
 from pydatacuration.utils import parse_file_list_metadata
@@ -363,3 +364,12 @@ def test_parse_dataset_url_special_characters():
         'persistentId=doi%3A10.1234%2Ftest%2Fdata+set' in result
         or 'persistentId=doi%3A10.1234%2Ftest%2Fdata%20set' in result
     )
+
+
+def test_get_name_initials():
+    """Test get_name_initials function."""
+    assert get_name_initials('John Doe') == 'JD'
+    assert get_name_initials('Alice B. Smith') == 'ABS'
+    assert get_name_initials('single') == 'S'
+    assert get_name_initials('multiple names here') == 'MNH'
+    assert not get_name_initials('')
