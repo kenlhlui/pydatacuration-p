@@ -15,7 +15,7 @@ from PIL import Image
 from pyreadstat import ReadstatError
 from pyreadstat import pyreadstat
 
-from pydatacuration.utils.ffmepg_file_formats import FFmpegFileFormats
+from pydatacuration.utils.ffmpeg_file_formats import FFmpegFileFormats
 
 
 IMAGE_FILE_EXTENSIONS = ['.jpg', '.jpeg', '.png', '.gif', '.bmp', '.tiff', '.tif']
@@ -148,7 +148,8 @@ class FilesOpener:
     def _open_audiovisual_file(self) -> tuple:
         try:
             stderr = (
-                ffmpeg.input(self.file)
+                ffmpeg
+                .input(self.file)
                 .output('null', f='null')
                 .global_args('-v', 'error')
                 .run(capture_stdout=False, capture_stderr=True)
