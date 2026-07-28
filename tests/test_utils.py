@@ -123,15 +123,15 @@ def test_gen_tree_diagram_success(tmp_path):
 
 
 def test_gen_tree_diagram_nonexistent_dir(tmp_path):
-    """Test gen_tree_diagram with non-existent target directory."""
+    """Test gen_tree_diagram with non-existent target directory: skips and returns None."""
     target_dir = tmp_path / 'nonexistent'
     save_dir = tmp_path / 'save_location'
     save_dir.mkdir()
 
-    with pytest.raises(SystemExit) as exc_info:
-        gen_tree_diagram(target_dir, save_dir)
+    result = gen_tree_diagram(target_dir, save_dir)
 
-    assert exc_info.value.code == 1
+    assert result is None
+    assert not (save_dir / 'ds_tree.txt').exists()
 
 
 def test_parse_file_list_metadata():
