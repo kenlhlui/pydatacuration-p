@@ -15,6 +15,7 @@ from pydatacuration.utils import orjson_export
 from pydatacuration.utils import parse_dataset_url
 from pydatacuration.utils import parse_file_list_metadata
 from pydatacuration.utils import validate_api_token
+from pydatacuration.utils.utils import get_ymdhms_timestamp
 
 
 @pytest.mark.parametrize(
@@ -373,3 +374,10 @@ def test_get_name_initials():
     assert get_name_initials('single') == 'S'
     assert get_name_initials('multiple names here') == 'MNH'
     assert not get_name_initials('')
+
+
+def test_get_ymdhms_timestamp():
+    """Test get_ymdhms_timestamp function."""
+    length_expected = 15  # Format: YYYYMMDD_HHMMSS
+    assert len(get_ymdhms_timestamp()) == length_expected
+    assert get_ymdhms_timestamp()[8] == '_'
