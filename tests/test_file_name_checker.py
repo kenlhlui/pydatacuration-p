@@ -89,6 +89,7 @@ def test_check_file_preferred_format(tmp_path):
 
 
 def test_check_file_preferred_format_missing_config():
-    """Test behavior when config file is missing."""
-    with pytest.raises(SystemExit):
-        FileNameChecker.check_file_preferred_format('test.txt', 'non_existent_file.txt')
+    """Test behavior when config file is missing: treated as no preferred formats."""
+    result_file, result_bool = FileNameChecker.check_file_preferred_format('test.txt', 'non_existent_file.txt')
+    assert result_file == 'test.txt'
+    assert result_bool is False
