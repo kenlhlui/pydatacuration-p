@@ -16,6 +16,7 @@ from pydatacuration.utils import parse_dataset_url
 from pydatacuration.utils import parse_file_list_metadata
 from pydatacuration.utils import validate_api_token
 from pydatacuration.utils.utils import get_ymdhms_timestamp
+from pydatacuration.utils.utils import validate_project_number
 
 
 @pytest.mark.parametrize(
@@ -381,3 +382,31 @@ def test_get_ymdhms_timestamp():
     length_expected = 15  # Format: YYYYMMDD_HHMMSS
     assert len(get_ymdhms_timestamp()) == length_expected
     assert get_ymdhms_timestamp()[8] == '_'
+
+
+@pytest.mark.parametrize(
+    ('project_number'),
+    [
+        'Project_123',
+        'Project-456',
+        'Project789',
+    ],
+)
+def test_validate_project_number_valid(project_number: str) -> None:
+    """Test valid project numbers."""
+    assert validate_project_number(project_number) == project_number
+
+
+@pytest.mark.parametrize(
+    ('project_number'),
+    [
+        'Invalid Project!',
+        'Invalid@Project',
+        'Invalid#Project',
+        'Invalid Project',
+    ],
+)
+def test_validate_project_number_invalid(project_number: str) -> None:
+    """Test invalid project numbers."""
+    with pytest.raises(ValueError):
+        validate_project_number(project_number)
