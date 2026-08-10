@@ -292,6 +292,12 @@ async def new_dataset_page() -> None:  # noqa: PLR0914
 
         # Action buttons
         with ui.element('div').classes('pdc-actions'):
+            back_button = action_button('Back', on_click=lambda: handle_back_navigation(back_button), color='red')
+
+            reset_button = action_button(
+                'Reset Form', on_click=lambda: reset_form(form_data, default_form_data, reset_button)
+            )
+
             start_button = action_button(
                 'Start Curation Process',
                 on_click=lambda: handle_setup_submit(
@@ -306,9 +312,3 @@ async def new_dataset_page() -> None:  # noqa: PLR0914
                     back_button,
                 ),
             )
-
-            reset_button = action_button(
-                'Reset Form', on_click=lambda: reset_form(form_data, default_form_data, reset_button)
-            )
-
-            back_button = action_button('Back', on_click=lambda: handle_back_navigation(back_button), color='red')
