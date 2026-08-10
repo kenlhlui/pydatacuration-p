@@ -1,7 +1,10 @@
 """Utility functions."""
 
 import os
+import platform
 import re
+import subprocess
+import sys
 from datetime import datetime
 from pathlib import Path
 from pathlib import PurePosixPath
@@ -75,9 +78,10 @@ def parse_file_list_metadata(file_list_metadata: list) -> list:
     for file_meta in file_list_metadata:
         filename = get_file_name_from_file_list_metadata(file_meta)
         file_full_path_obj = get_file_rel_path_from_file_list_metadata(file_meta, filename)
-        file_list_metadata_nested_list.append(
-            {'file': str(PurePosixPath(file_full_path_obj)), 'checksum': file_meta['dataFile']['md5']}
-        )
+        file_list_metadata_nested_list.append({
+            'file': str(PurePosixPath(file_full_path_obj)),
+            'checksum': file_meta['dataFile']['md5'],
+        })
 
     return file_list_metadata_nested_list
 
@@ -253,3 +257,38 @@ def validate_project_number(value: str) -> str:
         msg = 'Project number must only contain letters, numbers, hyphens, and underscores.'
         raise ValueError(msg)
     return value
+
+
+def in_wsl() -> bool:
+    """Return whether the code is running in Windows Subsystem for Linux.
+
+    Returns:
+        bool: True if running in WSL, False otherwise.
+
+    """
+    release = str(platform.uname().release).lower()
+    return 'microsoft' in release or 'wsl' in release
+
+
+def open_folder(path: Path | str = '.') -> None:
+    """Open a folder in the system's file explorer.
+
+    Args:
+        path (Path | str): The path to the folder to open.
+    """
+    p = Path(path).expanduser().resolve()
+
+    if in_wsl():
+        # WSL path -> Windows path -> Explorer
+        win_path = subprocess.check_output(['wslpath', '-w', str(p)], text=True).strip()
+        subprocess.run(['explorer.exe', win_path], check=False)
+        return
+
+    if os.name == 'nt':
+        # Native Windows / PowerShell
+        os.startfile(str(p))
+        return
+
+    # macOS / Linux
+    opener = 'open' if sys.platform == 'darwin' else 'xdg-open'
+    subprocess.run([opener, str(p)], check=False)

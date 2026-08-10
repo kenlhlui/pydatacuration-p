@@ -31,6 +31,7 @@ from pydatacuration.frontend.styles import create_check_type_badge
 from pydatacuration.frontend.styles import create_info_grid
 from pydatacuration.frontend.styles import create_priority_badge
 from pydatacuration.frontend.styles import create_status_select
+from pydatacuration.utils import open_folder
 
 # Import pydatacuration modules
 from pydatacuration.utils.directory_manager import DirectoryManager
@@ -107,10 +108,16 @@ async def checklist_page(project_number: str, view_only: bool = False) -> None:
         # Header using the checklist metadata name field (with fallback to "Unknown Checklist" if not available)
         ui.label(f'{checklist_metadata.get("name", "Unknown Checklist")}').classes('pdc-header')
 
+        def _open_file_explorer(path: Path | str = '.') -> ui.button:
+            """Open a folder in the system's file explorer."""
+            return action_button('Open files directory', on_click=lambda: open_folder(path))  # noqa: PLW0108
+
         # Metadata Display using our helper function
-        with ui.tabs() as tabs:
-            project_metadata_tab = ui.tab('Project Metadata')
-            checklist_metadata_tab = ui.tab('Checklist Metadata')
+        with ui.row().classes('w-full justify-between items-center'):
+            with ui.tabs() as tabs:
+                project_metadata_tab = ui.tab('Project Metadata')
+                checklist_metadata_tab = ui.tab('Checklist Metadata')
+            _open_file_explorer(dir_manager.files_dir)
         with ui.tab_panels(tabs, value=project_metadata_tab).classes('w-full'):
             with ui.tab_panel(project_metadata_tab).classes('w-full'):
                 create_info_grid(
