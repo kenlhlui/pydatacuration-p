@@ -1489,7 +1489,7 @@ wheels = [
 [[package]]
 name = "pydatacuration"
 version = "0.1.2"
-source = { virtual = "." }
+source = { editable = "." }
 dependencies = [
     { name = "chardet" },
     { name = "deepdiff" },
