@@ -10,6 +10,7 @@ from pydatacuration.utils import check_readme_file_existence
 from pydatacuration.utils import check_ticket_num_input
 from pydatacuration.utils import compare_files_and_metadata
 from pydatacuration.utils import gen_tree_diagram
+from pydatacuration.utils import in_wsl
 from pydatacuration.utils import orjson_export
 from pydatacuration.utils import parse_dataset_url
 from pydatacuration.utils import parse_file_list_metadata
@@ -368,3 +369,23 @@ def test_parse_dataset_url_special_characters():
         'persistentId=doi%3A10.1234%2Ftest%2Fdata+set' in result
         or 'persistentId=doi%3A10.1234%2Ftest%2Fdata%20set' in result
     )
+
+
+@pytest.mark.parametrize(
+    ('release', 'expected'),
+    [
+        ('x-WSL', True),
+        ('5.4.0-42-generic', False),
+        ('WSL2', True),
+        (11, False),
+        ('microsoft', True),
+        ('Ubuntu', False),
+        ('WSL_DISTRO_NAME-microsoft', True),
+        ('', False),
+    ],
+)
+def test_in_wsl(monkeypatch, release, expected):
+    """Test in_wsl function with different platform releases."""
+    monkeypatch.setattr('platform.uname', type('uname', (object,), {'release': release}))
+    result = in_wsl()
+    assert result is expected
