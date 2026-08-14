@@ -949,20 +949,24 @@ def apply_pdc_styles() -> None:
 
 
 def create_info_grid(metadata: dict, columns: list[tuple[str, str]]) -> None:
-    """Create a standardized info grid matching your current design.
+    """Create a standardized info grid matching the current design.
 
     Args:
-        metadata: Dictionary of metadata values
-        columns: List of (key, label) tuples
+        metadata: Dictionary containing metadata values
+        columns: List of tuples (key, label) for each column to display
 
-    Returns:
-        NiceGUI grid element
     """
     with ui.element('div').classes('pdc-info-section'), ui.grid(columns=2).classes('pdc-info-grid w-full'):
         for key, label in columns:
+            value = metadata.get(key, 'N/A')
+
             with ui.element('div').classes('pdc-info-item'):
                 ui.label(label).classes('pdc-info-label')
-                ui.label(metadata.get(key, 'N/A')).classes('pdc-info-value')
+
+                if isinstance(value, str) and value.startswith(('http://', 'https://')):
+                    ui.link(value, target=value, new_tab=True).classes('pdc-info-value')
+                else:
+                    ui.label(value).classes('pdc-info-value')
 
 
 def create_priority_badge(priority: str) -> ui.label:
