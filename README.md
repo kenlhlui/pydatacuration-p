@@ -1,5 +1,8 @@
 # U of T Dataverse dataset curation tool
 
+> [!WARNING]
+> This tool is under active development and is not yet production-ready. Please use it at your own risk.
+
 A containerized dataset curation tool for Dataverse repositories with web interface support.
 
 <img src="docs/full-tool-demo.gif" alt="The full curation tool demo" width="70%" height="70%">
