@@ -1,5 +1,8 @@
 # U of T Dataverse dataset curation tool
 
+> [!WARNING]
+> This tool is under active development and is not yet production-ready. Please use it at your own risk.
+
 A containerized dataset curation tool for Dataverse repositories with web interface support.
 
 <img src="docs/full-tool-demo.gif" alt="The full curation tool demo" width="70%" height="70%">
@@ -43,8 +46,8 @@ just clean
 ```
 This will delete the `./workdir`, `./new_dir/` and `./pgadmin/` folders,
 
-## 🧪 Testing the Checklist Validator
-See the [Checklist Validator CLI Guide](docs/checklist/README.md) for instructions on how to test the checklist validator using the command line interface (CLI).
+## 🧪 Validating the Checklist
+See the [Checklist Validator CLI Guide](docs/checklist/README.md) for instructions on how to validate the checklist using the command line interface (CLI).
 
 ## ⬆️ Bump the version
 Prerequisites:
