@@ -1,9 +1,10 @@
 # Use uv + Debian bookworm (glibc), not Alpine
 FROM ghcr.io/astral-sh/uv:python3.12-bookworm
 
-# Install ffmpeg
+# Install ffmpeg and the latest CA certificates
 RUN apt-get update && apt-get install -y --no-install-recommends \
     ffmpeg \
+    ca-certificates \
   && rm -rf /var/lib/apt/lists/*
 
 # Create a non-root user and group to run the app
