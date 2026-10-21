@@ -1,3 +1,15 @@
+## 0.2.0 (2026-10-21)
+
+### Feat
+
+- add detection of link in create_info_grid (#510)
+- add 'open files directory' in the checklist ui (#508)
+- reorder the action buttons in new dataset page. (#507)
+
+### Fix
+
+- CA compromise (#517)
+
 ## 0.1.2 (2026-07-27)
 
 ### Fix
