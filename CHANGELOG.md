@@ -1,3 +1,9 @@
+## 0.2.1 (2026-10-22)
+
+### Fix
+
+- checklist item rendering and ordering (#518)
+
 ## 0.2.0 (2026-10-21)
 
 ### Feat
