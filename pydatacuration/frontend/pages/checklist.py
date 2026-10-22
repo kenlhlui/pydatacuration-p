@@ -32,6 +32,7 @@ from pydatacuration.frontend.styles import create_info_grid
 from pydatacuration.frontend.styles import create_priority_badge
 from pydatacuration.frontend.styles import create_status_select
 from pydatacuration.utils import open_folder
+from pydatacuration.utils.utils import numeric_id_sort_key
 
 # Import pydatacuration modules
 from pydatacuration.utils.directory_manager import DirectoryManager
@@ -232,13 +233,7 @@ async def checklist_page(project_number: str, view_only: bool = False) -> None:
         # Render all rows once — never cleared, so timers are never interrupted
         checklist_items = helpers.get_checklist_items()
 
-        def _numeric_id_key(item) -> tuple[int, ...]:  # type: ignore[no-untyped-def]
-            try:
-                return tuple(int(part) for part in str(item.id).split('.'))  # type: ignore[union-attr]
-            except ValueError:
-                return (0,)
-
-        checklist_items = sorted(checklist_items, key=_numeric_id_key)
+        checklist_items = sorted(checklist_items, key=lambda item: numeric_id_sort_key(str(item.id)))
         await render_checklist_table(
             db,
             checklist_items,

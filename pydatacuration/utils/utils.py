@@ -28,6 +28,19 @@ from pydatacuration.utils.search_ds_meta import get_file_name_from_file_list_met
 from pydatacuration.utils.search_ds_meta import get_file_rel_path_from_file_list_metadata
 
 
+def numeric_id_sort_key(item_id: str) -> tuple[int, tuple[int, ...] | tuple[()], str]:
+    """Sort key for dotted-numeric IDs (e.g. '4.1', '4.10').
+
+    Numeric IDs sort first by their integer parts.
+    Non-numeric IDs (e.g. 'abc') sort after all numeric ones, ordered alphabetically.
+    """
+    try:
+        parts = tuple(int(part) for part in str(item_id).split('.'))
+        return (0, parts, '')
+    except ValueError:
+        return (1, (), str(item_id))
+
+
 def check_readme_file_existence(file: str) -> tuple[str, bool]:
     """Check if the file is a README file.
 
