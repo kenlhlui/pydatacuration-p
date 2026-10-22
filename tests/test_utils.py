@@ -7,6 +7,7 @@ import pytest
 import typer
 
 from pydatacuration.utils import check_readme_file_existence
+from pydatacuration.utils.utils import numeric_id_sort_key
 from pydatacuration.utils import check_ticket_num_input
 from pydatacuration.utils import compare_files_and_metadata
 from pydatacuration.utils import gen_tree_diagram
@@ -369,6 +370,46 @@ def test_parse_dataset_url_special_characters():
         'persistentId=doi%3A10.1234%2Ftest%2Fdata+set' in result
         or 'persistentId=doi%3A10.1234%2Ftest%2Fdata%20set' in result
     )
+
+
+class TestNumericIdSortKey:
+    """Tests for numeric_id_sort_key."""
+
+    @pytest.mark.parametrize(
+        ('item_id', 'expected'),
+        [
+            ('1', (0, (1,), '')),
+            ('4.1', (0, (4, 1), '')),
+            ('4.10', (0, (4, 10), '')),
+            ('1.2.3', (0, (1, 2, 3), '')),
+        ],
+    )
+    def test_numeric_ids(self, item_id, expected):
+        """Test that dotted-numeric IDs produce correct integer tuples."""
+        assert numeric_id_sort_key(item_id) == expected
+
+    @pytest.mark.parametrize(
+        'item_id',
+        ['abc', 'section-A', '4.x', ''],
+    )
+    def test_non_numeric_ids_sort_after_numeric(self, item_id):
+        """Test that non-numeric IDs get group 1 (after numeric group 0)."""
+        group, parts, label = numeric_id_sort_key(item_id)
+        assert group == 1
+        assert parts == ()
+        assert label == item_id
+
+    def test_sort_order(self):
+        """Test that a mixed list sorts correctly: numeric first, then non-numeric."""
+        ids = ['4.10', '4.2', '4.1', 'abc', '1.1', 'zzz', '4.11']
+        result = sorted(ids, key=numeric_id_sort_key)
+        assert result == ['1.1', '4.1', '4.2', '4.10', '4.11', 'abc', 'zzz']
+
+    def test_non_numeric_ids_sort_alphabetically(self):
+        """Test that non-numeric IDs sort alphabetically among themselves."""
+        ids = ['delta', 'alpha', 'charlie', 'bravo']
+        result = sorted(ids, key=numeric_id_sort_key)
+        assert result == ['alpha', 'bravo', 'charlie', 'delta']
 
 
 @pytest.mark.parametrize(

@@ -12,6 +12,7 @@ from sqlmodel import SQLModel
 from pydatacuration.db.base import DatabaseBackend
 from pydatacuration.utils.directory_manager import DirectoryManager
 from pydatacuration.utils.utils import get_name_initials
+from pydatacuration.utils.utils import numeric_id_sort_key
 
 
 def _strip_markup(text: str) -> str:
@@ -55,8 +56,8 @@ class Exporter:
 
         checklist_items = [row.model_dump() for row in self.checklist]
 
-        # Sort the checklist items by id, ensuring that items without an id are placed at the end
-        checklist_items.sort(key=lambda x: x['id'])
+        # Sort the checklist items by id numerically (e.g. 4.2 before 4.10)
+        checklist_items.sort(key=lambda x: numeric_id_sort_key(str(x.get('id', ''))))
 
         yaml_data = {
             'project_metadata': self.project_metadata,
