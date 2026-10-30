@@ -33,7 +33,7 @@ async def render_project_table(
     # Filters
     with form_section('Filters'), ui.row().classes('gap-4').style('align-items: flex-end;'):
         # Search filter
-        with ui.element('div').classes('pdc-form-group').style('flex: 1; margin-bottom: 0;'):
+        with ui.element('div').classes('pdc-form-group').style('flex: 1 1 240px; margin-bottom: 0;'):
             ui.label('Search').classes('pdc-form-label')
             search_input: Input = (
                 ui
@@ -43,7 +43,7 @@ async def render_project_table(
             )
 
         # Curator filter
-        with ui.element('div').classes('pdc-form-group').style('flex: 1; margin-bottom: 0;'):
+        with ui.element('div').classes('pdc-form-group').style('flex: 1 1 240px; margin-bottom: 0;'):
             curators = [''] + sorted({s['curator_name'] for s in schemas if s.get('curator_name')})
             curator_filter = dropdown_menu('Select Curator', curators)
 
@@ -77,7 +77,7 @@ async def render_project_table(
             )
 
             # Render table
-            with ui.element('table').classes('pdc-checklist-table'):
+            with ui.element('table').classes('pdc-checklist-table pdc-project-table'):
                 # Table Header
                 with ui.element('thead'), ui.element('tr'):
                     headers = ['Project Number', 'Dataset Information', 'Curator', 'Project Last Modified']
@@ -93,7 +93,7 @@ async def render_project_table(
                         row_classes = 'clickable-row' if mode == 'resume' else ''
                         with ui.element('tr').classes(row_classes):
                             # Project Number
-                            with ui.element('td'):
+                            with ui.element('td').props('data-label="Project Number"'):
                                 if mode == 'resume':
                                     href = ui.element('a').props(
                                         f'href="/checklist?project_number={quote(schema["project_number"])}"'
@@ -106,7 +106,7 @@ async def render_project_table(
                                     ui.label(f'📋 {schema["project_number"]}')
 
                             # Dataset Metadata
-                            with ui.element('td'):
+                            with ui.element('td').props('data-label="Dataset Information"'):
                                 with ui.element('div'):
                                     ui.markdown(
                                         f'**Title:** {schema.get("dataset_title", "N/A")}',
@@ -128,11 +128,11 @@ async def render_project_table(
                                         ui.html('URL: ', sanitize=False).style('display: inline; font-weight: bold;')
                                         ui.link(dataset_url, dataset_url, new_tab=True).style('display: inline;')
                             # Curator
-                            with ui.element('td'):
+                            with ui.element('td').props('data-label="Curator"'):
                                 ui.label(schema.get('curator_name', 'N/A'))
 
                             # Last Modified
-                            with ui.element('td'):
+                            with ui.element('td').props('data-label="Project Last Modified"'):
                                 ui.label(schema['last_modified'])
 
                             # Action column (only for delete mode)

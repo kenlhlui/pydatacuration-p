@@ -101,7 +101,7 @@ class NiceGUIHelper:  # noqa: PLR0904
             if self.refresh_callback:
                 self.refresh_callback()
         else:
-            ui.notify('Please enter time in MM:SS format', type='negative')
+            ui.notify('Enter time as MM:SS', type='negative')
 
     def render_status_progress(self, color_map: dict[str, str] | None = None) -> None:
         """Render circular progress indicators for each status count."""
@@ -127,7 +127,7 @@ class NiceGUIHelper:  # noqa: PLR0904
                         max=100,
                         size='120px',
                         color=color,
-                    ).props('show-value=false')  # if supported by your version
+                    ).props(f'show-value=false aria-label="{label}"')  # if supported by your version
 
                     ui.label(f'{count}').classes(
                         'absolute inset-0 flex items-center justify-center text-2xl font-bold'
@@ -143,7 +143,7 @@ class NiceGUIHelper:  # noqa: PLR0904
         with ui.column().classes('flex-1 items-center gap-1'):
             with ui.element('div').classes('flex items-center justify-center').style('height: 120px'):
                 ui.label(f'{comment_input_counter}').classes('text-5xl font-bold text-center w-full')
-            ui.label('Comments input').classes('text-sm text-center')
+            ui.label('Items with comments').classes('text-sm text-center')
 
     def _get_time_spent_input_count(self) -> str:
         """Get count of checklist items that have time spent input.
@@ -275,14 +275,16 @@ class NiceGUIHelper:  # noqa: PLR0904
             # Stop the timer
             self.stop_timer(item_id, time_input)
             # Update button to "Start" state
-            button.props('icon=play_arrow color=positive')
+            button.props(f'icon=play_arrow aria-label="Start timer for item {item_id}"')
+            button.style(replace='color: #556B2F;')
             button._props['icon'] = 'play_arrow'
             button.update()
         else:
             # Start the timer
             self.start_timer(item_id, time_input)
             # Update button to "Stop" state
-            button.props('icon=stop color=negative')
+            button.props(f'icon=stop aria-label="Stop timer for item {item_id}"')
+            button.style(replace='color: #C8102E;')
             button._props['icon'] = 'stop'
             button.update()
 
@@ -308,7 +310,7 @@ class NiceGUIHelper:  # noqa: PLR0904
             app.storage.user.clear()
             ui.navigate.to('/')
 
-        with ui.dialog() as dialog, ui.card().style('min-width: 400px;'):
+        with ui.dialog() as dialog, ui.card().style('min-width: min(400px, 90vw);'):
             ui.label('This will redirect to the new dataset page. Continue?').classes('text-xl font-semibold')
             with ui.row().classes('w-full justify-end gap-2').style('margin-top: 20px;'):
                 action_button('Continue', on_click=lambda: [dialog.close(), handle_confirm()], color='red')

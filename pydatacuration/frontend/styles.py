@@ -33,7 +33,8 @@ body {
     background-color: #f6f8fa;
     color: #1f2328;
     line-height: 1.6;
-    overflow-x: hidden;
+    /* clip, not hidden — hidden makes body a scroll container and breaks position: sticky */
+    overflow-x: clip;
     max-width: 100vw;
     box-sizing: border-box;
 }
@@ -59,7 +60,8 @@ code, pre,
     border: 1px solid #d0d7de;
     box-shadow: 0 1px 0 rgba(31, 35, 40, 0.04);
     box-sizing: border-box;
-    overflow-x: auto;
+    /* clip, not auto — auto makes this a scroll container and breaks sticky table headers */
+    overflow-x: clip;
 }
 
 .pdc-container > * {
@@ -68,7 +70,7 @@ code, pre,
 }
 
 .pdc-container-narrow {
-    max-width: 50%;
+    max-width: 720px;
     width: 100%;
     margin: 0 auto;
     background-color: #ffffff;
@@ -148,6 +150,7 @@ code, pre,
     font-size: 14px;
     background-color: transparent;
     min-height: 20px;
+    overflow-wrap: anywhere;
 }
 
 .pdc-info-value input {
@@ -202,27 +205,26 @@ code, pre,
     table-layout: fixed;
 }
 
-/* Column widths: ID, Action Item, Info Location, Priority, Comments, Status, Time */
+/* Column widths: ID, Action Item, Info Location, Priority, Comments, Status, Time.
+   Columns holding fixed-size controls use rem so they grow with browser zoom;
+   the three text columns (2, 3, 5) have no width and share the remaining space. */
 .pdc-checklist-table th:nth-child(1),
-.pdc-checklist-table td:nth-child(1) { width: 3%; }
-
-.pdc-checklist-table th:nth-child(2),
-.pdc-checklist-table td:nth-child(2) { width: 25%; }
-
-.pdc-checklist-table th:nth-child(3),
-.pdc-checklist-table td:nth-child(3) { width: 25%; }
+.pdc-checklist-table td:nth-child(1) { width: 4rem; }
 
 .pdc-checklist-table th:nth-child(4),
-.pdc-checklist-table td:nth-child(4) { width: 8%; }
-
-.pdc-checklist-table th:nth-child(5),
-.pdc-checklist-table td:nth-child(5) { width: 25%; }
+.pdc-checklist-table td:nth-child(4) { width: 8.5rem; }
 
 .pdc-checklist-table th:nth-child(6),
-.pdc-checklist-table td:nth-child(6) { width: 10%; overflow: hidden; }
+.pdc-checklist-table td:nth-child(6) { width: 10rem; overflow: hidden; }
 
 .pdc-checklist-table th:nth-child(7),
-.pdc-checklist-table td:nth-child(7) { width: 5%; }
+.pdc-checklist-table td:nth-child(7) { width: 8.5rem; }
+
+/* Tighter list indent than the 40px default, so nested guidance keeps room in narrow columns */
+.pdc-checklist-table .nicegui-markdown ul,
+.pdc-checklist-table .nicegui-markdown ol {
+    padding-left: 1.25rem;
+}
 
 /* Prevent table from forcing horizontal scroll */
 .pdc-checklist-table td,
@@ -254,6 +256,84 @@ code, pre,
 
 .pdc-checklist-table tbody tr.clickable-row:hover {
     background-color: #ebf3fd;
+}
+
+/* Project table (resume/delete pages) — overrides the checklist column widths.
+   Columns: Project Number, Dataset Information, Curator, Last Modified, Action */
+.pdc-project-table th:nth-child(n),
+.pdc-project-table td:nth-child(n) { width: auto; }
+
+.pdc-project-table th:nth-child(1),
+.pdc-project-table td:nth-child(1) { width: 15%; }
+
+.pdc-project-table th:nth-child(3),
+.pdc-project-table td:nth-child(3),
+.pdc-project-table th:nth-child(4),
+.pdc-project-table td:nth-child(4) { width: 15%; }
+
+/* rem, not %, so the column grows with the Delete button when zoomed */
+.pdc-project-table th:nth-child(5),
+.pdc-project-table td:nth-child(5) { width: 9rem; }
+
+/* Strip Quasar's 16px paragraph margin from markdown inside cells */
+.pdc-project-table .nicegui-markdown p {
+    margin: 0;
+}
+
+/* Mobile: stack each project row as a card, labelled via data-label */
+@media (max-width: 768px) {
+    .pdc-project-table,
+    .pdc-project-table tbody,
+    .pdc-project-table tr,
+    .pdc-project-table td:nth-child(n) {
+        display: block;
+        width: 100%;
+    }
+
+    .pdc-project-table thead {
+        display: none;
+    }
+
+    .pdc-project-table tr {
+        border: 1px solid #ddd;
+        border-radius: 6px;
+        margin-bottom: 12px;
+    }
+
+    .pdc-project-table td:nth-child(n) {
+        border: none;
+        border-bottom: 1px solid #ddd;
+        padding: 8px 12px;
+    }
+
+    .pdc-project-table td:last-child {
+        border-bottom: none;
+    }
+
+    .pdc-project-table td[data-label]::before {
+        content: attr(data-label);
+        display: block;
+        font-size: 12px;
+        font-weight: bold;
+        color: #57606a;
+    }
+}
+
+/* Checklist table scrolls sideways once its space drops below what the columns
+   need (31rem of fixed columns + 3 × 11rem text columns), e.g. on phones or when
+   zoomed in. Only then, so the sticky header keeps working whenever it fits. */
+.pdc-table-container {
+    container-type: inline-size;
+}
+
+@container (max-width: 64rem) {
+    .pdc-table-scroll {
+        overflow-x: auto;
+    }
+
+    .pdc-table-scroll > .pdc-checklist-table {
+        min-width: 64rem;
+    }
 }
 
 .pdc-section-header {
@@ -330,7 +410,7 @@ code, pre,
     margin: 8px 0 0 0;
     padding-left: 20px;
     list-style: decimal;
-    font-size: 11px;
+    font-size: 0.75rem;
 }
 
 .pdc-check-details-list .result-item {
@@ -346,7 +426,7 @@ code, pre,
     color: #6C757D;
     font-style: italic;
     margin-top: 5px;
-    font-size: 11px;
+    font-size: 0.75rem;
 }
 
 /* ========================================================================
@@ -458,6 +538,9 @@ code, pre,
 .pdc-check-type-manual,
 .pdc-check-type-hybrid {
     margin-bottom: 8px;
+    /* Wrap instead of truncating in narrow columns */
+    white-space: normal;
+    height: auto;
 }
 
 /* ========================================================================
@@ -566,12 +649,20 @@ code, pre,
     margin-bottom: 20px;
 }
 
-========================================================================
+/* ========================================================================
    Responsive Design
    ======================================================================== */
 @media (max-width: 768px) {
+    body {
+        margin: 10px;
+    }
+
+    .pdc-header {
+        font-size: 1.5rem;
+    }
+
     .pdc-info-grid {
-        grid-template-columns: 1fr;
+        grid-template-columns: minmax(0, 1fr);
         gap: 15px;
     }
 
@@ -738,6 +829,17 @@ code, pre,
     padding: 0 !important;
 }
 
+/* Mobile: 16px inputs so iOS Safari doesn't zoom the page on focus.
+   Placed after the input overrides above so it wins at equal specificity. */
+@media (max-width: 768px) {
+    .pdc-comments-input textarea,
+    .pdc-input .q-field__native,
+    .pdc-checklist-table .pdc-time-input .q-field__native,
+    .pdc-checklist-table .pdc-time-input input {
+        font-size: 16px !important;
+    }
+}
+
 .no-projects {
     text-align: center;
     padding: 40px;
@@ -850,6 +952,13 @@ MAIN_PAGE_HEAD_CSS: str = """
             .resume-card {
                 width: 100%;
             }
+            .main-container {
+                width: 100%;
+                padding: 20px;
+            }
+            .option-card {
+                padding: 20px;
+            }
         }
     </style>
 """
@@ -956,7 +1065,7 @@ def create_info_grid(metadata: dict, columns: list[tuple[str, str]]) -> None:
         columns: List of tuples (key, label) for each column to display
 
     """
-    with ui.element('div').classes('pdc-info-section'), ui.grid(columns=2).classes('pdc-info-grid w-full'):
+    with ui.element('div').classes('pdc-info-section'), ui.grid().classes('pdc-info-grid w-full'):
         for key, label in columns:
             value = metadata.get(key, 'N/A')
 

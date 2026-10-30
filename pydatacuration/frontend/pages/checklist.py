@@ -88,11 +88,11 @@ async def checklist_page(project_number: str, view_only: bool = False) -> None:
         .element('div')
         .classes('warning-banner')
         .style(
-            'position: fixed; top: 0; left: 0; right: 0; z-index: 1000; '
+            'position: sticky; top: 0; width: 100%; z-index: 1000; '
             'border-radius: 0; margin: 0; display: flex; align-items: center; gap: 10px;'
         ) as view_only_banner
     ):
-        ui.label("🔒You're in view-only mode \u2014 changes are disabled.").style('flex: 1').classes(
+        ui.label("🔒 You're in view-only mode \u2014 changes are disabled.").style('flex: 1').classes(
             'text-lg font-semibold'
         )
         ui.button('Edit', icon='edit', on_click=lambda: toggle_view_only()).props('flat dense').style(  # noqa: PLW0108
@@ -131,7 +131,7 @@ async def checklist_page(project_number: str, view_only: bool = False) -> None:
                         ('dataset_pid', 'Dataset persistent identifier'),
                         ('dataset_id', 'Dataset ID (versioned)'),
                         ('dataset_url', 'Dataset access URL'),
-                        ('dataset_path', 'Dataset Path'),
+                        ('dataset_path', 'Dataset path'),
                     ],
                 )
             with ui.tab_panel(checklist_metadata_tab).classes('w-full'):
@@ -177,7 +177,7 @@ async def checklist_page(project_number: str, view_only: bool = False) -> None:
         def toggle_view_only() -> None:
             is_view_only['value'] = not is_view_only['value']
             active = is_view_only['value']
-            toggle_btn.set_text('Edit' if active else 'View Only')
+            toggle_btn.set_text('Edit' if active else 'Switch to view only')
             toggle_btn.props('icon=edit' if active else 'icon=lock')
             view_only_banner.set_visibility(active)
             for el in interactive_elements:
@@ -196,7 +196,9 @@ async def checklist_page(project_number: str, view_only: bool = False) -> None:
                 helpers.render_comment_input_counter()
                 with ui.column().classes('flex-1 items-center gap-1'):
                     with ui.element('div').classes('flex items-center justify-center').style('height: 120px'):
-                        ui.label(helpers.get_total_time_str()).classes('text-5xl font-bold text-center w-full')
+                        ui.label(helpers.get_total_time_str()).classes(
+                            'text-5xl font-bold text-center w-full tabular-nums'
+                        )
                     ui.label(f'Total Time Spent ({helpers._get_time_spent_input_count()})').classes(
                         'text-sm text-center'
                     )
@@ -206,13 +208,13 @@ async def checklist_page(project_number: str, view_only: bool = False) -> None:
         def _render_toggle_btn() -> None:
             _btn_ref.append(
                 action_button(
-                    'Edit' if view_only else 'View Only',
+                    'Edit' if view_only else 'Switch to view only',
                     icon='edit' if view_only else 'lock',
                     on_click=toggle_view_only,
                 )
             )
 
-        with form_section('Status and Time Dashboard', header_slot=_render_toggle_btn):
+        with form_section('Status and time dashboard', header_slot=_render_toggle_btn):
             status_progress_ui()
 
         toggle_btn = _btn_ref[0]
@@ -222,7 +224,7 @@ async def checklist_page(project_number: str, view_only: bool = False) -> None:
             status_filter = dropdown_menu('Filter by Status', status_options)
             priority_filter = dropdown_menu('Filter by Priority', priority_options)
             # Clear filters button
-            action_button('Clear Filters', lambda: clear_filters())  # noqa: PLW0108
+            action_button('Clear filters', lambda: clear_filters())  # noqa: PLW0108
 
         # Dicts populated by render_checklist_table for visibility-based filtering
         # item_rows: {item_id: (row_element, item)}
@@ -289,7 +291,7 @@ async def checklist_page(project_number: str, view_only: bool = False) -> None:
             position='bottom',
             y_offset=20,
             direction='up',
-            show_on_scroll=True,
+            show_on_scroll=False,
         )
 
 
@@ -325,7 +327,11 @@ async def render_checklist_table(  # noqa: PLR0913, PLR0912, PLR0915, C901, PLR0
     if helpers is None:
         helpers = NiceGUIHelper(db_instance, project_number)
 
-    with ui.element('table').classes('pdc-checklist-table'):
+    with (
+        ui.element('div').classes('pdc-table-container'),
+        ui.element('div').classes('pdc-table-scroll'),
+        ui.element('table').classes('pdc-checklist-table'),
+    ):
         # Table Header
         with ui.element('thead'), ui.element('tr'):
             for header in [
@@ -338,7 +344,7 @@ async def render_checklist_table(  # noqa: PLR0913, PLR0912, PLR0915, C901, PLR0
                 'Time Spent',
             ]:
                 with ui.element('th'):
-                    ui.markdown(header)
+                    ui.label(header)
 
         # Table Body
         with ui.element('tbody'):
@@ -444,6 +450,7 @@ async def render_checklist_table(  # noqa: PLR0913, PLR0912, PLR0915, C901, PLR0
                         comments_input = ui.textarea(
                             value=item.comments or '', placeholder="Curator's comments..."
                         ).classes('pdc-comments-input')
+                        comments_input.props(f'aria-label="Comments for item {item.id}"')
                         if view_only:
                             comments_input.props('readonly')
                         comments_input.on(
@@ -476,7 +483,7 @@ async def render_checklist_table(  # noqa: PLR0913, PLR0912, PLR0915, C901, PLR0
                             .input(value=item.time_spent or '', placeholder='MM:SS')
                             .classes('pdc-time-input')
                             .on('change', lambda e, iid=item.id: helpers.handle_time_change(iid, e.sender.value))
-                            .props('maxlength=5')
+                            .props(f'maxlength=5 aria-label="Time spent on item {item.id}"')
                             .style('flex: 1; min-width: 60px;')
                         )
                         if view_only:
@@ -486,8 +493,9 @@ async def render_checklist_table(  # noqa: PLR0913, PLR0912, PLR0915, C901, PLR0
                         def create_timer_callback(item_id: str, time_inp: ui.input) -> ui.button:
                             timer_btn = (
                                 ui
-                                .button(icon='play_arrow')
-                                .props('flat dense round size=sm color=positive')
+                                .button(icon='play_arrow', color=None)
+                                .props(f'flat dense round size=sm aria-label="Start timer for item {item_id}"')
+                                .style('color: #556B2F;')
                                 .tooltip('Start/Stop Timer')
                             )
                             timer_btn.on('click', lambda: helpers.toggle_timer(item_id, time_inp, timer_btn))

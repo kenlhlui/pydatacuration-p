@@ -110,9 +110,15 @@ def dropdown_menu(label: str, options: list) -> ui.select:
         ui.select: The created dropdown component.
 
     """
-    with ui.element('div').style('flex: 1'):
+    with ui.element('div').style('flex: 1 1 240px'):
         ui.label(label).classes('pdc-form-label')
-        value = ui.select(options, value=None, with_input=False).classes('pdc-input').style('width: 100%;')
+        value = (
+            ui
+            .select(options, value=None, with_input=False)
+            .props(f'aria-label="{label}"')
+            .classes('pdc-input')
+            .style('width: 100%;')
+        )
         return value
 
 
