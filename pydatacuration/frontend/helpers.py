@@ -333,37 +333,30 @@ class NiceGUIHelper:  # noqa: PLR0904
                 if not db_file.exists():
                     return []
 
-            # Create a database backend instance to get schema names for further querying
+            # One backend instance; schema names and all metadata records are read in two queries
             db = get_database(schema_name='_system_query_', db_file=db_file)
             schema_names = db.get_all_schema_names()
+            records_by_schema = {r.pop('schema_name'): r for r in db.read_all_project_metadata_records()}
 
-            # Get additional project metadata for each schema
             project_metadata_schema = []
             for schema_name in schema_names:
-                try:
-                    # Try to get project metadata for last modified date
-                    schema_db = get_database(schema_name=schema_name, db_file=db_file)
-                    project_metadata_record: dict[str, Any] = schema_db.read_project_metadata_record(mode='python')
-
-                    # Turn the last_modified_datetime into a YYYY-MM-DD HH:MM:SS format
-                    last_modified_dt = project_metadata_record.get('last_modified_datetime')
-                    last_modified_display = (
-                        last_modified_dt.strftime('%Y-%m-%d %H:%M:%S') if last_modified_dt else 'Unknown'
-                    )  # noqa: E501
-
-                    project_metadata_record['last_modified'] = last_modified_display
-
-                    # Append to the list
-                    project_metadata_schema.append(project_metadata_record)
-
-                except Exception as e:
-                    logger.error(f'Could not get metadata for schema {schema_name}: {e}')
+                project_metadata_record: dict[str, Any] | None = records_by_schema.get(schema_name)
+                if project_metadata_record is None:
+                    # Schema without a project_metadata row (e.g. partially created project)
                     project_metadata_schema.append({
                         'project_number': schema_name.replace('duckdb.', '').replace('"', ''),
                         'name': schema_name,
                         'last_modified': 'Unknown',
                         'has_metadata': False,
                     })
+                    continue
+
+                # Turn the last_modified_datetime into a YYYY-MM-DD HH:MM:SS format
+                last_modified_dt = project_metadata_record.get('last_modified_datetime')
+                project_metadata_record['last_modified'] = (
+                    last_modified_dt.strftime('%Y-%m-%d %H:%M:%S') if last_modified_dt else 'Unknown'
+                )
+                project_metadata_schema.append(project_metadata_record)
 
             # Sort by last modified (most recent first)
             project_metadata_schema.sort(key=lambda x: x['last_modified'], reverse=True)
