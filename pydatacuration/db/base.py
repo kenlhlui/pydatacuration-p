@@ -10,6 +10,10 @@ from typing import Literal
 
 from loguru import logger
 from sqlalchemy import ScalarResult
+from sqlalchemy import column
+from sqlalchemy import literal
+from sqlalchemy import table
+from sqlalchemy import union_all
 from sqlmodel import SQLModel
 from sqlmodel import func
 from sqlmodel import inspect
@@ -254,6 +258,48 @@ class DatabaseBackend(ABC):  # noqa: PLR0904
                 return user_schemas
         except Exception as e:
             logger.error(f'Error fetching schema names: {e}')
+            return []
+
+    def read_all_project_metadata_records(self) -> list[dict[str, Any]]:
+        """Read the project metadata record of every schema in a single query.
+
+        Only the columns needed for the project table are selected, so schemas created by
+        older versions with extra/missing non-essential columns still UNION cleanly.
+
+        Returns:
+            list[dict[str, Any]]: One dict per schema that has a project_metadata row,
+                including a ``schema_name`` key.
+        """
+        # Lightweight table() constructs instead of per-schema SQLModel classes: no metadata registration,
+        # and SQLAlchemy still handles identifier quoting.
+        columns = (
+            'project_number',
+            'curator_name',
+            'dataset_title',
+            'dataset_pid',
+            'dataset_id',
+            'dataset_url',
+            'last_modified_datetime',
+        )
+        info_tables = table('tables', column('table_schema'), column('table_name'), schema='information_schema')
+        try:
+            with self.get_readonly_connection() as (_session, engine), engine.connect() as conn:
+                schemas = (
+                    conn
+                    .execute(select(info_tables.c.table_schema).where(info_tables.c.table_name == 'project_metadata'))
+                    .scalars()
+                    .all()
+                )
+                if not schemas:
+                    return []
+
+                selects = []
+                for schema in schemas:
+                    project_metadata = table('project_metadata', *(column(c) for c in columns), schema=schema)
+                    selects.append(select(literal(schema).label('schema_name'), *project_metadata.c))
+                return [dict(row) for row in conn.execute(union_all(*selects)).mappings()]
+        except Exception as e:
+            logger.error(f'Error fetching project metadata records: {e}')
             return []
 
     def drop_schema(self, schema_name: str) -> None:
