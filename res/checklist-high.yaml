@@ -64,7 +64,7 @@ checklist:
         * If we do not have the program, note any file extensions that were not checked (e.g. “File type: **.bin** was not reviewed”)
     priority: "required"
     section: "2. Files"
-    automated_check_ids: ["file_accessibility", "unsupported_files"]
+    automated_check_ids: ["file_openability", "unsupported_files"]
     curator_check_item: |
       - Opening errors
       - Files flagged by the tool check
