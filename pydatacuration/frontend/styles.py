@@ -68,7 +68,7 @@ code, pre,
 }
 
 .pdc-container-narrow {
-    max-width: 50%;
+    max-width: 720px;
     width: 100%;
     margin: 0 auto;
     background-color: #ffffff;
@@ -148,6 +148,7 @@ code, pre,
     font-size: 14px;
     background-color: transparent;
     min-height: 20px;
+    overflow-wrap: anywhere;
 }
 
 .pdc-info-value input {
@@ -254,6 +255,76 @@ code, pre,
 
 .pdc-checklist-table tbody tr.clickable-row:hover {
     background-color: #ebf3fd;
+}
+
+/* Project table (resume/delete pages) — overrides the checklist column widths.
+   Columns: Project Number, Dataset Information, Curator, Last Modified, Action */
+.pdc-project-table th:nth-child(n),
+.pdc-project-table td:nth-child(n) { width: auto; }
+
+.pdc-project-table th:nth-child(1),
+.pdc-project-table td:nth-child(1) { width: 15%; }
+
+.pdc-project-table th:nth-child(3),
+.pdc-project-table td:nth-child(3),
+.pdc-project-table th:nth-child(4),
+.pdc-project-table td:nth-child(4) { width: 15%; }
+
+/* rem, not %, so the column grows with the Delete button when zoomed */
+.pdc-project-table th:nth-child(5),
+.pdc-project-table td:nth-child(5) { width: 9rem; }
+
+/* Strip Quasar's 16px paragraph margin from markdown inside cells */
+.pdc-project-table .nicegui-markdown p {
+    margin: 0;
+}
+
+/* Mobile: stack each project row as a card, labelled via data-label */
+@media (max-width: 768px) {
+    .pdc-project-table,
+    .pdc-project-table tbody,
+    .pdc-project-table tr,
+    .pdc-project-table td:nth-child(n) {
+        display: block;
+        width: 100%;
+    }
+
+    .pdc-project-table thead {
+        display: none;
+    }
+
+    .pdc-project-table tr {
+        border: 1px solid #ddd;
+        border-radius: 6px;
+        margin-bottom: 12px;
+    }
+
+    .pdc-project-table td:nth-child(n) {
+        border: none;
+        border-bottom: 1px solid #ddd;
+        padding: 8px 12px;
+    }
+
+    .pdc-project-table td:last-child {
+        border-bottom: none;
+    }
+
+    .pdc-project-table td[data-label]::before {
+        content: attr(data-label);
+        display: block;
+        font-size: 12px;
+        font-weight: bold;
+        color: #57606a;
+    }
+
+    /* Mobile: checklist table scrolls sideways instead of squashing */
+    .pdc-table-scroll {
+        overflow-x: auto;
+    }
+
+    .pdc-table-scroll > .pdc-checklist-table {
+        min-width: 960px;
+    }
 }
 
 .pdc-section-header {
@@ -566,12 +637,20 @@ code, pre,
     margin-bottom: 20px;
 }
 
-========================================================================
+/* ========================================================================
    Responsive Design
    ======================================================================== */
 @media (max-width: 768px) {
+    body {
+        margin: 10px;
+    }
+
+    .pdc-header {
+        font-size: 1.5rem;
+    }
+
     .pdc-info-grid {
-        grid-template-columns: 1fr;
+        grid-template-columns: minmax(0, 1fr);
         gap: 15px;
     }
 
@@ -850,6 +929,13 @@ MAIN_PAGE_HEAD_CSS: str = """
             .resume-card {
                 width: 100%;
             }
+            .main-container {
+                width: 100%;
+                padding: 20px;
+            }
+            .option-card {
+                padding: 20px;
+            }
         }
     </style>
 """
@@ -956,7 +1042,7 @@ def create_info_grid(metadata: dict, columns: list[tuple[str, str]]) -> None:
         columns: List of tuples (key, label) for each column to display
 
     """
-    with ui.element('div').classes('pdc-info-section'), ui.grid(columns=2).classes('pdc-info-grid w-full'):
+    with ui.element('div').classes('pdc-info-section'), ui.grid().classes('pdc-info-grid w-full'):
         for key, label in columns:
             value = metadata.get(key, 'N/A')
 

@@ -325,7 +325,7 @@ async def render_checklist_table(  # noqa: PLR0913, PLR0912, PLR0915, C901, PLR0
     if helpers is None:
         helpers = NiceGUIHelper(db_instance, project_number)
 
-    with ui.element('table').classes('pdc-checklist-table'):
+    with ui.element('div').classes('pdc-table-scroll'), ui.element('table').classes('pdc-checklist-table'):
         # Table Header
         with ui.element('thead'), ui.element('tr'):
             for header in [

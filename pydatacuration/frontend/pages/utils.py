@@ -28,7 +28,7 @@ def confirm_delete_project(schema: dict, refresh_callback) -> None:
         else:
             ui.notify(message, type='negative')
 
-    with ui.dialog() as dialog, ui.card().style('min-width: 400px;'):
+    with ui.dialog() as dialog, ui.card().style('min-width: min(400px, 90vw);'):
         ui.label(f'Delete project "{schema["project_number"]}"?').classes('text-xl font-semibold')
         ui.label('This action cannot be undone. All data will be permanently deleted.').classes('text-red-600')
 
