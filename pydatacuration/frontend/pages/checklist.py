@@ -512,14 +512,17 @@ def render_check_results(results: dict) -> None:
         results (dict): The results data to render (can be list, dict, or other types).
 
     """
-    check_id = results.get('check_id', 'Unknown Check ID')
+    check_name = results.get('check_name') or results.get('check_id', 'Unknown Check')
+    check_description = results.get('description')
     result_name = results.get('unit', 'result')
     results = results.get('results', {})
 
     # Use the pdc-check-result class from nicegui_styles.py instead of inline styles
     with ui.element('div').classes('pdc-check-result'):
-        # Header with check ID - using pdc-static-curator-check-item class
-        ui.label(f'{check_id}').classes('pdc-check-result-header')
+        # Header with check name and description
+        ui.label(f'{check_name}').classes('pdc-check-result-header')
+        if check_description:
+            ui.label(check_description).classes('pdc-check-description')
 
         if isinstance(results, list):
             # Show count description
