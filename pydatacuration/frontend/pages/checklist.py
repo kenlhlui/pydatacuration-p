@@ -32,10 +32,10 @@ from pydatacuration.frontend.styles import create_info_grid
 from pydatacuration.frontend.styles import create_priority_badge
 from pydatacuration.frontend.styles import create_status_select
 from pydatacuration.utils import open_folder
-from pydatacuration.utils.utils import numeric_id_sort_key
 
 # Import pydatacuration modules
 from pydatacuration.utils.directory_manager import DirectoryManager
+from pydatacuration.utils.utils import numeric_id_sort_key
 
 
 # Create global settings instance
@@ -281,7 +281,7 @@ async def checklist_page(project_number: str, view_only: bool = False) -> None:
         # Floating menu
         floating_menu(
             {
-                'Save Curation Log (Word)': lambda: NiceGUIHelper.export_word(db, dir_manager),
+                'Download Curation Log (Word)': lambda: NiceGUIHelper.export_word(db, dir_manager),
                 'Export YAML': lambda: NiceGUIHelper.export_yaml_button(db, dir_manager),
                 'New Dataset': helpers.confirm_new_dataset,
             },
