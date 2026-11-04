@@ -24,7 +24,7 @@ dependencies = [
     "ffmpeg-python>=0.2.0,<0.3",
     "seedir>=0.5.0,<0.6",
     "pyshp>=2.3.1,<4",
-    "pypdf>=6.19.0,<7",
+    "pypdf>=6.21.4,<7.0.0",
     "python-docx>=1.1.2,<2",
     "docxtpl>=0.19.1,<0.21",
     "tenacity>=9.1.2,<10",
@@ -66,6 +66,9 @@ constraint-dependencies = [
     "python-socketio>=5.16.2",
     "soupsieve>=2.9.0",
     "tornado>=6.5.9",
+    "brotli>=1.2.1",
+    "brotlicffi>=1.2.1.0",
+    "dnspython>=2.9.0",
 ]
 
 [tool.commitizen]
