@@ -1087,11 +1087,12 @@ wheels = [
 
 [[package]]
 name = "nicegui"
-version = "3.13.0"
+version = "3.19.0"
 source = { registry = "https://pypi.org/simple" }
 dependencies = [
     { name = "aiofiles" },
     { name = "aiohttp" },
+    { name = "anyio" },
     { name = "certifi" },
     { name = "docutils" },
     { name = "fastapi" },
@@ -1101,25 +1102,22 @@ dependencies = [
     { name = "ifaddr" },
     { name = "itsdangerous" },
     { name = "jinja2" },
-    { name = "lxml" },
-    { name = "lxml-html-clean" },
     { name = "markdown2" },
+    { name = "multidict" },
     { name = "orjson", marker = "platform_machine != 'i386' and platform_machine != 'i686' and platform_python_implementation != 'PyPy'" },
     { name = "pydantic-core" },
     { name = "pygments" },
     { name = "python-dotenv" },
-    { name = "python-engineio" },
     { name = "python-multipart" },
     { name = "python-socketio", extra = ["asyncio-client"] },
     { name = "starlette" },
     { name = "tinycss2" },
     { name = "typing-extensions" },
     { name = "uvicorn", extra = ["standard"] },
-    { name = "watchfiles" },
 ]
-sdist = { url = "https://files.pythonhosted.org/packages/90/a2/61a865fe4fb25b9fc15510f15d110406a12498fcba309518ac86ae6878d6/nicegui-3.13.0.tar.gz", hash = "sha256:340ea81a9e5e9a94365492ccde249c55e3619d05b73b60dff9424b79a264a8f6", size = 19612421, upload-time = "2026-06-09T12:35:10.433Z" }
+sdist = { url = "https://files.pythonhosted.org/packages/a2/12/c828f10876175caf4b08f4e84795c5c44bb778af0303fc231944e78060d6/nicegui-3.19.0.tar.gz", hash = "sha256:d19c7eb181610fa9c8e3ee8e452261fcbcd9c495c9d66467c99d05f9d3229484", size = 21514299, upload-time = "2026-11-02T16:50:41.479Z" }
 wheels = [
-    { url = "https://files.pythonhosted.org/packages/a3/9c/ba25bdc2043854173365ffd29f34649eb59b705030e6c8bb154db30b472c/nicegui-3.13.0-py3-none-any.whl", hash = "sha256:06facff080828ff3da2855a33dcfca08ceb922138ac2c79d6ed021a9e949fab8", size = 20196229, upload-time = "2026-06-09T12:35:06.272Z" },
+    { url = "https://files.pythonhosted.org/packages/bd/4c/eab6b31f1f9e84944b6733c4ba597e2a957afab8ca8af5f39ad484fa3e50/nicegui-3.19.0-py3-none-any.whl", hash = "sha256:f0d0ed7485805051d7d039372615a18f08122aeaa30cf030e01471cb9e63725f", size = 8587426, upload-time = "2026-11-02T16:50:37.778Z" },
 ]
 
 [[package]]
@@ -1599,7 +1597,7 @@ requires-dist = [
     { name = "jmespath", specifier = ">=1.0.1,<2" },
     { name = "loguru", specifier = ">=0.7.3" },
     { name = "netcdf4", specifier = ">=1.7.2,<2" },
-    { name = "nicegui", specifier = "==3.13.0" },
+    { name = "nicegui", specifier = "==3.19.0" },
     { name = "openpyxl", specifier = ">=3.1.5,<4" },
     { name = "orjson", specifier = ">=3.10.7,<4" },
     { name = "pandas", extras = ["excel"], specifier = ">=2.2.3,<4" },
