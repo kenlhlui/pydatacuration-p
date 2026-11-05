@@ -1,3 +1,18 @@
+## 0.3.0 (2026-11-05)
+
+### Feat
+
+- **ui**: responsive UI & accessibility enhacements (#523)
+
+### Fix
+
+- **ui**: show the check name and description instead of check id (#520)
+- **ui**: update floating menu option label for clarity (#519)
+
+### Perf
+
+- db reading for project metadata record (#521)
+
 ## 0.2.1 (2026-10-22)
 
 ### Fix
