@@ -71,6 +71,7 @@ def write_checklist_metadata_to_db(db_instance: DatabaseBackend, checklist: Chec
         metadata = checklist.checklist_metadata
         db_instance.merge_records_to_table(
             checklist_metadata_schema(
+                project_number=db_instance.project_number,
                 name=metadata.name,
                 version=metadata.version,
                 description=metadata.description,
@@ -98,6 +99,7 @@ def write_checklist_items_to_db(db_instance: DatabaseBackend, checklist: Checkli
             logger.debug(f'Writing checklist item to database: {item.id}')
             db_instance.merge_records_to_table(
                 checklist_schema(
+                    project_number=db_instance.project_number,
                     id=item.id,
                     action=item.action,
                     instructions=item.instructions,

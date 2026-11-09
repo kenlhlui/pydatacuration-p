@@ -7,7 +7,6 @@ from pathlib import Path
 from loguru import logger
 from sqlmodel import Session
 from sqlmodel import create_engine
-from sqlmodel import text
 
 from pydatacuration.db.base import DatabaseBackend
 from pydatacuration.db.settings import DBType
@@ -17,29 +16,20 @@ from pydatacuration.db.sqlmodels import DBModels
 class DuckDBBackend(DatabaseBackend):
     """DuckDB backend implementation.
 
-    Uses a single DuckDB file with schemas per project.
+    Uses a single DuckDB file with shared tables, scoped by ``project_number``.
     All operations go through SQLAlchemy/SQLModel via the ``duckdb-engine`` driver.
     """
 
-    _SYSTEM_SCHEMAS: frozenset[str] = frozenset(
-        {
-            'system.information_schema',
-            'system.main',
-            'temp.main',
-            'db.main',
-        }
-    )
-
-    def __init__(self, schema_name: str, db_file: Path) -> None:
+    def __init__(self, db_file: Path, project_number: str | None = None) -> None:
         """Initialize the DuckDB backend.
 
         Args:
-            schema_name (str): The name of the schema to use.
             db_file (Path): The path to the DuckDB database file.
+            project_number (str | None): The project to scope queries to.
         """
-        super().__init__(schema_name)
+        super().__init__(project_number)
         self.db_file = db_file
-        self._db_models = DBModels(self.schema_name, db_type=DBType(db_type='duckdb'))
+        self._db_models = DBModels(db_type=DBType(db_type='duckdb'))
 
     # ------------------------------------------------------------------
     # Properties
@@ -47,13 +37,8 @@ class DuckDBBackend(DatabaseBackend):
 
     @property
     def models(self) -> DBModels:
-        """Return the DBModels factory bound to this schema."""
+        """Return the DBModels factory."""
         return self._db_models
-
-    @property
-    def system_schemas(self) -> frozenset[str]:
-        """DuckDB-specific system schemas."""
-        return self._SYSTEM_SCHEMAS
 
     # ------------------------------------------------------------------
     # Connection context managers (SQLAlchemy only — no raw duckdb.connect)
@@ -100,16 +85,6 @@ class DuckDBBackend(DatabaseBackend):
     # ------------------------------------------------------------------
     # Backend-specific operations
     # ------------------------------------------------------------------
-
-    def create_schema(self) -> None:
-        """Create a schema in the DuckDB database."""
-        try:
-            logger.info(f'Creating schema: {self.schema_name}')
-            with self.get_connection() as (_session, engine), engine.begin() as conn:
-                conn.execute(text(f'CREATE SCHEMA IF NOT EXISTS "{self.schema_name}";'))
-                logger.info(f'Created schema: {self.schema_name}')
-        except Exception as e:
-            logger.error(f'Error creating schema {self.schema_name}: {e}')
 
     def create_database(self) -> None:
         """Create the DuckDB database file (opening an engine connection creates it)."""

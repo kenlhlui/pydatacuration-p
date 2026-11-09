@@ -60,7 +60,7 @@ async def export_word_endpoint(
     if not dirs.project_dir.exists():
         raise HTTPException(status_code=404, detail=f'Project directory for project {project_number!r} not found.')
 
-    db = get_database(schema_name=project_number, db_file=dirs.db_path)
+    db = get_database(db_file=dirs.db_path, project_number=project_number)
     exporter = Exporter(db, dirs)
     await asyncio.to_thread(exporter.export_word, word_template_name)
 

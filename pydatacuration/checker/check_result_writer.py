@@ -31,6 +31,7 @@ class CheckResultWriter:
 
         """  # noqa: E501
         record = self.checklist_model(
+            project_number=self.db_instance.project_number,
             check_id=check_id,
             check_name=check_name,
             description=description,

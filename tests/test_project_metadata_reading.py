@@ -1,4 +1,4 @@
-"""Test reading project metadata across all schemas (db/base.py and frontend/helpers.py)."""
+"""Test reading project metadata across all projects (db/base.py and frontend/helpers.py)."""
 
 from datetime import datetime
 from pathlib import Path
@@ -14,7 +14,7 @@ from pydatacuration.utils.directory_manager import DirectoryManager
 
 @pytest.fixture
 def main_dir(tmp_path: Path, monkeypatch: pytest.MonkeyPatch) -> Path:
-    """Create a DuckDB file with two projects that have metadata and one schema that has none.
+    """Create a DuckDB file with two projects that have metadata.
 
     Returns:
         Path: The main directory containing db/db.duckdb.
@@ -24,8 +24,8 @@ def main_dir(tmp_path: Path, monkeypatch: pytest.MonkeyPatch) -> Path:
     db_file.parent.mkdir()
 
     for i, project_number in enumerate(['P-001', 'P-002'], start=1):
-        db = get_database(schema_name=project_number, db_file=db_file)
-        db.create_schema()
+        db = get_database(db_file=db_file, project_number=project_number)
+        db.create_tables()
         project_metadata = db.models.project_metadata_record()
         db.merge_records_to_table(
             project_metadata(
@@ -40,46 +40,43 @@ def main_dir(tmp_path: Path, monkeypatch: pytest.MonkeyPatch) -> Path:
             )
         )
 
-    get_database(schema_name='P-003', db_file=db_file).create_schema()
     return tmp_path
 
 
 def _system_db(main_dir: Path) -> DatabaseBackend:
-    return get_database(schema_name='_system_query_', db_file=main_dir / 'db' / DirectoryManager.DB_FILE_NAME)
+    return get_database(db_file=main_dir / 'db' / DirectoryManager.DB_FILE_NAME)
 
 
 def test_read_all_project_metadata_records(main_dir: Path) -> None:
-    """Test that one query returns a record per schema with metadata, tagged with its schema name."""
+    """Test that one query returns a record per project."""
     records = _system_db(main_dir).read_all_project_metadata_records()
 
-    by_schema = {r['schema_name']: r for r in records}
-    assert set(by_schema) == {'P-001', 'P-002'}
-    assert by_schema['P-002']['dataset_title'] == 'title 2'
-    assert by_schema['P-002']['last_modified_datetime'] == datetime(2026, 1, 2, 12, 30)  # noqa: DTZ001
+    by_project = {r['project_number']: r for r in records}
+    assert set(by_project) == {'P-001', 'P-002'}
+    assert by_project['P-002']['dataset_title'] == 'title 2'
+    assert by_project['P-002']['last_modified_datetime'] == datetime(2026, 1, 2, 12, 30)  # noqa: DTZ001
 
 
 def test_read_all_project_metadata_records_empty_db(tmp_path: Path, monkeypatch: pytest.MonkeyPatch) -> None:
-    """Test that a database with no project_metadata tables returns an empty list."""
+    """Test that a database without the project_metadata table returns an empty list."""
     monkeypatch.setenv('DB_TYPE', 'duckdb')
-    db = get_database(schema_name='_system_query_', db_file=tmp_path / 'empty.duckdb')
+    db = get_database(db_file=tmp_path / 'empty.duckdb')
     db.create_database()
 
     assert db.read_all_project_metadata_records() == []
 
 
 def test_get_all_schemas(main_dir: Path) -> None:
-    """Test formatting, the fallback row for a schema without metadata, and sort order."""
+    """Test formatting and sort order (most recently modified first)."""
     schemas = NiceGUIHelper.get_all_schemas(main_dir)
 
-    assert [s['project_number'] for s in schemas] == ['P-003', 'P-002', 'P-001']
-    assert schemas[0] == {'project_number': 'P-003', 'name': 'P-003', 'last_modified': 'Unknown', 'has_metadata': False}
-    assert schemas[1]['last_modified'] == '2026-01-02 12:30:00'
-    assert schemas[1]['curator_name'] == 'curator'
-    assert 'schema_name' not in schemas[1]
+    assert [s['project_number'] for s in schemas] == ['P-002', 'P-001']
+    assert schemas[0]['last_modified'] == '2026-01-02 12:30:00'
+    assert schemas[0]['curator_name'] == 'curator'
 
 
 def test_get_all_schemas_creates_single_backend(main_dir: Path, monkeypatch: pytest.MonkeyPatch) -> None:
-    """Test that listing projects does not create a backend per schema (n+1 regression guard)."""
+    """Test that listing projects does not create a backend per project (n+1 regression guard)."""
     calls = []
     monkeypatch.setattr(helpers, 'get_database', lambda **kw: calls.append(kw) or get_database(**kw))
 

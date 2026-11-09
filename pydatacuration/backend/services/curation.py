@@ -43,10 +43,10 @@ def init_curation(body: SetupForm) -> None:
     dir_manager_instance.delete_dir(dir_manager_instance.project_dir)
     dir_manager_instance.make_project_dir()
 
-    db = get_database(schema_name=body.project_number, db_file=dir_manager_instance.db_path)
+    db = get_database(db_file=dir_manager_instance.db_path, project_number=body.project_number)
     db.create_database()
-    db.drop_schema(body.project_number)
-    db.create_schema()
+    db.create_tables()
+    db.delete_project(body.project_number)
 
     logger.debug(
         f'Initialized working directory and database for project {body.project_number} at {dir_manager_instance.project_dir}'
@@ -71,7 +71,7 @@ async def fetch_curation(body: SetupForm) -> None:
         body (SetupForm): The setup form containing the necessary information for fetching the dataset.
     """
     dir_manager_instance = DirectoryManager.get_dir_manager_instance(body.project_number, Path(body.main_dir))
-    db = get_database(schema_name=body.project_number, db_file=dir_manager_instance.db_path)
+    db = get_database(db_file=dir_manager_instance.db_path, project_number=body.project_number)
 
     try:
         await asyncio.to_thread(_ensure_dataset_read_access, body)
@@ -82,7 +82,7 @@ async def fetch_curation(body: SetupForm) -> None:
         VerifyDownloadFiles(ds_metadata=ds_metadata, directory_manager_instance=dir_manager_instance).verify()
 
     except Exception:
-        db.drop_schema(body.project_number)
+        db.delete_project(body.project_number)
         dir_manager_instance.delete_dir(dir_manager_instance.project_dir)
         raise
 
@@ -96,7 +96,7 @@ def check_curation(body: SetupForm) -> None:
     dir_manager_instance = DirectoryManager.get_dir_manager_instance(
         body.project_number, Path(body.main_dir), res_dir=Path(body.res_dir)
     )
-    db = get_database(schema_name=body.project_number, db_file=dir_manager_instance.db_path)
+    db = get_database(db_file=dir_manager_instance.db_path, project_number=body.project_number)
 
     res_dir = Path(body.res_dir) if body.res_dir else None
 
@@ -125,7 +125,7 @@ def check_curation(body: SetupForm) -> None:
         checker.run_checks()
         logger.info('Checks completed')
     except Exception as exc:
-        db.drop_schema(body.project_number)
+        db.delete_project(body.project_number)
         dir_manager_instance.delete_dir(dir_manager_instance.project_dir)
         error_message = f'Error occurred during checks: {exc}'
         logger.error(error_message)

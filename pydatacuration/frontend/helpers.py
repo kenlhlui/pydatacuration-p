@@ -5,7 +5,6 @@ import time
 from collections.abc import Callable
 from datetime import timedelta
 from pathlib import Path
-from typing import Any
 
 from loguru import logger
 from nicegui import app
@@ -26,7 +25,7 @@ from pydatacuration.utils.utils import validate_project_number
 
 # Type alias for checklist items - uses dummy schema for type hints only
 # The actual schema name will be provided at runtime
-Checklist: type[SQLModel] = DBModels('_type_hints_').checklist()
+Checklist: type[SQLModel] = DBModels().checklist()
 
 
 class NiceGUIHelper:  # noqa: PLR0904
@@ -335,30 +334,16 @@ class NiceGUIHelper:  # noqa: PLR0904
                 if not db_file.exists():
                     return []
 
-            # One backend instance; schema names and all metadata records are read in two queries
-            db = get_database(schema_name='_system_query_', db_file=db_file)
-            schema_names = db.get_all_schema_names()
-            records_by_schema = {r.pop('schema_name'): r for r in db.read_all_project_metadata_records()}
+            # One backend instance; all project metadata records are read in one query
+            db = get_database(db_file=db_file)
+            project_metadata_schema = db.read_all_project_metadata_records()
 
-            project_metadata_schema = []
-            for schema_name in schema_names:
-                project_metadata_record: dict[str, Any] | None = records_by_schema.get(schema_name)
-                if project_metadata_record is None:
-                    # Schema without a project_metadata row (e.g. partially created project)
-                    project_metadata_schema.append({
-                        'project_number': schema_name.replace('duckdb.', '').replace('"', ''),
-                        'name': schema_name,
-                        'last_modified': 'Unknown',
-                        'has_metadata': False,
-                    })
-                    continue
-
+            for project_metadata_record in project_metadata_schema:
                 # Turn the last_modified_datetime into a YYYY-MM-DD HH:MM:SS format
                 last_modified_dt = project_metadata_record.get('last_modified_datetime')
                 project_metadata_record['last_modified'] = (
                     last_modified_dt.strftime('%Y-%m-%d %H:%M:%S') if last_modified_dt else 'Unknown'
                 )
-                project_metadata_schema.append(project_metadata_record)
 
             # Sort by last modified (most recent first)
             project_metadata_schema.sort(key=lambda x: x['last_modified'], reverse=True)
@@ -370,23 +355,22 @@ class NiceGUIHelper:  # noqa: PLR0904
             return []
 
     @staticmethod
-    def delete_project(schema_name: str | None, main_dir: Path) -> tuple[bool, str]:
-        """Delete a specific project by removing its schema and the project directory.
+    def delete_project(project_number: str | None, main_dir: Path) -> tuple[bool, str]:
+        """Delete a specific project by removing its database records and the project directory.
 
         Args:
-            schema_name (str | None): Name of the schema to delete (includes duckdb. prefix)
+            project_number (str | None): Project number of the project to delete.
             main_dir (Path): Main directory where the database, logs, and project directories are stored.
 
         """
-        if not schema_name:
-            return False, 'Invalid schema name'
-        schema_name_pruned = schema_name.replace('duckdb.', '').replace('"', '')
+        if not project_number:
+            return False, 'Invalid project number'
 
-        def delete_schema(schema_name_pruned: str) -> tuple[bool, str]:
-            """Delete a specific schema from the database.
+        def delete_project_records(project_number: str) -> tuple[bool, str]:
+            """Delete a specific project's records from the database.
 
             Args:
-                schema_name_pruned (str): Name of the schema to delete (without duckdb. prefix)
+                project_number (str): Project number of the project to delete.
 
             Returns:
                 tuple[bool, str]: Success status and message
@@ -403,22 +387,19 @@ class NiceGUIHelper:  # noqa: PLR0904
                     if not db_file.exists():
                         return False, 'Database file not found'
 
-                # Create a database backend instance to delete the schema
-                db = get_database(schema_name='_system_query_', db_file=db_file)
+                db = get_database(db_file=db_file)
+                db.delete_project(project_number)
 
-                # Delete the schema
-                db.drop_schema(schema_name_pruned)
-
-                return True, f'Schema {schema_name_pruned} deleted successfully'
+                return True, f'Project records for {project_number} deleted successfully'
 
             except Exception as e:
-                return False, f'Error deleting schema: {str(e)}'
+                return False, f'Error deleting project records: {str(e)}'
 
         def delete_project_directory(project_number: str) -> None:
             """Delete the project directory for a specific project number.
 
             Args:
-                project_number (str): Project number of the project to delete (is schema_name_pruned)
+                project_number (str): Project number of the project to delete.
 
             """
             try:
@@ -427,9 +408,9 @@ class NiceGUIHelper:  # noqa: PLR0904
             except Exception as e:
                 logger.error(f'Error deleting project directory for {project_number}: {e}')
 
-        delete_project_directory(schema_name_pruned)
-        delete_schema(schema_name_pruned)
-        return True, f'Project {schema_name_pruned} deleted successfully'
+        delete_project_directory(project_number)
+        delete_project_records(project_number)
+        return True, f'Project {project_number} deleted successfully'
 
     @staticmethod
     def export_word(db: DatabaseBackend, dir_manager: DirectoryManager, word_template_name: str | None = None) -> None:

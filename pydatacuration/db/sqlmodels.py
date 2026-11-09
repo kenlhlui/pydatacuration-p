@@ -54,7 +54,6 @@ class DBModels:
     """SQLModels implementation for writing to DuckDB or PostgreSQL.
 
     Args:
-        schema_name: The schema name for table placement.
         backend: The database type ('duckdb' or 'postgresql').
     """
 
@@ -62,7 +61,6 @@ class DBModels:
         """Initialize DBModels with the specified schema name and backend.
 
         Args:
-            schema_name (str): The name of the schema to use for the tables.
             db_type (DBType): The database type ('duckdb' or 'postgresql').
         """
         self.db_type = db_type if db_type is not None else DBType()
