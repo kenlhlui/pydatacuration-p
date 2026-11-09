@@ -118,3 +118,23 @@ def test_update_project_metadata_timestamp_with_child_rows(db_file: Path) -> Non
 
     assert db.read_project_metadata_record(mode='python')['last_modified_datetime'] > initial
     assert _db(db_file, 'P-2').read_project_metadata_record(mode='python')['last_modified_datetime'] == initial
+
+
+def test_create_tables_next_to_old_schema(tmp_path: Path, monkeypatch: pytest.MonkeyPatch) -> None:
+    """Test that create_tables is not fooled by a same-named table in an old per-project schema."""
+    monkeypatch.setenv('DB_TYPE', 'duckdb')
+    db = get_database(db_file=tmp_path / 'db.duckdb')
+    db.create_database()
+    with db.get_connection() as (_session, engine), engine.begin() as conn:
+        conn.execute(text('CREATE SCHEMA "OLD-1"'))
+        conn.execute(text('CREATE TABLE "OLD-1".project_metadata (project_number VARCHAR)'))
+
+    db.create_tables()
+
+    assert db.read_all_project_metadata_records() == []
+    assert _project_numbers_per_table(tmp_path / 'db.duckdb') == {
+        'project_metadata': set(),
+        'checklist_metadata': set(),
+        'checklist': set(),
+        'check_results': set(),
+    }
