@@ -58,14 +58,13 @@ class DBModels:
         backend: The database type ('duckdb' or 'postgresql').
     """
 
-    def __init__(self, schema_name: str, db_type: DBType | None = None) -> None:
+    def __init__(self, db_type: DBType | None = None) -> None:
         """Initialize DBModels with the specified schema name and backend.
 
         Args:
             schema_name (str): The name of the schema to use for the tables.
             db_type (DBType): The database type ('duckdb' or 'postgresql').
         """
-        self.schema_name = schema_name
         self.db_type = db_type if db_type is not None else DBType()
 
     def project_metadata_record(self) -> type[SQLModel]:
@@ -76,18 +75,22 @@ class DBModels:
         """
         dt_type = _datetime_column_type(self.db_type)
 
-        # Only clear if table already exists in metadata
-        table_key = f'{self.schema_name}.project_metadata'
-        if table_key in BaseSQLModel.metadata.tables:
-            BaseSQLModel.metadata.remove(BaseSQLModel.metadata.tables[table_key])
+        # Clear metadata to avoid "already defined" errors in long-running processes
+        if 'project_metadata' in BaseSQLModel.metadata.tables:
+            BaseSQLModel.metadata.remove(BaseSQLModel.metadata.tables['project_metadata'])
 
         class ProjectMetadata(SQLModel, table=True):
             """Project metadata table model."""
 
             __tablename__ = 'project_metadata'  # type: ignore[assignment]
-            __table_args__ = {'schema': self.schema_name}
             project_number: str = Field(
-                default='', sa_column=Column(String, nullable=False, unique=True), description='Unique project number'
+                sa_column=Column(
+                    String,
+                    nullable=False,
+                    unique=True,
+                    primary_key=True,
+                ),
+                description='Unique project number',
             )
             curator_name: str = Field(
                 default='', sa_column=Column(String, nullable=False), description='Name of the data curator'
@@ -102,7 +105,7 @@ class DBModels:
                 default='', sa_column=Column(String, nullable=False), description='Persistent identifier of the dataset'
             )
             dataset_id: int = Field(
-                sa_column=Column(Integer, primary_key=True, autoincrement=False, nullable=False),
+                sa_column=Column(Integer, autoincrement=False, nullable=False),
                 description='Versioned ID of the dataset',
             )
             datasetid: int = Field(
@@ -146,16 +149,19 @@ class DBModels:
         Returns:
             type[SQLModel]: The ChecklistMetadata class with the specified schema.
         """
-        # Only clear if table already exists in metadata
-        table_key = f'{self.schema_name}.checklist_metadata'
-        if table_key in BaseSQLModel.metadata.tables:
-            BaseSQLModel.metadata.remove(BaseSQLModel.metadata.tables[table_key])
+        # Clear metadata to avoid "already defined" errors in long-running processes
+        if 'checklist_metadata' in BaseSQLModel.metadata.tables:
+            BaseSQLModel.metadata.remove(BaseSQLModel.metadata.tables['checklist_metadata'])
 
         class ChecklistMetadata(SQLModel, table=True):
             """Checklist metadata table model."""
 
             __tablename__ = 'checklist_metadata'  # type: ignore[assignment]
-            __table_args__ = {'schema': self.schema_name}
+
+            project_number: str = Field(
+                foreign_key='project_metadata.project_number',
+                primary_key=True,
+            )
             name: str = Field(
                 default='',
                 sa_column=Column(String, nullable=False, primary_key=True),
@@ -199,16 +205,15 @@ class DBModels:
         dt_type = _datetime_column_type(self.db_type)
 
         # Clear metadata to avoid "already defined" errors in long-running processes
-        table_key = f'{self.schema_name}.checklist'
-        if table_key in BaseSQLModel.metadata.tables:
-            BaseSQLModel.metadata.remove(BaseSQLModel.metadata.tables[table_key])
+        if 'checklist' in BaseSQLModel.metadata.tables:
+            BaseSQLModel.metadata.remove(BaseSQLModel.metadata.tables['checklist'])
 
         class Checklist(SQLModel, table=True):
             """Checklist table model."""
 
             __tablename__ = 'checklist'  # type: ignore[assignment]
-            __table_args__ = {'schema': self.schema_name, 'extend_existing': True}
 
+            project_number: str = Field(foreign_key='project_metadata.project_number', primary_key=True)
             id: str = Field(
                 sa_column=Column(String, nullable=False, primary_key=True), description='Unique checklist identifier'
             )
@@ -263,16 +268,15 @@ class DBModels:
         dt_type = _datetime_column_type(self.db_type)
 
         # Clear metadata to avoid "already defined" errors in long-running processes
-        table_key = f'{self.schema_name}.check_results'
-        if table_key in BaseSQLModel.metadata.tables:
-            BaseSQLModel.metadata.remove(BaseSQLModel.metadata.tables[table_key])
+        if 'check_results' in BaseSQLModel.metadata.tables:
+            BaseSQLModel.metadata.remove(BaseSQLModel.metadata.tables['check_results'])
 
         class CheckResult(SQLModel, table=True):
             """Check result list table model."""
 
             __tablename__ = 'check_results'  # type: ignore[assignment]
-            __table_args__ = {'schema': self.schema_name, 'extend_existing': True}
 
+            project_number: str = Field(foreign_key='project_metadata.project_number', primary_key=True)
             check_name: str = Field(sa_column=Column(String, nullable=False), description='Name of the check')
             check_id: str = Field(
                 sa_column=Column(String, nullable=False, primary_key=True), description='ID of the check'
