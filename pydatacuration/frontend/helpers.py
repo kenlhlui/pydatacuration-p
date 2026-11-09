@@ -9,23 +9,17 @@ from pathlib import Path
 from loguru import logger
 from nicegui import app
 from nicegui import ui
-from sqlmodel import SQLModel
 
 from pydatacuration.checklist.utils import discover_checklist_files
 from pydatacuration.db import DatabaseBackend
-from pydatacuration.db import DBModels
 from pydatacuration.db import get_database
 from pydatacuration.db import get_db_type
+from pydatacuration.db.sqlmodels import Checklist
 from pydatacuration.frontend.models.status_options import StatusOptions
 from pydatacuration.frontend.reusable_elements import action_button
 from pydatacuration.services.exporter import Exporter
 from pydatacuration.utils.directory_manager import DirectoryManager
 from pydatacuration.utils.utils import validate_project_number
-
-
-# Type alias for checklist items - uses dummy schema for type hints only
-# The actual schema name will be provided at runtime
-Checklist: type[SQLModel] = DBModels().checklist()
 
 
 class NiceGUIHelper:  # noqa: PLR0904
@@ -44,7 +38,7 @@ class NiceGUIHelper:  # noqa: PLR0904
         self.timers: dict[str, dict] = {}
         self.refresh_callback: Callable | None = None
 
-    def get_checklist_items(self) -> list[SQLModel]:
+    def get_checklist_items(self) -> list[Checklist]:
         """Get all checklist items from the database database for the specified project.
 
         The checklist type is determined by what was stored in the database during setup.
@@ -53,7 +47,7 @@ class NiceGUIHelper:  # noqa: PLR0904
             project_number (str): Project number to get checklist items for.
 
         Returns:
-            Sequence[SQLModel]: List of checklist items with their details.
+            list[Checklist]: List of checklist items with their details.
 
         """
         checklist_items = self.db.read_checklist()

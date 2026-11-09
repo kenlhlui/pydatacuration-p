@@ -1,6 +1,7 @@
 """The module for writing checklist results to the database."""
 
 from pydatacuration.db.base import DatabaseBackend
+from pydatacuration.db.sqlmodels import CheckResult
 
 
 class CheckResultWriter:
@@ -9,7 +10,6 @@ class CheckResultWriter:
     def __init__(self, db_instance: DatabaseBackend) -> None:
         """Initialize the ChecklistResultWriter with a database instance."""
         self.db_instance = db_instance
-        self.checklist_model = self.db_instance.models.check_results()
 
     def write(
         self,
@@ -30,7 +30,7 @@ class CheckResultWriter:
         results (list[str] | list[dict] | None): The results of the checklist item, which can be a list of strings, a list of dictionaries, or None.
 
         """  # noqa: E501
-        record = self.checklist_model(
+        record = CheckResult(
             project_number=self.db_instance.project_number,
             check_id=check_id,
             check_name=check_name,

@@ -2,6 +2,7 @@
 
 from abc import ABC
 from abc import abstractmethod
+from collections.abc import Generator
 from contextlib import contextmanager
 from datetime import datetime
 from datetime import timedelta
@@ -9,12 +10,21 @@ from typing import Any
 from typing import Literal
 
 from loguru import logger
+from sqlalchemy import Engine
 from sqlalchemy import ScalarResult
 from sqlalchemy import delete
+from sqlmodel import Session
 from sqlmodel import SQLModel
+from sqlmodel import col
 from sqlmodel import func
 from sqlmodel import inspect
 from sqlmodel import select
+
+from pydatacuration.db.sqlmodels import Checklist
+from pydatacuration.db.sqlmodels import ChecklistMetadata
+from pydatacuration.db.sqlmodels import CheckResult
+from pydatacuration.db.sqlmodels import ProjectMetadata
+from pydatacuration.db.sqlmodels import TableModel
 
 
 class DatabaseBackend(ABC):  # noqa: PLR0904
@@ -40,26 +50,12 @@ class DatabaseBackend(ABC):  # noqa: PLR0904
         return self.project_number
 
     # ------------------------------------------------------------------
-    # Properties that subclasses must provide
-    # ------------------------------------------------------------------
-
-    @property
-    @abstractmethod
-    def models(self):
-        """Return the DBModels instance for this backend.
-
-        Returns:
-            DBModels: The models factory bound to this backend's schema and type information.
-        """
-        ...
-
-    # ------------------------------------------------------------------
     # Abstract connection context managers
     # ------------------------------------------------------------------
 
     @contextmanager
     @abstractmethod
-    def get_connection(self):
+    def get_connection(self) -> Generator[tuple[Session, Engine], None, None]:
         """Get a read-write SQLAlchemy Session + Engine.
 
         Yields:
@@ -69,7 +65,7 @@ class DatabaseBackend(ABC):  # noqa: PLR0904
 
     @contextmanager
     @abstractmethod
-    def get_readonly_connection(self):
+    def get_readonly_connection(self) -> Generator[tuple[Session, Engine], None, None]:
         """Get a read-only SQLAlchemy Session + Engine.
 
         Yields:
@@ -89,10 +85,8 @@ class DatabaseBackend(ABC):  # noqa: PLR0904
     def create_tables(self) -> None:
         """Create the shared tables if they do not exist (parent table first, for the foreign keys)."""
         tables = [
-            self.models.project_metadata_record().__table__,
-            self.models.checklist_metadata().__table__,
-            self.models.checklist().__table__,
-            self.models.check_results().__table__,
+            SQLModel.metadata.tables[name]
+            for name in ('project_metadata', 'checklist_metadata', 'checklist', 'check_results')
         ]
         try:
             with self.get_connection() as (_session, engine):
@@ -100,11 +94,11 @@ class DatabaseBackend(ABC):  # noqa: PLR0904
         except Exception as e:
             logger.error(f'Error creating tables: {e}')
 
-    def merge_records_to_table(self, sqlmodel: type[SQLModel]) -> None:
+    def merge_records_to_table(self, sqlmodel: SQLModel) -> None:
         """Merge records into a table (upsert by primary key).
 
         Args:
-            sqlmodel (type[SQLModel]): The SQLModel instance to merge.
+            sqlmodel (SQLModel): The SQLModel instance to merge.
         """
         logger.debug(f'Merging records into table: {sqlmodel.__tablename__}')
         try:
@@ -115,11 +109,11 @@ class DatabaseBackend(ABC):  # noqa: PLR0904
             logger.error(f'Error merging records to table {sqlmodel.__tablename__}: {e}')
 
     # Question: This function is not used anywhere. Do we want to keep it?
-    def write_records_to_table(self, sqlmodel: type[SQLModel]) -> None:
+    def write_records_to_table(self, sqlmodel: SQLModel) -> None:
         """Write (insert) records into a table.
 
         Args:
-            sqlmodel (type[SQLModel]): The SQLModel instance to insert.
+            sqlmodel (SQLModel): The SQLModel instance to insert.
         """
         logger.debug(f'Writing records into table: {sqlmodel.__tablename__}')
         try:
@@ -133,12 +127,12 @@ class DatabaseBackend(ABC):  # noqa: PLR0904
             logger.error(f'Error writing records to table {sqlmodel.__tablename__}: {e}')
 
     def read_table_records(
-        self, model: type[SQLModel], mode: Literal['json', 'python'] | str = 'json'
+        self, model: type[TableModel], mode: Literal['json', 'python'] | str = 'json'
     ) -> list[dict[str, Any]]:
         """Read all records from a table.
 
         Args:
-            model (type[SQLModel]): The SQLModel class to read records for.
+            model (type[TableModel]): The table class to read records for.
             mode (str): Optional mode for model_dump (default is 'json').
 
         Returns:
@@ -146,8 +140,8 @@ class DatabaseBackend(ABC):  # noqa: PLR0904
         """
         try:
             with self.get_readonly_connection() as (session, _engine):
-                result: ScalarResult[SQLModel] = session.exec(
-                    select(model).where(model.project_number == self._require_project_number())
+                result: ScalarResult[TableModel] = session.exec(
+                    select(model).where(col(model.project_number) == self._require_project_number())
                 )
                 rows = result.all()
                 if rows:
@@ -167,7 +161,7 @@ class DatabaseBackend(ABC):  # noqa: PLR0904
         Returns:
             dict[str, Any]: Project metadata dictionary.
         """
-        return self.read_table_records(self.models.project_metadata_record(), mode=mode)[0]
+        return self.read_table_records(ProjectMetadata, mode=mode)[0]
 
     def read_check_results(self, mode: Literal['json', 'python'] | str = 'json') -> dict[str, Any]:
         """Read check results.
@@ -178,10 +172,9 @@ class DatabaseBackend(ABC):  # noqa: PLR0904
         Returns:
             dict[str, Any]: Check results dictionary.
         """
-        model_class = self.models.check_results()
-        return {'check_results': self.read_table_records(model_class, mode=mode)}
+        return {'check_results': self.read_table_records(CheckResult, mode=mode)}
 
-    def read_checklist(self) -> list[SQLModel]:
+    def read_checklist(self) -> list[Checklist]:
         """Read checklist table, returning model instances.
 
         Objects are expunged from the session so they remain usable after
@@ -190,16 +183,15 @@ class DatabaseBackend(ABC):  # noqa: PLR0904
         """
         try:
             with self.get_connection() as (session, _engine):
-                checklist_model = self.models.checklist()
                 rows = session.exec(
-                    select(checklist_model)
-                    .where(checklist_model.project_number == self._require_project_number())
-                    .order_by(checklist_model.id)
+                    select(Checklist)
+                    .where(Checklist.project_number == self._require_project_number())
+                    .order_by(col(Checklist.id))
                 ).all()
                 # Expunge objects so they survive session close
                 for row in rows:
                     session.expunge(row)
-                return rows
+                return list(rows)
         except Exception as e:
             logger.error(f'Error reading checklist: {e}')
             return []
@@ -208,11 +200,8 @@ class DatabaseBackend(ABC):  # noqa: PLR0904
         """Read checklist metadata record."""
         try:
             with self.get_connection() as (session, _engine):
-                checklist_metadata_model = self.models.checklist_metadata()
                 record = session.exec(
-                    select(checklist_metadata_model).where(
-                        checklist_metadata_model.project_number == self._require_project_number()
-                    )
+                    select(ChecklistMetadata).where(ChecklistMetadata.project_number == self._require_project_number())
                 ).first()
                 if record:
                     return record.model_dump()
@@ -230,7 +219,6 @@ class DatabaseBackend(ABC):  # noqa: PLR0904
         Returns:
             list[dict[str, Any]]: One dict per project; empty if the table does not exist yet.
         """
-        model = self.models.project_metadata_record()
         columns = (
             'project_number',
             'curator_name',
@@ -242,10 +230,10 @@ class DatabaseBackend(ABC):  # noqa: PLR0904
         )
         try:
             with self.get_readonly_connection() as (session, engine):
-                if not inspect(engine).has_table(model.__tablename__):
+                if not inspect(engine).has_table('project_metadata'):
                     return []
-                query = select(*(getattr(model, c) for c in columns))
-                return [dict(row) for row in session.execute(query).mappings()]
+                query = select(*(getattr(ProjectMetadata, c) for c in columns))
+                return [dict(row) for row in session.exec(query).mappings()]
         except Exception as e:
             logger.error(f'Error fetching project metadata records: {e}')
             return []
@@ -260,16 +248,13 @@ class DatabaseBackend(ABC):  # noqa: PLR0904
         Args:
             project_number (str): The project to delete.
         """
-        child_models = [self.models.check_results(), self.models.checklist(), self.models.checklist_metadata()]
-        project_metadata_model = self.models.project_metadata_record()
+        child_models: list[type[TableModel]] = [CheckResult, Checklist, ChecklistMetadata]
         try:
             with self.get_connection() as (session, _engine):
                 for model in child_models:
-                    session.execute(delete(model).where(model.project_number == project_number))
+                    session.exec(delete(model).where(col(model.project_number) == project_number))
                 session.commit()
-                session.execute(
-                    delete(project_metadata_model).where(project_metadata_model.project_number == project_number)
-                )
+                session.exec(delete(ProjectMetadata).where(col(ProjectMetadata.project_number) == project_number))
                 session.commit()
                 logger.info(f'Deleted project: {project_number}')
         except Exception as e:
@@ -300,11 +285,10 @@ class DatabaseBackend(ABC):  # noqa: PLR0904
             logger.debug(f'Updating checklist item {item_id} in project {project_number}')
 
             with self.get_connection() as (session, _engine):
-                checklist_model = self.models.checklist()
                 existing_item = session.exec(
-                    select(checklist_model).where(
-                        checklist_model.project_number == project_number,
-                        checklist_model.id == item_id,
+                    select(Checklist).where(
+                        Checklist.project_number == project_number,
+                        Checklist.id == item_id,
                     )
                 ).first()
 
@@ -341,11 +325,11 @@ class DatabaseBackend(ABC):  # noqa: PLR0904
             logger.error(f'Error updating checklist item {item_id}: {e}')
             return False
 
-    def read_row(self, sqlmodel: type[SQLModel], column: str, value: str) -> dict[str, Any] | None:
+    def read_row(self, sqlmodel: type[TableModel], column: str, value: str) -> dict[str, Any] | None:
         """Get a single row from a table based on a column value.
 
         Args:
-            sqlmodel (type[SQLModel]): The SQLModel class to query.
+            sqlmodel (type[TableModel]): The table class to query.
             column (str): The column to filter on.
             value (str): The value to match in the specified column.
 
@@ -356,7 +340,7 @@ class DatabaseBackend(ABC):  # noqa: PLR0904
             with self.get_readonly_connection() as (session, _engine):
                 column_attr = getattr(sqlmodel, column)
                 query = select(sqlmodel).where(
-                    sqlmodel.project_number == self._require_project_number(), column_attr == value
+                    col(sqlmodel.project_number) == self._require_project_number(), column_attr == value
                 )
                 result = session.exec(query)
                 row = result.first()
@@ -369,7 +353,7 @@ class DatabaseBackend(ABC):  # noqa: PLR0904
 
     def read_with_in_filter(
         self,
-        sqlmodel: type[SQLModel],
+        sqlmodel: type[TableModel],
         column: str,
         values: list[Any],
         mode: Literal['json', 'python'] | str = 'json',
@@ -377,7 +361,7 @@ class DatabaseBackend(ABC):  # noqa: PLR0904
         """Get rows where column value is in the provided list.
 
         Args:
-            sqlmodel: The SQLModel class to query.
+            sqlmodel: The table class to query.
             column: The column to filter on.
             values: List of values to match.
             mode: Optional mode for model_dump.
@@ -389,7 +373,7 @@ class DatabaseBackend(ABC):  # noqa: PLR0904
             with self.get_readonly_connection() as (session, _engine):
                 column_attr = getattr(sqlmodel, column)
                 query = select(sqlmodel).where(
-                    sqlmodel.project_number == self._require_project_number(), column_attr.in_(values)
+                    col(sqlmodel.project_number) == self._require_project_number(), column_attr.in_(values)
                 )
                 result = session.exec(query)
                 rows = result.all()
@@ -402,11 +386,8 @@ class DatabaseBackend(ABC):  # noqa: PLR0904
         """Update the project_metadata last modified timestamps."""
         try:
             with self.get_connection() as (session, _engine):
-                project_metadata_model = self.models.project_metadata_record()
                 existing_record = session.exec(
-                    select(project_metadata_model).where(
-                        project_metadata_model.project_number == self._require_project_number()
-                    )
+                    select(ProjectMetadata).where(ProjectMetadata.project_number == self._require_project_number())
                 ).first()
 
                 if existing_record:
@@ -430,12 +411,11 @@ class DatabaseBackend(ABC):  # noqa: PLR0904
         # FIXME: move this business logic to new module
         try:
             with self.get_connection() as (session, _engine):
-                checklist_model = self.models.checklist()
                 status_counts = dict(
                     session.exec(
-                        select(checklist_model.status, func.count(checklist_model.id))
-                        .where(checklist_model.project_number == self._require_project_number())
-                        .group_by(checklist_model.status)
+                        select(Checklist.status, func.count(col(Checklist.id)))
+                        .where(Checklist.project_number == self._require_project_number())
+                        .group_by(col(Checklist.status))
                     ).all()
                 )
                 if status_counts:
@@ -457,11 +437,10 @@ class DatabaseBackend(ABC):  # noqa: PLR0904
         # FIXME: move this business logic to new module
         try:
             with self.get_connection() as (session, _engine):
-                checklist_model = self.models.checklist()
                 count = session.exec(
-                    select(func.count(checklist_model.time_spent)).where(
-                        checklist_model.project_number == self._require_project_number(),
-                        checklist_model.time_spent != None,  # noqa: E711
+                    select(func.count(col(Checklist.time_spent))).where(
+                        Checklist.project_number == self._require_project_number(),
+                        col(Checklist.time_spent).is_not(None),
                     )
                 ).one()
                 logger.debug(f'Time spent input count: {count}')
@@ -479,12 +458,11 @@ class DatabaseBackend(ABC):  # noqa: PLR0904
         # FIXME: move this business logic to new module
         try:
             with self.get_connection() as (session, _engine):
-                checklist_model = self.models.checklist()
                 count = session.exec(
                     select(func.count()).where(
-                        checklist_model.project_number == self._require_project_number(),
-                        checklist_model.comments.is_not(None),
-                        func.trim(checklist_model.comments) != '',  # noqa: PLC1901
+                        Checklist.project_number == self._require_project_number(),
+                        col(Checklist.comments).is_not(None),
+                        func.trim(col(Checklist.comments)) != '',  # noqa: PLC1901
                     )
                 ).one()
                 return count

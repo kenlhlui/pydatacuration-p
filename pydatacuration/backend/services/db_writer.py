@@ -6,6 +6,9 @@ from pydatacuration.backend.models.setup_form import SetupForm
 from pydatacuration.checker.checker import Checker
 from pydatacuration.checklist.checklist_model import ChecklistYAML
 from pydatacuration.db import DatabaseBackend
+from pydatacuration.db.sqlmodels import Checklist
+from pydatacuration.db.sqlmodels import ChecklistMetadata
+from pydatacuration.db.sqlmodels import ProjectMetadata
 from pydatacuration.utils.search_ds_meta import get_dataset_id
 from pydatacuration.utils.search_ds_meta import get_dataset_persistent_id
 from pydatacuration.utils.search_ds_meta import get_dataset_pid
@@ -26,9 +29,6 @@ def write_project_metadata_to_db(
         setup_form_instance (SetupForm): The setup form instance containing the project information.
     """
     try:
-        # Get the project metadata schema from the database instance
-        project_metadata_schema = db_instance.models.project_metadata_record()
-
         # Extract the necessary metadata from the checker instance
         project_number = setup_form_instance.project_number
         curator_name: str | None = setup_form_instance.curator_name
@@ -40,7 +40,7 @@ def write_project_metadata_to_db(
         dataset_url = parse_dataset_url(checker.base_url, dataset_pid)
 
         db_instance.merge_records_to_table(
-            project_metadata_schema(
+            ProjectMetadata(
                 curator_name=curator_name,
                 curator_email=curator_email,
                 project_number=project_number,
@@ -66,11 +66,9 @@ def write_checklist_metadata_to_db(db_instance: DatabaseBackend, checklist: Chec
         checklist (ChecklistYAML): The checklist content to write.
     """
     try:
-        checklist_metadata_schema = db_instance.models.checklist_metadata()
-
         metadata = checklist.checklist_metadata
         db_instance.merge_records_to_table(
-            checklist_metadata_schema(
+            ChecklistMetadata(
                 project_number=db_instance.project_number,
                 name=metadata.name,
                 version=metadata.version,
@@ -93,12 +91,10 @@ def write_checklist_items_to_db(db_instance: DatabaseBackend, checklist: Checkli
         checklist (ChecklistYAML): The checklist content to write.
     """
     try:
-        checklist_schema = db_instance.models.checklist()
-
         for item in checklist.checklist:
             logger.debug(f'Writing checklist item to database: {item.id}')
             db_instance.merge_records_to_table(
-                checklist_schema(
+                Checklist(
                     project_number=db_instance.project_number,
                     id=item.id,
                     action=item.action,

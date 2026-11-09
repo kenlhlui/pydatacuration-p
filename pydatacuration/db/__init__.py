@@ -32,12 +32,10 @@ from loguru import logger
 from pydatacuration.db.base import DatabaseBackend
 from pydatacuration.db.settings import DBSettings
 from pydatacuration.db.settings import DBType
-from pydatacuration.db.sqlmodels import DBModels
 
 
 # Re-export key symbols for convenient imports
 __all__ = [
-    'DBModels',
     'DBSettings',
     'DBType',
     'DatabaseBackend',

@@ -7,6 +7,7 @@ import pytest
 
 from pydatacuration.db import DatabaseBackend
 from pydatacuration.db import get_database
+from pydatacuration.db.sqlmodels import ProjectMetadata
 from pydatacuration.frontend import helpers
 from pydatacuration.frontend.helpers import NiceGUIHelper
 from pydatacuration.utils.directory_manager import DirectoryManager
@@ -26,9 +27,8 @@ def main_dir(tmp_path: Path, monkeypatch: pytest.MonkeyPatch) -> Path:
     for i, project_number in enumerate(['P-001', 'P-002'], start=1):
         db = get_database(db_file=db_file, project_number=project_number)
         db.create_tables()
-        project_metadata = db.models.project_metadata_record()
         db.merge_records_to_table(
-            project_metadata(
+            ProjectMetadata(
                 project_number=project_number,
                 curator_name='curator',
                 dataset_title=f'title {i}',

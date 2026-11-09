@@ -9,8 +9,6 @@ from sqlmodel import Session
 from sqlmodel import create_engine
 
 from pydatacuration.db.base import DatabaseBackend
-from pydatacuration.db.settings import DBType
-from pydatacuration.db.sqlmodels import DBModels
 
 
 class DuckDBBackend(DatabaseBackend):
@@ -29,16 +27,6 @@ class DuckDBBackend(DatabaseBackend):
         """
         super().__init__(project_number)
         self.db_file = db_file
-        self._db_models = DBModels(db_type=DBType(db_type='duckdb'))
-
-    # ------------------------------------------------------------------
-    # Properties
-    # ------------------------------------------------------------------
-
-    @property
-    def models(self) -> DBModels:
-        """Return the DBModels factory."""
-        return self._db_models
 
     # ------------------------------------------------------------------
     # Connection context managers (SQLAlchemy only — no raw duckdb.connect)

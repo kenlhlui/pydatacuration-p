@@ -8,8 +8,6 @@ from sqlmodel import Session
 from sqlmodel import create_engine
 
 from pydatacuration.db.base import DatabaseBackend
-from pydatacuration.db.settings import DBType
-from pydatacuration.db.sqlmodels import DBModels
 
 
 class PostgreSQLBackend(DatabaseBackend):
@@ -29,7 +27,6 @@ class PostgreSQLBackend(DatabaseBackend):
         """
         super().__init__(project_number)
         self.database_url = database_url
-        self._db_models = DBModels(db_type=DBType(db_type='postgresql'))
 
         # Persistent engine with connection pooling
         self._engine = create_engine(
@@ -40,15 +37,6 @@ class PostgreSQLBackend(DatabaseBackend):
             pool_timeout=30,
             pool_recycle=1800,
         )
-
-    # ------------------------------------------------------------------
-    # Properties
-    # ------------------------------------------------------------------
-
-    @property
-    def models(self) -> DBModels:
-        """Return the DBModels factory."""
-        return self._db_models
 
     # ------------------------------------------------------------------
     # Connection context managers
