@@ -13,6 +13,7 @@ from loguru import logger
 from sqlalchemy import Engine
 from sqlalchemy import ScalarResult
 from sqlalchemy import delete
+from sqlalchemy.schema import CreateTable
 from sqlmodel import Session
 from sqlmodel import SQLModel
 from sqlmodel import col
@@ -83,14 +84,19 @@ class DatabaseBackend(ABC):  # noqa: PLR0904
         ...
 
     def create_tables(self) -> None:
-        """Create the shared tables if they do not exist (parent table first, for the foreign keys)."""
+        """Create the shared tables if they do not exist (parent table first, for the foreign keys).
+
+        Uses CREATE TABLE IF NOT EXISTS rather than ``metadata.create_all``: duckdb-engine's existence check ignores
+        the schema, so a same-named table in an old per-project schema would make it skip creating the table.
+        """
         tables = [
             SQLModel.metadata.tables[name]
             for name in ('project_metadata', 'checklist_metadata', 'checklist', 'check_results')
         ]
         try:
-            with self.get_connection() as (_session, engine):
-                SQLModel.metadata.create_all(engine, tables=tables)
+            with self.get_connection() as (_session, engine), engine.begin() as conn:
+                for table in tables:
+                    conn.execute(CreateTable(table, if_not_exists=True))
         except Exception as e:
             logger.error(f'Error creating tables: {e}')
 
@@ -230,7 +236,9 @@ class DatabaseBackend(ABC):  # noqa: PLR0904
         )
         try:
             with self.get_readonly_connection() as (session, engine):
-                if not inspect(engine).has_table('project_metadata'):
+                inspector = inspect(engine)
+                # Explicit schema: duckdb-engine would otherwise also match old per-project schemas.
+                if not inspector.has_table('project_metadata', schema=inspector.default_schema_name):
                     return []
                 query = select(*(getattr(ProjectMetadata, c) for c in columns))
                 return [dict(row) for row in session.exec(query).mappings()]
