@@ -4,8 +4,10 @@ Old layout: one schema per project, each holding project_metadata, checklist_met
 New layout: those 4 tables once, in the default schema (main / public), keyed by project_number.
 
 Each project is copied in its own transaction and its row counts are checked. Projects already present in the
-new tables are skipped, so the script can be re-run. The old schemas are left untouched: back up the database
-before running, and drop the old schemas yourself once you have checked the result.
+new tables are skipped, so the script can be re-run. Back up the database before running. By default the old schemas
+are left untouched. With --drop-old, each old schema is dropped in the same transaction as its copy, but only if its
+row counts match the new tables. A schema migrated by an earlier run is dropped too, unless its project has changed
+since then.
 
 Timestamps: the old datetime columns hold naive local time; the new ones hold naive UTC. Pass the time zone the
 old data was recorded in with --source-tz (default America/Toronto, the Docker default). Times inside the repeated
@@ -17,6 +19,7 @@ YAML, not the clock, and is copied as is.
 Usage:
     uv run python scripts/db_migration.py --db-file workdir/db/db.duckdb
     uv run python scripts/db_migration.py --db-file workdir/db/db.duckdb --source-tz America/Vancouver
+    uv run python scripts/db_migration.py --db-file workdir/db/db.duckdb --drop-old
     DB_TYPE=postgresql uv run python scripts/db_migration.py
 """
 
@@ -36,6 +39,7 @@ from sqlalchemy import insert
 from sqlalchemy import literal
 from sqlalchemy import select
 from sqlalchemy import table
+from sqlalchemy.schema import DropSchema
 from sqlmodel import SQLModel
 
 from pydatacuration.db import get_database
@@ -112,16 +116,48 @@ def migrate_schema(conn: Connection, schema: str, source_tz: str) -> str | None:
             )
         )
 
-        old_count = conn.execute(select(func.count()).select_from(old_table)).scalar_one()
+    if mismatches := count_mismatches(conn, schema, project_number):
+        raise RuntimeError('; '.join(mismatches))
+    return project_number
+
+
+def count_mismatches(conn: Connection, schema: str, project_number: str) -> list[str]:
+    """Compare each old table's row count with the project's rows in the new table.
+
+    Returns:
+        list[str]: One message per table whose counts differ; empty if they all match.
+    """
+    mismatches = []
+    for name in TABLE_NAMES:
+        new_table = SQLModel.metadata.tables[name]
+        old_count = conn.execute(select(func.count()).select_from(table(name, schema=schema))).scalar_one()
         new_count = conn.execute(
             select(func.count()).select_from(new_table).where(new_table.c.project_number == project_number)
         ).scalar_one()
         if old_count != new_count:
-            msg = f'{schema}.{name}: copied {new_count} rows, expected {old_count}'
-            raise RuntimeError(msg)
-        logger.debug(f'{schema}.{name}: copied {new_count} rows')
+            mismatches.append(f'{schema}.{name}: {old_count} old rows, {new_count} new rows')
+        logger.debug(f'{schema}.{name}: {old_count} old rows, {new_count} new rows')
+    return mismatches
 
-    return project_number
+
+def drop_old_schema(conn: Connection, schema: str) -> bool:
+    """Drop an old project schema, but only if its project is in the new tables with the same row counts.
+
+    Returns:
+        bool: True if the schema was dropped.
+    """
+    old_project_metadata = table('project_metadata', column('project_number'), schema=schema)
+    project_numbers = conn.execute(select(old_project_metadata.c.project_number)).scalars().all()
+    if len(project_numbers) != 1:
+        logger.warning(f'Keeping schema {schema}: expected 1 project_metadata row, found {len(project_numbers)}')
+        return False
+    # Rows added or deleted in the new tables since an earlier migration also show up here, so the schema is kept.
+    if mismatches := count_mismatches(conn, schema, project_numbers[0]):
+        logger.warning(f'Keeping schema {schema}: row counts differ ({"; ".join(mismatches)})')
+        return False
+    conn.execute(DropSchema(schema, cascade=True))
+    logger.info(f'Dropped old schema {schema}')
+    return True
 
 
 @app.command()
@@ -132,27 +168,32 @@ def main(
     source_tz: Annotated[
         str, typer.Option(help='Time zone the old timestamps were recorded in. They are converted to UTC.')
     ] = 'America/Toronto',
+    drop_old: Annotated[
+        bool, typer.Option(help='Drop each old schema once its project is in the new tables with matching row counts.')
+    ] = False,
 ) -> None:
     """Copy every old per-project schema into the shared tables."""
     ZoneInfo(source_tz)  # Fail early on an unknown time zone name.
     db = get_database(db_file=db_file)
     db.create_tables()
 
-    migrated, skipped = [], []
+    migrated, skipped, dropped = [], [], []
     with db.get_connection() as (_session, engine):
         with engine.connect() as conn:
             schemas = find_old_schemas(conn)
         logger.info(f'Found {len(schemas)} old project schemas')
 
         for schema in schemas:
-            # One transaction per project: a failure rolls back that project only, and stops the run.
+            # One transaction per project: a failure rolls back that project only (copy and drop), and stops the run.
             with engine.begin() as conn:
                 project_number = migrate_schema(conn, schema, source_tz)
+                if drop_old and drop_old_schema(conn, schema):
+                    dropped.append(schema)
             (migrated if project_number else skipped).append(schema)
             if project_number:
                 logger.info(f'Migrated schema {schema} as project {project_number}')
 
-    logger.info(f'Done: {len(migrated)} migrated, {len(skipped)} skipped')
+    logger.info(f'Done: {len(migrated)} migrated, {len(skipped)} skipped, {len(dropped)} old schemas dropped')
 
 
 if __name__ == '__main__':
