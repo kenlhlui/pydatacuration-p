@@ -10,15 +10,11 @@ from typing import Literal
 
 from loguru import logger
 from sqlalchemy import ScalarResult
-from sqlalchemy import column
-from sqlalchemy import literal
-from sqlalchemy import table
-from sqlalchemy import union_all
+from sqlalchemy import delete
 from sqlmodel import SQLModel
 from sqlmodel import func
 from sqlmodel import inspect
 from sqlmodel import select
-from sqlmodel import text
 
 
 class DatabaseBackend(ABC):  # noqa: PLR0904
@@ -28,14 +24,20 @@ class DatabaseBackend(ABC):  # noqa: PLR0904
     Shared CRUD logic (SQLAlchemy/SQLModel-based) is provided as concrete methods.
     """
 
-    def __init__(self, schema_name: str) -> None:
+    def __init__(self, project_number: str | None = None) -> None:
         """Initialize the database backend.
 
         Args:
-            schema_name (str): The name of the schema to use.
+            project_number (str | None): The project to scope queries to. ``None`` for cross-project operations only.
         """
-        # ponytail: dots split as catalog.schema in duckdb-engine; replace to keep as single identifier.
-        self.schema_name = schema_name.replace('.', '_')
+        self.project_number = project_number
+
+    def _require_project_number(self) -> str:
+        """Return the bound project number, or raise if this backend is not bound to a project."""
+        if self.project_number is None:
+            msg = 'This operation requires a backend bound to a project_number.'
+            raise ValueError(msg)
+        return self.project_number
 
     # ------------------------------------------------------------------
     # Properties that subclasses must provide
@@ -48,16 +50,6 @@ class DatabaseBackend(ABC):  # noqa: PLR0904
 
         Returns:
             DBModels: The models factory bound to this backend's schema and type information.
-        """
-        ...
-
-    @property
-    @abstractmethod
-    def system_schemas(self) -> set[str]:
-        """Return the set of system schema names to exclude from user-facing queries.
-
-        Returns:
-            set[str]: System schema names.
         """
         ...
 
@@ -90,14 +82,23 @@ class DatabaseBackend(ABC):  # noqa: PLR0904
     # ------------------------------------------------------------------
 
     @abstractmethod
-    def create_schema(self) -> None:
-        """Create the schema in the database."""
-        ...
-
-    @abstractmethod
     def create_database(self) -> None:
         """Create or ensure the database exists."""
         ...
+
+    def create_tables(self) -> None:
+        """Create the shared tables if they do not exist (parent table first, for the foreign keys)."""
+        tables = [
+            self.models.project_metadata_record().__table__,
+            self.models.checklist_metadata().__table__,
+            self.models.checklist().__table__,
+            self.models.check_results().__table__,
+        ]
+        try:
+            with self.get_connection() as (_session, engine):
+                SQLModel.metadata.create_all(engine, tables=tables)
+        except Exception as e:
+            logger.error(f'Error creating tables: {e}')
 
     def merge_records_to_table(self, sqlmodel: type[SQLModel]) -> None:
         """Merge records into a table (upsert by primary key).
@@ -107,8 +108,7 @@ class DatabaseBackend(ABC):  # noqa: PLR0904
         """
         logger.debug(f'Merging records into table: {sqlmodel.__tablename__}')
         try:
-            with self.get_connection() as (session, engine):
-                sqlmodel.__table__.create(engine, checkfirst=True)
+            with self.get_connection() as (session, _engine):
                 session.merge(sqlmodel)
                 session.commit()
         except Exception as e:
@@ -146,7 +146,9 @@ class DatabaseBackend(ABC):  # noqa: PLR0904
         """
         try:
             with self.get_readonly_connection() as (session, _engine):
-                result: ScalarResult[SQLModel] = session.exec(select(model))
+                result: ScalarResult[SQLModel] = session.exec(
+                    select(model).where(model.project_number == self._require_project_number())
+                )
                 rows = result.all()
                 if rows:
                     return [row.model_dump(mode=mode) for row in rows]
@@ -189,7 +191,11 @@ class DatabaseBackend(ABC):  # noqa: PLR0904
         try:
             with self.get_connection() as (session, _engine):
                 checklist_model = self.models.checklist()
-                rows = session.exec(select(checklist_model).order_by(checklist_model.id)).all()
+                rows = session.exec(
+                    select(checklist_model)
+                    .where(checklist_model.project_number == self._require_project_number())
+                    .order_by(checklist_model.id)
+                ).all()
                 # Expunge objects so they survive session close
                 for row in rows:
                     session.expunge(row)
@@ -203,7 +209,11 @@ class DatabaseBackend(ABC):  # noqa: PLR0904
         try:
             with self.get_connection() as (session, _engine):
                 checklist_metadata_model = self.models.checklist_metadata()
-                record = session.exec(select(checklist_metadata_model)).first()
+                record = session.exec(
+                    select(checklist_metadata_model).where(
+                        checklist_metadata_model.project_number == self._require_project_number()
+                    )
+                ).first()
                 if record:
                     return record.model_dump()
                 logger.warning('No checklist metadata record found.')
@@ -212,66 +222,15 @@ class DatabaseBackend(ABC):  # noqa: PLR0904
             logger.error(f'Error reading checklist metadata: {e}')
             return None
 
-    def read_schema_tables(self) -> list[str]:
-        """Get the names of the tables inside the current schema.
-
-        Returns:
-            list[str]: Schema tables list.
-        """
-        try:
-            with self.get_readonly_connection() as (_session, engine):
-                inspector = inspect(engine)
-                table_names = inspector.get_table_names(schema=self.schema_name)
-                return table_names or []
-        except Exception as e:
-            logger.error(f'Error fetching schema tables for {self.schema_name}: {e}')
-            return []
-
-    def read_check_item_table_names(self) -> list[str]:
-        """Get the names of the tables inside a schema, without the project_metadata table.
-
-        Returns:
-            list[str]: Schema tables list.
-        """
-        table_names = self.read_schema_tables()
-        filtered_names = [name for name in table_names if name != 'project_metadata']
-        logger.debug(f'Check item tables: {filtered_names}')
-        return filtered_names
-
-    def get_all_schema_names(self) -> list[str]:
-        """Get all user schema names from the database.
-
-        Returns:
-            list[str]: List of schema names, excluding system schemas.
-        """
-        try:
-            with self.get_readonly_connection() as (_session, engine):
-                inspector = inspect(engine)
-                all_schemas = inspector.get_schema_names()
-                # ponytail: duckdb-engine returns 'catalog."schema"' format; strip both so callers
-                # get bare names that round-trip safely through get_database(schema_name=...).
-                user_schemas = [
-                    schema.split('.', 1)[1].strip('"') if '.' in schema else schema
-                    for schema in all_schemas
-                    if schema.replace('"', '') not in self.system_schemas
-                ]
-                return user_schemas
-        except Exception as e:
-            logger.error(f'Error fetching schema names: {e}')
-            return []
-
     def read_all_project_metadata_records(self) -> list[dict[str, Any]]:
-        """Read the project metadata record of every schema in a single query.
+        """Read the project metadata record of every project in a single query.
 
-        Only the columns needed for the project table are selected, so schemas created by
-        older versions with extra/missing non-essential columns still UNION cleanly.
+        Only the columns needed for the project table are selected.
 
         Returns:
-            list[dict[str, Any]]: One dict per schema that has a project_metadata row,
-                including a ``schema_name`` key.
+            list[dict[str, Any]]: One dict per project; empty if the table does not exist yet.
         """
-        # Lightweight table() constructs instead of per-schema SQLModel classes: no metadata registration,
-        # and SQLAlchemy still handles identifier quoting.
+        model = self.models.project_metadata_record()
         columns = (
             'project_number',
             'curator_name',
@@ -281,40 +240,40 @@ class DatabaseBackend(ABC):  # noqa: PLR0904
             'dataset_url',
             'last_modified_datetime',
         )
-        info_tables = table('tables', column('table_schema'), column('table_name'), schema='information_schema')
         try:
-            with self.get_readonly_connection() as (_session, engine), engine.connect() as conn:
-                schemas = (
-                    conn
-                    .execute(select(info_tables.c.table_schema).where(info_tables.c.table_name == 'project_metadata'))
-                    .scalars()
-                    .all()
-                )
-                if not schemas:
+            with self.get_readonly_connection() as (session, engine):
+                if not inspect(engine).has_table(model.__tablename__):
                     return []
-
-                selects = []
-                for schema in schemas:
-                    project_metadata = table('project_metadata', *(column(c) for c in columns), schema=schema)
-                    selects.append(select(literal(schema).label('schema_name'), *project_metadata.c))
-                return [dict(row) for row in conn.execute(union_all(*selects)).mappings()]
+                query = select(*(getattr(model, c) for c in columns))
+                return [dict(row) for row in session.execute(query).mappings()]
         except Exception as e:
             logger.error(f'Error fetching project metadata records: {e}')
             return []
 
-    def drop_schema(self, schema_name: str) -> None:
-        """Drop a schema.
+    def delete_project(self, project_number: str) -> None:
+        """Delete all rows of a project from every table.
+
+        Child rows are deleted and committed before the project_metadata row: DuckDB has no ON DELETE CASCADE,
+        and checks foreign keys against the state before the transaction, so one transaction would fail.
+        Not atomic, but idempotent: a failed run can simply be repeated.
 
         Args:
-            schema_name (str): The schema to drop.
+            project_number (str): The project to delete.
         """
+        child_models = [self.models.check_results(), self.models.checklist(), self.models.checklist_metadata()]
+        project_metadata_model = self.models.project_metadata_record()
         try:
-            normalized = schema_name.replace('.', '_')
-            with self.get_connection() as (_session, engine), engine.begin() as conn:
-                conn.execute(text(f'DROP SCHEMA IF EXISTS "{normalized}" CASCADE;'))
-                logger.info(f'Dropped schema: {normalized}')
+            with self.get_connection() as (session, _engine):
+                for model in child_models:
+                    session.execute(delete(model).where(model.project_number == project_number))
+                session.commit()
+                session.execute(
+                    delete(project_metadata_model).where(project_metadata_model.project_number == project_number)
+                )
+                session.commit()
+                logger.info(f'Deleted project: {project_number}')
         except Exception as e:
-            logger.error(f'Error dropping schema {schema_name}: {e}')
+            logger.error(f'Error deleting project {project_number}: {e}')
 
     def update_checklist_item(
         self,
@@ -337,14 +296,20 @@ class DatabaseBackend(ABC):  # noqa: PLR0904
             bool: True if update was successful, False otherwise.
         """
         try:
-            logger.debug(f'Updating checklist item {item_id} in schema {self.schema_name}')
+            project_number = self._require_project_number()
+            logger.debug(f'Updating checklist item {item_id} in project {project_number}')
 
             with self.get_connection() as (session, _engine):
                 checklist_model = self.models.checklist()
-                existing_item = session.exec(select(checklist_model).where(checklist_model.id == item_id)).first()
+                existing_item = session.exec(
+                    select(checklist_model).where(
+                        checklist_model.project_number == project_number,
+                        checklist_model.id == item_id,
+                    )
+                ).first()
 
                 if not existing_item:
-                    logger.warning(f'Checklist item {item_id} not found in schema {self.schema_name}')
+                    logger.warning(f'Checklist item {item_id} not found in project {project_number}')
                     return False
 
                 if status is not None:
@@ -390,7 +355,9 @@ class DatabaseBackend(ABC):  # noqa: PLR0904
         try:
             with self.get_readonly_connection() as (session, _engine):
                 column_attr = getattr(sqlmodel, column)
-                query = select(sqlmodel).where(column_attr == value)
+                query = select(sqlmodel).where(
+                    sqlmodel.project_number == self._require_project_number(), column_attr == value
+                )
                 result = session.exec(query)
                 row = result.first()
                 if row:
@@ -421,7 +388,9 @@ class DatabaseBackend(ABC):  # noqa: PLR0904
         try:
             with self.get_readonly_connection() as (session, _engine):
                 column_attr = getattr(sqlmodel, column)
-                query = select(sqlmodel).where(column_attr.in_(values))
+                query = select(sqlmodel).where(
+                    sqlmodel.project_number == self._require_project_number(), column_attr.in_(values)
+                )
                 result = session.exec(query)
                 rows = result.all()
                 return [row.model_dump(mode=mode) for row in rows]
@@ -434,14 +403,18 @@ class DatabaseBackend(ABC):  # noqa: PLR0904
         try:
             with self.get_connection() as (session, _engine):
                 project_metadata_model = self.models.project_metadata_record()
-                existing_record = session.exec(select(project_metadata_model)).first()
+                existing_record = session.exec(
+                    select(project_metadata_model).where(
+                        project_metadata_model.project_number == self._require_project_number()
+                    )
+                ).first()
 
                 if existing_record:
                     existing_record.log_last_update_date = datetime.today()
                     existing_record.last_modified_datetime = datetime.now()
                     session.add(existing_record)
                     session.commit()
-                    logger.debug(f'Updated project_metadata timestamps for schema {self.schema_name}')
+                    logger.debug(f'Updated project_metadata timestamps for project {self.project_number}')
         except Exception as e:
             logger.error(f'Error updating project_metadata timestamps: {e}')
 
@@ -460,7 +433,9 @@ class DatabaseBackend(ABC):  # noqa: PLR0904
                 checklist_model = self.models.checklist()
                 status_counts = dict(
                     session.exec(
-                        select(checklist_model.status, func.count(checklist_model.id)).group_by(checklist_model.status)
+                        select(checklist_model.status, func.count(checklist_model.id))
+                        .where(checklist_model.project_number == self._require_project_number())
+                        .group_by(checklist_model.status)
                     ).all()
                 )
                 if status_counts:
@@ -484,7 +459,10 @@ class DatabaseBackend(ABC):  # noqa: PLR0904
             with self.get_connection() as (session, _engine):
                 checklist_model = self.models.checklist()
                 count = session.exec(
-                    select(func.count(checklist_model.time_spent)).where(checklist_model.time_spent != None)  # noqa: E711
+                    select(func.count(checklist_model.time_spent)).where(
+                        checklist_model.project_number == self._require_project_number(),
+                        checklist_model.time_spent != None,  # noqa: E711
+                    )
                 ).one()
                 logger.debug(f'Time spent input count: {count}')
                 return count
@@ -504,6 +482,7 @@ class DatabaseBackend(ABC):  # noqa: PLR0904
                 checklist_model = self.models.checklist()
                 count = session.exec(
                     select(func.count()).where(
+                        checklist_model.project_number == self._require_project_number(),
                         checklist_model.comments.is_not(None),
                         func.trim(checklist_model.comments) != '',  # noqa: PLC1901
                     )

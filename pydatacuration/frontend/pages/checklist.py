@@ -63,7 +63,7 @@ async def checklist_page(project_number: str, view_only: bool = False) -> None:
 
     # Initialize the db connection for this project number
     dir_manager = DirectoryManager(MAIN_DIR, project_number=project_number, res_dir=RES_DIR)
-    db = get_database(schema_name=project_number, db_file=dir_manager.db_path)
+    db = get_database(db_file=dir_manager.db_path, project_number=project_number)
     helpers = NiceGUIHelper(db, project_number)
 
     # Load metadata from database

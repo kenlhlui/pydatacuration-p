@@ -73,16 +73,16 @@ def get_database_url() -> str:
 
 
 def get_database(
-    schema_name: str,
     db_file: Path | None = None,
     backend: DBType | None = None,
+    project_number: str | None = None,
 ) -> DatabaseBackend:
     """Factory that returns the appropriate database backend instance.
 
     Args:
-        schema_name: The schema (project) name.
         db_file: Path to the DuckDB file (only used when backend is ``'duckdb'``).
         backend: Explicit backend override. If ``None``, reads ``DB_TYPE`` env var.
+        project_number: The project to scope queries to. ``None`` for cross-project operations only.
 
     Returns:
         DatabaseBackend: A concrete backend (``DuckDBBackend`` or ``PostgreSQLBackend``).
@@ -105,7 +105,7 @@ def get_database(
 
         logger.debug(f'Using DuckDB backend with file: {db_file}')
 
-        return DuckDBBackend(schema_name=schema_name, db_file=db_file)
+        return DuckDBBackend(db_file=db_file, project_number=project_number)
 
     # PostgreSQL
     from pydatacuration.db.postgres import (  # noqa: PLC0415
@@ -113,4 +113,4 @@ def get_database(
     )
 
     logger.debug(f'Using PostgreSQL backend with host: {db_settings.postgres_host}')
-    return PostgreSQLBackend(schema_name=schema_name, database_url=db_settings.build_postgres_url())
+    return PostgreSQLBackend(database_url=db_settings.build_postgres_url(), project_number=project_number)
