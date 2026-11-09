@@ -4,7 +4,6 @@ from abc import ABC
 from abc import abstractmethod
 from collections.abc import Generator
 from contextlib import contextmanager
-from datetime import datetime
 from datetime import timedelta
 from typing import Any
 from typing import Literal
@@ -26,6 +25,8 @@ from pydatacuration.db.sqlmodels import ChecklistMetadata
 from pydatacuration.db.sqlmodels import CheckResult
 from pydatacuration.db.sqlmodels import ProjectMetadata
 from pydatacuration.db.sqlmodels import TableModel
+from pydatacuration.db.sqlmodels import utc_now
+from pydatacuration.db.sqlmodels import utc_today
 
 
 class DatabaseBackend(ABC):  # noqa: PLR0904
@@ -317,7 +318,7 @@ class DatabaseBackend(ABC):  # noqa: PLR0904
                     logger.debug(f'Updated time_spent for item {item_id}: {existing_item.time_spent}')
 
                 if hasattr(existing_item, 'last_modified_datetime'):
-                    existing_item.last_modified_datetime = datetime.now()
+                    existing_item.last_modified_datetime = utc_now()
 
                 session.add(existing_item)
                 session.commit()
@@ -399,8 +400,8 @@ class DatabaseBackend(ABC):  # noqa: PLR0904
                 ).first()
 
                 if existing_record:
-                    existing_record.log_last_update_date = datetime.today()
-                    existing_record.last_modified_datetime = datetime.now()
+                    existing_record.log_last_update_date = utc_today()
+                    existing_record.last_modified_datetime = utc_now()
                     session.add(existing_record)
                     session.commit()
                     logger.debug(f'Updated project_metadata timestamps for project {self.project_number}')
