@@ -332,15 +332,8 @@ class NiceGUIHelper:  # noqa: PLR0904
             db = get_database(db_file=db_file)
             project_metadata_schema = db.read_all_project_metadata_records()
 
-            for project_metadata_record in project_metadata_schema:
-                # Turn the last_modified_datetime into a YYYY-MM-DD HH:MM:SS format
-                last_modified_dt = project_metadata_record.get('last_modified_datetime')
-                project_metadata_record['last_modified'] = (
-                    last_modified_dt.strftime('%Y-%m-%d %H:%M:%S') if last_modified_dt else 'Unknown'
-                )
-
-            # Sort by last modified (most recent first)
-            project_metadata_schema.sort(key=lambda x: x['last_modified'], reverse=True)
+            # Sort by last modified (most recent first). The table page shows it in the browser's time zone.
+            project_metadata_schema.sort(key=lambda x: x['last_modified_datetime'], reverse=True)
 
             return project_metadata_schema
 

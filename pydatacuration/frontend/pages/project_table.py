@@ -1,8 +1,12 @@
 """The project table page shared by the delete and resume project pages."""
 
 # ruff: noqa: PLR1702
+from datetime import UTC
+from datetime import datetime
 from urllib.parse import quote
 from urllib.parse import urlparse
+from zoneinfo import ZoneInfo
+from zoneinfo import ZoneInfoNotFoundError
 
 from nicegui import ui
 from nicegui.elements.input import Input
@@ -11,6 +15,22 @@ from pydatacuration.frontend.pages.utils import confirm_delete_project
 from pydatacuration.frontend.reusable_elements import action_button
 from pydatacuration.frontend.reusable_elements import dropdown_menu
 from pydatacuration.frontend.reusable_elements import form_section
+
+
+async def browser_time_zone() -> ZoneInfo:
+    """Return the time zone of the current browser, or UTC if it can't be read."""
+    try:
+        await ui.context.client.connected()
+        return ZoneInfo(await ui.run_javascript('Intl.DateTimeFormat().resolvedOptions().timeZone'))
+    except (TimeoutError, ZoneInfoNotFoundError, ValueError, TypeError):
+        return ZoneInfo('UTC')
+
+
+def format_last_modified(value: datetime | None, tz: ZoneInfo) -> str:
+    """Format a naive UTC datetime from the database as local time in tz, e.g. '2026-01-15 12:00:00 EST'."""
+    if value is None:
+        return 'Unknown'
+    return value.replace(tzinfo=UTC).astimezone(tz).strftime('%Y-%m-%d %H:%M:%S')
 
 
 async def render_project_table(
@@ -29,6 +49,8 @@ async def render_project_table(
         with ui.element('div').classes('no-projects'):
             ui.label('No projects found').classes('text-xl')
         return
+
+    tz = await browser_time_zone()
 
     # Filters
     with form_section('Filters'), ui.row().classes('gap-4').style('align-items: flex-end;'):
@@ -133,7 +155,7 @@ async def render_project_table(
 
                             # Last Modified
                             with ui.element('td').props('data-label="Project Last Modified"'):
-                                ui.label(schema['last_modified'])
+                                ui.label(format_last_modified(schema.get('last_modified_datetime'), tz))
 
                             # Action column (only for delete mode)
                             if mode == 'delete':

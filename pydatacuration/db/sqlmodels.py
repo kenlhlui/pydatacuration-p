@@ -3,6 +3,7 @@
 Column types that differ per backend use SQLAlchemy variants, so one class works for both.
 """
 
+from datetime import UTC
 from datetime import date
 from datetime import datetime
 from datetime import timedelta
@@ -24,6 +25,24 @@ from sqlmodel import text
 
 # PostgreSQL benefits from JSONB (indexed, faster queries); DuckDB uses plain JSON.
 JSON_TYPE = JSON().with_variant(JSONB(), 'postgresql')
+
+
+def utc_now() -> datetime:
+    """Return the current UTC time as a naive datetime.
+
+    The datetime columns store UTC with no time zone attached. Do not write an aware datetime to them:
+    the database would silently convert it to the session's local time.
+    """
+    return datetime.now(UTC).replace(tzinfo=None)
+
+
+def utc_today() -> date:
+    """Return the current date in UTC."""
+    return datetime.now(UTC).date()
+
+
+# The same as utc_today(), computed by the database. CURRENT_DATE would use the session's local time zone.
+UTC_TODAY_SQL = text("CAST(timezone('UTC', now()) AS DATE)")
 
 
 # NOTE: The description field does not write into the database; it's just for documentation purposes in this python file.
@@ -68,20 +87,20 @@ class ProjectMetadata(SQLModel, table=True):
         description='Type of checklist used, defined by its suffix (e.g., "high" for "checklist-high.yaml"). checklist.yaml is considered "default".',  # noqa: E501
     )
     log_init_date: date = Field(
-        sa_column=Column(DATE, nullable=False, server_default=text('CURRENT_DATE')),
-        description='Date when the log was initialized',
+        sa_column=Column(DATE, nullable=False, server_default=UTC_TODAY_SQL),
+        description='Date when the log was initialized, in UTC',
     )
     log_last_update_date: date = Field(
-        default_factory=date.today,
+        default_factory=utc_today,
         sa_column=Column(DATE, nullable=False),
-        description='Date when the log was last updated',
+        description='Date when the log was last updated, in UTC',
     )
     last_modified_datetime: datetime = Field(
-        default_factory=datetime.today,
+        default_factory=utc_now,
         nullable=False,
         sa_type=DateTime,
-        sa_column_kwargs={'onupdate': lambda: datetime.today()},
-        description='Last modified datetime',
+        sa_column_kwargs={'onupdate': utc_now},
+        description='Last modified datetime, in UTC (naive)',
     )
 
 
@@ -115,9 +134,9 @@ class ChecklistMetadata(SQLModel, table=True):
         description='List of people who created the checklist',
     )
     last_updated: date = Field(
-        default_factory=date.today,
+        default_factory=utc_today,
         sa_column=Column(DATE, nullable=False),
-        description='Date when the checklist was last updated',
+        description='Date when the checklist was last updated (from the checklist YAML; UTC if missing)',
     )
     status: str = Field(
         default='draft',
@@ -155,11 +174,11 @@ class Checklist(SQLModel, table=True):
     comments: str = Field(sa_column=Column(String, nullable=True), description="Curator's Comments")
     time_spent: timedelta = Field(sa_column=Column(Interval, nullable=True), description='Time spent on this item')
     last_modified_datetime: datetime = Field(
-        default_factory=datetime.today,
+        default_factory=utc_now,
         nullable=False,
         sa_type=DateTime,
-        sa_column_kwargs={'onupdate': lambda: datetime.today()},
-        description='Last modified datetime',
+        sa_column_kwargs={'onupdate': utc_now},
+        description='Last modified datetime, in UTC (naive)',
     )
 
     @field_serializer('time_spent')
@@ -190,11 +209,11 @@ class CheckResult(SQLModel, table=True):
         sa_column=Column(JSON_TYPE, nullable=False), description='(Nested) List of check results'
     )
     last_modified_datetime: datetime = Field(
-        default_factory=datetime.today,
+        default_factory=utc_now,
         nullable=False,
         sa_type=DateTime,
-        sa_column_kwargs={'onupdate': lambda: datetime.today()},
-        description='Last modified datetime',
+        sa_column_kwargs={'onupdate': utc_now},
+        description='Last modified datetime, in UTC (naive)',
     )
 
 

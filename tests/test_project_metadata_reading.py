@@ -2,6 +2,7 @@
 
 from datetime import datetime
 from pathlib import Path
+from zoneinfo import ZoneInfo
 
 import pytest
 
@@ -10,6 +11,7 @@ from pydatacuration.db import get_database
 from pydatacuration.db.sqlmodels import ProjectMetadata
 from pydatacuration.frontend import helpers
 from pydatacuration.frontend.helpers import NiceGUIHelper
+from pydatacuration.frontend.pages.project_table import format_last_modified
 from pydatacuration.utils.directory_manager import DirectoryManager
 
 
@@ -67,12 +69,24 @@ def test_read_all_project_metadata_records_empty_db(tmp_path: Path, monkeypatch:
 
 
 def test_get_all_schemas(main_dir: Path) -> None:
-    """Test formatting and sort order (most recently modified first)."""
+    """Test sort order (most recently modified first)."""
     schemas = NiceGUIHelper.get_all_schemas(main_dir)
 
     assert [s['project_number'] for s in schemas] == ['P-002', 'P-001']
-    assert schemas[0]['last_modified'] == '2026-01-02 12:30:00'
     assert schemas[0]['curator_name'] == 'curator'
+
+
+@pytest.mark.parametrize(
+    ('value', 'expected'),
+    [
+        (datetime(2026, 1, 15, 17, 0), '2026-01-15 12:00:00 EST'),  # noqa: DTZ001 - stored as naive UTC
+        (datetime(2026, 7, 15, 16, 0), '2026-07-15 12:00:00 EDT'),  # noqa: DTZ001
+        (None, 'Unknown'),
+    ],
+)
+def test_format_last_modified(value: datetime | None, expected: str) -> None:
+    """Test that stored UTC times are shown in the browser's time zone."""
+    assert format_last_modified(value, ZoneInfo('America/Toronto')) == expected
 
 
 def test_get_all_schemas_creates_single_backend(main_dir: Path, monkeypatch: pytest.MonkeyPatch) -> None:

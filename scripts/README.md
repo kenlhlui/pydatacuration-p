@@ -18,6 +18,7 @@ After the upgrade, the app reads only the new tables. Projects still in the old 
 2. Finds every old project schema: any schema other than the default one that has a `project_metadata` table.
 3. Copies each project in its own transaction:
    - Copies `project_metadata`, `checklist_metadata`, `checklist` and `check_results` with `INSERT … SELECT`. The project number comes from the old schema's `project_metadata` row and is added to every row.
+   - Converts every `last_modified_datetime` value from local time to UTC, and recalculates `log_last_update_date` in UTC (see [Timestamps](#timestamps)).
    - Compares old and new row counts for each table. On a mismatch, it rolls back that project and stops.
 4. Leaves the old schemas untouched.
 
@@ -32,6 +33,23 @@ It's safe to re-run:
 - **Set `DB_TYPE`** to match the database you're migrating (`duckdb` or `postgresql`). The script reads it from the environment or `.env`, like the app does.
 - **PostgreSQL hasn't been tested.** The script is written for both backends, but it has only been run against DuckDB. Try it on a copy of the PostgreSQL database first.
 - **The old schemas stay in the database.** The app ignores them. Once you've checked the result, remove them yourself (see [After migrating](#after-migrating)).
+- **Know which time zone the old timestamps are in.** In Docker it's the `TIMEZONE` setting (default `America/Toronto`). Outside Docker it's the time zone of the machine that ran the app. Pass it with `--source-tz`.
+
+### Timestamps
+
+The old layout stored `last_modified_datetime` as local time with no time zone attached. The new layout stores it as UTC, still with no time zone attached, and the app shows it in each user's browser time zone.
+
+The script reads each old value as local time in `--source-tz` (default `America/Toronto`) and converts it to UTC. Daylight saving time is handled, so `2026-01-15 12:00` becomes `17:00` UTC and `2026-07-15 12:00` becomes `16:00` UTC.
+
+One hour a year can't be converted exactly: when clocks fall back, times between 01:00 and 02:00 happen twice, and the database picks one of the two readings. Those values can be off by an hour.
+
+The date columns are also UTC in the new layout. The script handles them like this:
+
+| Column | What the script does |
+|---|---|
+| `project_metadata.log_last_update_date` | Sets it to the UTC date of the converted `last_modified_datetime`. The app always updated both at once, so this is exact. |
+| `project_metadata.log_init_date` | Copies it unchanged. A date has no time of day, so it can't be converted. For a project started in the evening (after 19:00 or 20:00 in Toronto), the UTC date would have been one day later. |
+| `checklist_metadata.last_updated` | Copies it unchanged. It's the date written in the checklist YAML, not a time recorded by the app. |
 
 ### Usage
 
@@ -39,6 +57,12 @@ DuckDB:
 
 ```bash
 DB_TYPE=duckdb uv run python scripts/db_migration.py --db-file workdir/db/db.duckdb
+```
+
+If the old timestamps aren't Toronto time:
+
+```bash
+DB_TYPE=duckdb uv run python scripts/db_migration.py --db-file workdir/db/db.duckdb --source-tz America/Vancouver
 ```
 
 PostgreSQL (the connection comes from `DATABASE_URL` or the `POSTGRES_*` variables, as in the app):
