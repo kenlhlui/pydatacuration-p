@@ -21,6 +21,7 @@ After the upgrade, the app reads only the new tables. Projects still in the old 
    - Converts every `last_modified_datetime` value from local time to UTC, and recalculates `log_last_update_date` in UTC (see [Timestamps](#timestamps)).
    - Compares old and new row counts for each table. On a mismatch, it rolls back that project and stops.
 4. Leaves the old schemas untouched, unless you pass `--drop-old` (see [Dropping the old schemas](#dropping-the-old-schemas)).
+5. Records schema version 2 in the `schema_version` table. It does this only once every project has been copied. Until then, the app refuses to open the database and asks you to run this script.
 
 It's safe to re-run:
 - Projects already in the new tables are skipped.

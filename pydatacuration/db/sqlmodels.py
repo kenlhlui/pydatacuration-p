@@ -219,3 +219,19 @@ class CheckResult(SQLModel, table=True):
 
 # Any of the shared tables; all of them have a project_number column.
 TableModel = ProjectMetadata | ChecklistMetadata | Checklist | CheckResult
+
+
+# The table layout this code expects. Independent of the app version: bump it only when the layout changes,
+# and give scripts/db_migration.py a way to get existing databases there.
+#   1: one schema per project (no schema_version table)
+#   2: the 4 shared tables, keyed by project_number
+SCHEMA_VERSION = 2
+
+
+class SchemaVersion(SQLModel, table=True):
+    """The schema version of the database. Holds a single row."""
+
+    __tablename__ = 'schema_version'  # type: ignore[assignment]
+
+    # No autoincrement: SQLAlchemy would render SERIAL, which DuckDB does not have.
+    version: int = Field(primary_key=True, sa_column_kwargs={'autoincrement': False})

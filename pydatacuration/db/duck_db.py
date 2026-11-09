@@ -74,6 +74,12 @@ class DuckDBBackend(DatabaseBackend):
     # Backend-specific operations
     # ------------------------------------------------------------------
 
+    def get_schema_version(self) -> int | None:
+        """Return the database's schema version, or None if the file does not exist yet (see the base class)."""
+        if not self.db_file.exists():
+            return None
+        return super().get_schema_version()
+
     def create_database(self) -> None:
         """Create the DuckDB database file (opening an engine connection creates it)."""
         try:

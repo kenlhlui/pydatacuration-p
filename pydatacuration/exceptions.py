@@ -13,6 +13,10 @@ class DatasetNotFoundError(DatasetAccessError):
     """Raised when the dataset does not exist."""
 
 
+class SchemaVersionError(Exception):
+    """Raised when the database's schema version does not match the version the code expects."""
+
+
 class DirectoryExistsError(Exception):
     """Raised when the working directory already exists and force_delete is not set."""
 
