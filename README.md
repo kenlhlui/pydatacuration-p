@@ -49,6 +49,9 @@ This will delete the `./workdir`, `./new_dir/` and `./pgadmin/` folders,
 ## 🧪 Validating the Checklist
 See the [Checklist Validator CLI Guide](docs/checklist/README.md) for instructions on how to validate the checklist using the command line interface (CLI).
 
+## 🗄️ Changing the Database Schema
+The database layout has its own version number, separate from the app version. See the [Database Schema Version Guide](docs/db_schema_version/README.md) for how to change the schema, upgrade a database, and how the version check works.
+
 ## ⬆️ Bump the version
 Prerequisites:
 1. [Commitizen](https://commitizen-tools.github.io/commitizen/)

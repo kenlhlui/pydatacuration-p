@@ -16,6 +16,11 @@ run-tests-with-report-html:
     just run-tests
     coverage html
 
+# Write the schema snapshots for the current SCHEMA_VERSION (tests/schema_snapshots/), after bumping it
+schema-snapshot:
+    -UPDATE_SCHEMA_SNAPSHOT=1 uv run pytest -q tests/test_schema_snapshot.py
+    uv run pytest -q tests/test_schema_snapshot.py
+
 # ─────────────────────────────────────────────────────────
 # Docker
 # ─────────────────────────────────────────────────────────
