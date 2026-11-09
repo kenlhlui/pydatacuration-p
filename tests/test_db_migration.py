@@ -9,8 +9,10 @@ import pytest
 from sqlmodel import text
 
 from pydatacuration.db import get_database
+from pydatacuration.db.sqlmodels import SCHEMA_VERSION
 from pydatacuration.db.sqlmodels import Checklist
 from pydatacuration.db.sqlmodels import ProjectMetadata
+from pydatacuration.exceptions import SchemaVersionError
 
 
 SCRIPT = Path(__file__).parents[1] / 'scripts' / 'db_migration.py'
@@ -54,6 +56,7 @@ def old_db_file(tmp_path: Path, monkeypatch: pytest.MonkeyPatch) -> Path:
         conn.execute(text('CREATE TABLE "OLD-1".project_metadata AS SELECT * FROM main.project_metadata'))
         for name in ('checklist_metadata', 'checklist', 'check_results'):
             conn.execute(text(f'CREATE TABLE "OLD-1".{name} AS SELECT * EXCLUDE (project_number) FROM main.{name}'))
+        conn.execute(text('DROP TABLE main.schema_version'))  # Old databases have no version table.
     db.delete_project('OLD-1')
     return db_file
 
@@ -104,6 +107,16 @@ def test_drop_old_keeps_schema_when_project_changed(old_db_file: Path) -> None:
 
     db_migration.main(db_file=old_db_file, source_tz='America/Toronto', drop_old=True)
     assert old_schemas(old_db_file) == ['OLD-1']
+
+
+def test_migration_sets_schema_version(old_db_file: Path) -> None:
+    """Test that the app refuses the old database until the migration has run, and accepts it afterwards."""
+    with pytest.raises(SchemaVersionError, match='db_migration.py'):
+        get_database(db_file=old_db_file)
+
+    db_migration.main(db_file=old_db_file, source_tz='America/Toronto')
+
+    assert get_database(db_file=old_db_file).get_schema_version() == SCHEMA_VERSION
 
 
 def test_migration_rejects_unknown_time_zone(old_db_file: Path) -> None:

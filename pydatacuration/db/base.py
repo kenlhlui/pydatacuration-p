@@ -12,6 +12,7 @@ from loguru import logger
 from sqlalchemy import Engine
 from sqlalchemy import ScalarResult
 from sqlalchemy import delete
+from sqlalchemy import insert
 from sqlalchemy.schema import CreateTable
 from sqlmodel import Session
 from sqlmodel import SQLModel
@@ -20,10 +21,12 @@ from sqlmodel import func
 from sqlmodel import inspect
 from sqlmodel import select
 
+from pydatacuration.db.sqlmodels import SCHEMA_VERSION
 from pydatacuration.db.sqlmodels import Checklist
 from pydatacuration.db.sqlmodels import ChecklistMetadata
 from pydatacuration.db.sqlmodels import CheckResult
 from pydatacuration.db.sqlmodels import ProjectMetadata
+from pydatacuration.db.sqlmodels import SchemaVersion
 from pydatacuration.db.sqlmodels import TableModel
 from pydatacuration.db.sqlmodels import utc_now
 from pydatacuration.db.sqlmodels import utc_today
@@ -95,11 +98,43 @@ class DatabaseBackend(ABC):  # noqa: PLR0904
             for name in ('project_metadata', 'checklist_metadata', 'checklist', 'check_results')
         ]
         try:
+            is_empty = self.get_schema_version() is None
             with self.get_connection() as (_session, engine), engine.begin() as conn:
                 for table in tables:
                     conn.execute(CreateTable(table, if_not_exists=True))
+            # Only a new database is known to have the current layout. An old one keeps its version
+            # until scripts/db_migration.py has moved its data.
+            if is_empty:
+                self.set_schema_version(SCHEMA_VERSION)
         except Exception as e:
             logger.error(f'Error creating tables: {e}')
+
+    def get_schema_version(self) -> int | None:
+        """Return the database's schema version.
+
+        Returns:
+            int | None: The version in the schema_version table. Without one: 1 (the old layout) if there is a
+                project_metadata table in any schema, or None if the database is empty.
+        """
+        with self.get_readonly_connection() as (_session, engine), engine.connect() as conn:
+            inspector = inspect(conn)
+            if inspector.has_table('schema_version', schema=inspector.default_schema_name):
+                version = conn.execute(select(SchemaVersion.version)).scalar()
+                if version is not None:
+                    return version
+            has_project_metadata = any(
+                inspector.has_table('project_metadata', schema=schema) for schema in inspector.get_schema_names()
+            )
+        return 1 if has_project_metadata else None
+
+    def set_schema_version(self, version: int) -> None:
+        """Record the database's schema version, creating the schema_version table if needed."""
+        version_table = SQLModel.metadata.tables['schema_version']
+        with self.get_connection() as (_session, engine), engine.begin() as conn:
+            conn.execute(CreateTable(version_table, if_not_exists=True))
+            conn.execute(delete(version_table))
+            conn.execute(insert(version_table).values(version=version))
+        logger.info(f'Set the database schema version to {version}')
 
     def merge_records_to_table(self, sqlmodel: SQLModel) -> None:
         """Merge records into a table (upsert by primary key).

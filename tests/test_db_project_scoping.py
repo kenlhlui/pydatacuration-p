@@ -61,7 +61,8 @@ def _db(db_file: Path, project_number: str) -> DatabaseBackend:
 
 def _project_numbers_per_table(db_file: Path) -> dict[str, set[str]]:
     tables = ('project_metadata', 'checklist_metadata', 'checklist', 'check_results')
-    with get_database(db_file=db_file).get_readonly_connection() as (_session, engine), engine.connect() as conn:
+    db = get_database(db_file=db_file, check_schema_version=False)  # Also used on databases with an old schema.
+    with db.get_readonly_connection() as (_session, engine), engine.connect() as conn:
         return {table: set(conn.execute(text(f'SELECT project_number FROM {table}')).scalars()) for table in tables}
 
 

@@ -32,6 +32,8 @@ from loguru import logger
 from pydatacuration.db.base import DatabaseBackend
 from pydatacuration.db.settings import DBSettings
 from pydatacuration.db.settings import DBType
+from pydatacuration.db.sqlmodels import SCHEMA_VERSION
+from pydatacuration.exceptions import SchemaVersionError
 
 
 # Re-export key symbols for convenient imports
@@ -74,6 +76,7 @@ def get_database(
     db_file: Path | None = None,
     backend: DBType | None = None,
     project_number: str | None = None,
+    check_schema_version: bool = True,
 ) -> DatabaseBackend:
     """Factory that returns the appropriate database backend instance.
 
@@ -81,6 +84,8 @@ def get_database(
         db_file: Path to the DuckDB file (only used when backend is ``'duckdb'``).
         backend: Explicit backend override. If ``None``, reads ``DB_TYPE`` env var.
         project_number: The project to scope queries to. ``None`` for cross-project operations only.
+        check_schema_version: Check that the database has the schema version this code expects
+            (see ``_check_schema_version``). Only the migration script turns this off.
 
     Returns:
         DatabaseBackend: A concrete backend (``DuckDBBackend`` or ``PostgreSQLBackend``).
@@ -92,6 +97,7 @@ def get_database(
 
     resolved_backend = backend.db_type if backend is not None else db_settings.db_type
 
+    db: DatabaseBackend
     if resolved_backend == 'duckdb':
         if db_file is None:
             msg = "DuckDB backend requires a 'db_file' path."
@@ -103,12 +109,48 @@ def get_database(
 
         logger.debug(f'Using DuckDB backend with file: {db_file}')
 
-        return DuckDBBackend(db_file=db_file, project_number=project_number)
+        db = DuckDBBackend(db_file=db_file, project_number=project_number)
+        db_key = str(db_file.resolve())
+    else:
+        # PostgreSQL
+        from pydatacuration.db.postgres import (  # noqa: PLC0415
+            PostgreSQLBackend,  # Note: Import here to avoid unnecessary dependencies when using DuckDB
+        )
 
-    # PostgreSQL
-    from pydatacuration.db.postgres import (  # noqa: PLC0415
-        PostgreSQLBackend,  # Note: Import here to avoid unnecessary dependencies when using DuckDB
-    )
+        logger.debug(f'Using PostgreSQL backend with host: {db_settings.postgres_host}')
+        db_key = db_settings.build_postgres_url()
+        db = PostgreSQLBackend(database_url=db_key, project_number=project_number)
 
-    logger.debug(f'Using PostgreSQL backend with host: {db_settings.postgres_host}')
-    return PostgreSQLBackend(database_url=db_settings.build_postgres_url(), project_number=project_number)
+    if check_schema_version:
+        _check_schema_version(db, db_key)
+    return db
+
+
+# Databases already found at SCHEMA_VERSION in this process, so each one is checked only once.
+_checked_databases: set[str] = set()
+
+
+def _check_schema_version(db: DatabaseBackend, key: str) -> None:
+    """Raise if the database's schema version differs from SCHEMA_VERSION. An empty database passes.
+
+    Raises:
+        SchemaVersionError: If the database is at another schema version.
+    """
+    if key in _checked_databases:
+        return
+    version = db.get_schema_version()
+    if version is None:  # Empty: create_tables() will record the current version.
+        return
+    if version < SCHEMA_VERSION:
+        msg = (
+            f'The database is at schema version {version}, but this version of the app needs version '
+            f'{SCHEMA_VERSION}. Back up the database, then run scripts/db_migration.py.'
+        )
+        raise SchemaVersionError(msg)
+    if version > SCHEMA_VERSION:
+        msg = (
+            f'The database is at schema version {version}, which is newer than this version of the app supports '
+            f'({SCHEMA_VERSION}). Upgrade the app.'
+        )
+        raise SchemaVersionError(msg)
+    _checked_databases.add(key)

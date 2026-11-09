@@ -7,7 +7,8 @@ Each project is copied in its own transaction and its row counts are checked. Pr
 new tables are skipped, so the script can be re-run. Back up the database before running. By default the old schemas
 are left untouched. With --drop-old, each old schema is dropped in the same transaction as its copy, but only if its
 row counts match the new tables. A schema migrated by an earlier run is dropped too, unless its project has changed
-since then.
+since then. Once every project is copied, the database is marked as schema version 2 (SCHEMA_VERSION), which the app
+checks before using it.
 
 Timestamps: the old datetime columns hold naive local time; the new ones hold naive UTC. Pass the time zone the
 old data was recorded in with --source-tz (default America/Toronto, the Docker default). Times inside the repeated
@@ -43,6 +44,7 @@ from sqlalchemy.schema import DropSchema
 from sqlmodel import SQLModel
 
 from pydatacuration.db import get_database
+from pydatacuration.db.sqlmodels import SCHEMA_VERSION
 
 
 # Parent table first, for the foreign keys.
@@ -174,7 +176,7 @@ def main(
 ) -> None:
     """Copy every old per-project schema into the shared tables."""
     ZoneInfo(source_tz)  # Fail early on an unknown time zone name.
-    db = get_database(db_file=db_file)
+    db = get_database(db_file=db_file, check_schema_version=False)
     db.create_tables()
 
     migrated, skipped, dropped = [], [], []
@@ -193,6 +195,8 @@ def main(
             if project_number:
                 logger.info(f'Migrated schema {schema} as project {project_number}')
 
+    # Reached only if every project was copied (a failure raises above), so the database now has the new layout.
+    db.set_schema_version(SCHEMA_VERSION)
     logger.info(f'Done: {len(migrated)} migrated, {len(skipped)} skipped, {len(dropped)} old schemas dropped')
 
 
