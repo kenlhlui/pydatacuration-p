@@ -7,9 +7,10 @@ from typing import Any
 import yaml
 from docxtpl import DocxTemplate
 from loguru import logger
-from sqlmodel import SQLModel
 
 from pydatacuration.db.base import DatabaseBackend
+from pydatacuration.db.sqlmodels import Checklist
+from pydatacuration.db.sqlmodels import CheckResult
 from pydatacuration.utils.directory_manager import DirectoryManager
 from pydatacuration.utils.utils import get_name_initials
 from pydatacuration.utils.utils import numeric_id_sort_key
@@ -32,7 +33,7 @@ class Exporter:
         self.res_dir = res_dir if res_dir is not None else Path.cwd() / 'res'
 
         self.project_metadata = self.db.read_project_metadata_record()
-        self.checklist: list[SQLModel] = self.db.read_checklist()
+        self.checklist: list[Checklist] = self.db.read_checklist()
 
     def get_docx_file_name(self) -> str:
         """Generate a file name for the exported word document based on the project metadata."""
@@ -49,7 +50,7 @@ class Exporter:
             # Unpack the automated check results to the checklist item
             if row_dict.get('automated_check_ids') and row_dict.get('automated_check_ids') != []:
                 for check_id in row_dict['automated_check_ids']:
-                    result = self.db.read_row(self.db.models.check_results(), 'check_id', check_id)
+                    result = self.db.read_row(CheckResult, 'check_id', check_id)
                     if result:
                         check_name = result.get('check_name', '')
                         row_dict.setdefault('automated_check_results', {})[check_name] = result.get('results')

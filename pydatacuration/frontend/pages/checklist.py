@@ -11,6 +11,7 @@ from pydatacuration.backend.models.app_settings import AppSettings
 from pydatacuration.checklist.priority_options import load_priority_options
 from pydatacuration.db import DatabaseBackend
 from pydatacuration.db import get_database
+from pydatacuration.db.sqlmodels import CheckResult
 
 # Import exceptions for error handling
 from pydatacuration.frontend.helpers import NiceGUIHelper
@@ -399,7 +400,7 @@ async def render_checklist_table(  # noqa: PLR0913, PLR0912, PLR0915, C901, PLR0
 
                                 if automated_check_ids:
                                     checks_info = db_instance.read_with_in_filter(
-                                        db_instance.models.check_results(),
+                                        CheckResult,
                                         'check_id',
                                         automated_check_ids,
                                     )
