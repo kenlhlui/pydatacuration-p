@@ -204,3 +204,6 @@ pgadmin/
 
 # node_modules
 node_modules/
+
+# Claude
+.claude/
