@@ -75,6 +75,37 @@ def test_migration_converts_timestamps_to_utc(old_db_file: Path) -> None:
     }
 
 
+def old_schemas(db_file: Path) -> list[str]:
+    """Return the old project schemas left in the database."""
+    db = get_database(db_file=db_file)
+    with db.get_readonly_connection() as (_session, engine), engine.connect() as conn:
+        return db_migration.find_old_schemas(conn)
+
+
+def test_migration_keeps_old_schemas_by_default(old_db_file: Path) -> None:
+    """Test that the old schemas are left alone without --drop-old."""
+    db_migration.main(db_file=old_db_file, source_tz='America/Toronto')
+    assert old_schemas(old_db_file) == ['OLD-1']
+
+
+def test_migration_drops_old_schemas(old_db_file: Path) -> None:
+    """Test that --drop-old drops the old schema and keeps the migrated rows."""
+    db_migration.main(db_file=old_db_file, source_tz='America/Toronto', drop_old=True)
+    assert old_schemas(old_db_file) == []
+    db = get_database(db_file=old_db_file, project_number='OLD-1')
+    assert db.read_project_metadata_record(mode='python')['project_number'] == 'OLD-1'
+
+
+def test_drop_old_keeps_schema_when_project_changed(old_db_file: Path) -> None:
+    """Test that a re-run with --drop-old keeps an old schema whose project has changed since it was migrated."""
+    db_migration.main(db_file=old_db_file, source_tz='America/Toronto')
+    db = get_database(db_file=old_db_file)
+    db.merge_records_to_table(Checklist(project_number='OLD-1', id='added-later'))
+
+    db_migration.main(db_file=old_db_file, source_tz='America/Toronto', drop_old=True)
+    assert old_schemas(old_db_file) == ['OLD-1']
+
+
 def test_migration_rejects_unknown_time_zone(old_db_file: Path) -> None:
     """Test that a misspelt time zone stops the run before anything is copied."""
     with pytest.raises(Exception, match='Not/AZone'):

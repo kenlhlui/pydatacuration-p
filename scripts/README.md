@@ -20,11 +20,22 @@ After the upgrade, the app reads only the new tables. Projects still in the old 
    - Copies `project_metadata`, `checklist_metadata`, `checklist` and `check_results` with `INSERT … SELECT`. The project number comes from the old schema's `project_metadata` row and is added to every row.
    - Converts every `last_modified_datetime` value from local time to UTC, and recalculates `log_last_update_date` in UTC (see [Timestamps](#timestamps)).
    - Compares old and new row counts for each table. On a mismatch, it rolls back that project and stops.
-4. Leaves the old schemas untouched.
+4. Leaves the old schemas untouched, unless you pass `--drop-old` (see [Dropping the old schemas](#dropping-the-old-schemas)).
 
 It's safe to re-run:
 - Projects already in the new tables are skipped.
 - A schema without exactly one `project_metadata` row is skipped, with a warning.
+
+### Dropping the old schemas
+
+With `--drop-old`, the script also drops each old schema (`DROP SCHEMA … CASCADE`, which removes its 4 tables). For each schema:
+
+- The drop happens in the same transaction as the copy, so a project is either copied and dropped, or neither.
+- The schema is dropped only if the row counts of all 4 tables match the project's rows in the new tables. Otherwise, it's kept, with a warning.
+- A schema copied by an earlier run without `--drop-old` is dropped too, unless its project has changed in the app since then. Added or deleted rows change the counts, so the schema is kept. Check it and drop it yourself (see [After migrating](#after-migrating)).
+- A schema without exactly one `project_metadata` row is kept.
+
+Back up the database first. There's no undo.
 
 ### Before you run it
 
@@ -32,7 +43,7 @@ It's safe to re-run:
 - **Stop the app.** DuckDB allows only one writer, so the migration fails if the app holds the file open.
 - **Set `DB_TYPE`** to match the database you're migrating (`duckdb` or `postgresql`). The script reads it from the environment or `.env`, like the app does.
 - **PostgreSQL hasn't been tested.** The script is written for both backends, but it has only been run against DuckDB. Try it on a copy of the PostgreSQL database first.
-- **The old schemas stay in the database.** The app ignores them. Once you've checked the result, remove them yourself (see [After migrating](#after-migrating)).
+- **The old schemas stay in the database by default.** The app ignores them. Once you've checked the result, re-run with `--drop-old` or remove them yourself (see [After migrating](#after-migrating)).
 - **Know which time zone the old timestamps are in.** In Docker it's the `TIMEZONE` setting (default `America/Toronto`). Outside Docker it's the time zone of the machine that ran the app. Pass it with `--source-tz`.
 
 ### Timestamps
@@ -65,6 +76,12 @@ If the old timestamps aren't Toronto time:
 DB_TYPE=duckdb uv run python scripts/db_migration.py --db-file workdir/db/db.duckdb --source-tz America/Vancouver
 ```
 
+Migrate and drop the old schemas in one go:
+
+```bash
+DB_TYPE=duckdb uv run python scripts/db_migration.py --db-file workdir/db/db.duckdb --drop-old
+```
+
 PostgreSQL (the connection comes from `DATABASE_URL` or the `POSTGRES_*` variables, as in the app):
 
 ```bash
@@ -83,13 +100,15 @@ Example output (DEBUG lines omitted):
 INFO     | Found 7 old project schemas
 INFO     | Migrated schema CUR-0922 as project CUR-0922
 ...
-INFO     | Done: 7 migrated, 0 skipped
+INFO     | Done: 7 migrated, 0 skipped, 0 old schemas dropped
 ```
+
+With `--drop-old`, each migrated schema also logs `Dropped old schema CUR-0922`, and the last line counts the dropped schemas.
 
 ### After migrating
 
 1. Start the app and check that every project appears in the project list, and that checklists, comments and check results show up for a few of them.
-2. When you're satisfied, drop each old schema:
+2. When you're satisfied, re-run the script with `--drop-old`. Or drop each old schema yourself, e.g. one that `--drop-old` kept:
 
    ```sql
    DROP SCHEMA "CUR-0922" CASCADE;
