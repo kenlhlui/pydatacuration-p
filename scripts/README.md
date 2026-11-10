@@ -1,8 +1,8 @@
 # Scripts
 
-## `db_migration.py`
+## `db_migration_v1_to_v2.py`
 
-Migrates a database from the old layout (one schema per project) to the current layout (4 shared tables keyed by `project_number`).
+Migrates a database from schema version 1, the old layout (one schema per project), to version 2 (4 shared tables keyed by `project_number`).
 
 | | Old layout | New layout |
 |---|---|---|
@@ -68,31 +68,31 @@ The date columns are also UTC in the new layout. The script handles them like th
 DuckDB:
 
 ```bash
-DB_TYPE=duckdb uv run python scripts/db_migration.py --db-file workdir/db/db.duckdb
+DB_TYPE=duckdb uv run python scripts/db_migration_v1_to_v2.py --db-file workdir/db/db.duckdb
 ```
 
 If the old timestamps aren't Toronto time:
 
 ```bash
-DB_TYPE=duckdb uv run python scripts/db_migration.py --db-file workdir/db/db.duckdb --source-tz America/Vancouver
+DB_TYPE=duckdb uv run python scripts/db_migration_v1_to_v2.py --db-file workdir/db/db.duckdb --source-tz America/Vancouver
 ```
 
 Migrate and drop the old schemas in one go:
 
 ```bash
-DB_TYPE=duckdb uv run python scripts/db_migration.py --db-file workdir/db/db.duckdb --drop-old
+DB_TYPE=duckdb uv run python scripts/db_migration_v1_to_v2.py --db-file workdir/db/db.duckdb --drop-old
 ```
 
 PostgreSQL (the connection comes from `DATABASE_URL` or the `POSTGRES_*` variables, as in the app):
 
 ```bash
-DB_TYPE=postgresql uv run python scripts/db_migration.py
+DB_TYPE=postgresql uv run python scripts/db_migration_v1_to_v2.py
 ```
 
 Show the options:
 
 ```bash
-uv run python scripts/db_migration.py --help
+uv run python scripts/db_migration_v1_to_v2.py --help
 ```
 
 Example output (DEBUG lines omitted):

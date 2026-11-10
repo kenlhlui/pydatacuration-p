@@ -22,14 +22,14 @@ When you change a table model in [`sqlmodels.py`](../../pydatacuration/db/sqlmod
    just schema-snapshot
    ```
    This creates `tests/schema_snapshots/v3.duckdb.sql` and `v3.postgresql.sql`, then checks that they match the models.
-4. **Give existing databases a way to reach the new version.** Update [`scripts/db_migration.py`](../../scripts/db_migration.py) so it migrates the data and records the new version when it's done.
+4. **Give existing databases a way to reach the new version.** Add a migration script for the step, e.g. `scripts/db_migration_v2_to_v3.py`, that migrates the data and records the new version when it's done. Use [`scripts/db_migration_v1_to_v2.py`](../../scripts/db_migration_v1_to_v2.py) as a model, and make it refuse to run unless `SCHEMA_VERSION` is its target version.
 5. **Commit the model change, the version bump and the snapshots together.**
 
 If you skip step 2, the test suite fails:
 
 ```
 AssertionError: The table layout no longer matches schema version 2. Bump SCHEMA_VERSION in
-pydatacuration/db/sqlmodels.py, make scripts/db_migration.py handle the change, then create the new
+pydatacuration/db/sqlmodels.py, add a migration script (scripts/db_migration_vN_to_vM.py), then create the new
 snapshot with: UPDATE_SCHEMA_SNAPSHOT=1 uv run pytest tests/test_schema_snapshot.py. Do not edit v2.postgresql.sql.
 ```
 
@@ -51,7 +51,7 @@ If the app finds a database at an older version, it stops with this error in the
 
 ```
 The database is at schema version 1, but this version of the app needs version 2.
-Back up the database, then run scripts/db_migration.py.
+Back up the database, then run scripts/db_migration_v1_to_v2.py and any later migration scripts, in order.
 ```
 
 Back up the database and run the migration script. See the [migration script guide](../../scripts/README.md) for the options. The script records the new version only after every project has been copied, so a failed run leaves the database at its old version.
@@ -97,7 +97,7 @@ Only the migration script turns the check off, with `get_database(..., check_sch
 | When | Who | Version written |
 |---|---|---|
 | A new, empty database gets its tables | `create_tables()` | `SCHEMA_VERSION` |
-| An old database has been migrated | `scripts/db_migration.py`, after the last project is copied | `SCHEMA_VERSION` |
+| An old database has been migrated | `scripts/db_migration_v1_to_v2.py`, after the last project is copied | `2` (the script's target version) |
 | Any other time | Nobody | |
 
 `create_tables()` never changes the version of a database that already has tables: an old database must not be marked as current before its data has moved.
@@ -133,7 +133,7 @@ The snapshot covers everything that ends up in the SQL: table and column names, 
 | [`pydatacuration/db/base.py`](../../pydatacuration/db/base.py) | `get_schema_version()`, `set_schema_version()`, and `create_tables()` recording the version |
 | [`pydatacuration/db/__init__.py`](../../pydatacuration/db/__init__.py) | The check in `get_database()` |
 | [`pydatacuration/exceptions.py`](../../pydatacuration/exceptions.py) | `SchemaVersionError` |
-| [`scripts/db_migration.py`](../../scripts/db_migration.py) | Migrates old databases and records the new version |
+| [`scripts/db_migration_v1_to_v2.py`](../../scripts/db_migration_v1_to_v2.py) | Migrates v1 databases to v2 and records the new version |
 | [`tests/test_schema_snapshot.py`](../../tests/test_schema_snapshot.py) | The snapshot test |
 | [`tests/schema_snapshots/`](../../tests/schema_snapshots/) | One SQL file per version and dialect |
 | [`tests/test_db_schema_version.py`](../../tests/test_db_schema_version.py) | Tests for the version check |

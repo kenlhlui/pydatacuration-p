@@ -1,4 +1,4 @@
-"""Test scripts/db_migration.py: old per-project schemas are copied and their timestamps converted to UTC."""
+"""Test scripts/db_migration_v1_to_v2.py: old per-project schemas are copied and their timestamps converted to UTC."""
 
 import importlib.util
 from datetime import date
@@ -15,7 +15,7 @@ from pydatacuration.db.sqlmodels import ProjectMetadata
 from pydatacuration.exceptions import SchemaVersionError
 
 
-SCRIPT = Path(__file__).parents[1] / 'scripts' / 'db_migration.py'
+SCRIPT = Path(__file__).parents[1] / 'scripts' / 'db_migration_v1_to_v2.py'
 spec = importlib.util.spec_from_file_location('db_migration', SCRIPT)
 assert spec
 assert spec.loader
@@ -111,7 +111,7 @@ def test_drop_old_keeps_schema_when_project_changed(old_db_file: Path) -> None:
 
 def test_migration_sets_schema_version(old_db_file: Path) -> None:
     """Test that the app refuses the old database until the migration has run, and accepts it afterwards."""
-    with pytest.raises(SchemaVersionError, match='db_migration.py'):
+    with pytest.raises(SchemaVersionError, match='db_migration_v1_to_v2.py'):
         get_database(db_file=old_db_file)
 
     db_migration.main(db_file=old_db_file, source_tz='America/Toronto')
@@ -123,3 +123,11 @@ def test_migration_rejects_unknown_time_zone(old_db_file: Path) -> None:
     """Test that a misspelt time zone stops the run before anything is copied."""
     with pytest.raises(Exception, match='Not/AZone'):
         db_migration.main(db_file=old_db_file, source_tz='Not/AZone')
+
+
+def test_migration_refuses_other_schema_version(old_db_file: Path, monkeypatch: pytest.MonkeyPatch) -> None:
+    """Test that the script stops once the models have moved past its target version."""
+    monkeypatch.setattr(db_migration, 'SCHEMA_VERSION', 3)
+    with pytest.raises(RuntimeError, match='migrates schema version 1 to 2'):
+        db_migration.main(db_file=old_db_file, source_tz='America/Toronto')
+    assert get_database(db_file=old_db_file, check_schema_version=False).get_schema_version() == 1

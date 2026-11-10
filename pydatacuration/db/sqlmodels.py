@@ -222,7 +222,7 @@ TableModel = ProjectMetadata | ChecklistMetadata | Checklist | CheckResult
 
 
 # The table layout this code expects. Independent of the app version: bump it only when the layout changes,
-# and give scripts/db_migration.py a way to get existing databases there.
+# and add a scripts/db_migration_vN_to_vM.py that gets existing databases there.
 #   1: one schema per project (no schema_version table)
 #   2: the 4 shared tables, keyed by project_number
 SCHEMA_VERSION = 2

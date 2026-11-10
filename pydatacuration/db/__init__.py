@@ -144,7 +144,8 @@ def _check_schema_version(db: DatabaseBackend, key: str) -> None:
     if version < SCHEMA_VERSION:
         msg = (
             f'The database is at schema version {version}, but this version of the app needs version '
-            f'{SCHEMA_VERSION}. Back up the database, then run scripts/db_migration.py.'
+            f'{SCHEMA_VERSION}. Back up the database, then run scripts/db_migration_v{version}_to_v{version + 1}.py '
+            'and any later migration scripts, in order.'
         )
         raise SchemaVersionError(msg)
     if version > SCHEMA_VERSION:
