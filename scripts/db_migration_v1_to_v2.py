@@ -1,14 +1,14 @@
-"""Migrate a database from the old schema-per-project layout to the shared 4-table layout.
+"""Migrate a database from schema version 1 (one schema per project) to version 2 (the shared 4-table layout).
 
-Old layout: one schema per project, each holding project_metadata, checklist_metadata, checklist and check_results.
-New layout: those 4 tables once, in the default schema (main / public), keyed by project_number.
+v1 layout: one schema per project, each holding project_metadata, checklist_metadata, checklist and check_results.
+v2 layout: those 4 tables once, in the default schema (main / public), keyed by project_number.
 
 Each project is copied in its own transaction and its row counts are checked. Projects already present in the
 new tables are skipped, so the script can be re-run. Back up the database before running. By default the old schemas
 are left untouched. With --drop-old, each old schema is dropped in the same transaction as its copy, but only if its
 row counts match the new tables. A schema migrated by an earlier run is dropped too, unless its project has changed
-since then. Once every project is copied, the database is marked as schema version 2 (SCHEMA_VERSION), which the app
-checks before using it.
+since then. Once every project is copied, the database is marked as schema version 2, which the app checks before
+using it. The script copies into the tables of the current models, so it refuses to run once SCHEMA_VERSION is not 2.
 
 Timestamps: the old datetime columns hold naive local time; the new ones hold naive UTC. Pass the time zone the
 old data was recorded in with --source-tz (default America/Toronto, the Docker default). Times inside the repeated
@@ -18,10 +18,10 @@ time of day, so it can't be converted and is copied as is. checklist_metadata.la
 YAML, not the clock, and is copied as is.
 
 Usage:
-    uv run python scripts/db_migration.py --db-file workdir/db/db.duckdb
-    uv run python scripts/db_migration.py --db-file workdir/db/db.duckdb --source-tz America/Vancouver
-    uv run python scripts/db_migration.py --db-file workdir/db/db.duckdb --drop-old
-    DB_TYPE=postgresql uv run python scripts/db_migration.py
+    uv run python scripts/db_migration_v1_to_v2.py --db-file workdir/db/db.duckdb
+    uv run python scripts/db_migration_v1_to_v2.py --db-file workdir/db/db.duckdb --source-tz America/Vancouver
+    uv run python scripts/db_migration_v1_to_v2.py --db-file workdir/db/db.duckdb --drop-old
+    DB_TYPE=postgresql uv run python scripts/db_migration_v1_to_v2.py
 """
 
 from pathlib import Path
@@ -49,6 +49,7 @@ from pydatacuration.db.sqlmodels import SCHEMA_VERSION
 
 # Parent table first, for the foreign keys.
 TABLE_NAMES = ('project_metadata', 'checklist_metadata', 'checklist', 'check_results')
+TARGET_VERSION = 2
 
 app = typer.Typer()
 
@@ -175,6 +176,12 @@ def main(
     ] = False,
 ) -> None:
     """Copy every old per-project schema into the shared tables."""
+    if SCHEMA_VERSION != TARGET_VERSION:
+        msg = (
+            f'This script migrates schema version 1 to {TARGET_VERSION}, but the models are at version '
+            f'{SCHEMA_VERSION}. Run it with the app release that has schema version {TARGET_VERSION}.'
+        )
+        raise RuntimeError(msg)
     ZoneInfo(source_tz)  # Fail early on an unknown time zone name.
     db = get_database(db_file=db_file, check_schema_version=False)
     db.create_tables()
@@ -196,7 +203,7 @@ def main(
                 logger.info(f'Migrated schema {schema} as project {project_number}')
 
     # Reached only if every project was copied (a failure raises above), so the database now has the new layout.
-    db.set_schema_version(SCHEMA_VERSION)
+    db.set_schema_version(TARGET_VERSION)
     logger.info(f'Done: {len(migrated)} migrated, {len(skipped)} skipped, {len(dropped)} old schemas dropped')
 
 

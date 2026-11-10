@@ -1,8 +1,8 @@
 """Test that the table layout only changes together with SCHEMA_VERSION.
 
 Each schema version has a snapshot of its CREATE TABLE statements in tests/schema_snapshots/, one file per dialect.
-If a model change makes this test fail, the layout has changed: bump SCHEMA_VERSION, make scripts/db_migration.py
-handle the change, and create the snapshot for the new version:
+If a model change makes this test fail, the layout has changed: bump SCHEMA_VERSION, add a migration script
+(scripts/db_migration_vN_to_vM.py), and create the snapshot for the new version:
 
     UPDATE_SCHEMA_SNAPSHOT=1 uv run pytest tests/test_schema_snapshot.py
 
@@ -56,7 +56,7 @@ def test_schema_matches_snapshot(dialect_name: str) -> None:
 
     assert schema == snapshot.read_text(encoding='utf-8'), (
         f'The table layout no longer matches schema version {SCHEMA_VERSION}. Bump SCHEMA_VERSION in '
-        'pydatacuration/db/sqlmodels.py, make scripts/db_migration.py handle the change, then create the new '
-        'snapshot with: UPDATE_SCHEMA_SNAPSHOT=1 uv run pytest tests/test_schema_snapshot.py. '
+        'pydatacuration/db/sqlmodels.py, add a migration script (scripts/db_migration_vN_to_vM.py), then '
+        'create the new snapshot with: UPDATE_SCHEMA_SNAPSHOT=1 uv run pytest tests/test_schema_snapshot.py. '
         f'Do not edit {snapshot.name}.'
     )

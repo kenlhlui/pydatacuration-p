@@ -103,7 +103,7 @@ class DatabaseBackend(ABC):  # noqa: PLR0904
                 for table in tables:
                     conn.execute(CreateTable(table, if_not_exists=True))
             # Only a new database is known to have the current layout. An old one keeps its version
-            # until scripts/db_migration.py has moved its data.
+            # until a migration script (scripts/db_migration_v*_to_v*.py) has moved its data.
             if is_empty:
                 self.set_schema_version(SCHEMA_VERSION)
         except Exception as e:
