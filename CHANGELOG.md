@@ -1,3 +1,9 @@
+## 0.4.1 (2026-11-10)
+
+### Fix
+
+- **deps**: update duckdb dependency to version 2.0.0
+
 ## 0.4.0 (2026-11-10)
 
 > [!CAUTION]
