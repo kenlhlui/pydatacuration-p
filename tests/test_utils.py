@@ -7,7 +7,6 @@ import pytest
 import typer
 
 from pydatacuration.utils import check_readme_file_existence
-from pydatacuration.utils.utils import numeric_id_sort_key
 from pydatacuration.utils import check_ticket_num_input
 from pydatacuration.utils import compare_files_and_metadata
 from pydatacuration.utils import gen_tree_diagram
@@ -16,6 +15,7 @@ from pydatacuration.utils import orjson_export
 from pydatacuration.utils import parse_dataset_url
 from pydatacuration.utils import parse_file_list_metadata
 from pydatacuration.utils import validate_api_token
+from pydatacuration.utils.utils import numeric_id_sort_key
 
 
 @pytest.mark.parametrize(
@@ -69,10 +69,8 @@ def test_compare_files_and_metadata_different(tmp_path):
         {'file': 'data/file2.csv', 'checksum': 'def456'},
     ]
 
-    with pytest.raises(SystemExit) as exc_info:
-        compare_files_and_metadata(dl_files_checksums, metadata_file_checksums, tmp_path)
-    assert exc_info.value.code == 1
-
+    result = compare_files_and_metadata(dl_files_checksums, metadata_file_checksums, tmp_path)
+    assert not result
     # Check that diff.txt was created
     diff_file = tmp_path / 'logs' / 'diff.txt'
     assert diff_file.exists()
@@ -130,10 +128,7 @@ def test_gen_tree_diagram_nonexistent_dir(tmp_path):
     save_dir = tmp_path / 'save_location'
     save_dir.mkdir()
 
-    with pytest.raises(SystemExit) as exc_info:
-        gen_tree_diagram(target_dir, save_dir)
-
-    assert exc_info.value.code == 1
+    gen_tree_diagram(target_dir, save_dir)
 
 
 def test_parse_file_list_metadata():

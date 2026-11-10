@@ -9,12 +9,12 @@
 run-tests:
     uv sync --dev
     uv pip install -e .
-    coverage run -m pytest -v
+    uv run coverage run -m pytest -v
 
 # Run tests and generate an HTML coverage report (opens in htmlcov/)
 run-tests-with-report-html:
     just run-tests
-    coverage html
+    uv run coverage html
 
 # Write the schema snapshots for the current SCHEMA_VERSION (tests/schema_snapshots/), after bumping it
 schema-snapshot:

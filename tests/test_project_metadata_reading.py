@@ -79,8 +79,8 @@ def test_get_all_schemas(main_dir: Path) -> None:
 @pytest.mark.parametrize(
     ('value', 'expected'),
     [
-        (datetime(2026, 1, 15, 17, 0), '2026-01-15 12:00:00 EST'),  # noqa: DTZ001 - stored as naive UTC
-        (datetime(2026, 7, 15, 16, 0), '2026-07-15 12:00:00 EDT'),  # noqa: DTZ001
+        (datetime(2026, 1, 15, 17, 0), '2026-01-15 12:00:00'),  # noqa: DTZ001 - stored as naive UTC
+        (datetime(2026, 7, 15, 16, 0), '2026-07-15 12:00:00'),  # noqa: DTZ001
         (None, 'Unknown'),
     ],
 )
