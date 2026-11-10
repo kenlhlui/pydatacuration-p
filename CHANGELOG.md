@@ -1,3 +1,21 @@
+## 0.4.0 (2026-11-10)
+
+> [!CAUTION]
+> This release contains a breaking change in the database schema. Please follow the instructions in the [migration guide](docs/db_schema_version/README.md#upgrading-a-database) to upgrade your database.
+
+### Refactor
+
+- **db**: specify the migration script version
+- **db**: add schema snapshot generation and update test for schema versioning
+- **db**: add db schema version
+- **db**: add dropping old tables in migration script
+- **db**: change all backend datatime/date to UTC based, and display using browser local
+- **db**: add db migration script
+- **db**: fix the create table in base.py
+- **db**: fix types issues related to db models
+- **db**: sql query functions base on the new schema
+- **db**: change the schema to group results in 4 tables, instead of table per project
+
 ## 0.3.0 (2026-11-05)
 
 ### Feat
