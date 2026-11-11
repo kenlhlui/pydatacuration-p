@@ -48,6 +48,4 @@ services:
       - PGADMIN_DEFAULT_PASSWORD=${PGADMIN_PW:-curation}
     ports:
       - "5050:80"
-    volumes:
-      - ./dev/servers.json:/pgadmin4/servers.json  # Configure the path on the left side of colon to your servers.json file for pgAdmin configuration
     restart: always

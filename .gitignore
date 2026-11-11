@@ -193,12 +193,6 @@ temp.py
 temp.ipynb
 doi_list.txt
 
-# Dataverse docker files
-/dataverse/data
-
-# Contains API token, should not be committed
-dataverse/dataverse-sample-data/dvconfig.py
-
 # pgadmin folders
 pgadmin/
 
