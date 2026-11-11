@@ -1,0 +1,93 @@
+# Unit tests first; if they pass, end-to-end tests against a throwaway Dataverse seeded with tests/e2e/sample_data.
+# See tests/README.md ("End-to-end tests (Dataverse)").
+name: Tests
+
+on:
+  pull_request:
+  push:
+    branches:
+      - main
+
+permissions:
+  contents: read
+
+concurrency:
+  group: tests-${{ github.ref }}
+  cancel-in-progress: true
+
+jobs:
+  unit:
+    runs-on: ubuntu-latest
+    timeout-minutes: 15
+    steps:
+      - uses: actions/checkout@v7
+
+      - name: Set up uv
+        uses: astral-sh/setup-uv@v10.3.3
+
+      - name: Install dependencies
+        run: uv sync --dev --locked
+
+      - name: Run unit tests
+        # ./workdir must exist: pydatacuration/frontend/pages/utils.py builds AppSettings() on import.
+        run: |
+          mkdir -p workdir
+          uv run coverage run -m pytest -v --ignore=tests/e2e
+
+  e2e:
+    needs: unit
+    runs-on: ubuntu-latest
+    timeout-minutes: 30
+    env:
+      # 127.0.0.1 rather than localhost: downloads bind to IPv4 (pydatacuration/services/api_calls/httpx_client.py).
+      E2E_BASE_URL: http://127.0.0.1:8080
+    steps:
+      - uses: actions/checkout@v7
+
+      - name: Start Dataverse
+        id: dataverse
+        uses: gdcc/dataverse-action@0ebc4bf6f50bdc48b4d572b0c4f4c4115c48a0ec # main as of 2025-03-19 (no tagged releases)
+        with:
+          image_tag: latest
+
+      - name: Mask API token
+        run: echo "::add-mask::${{ steps.dataverse.outputs.api_token }}"
+
+      - name: Set up uv
+        uses: astral-sh/setup-uv@v10.3.3
+
+      - name: Install ffmpeg (cached)
+        # The cache key is packages + version; bump the version when ubuntu-latest moves to a new Ubuntu release.
+        uses: awalsh128/cache-apt-pkgs-action@553a35bb8ebd9fcabcb1c9451aa4c98e1b4ca8a9 # v1.6.3
+        with:
+          packages: ffmpeg
+          version: ubuntu-26.04-v1
+
+      - name: Check ffmpeg
+        run: ffmpeg -version | head -n 1
+
+      - name: Install dependencies
+        run: uv sync --dev --locked
+
+      - name: Seed sample dataset
+        id: seed
+        env:
+          E2E_API_TOKEN: ${{ steps.dataverse.outputs.api_token }}
+        run: uv run tests/e2e/seed_dataverse.py
+
+      - name: Run e2e tests
+        env:
+          E2E_API_TOKEN: ${{ steps.dataverse.outputs.api_token }}
+          E2E_PID: ${{ steps.seed.outputs.pid }}
+        run: uv run coverage run -m pytest -v tests/e2e --basetemp="$RUNNER_TEMP/pytest"
+
+      - name: Upload e2e work directory
+        if: always()
+        uses: actions/upload-artifact@v7
+        with:
+          name: e2e-workdir
+          # Only the e2e work dir (logs, check_results.json, DuckDB, docx), without the downloaded sample files.
+          path: |
+            ${{ runner.temp }}/pytest/workdir0/
+            !${{ runner.temp }}/pytest/workdir0/projects/*/dataset/files/
+          if-no-files-found: ignore
