@@ -1,5 +1,5 @@
 # /// script
-# requires-python = ">=3.12"
+# requires-python = ">=3.12,<3.14"  # dvuploader uses nest_asyncio, which breaks httpx/anyio on 3.14
 # dependencies = [
 #     "dvuploader==0.3.2",
 #     "httpx>=0.28,<0.29",
