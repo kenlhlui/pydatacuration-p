@@ -1,7 +1,7 @@
 """End-to-end: curate the seeded sample dataset on a live Dataverse and check the per-file results.
 
 Skipped unless E2E_BASE_URL, E2E_API_TOKEN and E2E_PID are set (see tests/README.md). In CI these come from
-.github/workflows/e2e.yml after tests/e2e/seed_dataverse.py uploads tests/e2e/sample_data/.
+.github/workflows/tests.yml after tests/e2e/seed_dataverse.py uploads tests/e2e/sample_data/.
 """
 
 import os

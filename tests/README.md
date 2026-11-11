@@ -54,7 +54,7 @@ uv pip install -e . && uv run --env-file=.env tests/curation-run-test.py # Load 
 
 `tests/e2e/` runs the real curation pipeline (download, checks, Word export) against a live Dataverse instance and checks the result for each sample file in `tests/e2e/sample_data/files/`.
 
-They run in GitHub Actions (`.github/workflows/e2e.yml`) on every pull request and on pushes to `main`. The workflow starts a throwaway Dataverse with [gdcc/dataverse-action](https://github.com/gdcc/dataverse-action), seeds it with `tests/e2e/seed_dataverse.py`, then runs the whole test suite. No local Docker is needed.
+They run in GitHub Actions (`.github/workflows/tests.yml`) on every pull request and on pushes to `main`. The `unit` job runs first. Only if it passes does the `e2e` job start a throwaway Dataverse with [gdcc/dataverse-action](https://github.com/gdcc/dataverse-action), seed it with `tests/e2e/seed_dataverse.py`, and run `tests/e2e`. No local Docker is needed.
 
 - To iterate on a branch, open a draft PR; every push re-runs the workflow.
 - Follow a run from the terminal with `gh run watch`.

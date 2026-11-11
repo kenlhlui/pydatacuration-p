@@ -1,6 +1,6 @@
-# End-to-end tests: start a throwaway Dataverse, seed it with tests/e2e/sample_data, run the whole test suite.
+# Unit tests first; if they pass, end-to-end tests against a throwaway Dataverse seeded with tests/e2e/sample_data.
 # See tests/README.md ("End-to-end tests (Dataverse)").
-name: E2E tests (Dataverse)
+name: Tests
 
 on:
   pull_request:
@@ -12,11 +12,30 @@ permissions:
   contents: read
 
 concurrency:
-  group: e2e-${{ github.ref }}
+  group: tests-${{ github.ref }}
   cancel-in-progress: true
 
 jobs:
+  unit:
+    runs-on: ubuntu-latest
+    timeout-minutes: 15
+    steps:
+      - uses: actions/checkout@v7
+
+      - name: Set up uv
+        uses: astral-sh/setup-uv@v8.3.2
+
+      - name: Install dependencies
+        run: uv sync --dev --locked
+
+      - name: Run unit tests
+        # ./workdir must exist: pydatacuration/frontend/pages/utils.py builds AppSettings() on import.
+        run: |
+          mkdir -p workdir
+          uv run coverage run -m pytest -v --ignore=tests/e2e
+
   e2e:
+    needs: unit
     runs-on: ubuntu-latest
     timeout-minutes: 30
     env:
@@ -49,14 +68,11 @@ jobs:
           E2E_API_TOKEN: ${{ steps.dataverse.outputs.api_token }}
         run: uv run tests/e2e/seed_dataverse.py
 
-      - name: Run tests
+      - name: Run e2e tests
         env:
           E2E_API_TOKEN: ${{ steps.dataverse.outputs.api_token }}
           E2E_PID: ${{ steps.seed.outputs.pid }}
-        # ./workdir must exist: pydatacuration/frontend/pages/utils.py builds AppSettings() on import.
-        run: |
-          mkdir -p workdir
-          uv run coverage run -m pytest -v --basetemp="$RUNNER_TEMP/pytest"
+        run: uv run coverage run -m pytest -v tests/e2e --basetemp="$RUNNER_TEMP/pytest"
 
       - name: Upload e2e work directory
         if: always()
