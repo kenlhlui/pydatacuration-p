@@ -63,5 +63,8 @@ jobs:
         uses: actions/upload-artifact@v7
         with:
           name: e2e-workdir
-          path: ${{ runner.temp }}/pytest/
+          # Only the e2e work dir (logs, check_results.json, DuckDB, docx), without the downloaded sample files.
+          path: |
+            ${{ runner.temp }}/pytest/workdir0/
+            !${{ runner.temp }}/pytest/workdir0/projects/*/dataset/files/
           if-no-files-found: ignore

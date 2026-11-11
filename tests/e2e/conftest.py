@@ -34,7 +34,7 @@ def curated_project(tmp_path_factory: pytest.TempPathFactory) -> CuratedProject:
     main_dir = tmp_path_factory.mktemp('workdir')
     logs_dir = main_dir / 'logs'
     logs_dir.mkdir()
-    logger.add(logs_dir / 'e2e.log', level='DEBUG')  # The pipeline deletes the project dir on failure.
+    sink_id = logger.add(logs_dir / 'e2e.log', level='DEBUG')  # The pipeline deletes the project dir on failure.
 
     form = SetupForm(
         base_url=os.environ['E2E_BASE_URL'],
@@ -49,11 +49,13 @@ def curated_project(tmp_path_factory: pytest.TempPathFactory) -> CuratedProject:
         main_dir=main_dir,
         res_dir=RES_DIR,
     )
-    asyncio.run(run_curation(form))
-
-    dirs = DirectoryManager.get_dir_manager_instance(PROJECT_NUMBER, main_dir, res_dir=RES_DIR)
-    db = get_database(db_file=dirs.db_path, project_number=PROJECT_NUMBER)
-    Exporter(db, dirs).export_word()
+    try:
+        asyncio.run(run_curation(form))
+        dirs = DirectoryManager.get_dir_manager_instance(PROJECT_NUMBER, main_dir, res_dir=RES_DIR)
+        db = get_database(db_file=dirs.db_path, project_number=PROJECT_NUMBER)
+        Exporter(db, dirs).export_word()
+    finally:
+        logger.remove(sink_id)  # Keep later unit tests' logs out of e2e.log.
 
     # read_table_records returns one empty placeholder row when nothing was written; skip it.
     rows = db.read_check_results()['check_results']
