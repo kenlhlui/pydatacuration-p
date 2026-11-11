@@ -30,11 +30,14 @@ class DataverseClient:
         Returns:
             dict: Metadata of the dataset
         """
-        endpoint = f'/api/datasets/:persistentId/?persistentId={pid}'
-        endpoint += '&returnOwners=true' if return_owners else ''
+        endpoint = '/api/datasets/:persistentId/'
+        params = {
+            'persistentId': pid,
+            'returnOwners': 'true' if return_owners else 'false',
+        }
 
         logger.info(f'Fetching dataset metadata from {endpoint}...')
-        response = self.httpx_client.sync_get(endpoint)
+        response = self.httpx_client.sync_get(endpoint, params=params)
         response.raise_for_status()
         if response.is_success and response.json():
             return response.json()
@@ -68,14 +71,13 @@ class DataverseClient:
         Returns:
             dict: A dictionary containing the dataverse tree information.
         """
-        # If collection_alias is provided, search within the specified dataverse collection
+        endpoint = '/api/search'
+        # Escape backslashes first, then quotes, so depositor stays inside the Solr phrase
+        escaped_depositor = depositor.replace('\\', '\\\\').replace('"', '\\"')
+        params = {'q': '*', 'type': 'dataset', 'per_page': 1000, 'fq': f'depositor:"{escaped_depositor}"'}
         if collection_alias:
-            response = self.httpx_client.sync_get(
-                f'/api/search?q=*&type=dataset&per_page=1000&subtree={collection_alias}&fq=depositor:"{depositor}"'
-            )  # noqa: E501
-            return response.json()
-        # If no collection_alias is provided, search in all dataverses
-        response = self.httpx_client.sync_get(f'/api/search?q=*&type=dataset&per_page=1000&fq=depositor:"{depositor}"')  # noqa: E501
+            params['subtree'] = collection_alias
+        response = self.httpx_client.sync_get(endpoint, params=params)
         return response.json()
 
     def search_dataset_by_version_id(self, ds_version_id: str | int) -> dict:
@@ -90,7 +92,8 @@ class DataverseClient:
             dict: A dictionary containing the dataverse tree information.
         """  # noqa: E501
         response = self.httpx_client.sync_get(
-            f'/api/search?q=*&type=dataset&per_page=1&fq=datasetVersionId:{ds_version_id}'
+            '/api/search',
+            params={'q': '*', 'per_page': 1, 'type': 'dataset', 'fq': f'datasetVersionId:{ds_version_id}'},
         )
         return response.json()
 
@@ -103,25 +106,28 @@ class DataverseClient:
         Returns:
             httpx2.Response: The HTTP response from the access check
         """
-        endpoint = f'/api/datasets/:persistentId/?persistentId={pid}'
+        endpoint = '/api/datasets/:persistentId/'
+        params = {'persistentId': pid}
 
-        return self.httpx_client.sync_get(endpoint, raise_for_status=False)
+        return self.httpx_client.sync_get(endpoint, params=params, raise_for_status=False)
 
-    def get_ds_export_metadata(
-        self, pid: str, exporter: str = 'OAI_ORE', version: str | None = ':latest'
-    ) -> httpx2.Response:
+    def get_ds_export_metadata(self, pid: str, exporter: str = 'OAI_ORE', version: str = ':latest') -> httpx2.Response:
         """Get the exported metadata of a dataset.
 
         Args:
             pid (str): Persistent identifier of the dataset
             exporter (str): The exporter to use for the metadata export
-            version (str | None): The version of the dataset to export
+            version (str): The version of the dataset to export
 
         Returns:
             httpx2.Response: The HTTP response containing the exported metadata
         """
-        endpoint = f'/api/datasets/export?exporter={exporter}&persistentId={pid}'
+        endpoint = '/api/datasets/export'
+        params = {
+            'exporter': exporter,
+            'persistentId': pid,
+        }
         if version:
-            endpoint += f'&version={version}'
+            params['version'] = version
 
-        return self.httpx_client.sync_get(endpoint, raise_for_status=False)
+        return self.httpx_client.sync_get(endpoint, params=params, raise_for_status=False)

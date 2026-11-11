@@ -48,13 +48,21 @@ class HTTPXClient:
         await self._async_client.aclose()
 
     @retry(stop=stop_after_attempt(3), wait=wait_fixed(5))
-    def sync_get(self, api_endpoint: str, raise_for_status: bool = True) -> httpx2.Response:
+    def sync_get(
+        self,
+        api_endpoint: str,
+        params: dict | None = None,
+        raise_for_status: bool = True,
+    ) -> httpx2.Response:
         """Synchronous GET request.
 
         Args:
             api_endpoint (str): API endpoint to be appended to the base URL.
+            params (dict | None): Parameters to include in the request.
             raise_for_status (bool): Whether to raise an exception for non-2xx status codes.
 
+        Returns:
+            httpx2.Response: The response from the API.
         """
         url = urljoin(self.base_url, api_endpoint)
 
@@ -64,7 +72,7 @@ class HTTPXClient:
             headers=self.headers, timeout=httpx2.Timeout(10.0, connect=5.0), follow_redirects=True, limits=limits
         ) as client:
             try:
-                response = client.get(url)
+                response = client.get(url, params=params)
                 if raise_for_status:
                     response.raise_for_status()
                 return response
@@ -92,16 +100,19 @@ class HTTPXClient:
             f.write(content)
 
     @retry(stop=stop_after_attempt(3), wait=wait_fixed(5))
-    async def async_stream_files(self, url: str, client: httpx2.AsyncClient, **kwargs) -> bytes | None:
+    async def async_stream_files(
+        self, url: str, client: httpx2.AsyncClient, params: dict | None = None, **kwargs
+    ) -> bytes | None:
         """Asynchronous streaming GET request that returns the full content.
 
         Args:
             url (str): URL to send the GET request to.
             client (httpx2.AsyncClient): The HTTPX AsyncClient instance to use.
+            params (dict | None): Optional query parameters to include in the request.
             **kwargs: Additional keyword arguments for the request.
         """
         try:
-            async with self.semaphore, client.stream('GET', url, **kwargs) as response:
+            async with self.semaphore, client.stream('GET', url, params=params, **kwargs) as response:
                 if response.is_success:
                     # Check for empty files
                     content_length = int(response.headers.get('content-length', '-1'))
