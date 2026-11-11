@@ -23,7 +23,7 @@ jobs:
       - uses: actions/checkout@v7
 
       - name: Set up uv
-        uses: astral-sh/setup-uv@v8.3.2
+        uses: astral-sh/setup-uv@v10
 
       - name: Install dependencies
         run: uv sync --dev --locked
@@ -54,7 +54,7 @@ jobs:
         run: echo "::add-mask::${{ steps.dataverse.outputs.api_token }}"
 
       - name: Set up uv
-        uses: astral-sh/setup-uv@v8.3.2
+        uses: astral-sh/setup-uv@v10
 
       - name: Install ffmpeg
         run: sudo apt-get update && sudo apt-get install -y --no-install-recommends ffmpeg
