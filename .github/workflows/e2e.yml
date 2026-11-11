@@ -1,0 +1,64 @@
+# End-to-end tests: start a throwaway Dataverse, seed it with tests/e2e/sample_data, run the whole test suite.
+# See tests/README.md ("End-to-end tests (Dataverse)").
+name: E2E tests (Dataverse)
+
+on:
+  pull_request:
+  push:
+    branches:
+      - main
+
+permissions:
+  contents: read
+
+concurrency:
+  group: e2e-${{ github.ref }}
+  cancel-in-progress: true
+
+jobs:
+  e2e:
+    runs-on: ubuntu-latest
+    timeout-minutes: 30
+    env:
+      # 127.0.0.1 rather than localhost: downloads bind to IPv4 (pydatacuration/services/api_calls/httpx_client.py).
+      E2E_BASE_URL: http://127.0.0.1:8080
+    steps:
+      - uses: actions/checkout@v7
+
+      - name: Start Dataverse
+        id: dataverse
+        uses: gdcc/dataverse-action@0ebc4bf6f50bdc48b4d572b0c4f4c4115c48a0ec # main as of 2025-03-19 (no tagged releases)
+        with:
+          image_tag: latest
+
+      - name: Mask API token
+        run: echo "::add-mask::${{ steps.dataverse.outputs.api_token }}"
+
+      - name: Set up uv
+        uses: astral-sh/setup-uv@v8.3.2
+
+      - name: Install ffmpeg
+        run: sudo apt-get update && sudo apt-get install -y --no-install-recommends ffmpeg
+
+      - name: Install dependencies
+        run: uv sync --dev --locked
+
+      - name: Seed sample dataset
+        id: seed
+        env:
+          E2E_API_TOKEN: ${{ steps.dataverse.outputs.api_token }}
+        run: uv run tests/e2e/seed_dataverse.py
+
+      - name: Run tests
+        env:
+          E2E_API_TOKEN: ${{ steps.dataverse.outputs.api_token }}
+          E2E_PID: ${{ steps.seed.outputs.pid }}
+        run: uv run coverage run -m pytest -v --basetemp="$RUNNER_TEMP/pytest"
+
+      - name: Upload e2e work directory
+        if: always()
+        uses: actions/upload-artifact@v7
+        with:
+          name: e2e-workdir
+          path: ${{ runner.temp }}/pytest/
+          if-no-files-found: ignore
