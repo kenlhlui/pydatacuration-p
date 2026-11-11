@@ -41,6 +41,8 @@ def curated_project(tmp_path_factory: pytest.TempPathFactory) -> CuratedProject:
         api_token=os.environ['E2E_API_TOKEN'],
         pid=os.environ['E2E_PID'],
         project_number=PROJECT_NUMBER,
+        curator_name='E2E CI',
+        curator_email='e2e@example.org',  # project_metadata.curator_email is NOT NULL
         checklist='checklist-high.yaml',
         check_zip=True,
         force_delete=True,
@@ -53,6 +55,8 @@ def curated_project(tmp_path_factory: pytest.TempPathFactory) -> CuratedProject:
     db = get_database(db_file=dirs.db_path, project_number=PROJECT_NUMBER)
     Exporter(db, dirs).export_word()
 
-    results = {row['check_id']: row['results'] for row in db.read_check_results()['check_results']}
+    # read_table_records returns one empty placeholder row when nothing was written; skip it.
+    rows = db.read_check_results()['check_results']
+    results = {row['check_id']: row['results'] for row in rows if row.get('check_id')}
     (main_dir / 'check_results.json').write_text(json.dumps(results, indent=2), encoding='utf-8')
     return CuratedProject(dirs=dirs, results=results)
