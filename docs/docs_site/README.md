@@ -57,6 +57,20 @@ Options considered:
 
 ---
 
+## Pages Included From Other Files
+
+Two pages are one-line stubs that pull in a Markdown file from elsewhere in the repository, so the file stays where people look for it on GitHub:
+
+| Page | Stub | Source |
+|---|---|---|
+| Home | `docs/index.md` | `README.md` |
+| Testing | `docs/testing/README.md` | `tests/README.md` |
+
+- **Edit the source file, not the stub.** The "Edit this page" button on these pages opens the stub.
+- **Link to other docs pages with full site URLs**, such as `https://kenlhlui.github.io/pydatacuration-p/local_setup/`. Zensical doesn't rewrite relative links in included files, and `rewrite-relative-urls=true` has no effect, so a link like `../docs/local_setup/README.md` breaks on the site.
+
+---
+
 ## Custom CSS
 
 [`docs/stylesheets/extra.css`]({{ repo_blob }}/docs/stylesheets/extra.css) is loaded through `extra_css` in `zensical.toml`.

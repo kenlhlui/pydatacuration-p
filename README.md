@@ -39,6 +39,7 @@ Refer to the [Local Setup Guide](https://kenlhlui.github.io/pydatacuration-p/loc
 - [Checklist YAML File and Validator CLI](https://kenlhlui.github.io/pydatacuration-p/checklist/)
 
 ### Development
+- [Testing](https://kenlhlui.github.io/pydatacuration-p/testing/)
 - [Database Schema Version](https://kenlhlui.github.io/pydatacuration-p/db_schema_version/)
 - [Bump the Version](https://kenlhlui.github.io/pydatacuration-p/version_bump/)
 - [Documentation Site](https://kenlhlui.github.io/pydatacuration-p/docs_site/)

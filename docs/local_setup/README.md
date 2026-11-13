@@ -111,13 +111,6 @@ FORCE_DELETE=true
 CHECK_ZIP=true
 ```
 
-| Variable | Form field |
-|---|---|
-| `PID` | Dataset PID |
-| `PROJECT_NUMBER` | Project Number (letters, numbers, `-` and `_` only) |
-| `COLLECTION_ALIAS` | Dataverse Collection Alias |
-| `CHECKLIST` | The checklist. Use the file name of a checklist in `res/`, e.g. `checklist-high.yaml` |
-| `FORCE_DELETE` | Replace existing project (if exists) |
-| `CHECK_ZIP` | Unzip archive files and check contents |
+For what each variable fills in, see [New Dataset Form Defaults](../app_settings/README.md#new-dataset-form-defaults) in the App Settings Guide.
 
 The app reads `.env` when it starts. Restart it after you change the file.

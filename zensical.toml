@@ -22,6 +22,7 @@ nav = [
     { "Checklist" = "checklist/README.md" },
   ] },
   { "Development" = [
+    { "Testing" = "testing/README.md" },
     { "Database schema version" = "db_schema_version/README.md" },
     { "Bump the version" = "version_bump/README.md" },
     { "Documentation site" = "docs_site/README.md" },
