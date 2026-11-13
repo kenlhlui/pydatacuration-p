@@ -28,17 +28,18 @@ Then open <http://localhost:9005>.
 Refer to the [Local Setup Guide](https://kenlhlui.github.io/pydatacuration-p/local_setup/) for the `.env` settings, PostgreSQL, and `just dev-run`. To run the tool with Docker instead, see the [Container Guide](https://kenlhlui.github.io/pydatacuration-p/container/).
 
 ## 📚 Guides
+
+### Getting Started
 - [Local Setup (uv)](https://kenlhlui.github.io/pydatacuration-p/local_setup/)
 - [Container Setup (Docker)](https://kenlhlui.github.io/pydatacuration-p/container/)
+
+### Configuration
 - [App Settings (Environment Variables)](https://kenlhlui.github.io/pydatacuration-p/app_settings/)
 - [Custom Status Options](https://kenlhlui.github.io/pydatacuration-p/custom_status_options/)
 - [Checklist YAML File and Validator CLI](https://kenlhlui.github.io/pydatacuration-p/checklist/)
+
+### Development
+- [Testing](https://kenlhlui.github.io/pydatacuration-p/testing/)
 - [Database Schema Version](https://kenlhlui.github.io/pydatacuration-p/db_schema_version/)
 - [Bump the Version](https://kenlhlui.github.io/pydatacuration-p/version_bump/)
-
-## 📝 Working on the Docs
-The documentation site is built with [Zensical](https://zensical.org/) from the Markdown files in [`docs/`](https://github.com/kenlhlui/pydatacuration-p/tree/main/docs), using the settings in [`zensical.toml`](https://github.com/kenlhlui/pydatacuration-p/blob/main/zensical.toml). To preview it locally:
-```sh
-uv run zensical serve
-```
-Then open <http://localhost:8000>. The site is published to GitHub Pages when changes are pushed to `main`.
+- [Documentation Site](https://kenlhlui.github.io/pydatacuration-p/docs_site/)

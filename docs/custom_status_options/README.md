@@ -2,14 +2,11 @@
 
 The checklist supports user-defined status options via a configuration file. 
 
-If no file is found, the following defaults are used automatically, as defined in the [`StatusOptions` model]({{ repo_blob }}/pydatacuration/frontend/models/status_options.py):
+## Default Status Options
 
-| Key | Label |
-|---|---|
-| `Pass` | Pass |
-| `Follow_up` | Follow-up |
-| `TBD` | To Be Determined |
-| `NA` | Not Applicable |
+If no file is found, the following defaults are used automatically. The table is generated from the [`StatusOptions` model]({{ repo_blob }}/pydatacuration/frontend/models/status_options.py) at build time: **Name** is the key and **Default** is the label shown in the UI.
+
+::: pydatacuration.frontend.models.status_options.StatusOptions
 
 ---
 
