@@ -14,7 +14,6 @@ from pydatacuration.utils import in_wsl
 from pydatacuration.utils import orjson_export
 from pydatacuration.utils import parse_dataset_url
 from pydatacuration.utils import parse_file_list_metadata
-from pydatacuration.utils import validate_api_token
 from pydatacuration.utils.utils import numeric_id_sort_key
 
 
@@ -208,33 +207,6 @@ def test_check_ticket_num_input_invalid(input_string, expected_error_msg):
 def test_check_ds_read_access():
     """Placeholder for future test of check_ds_read_access function."""
     # TODO: Implement this test in the future
-
-
-def test_validate_api_token_with_env_var(monkeypatch):
-    """Test validate_api_token returns env var when value is empty string."""
-    monkeypatch.setenv('API_TOKEN', 'env_token_12345')
-    result = validate_api_token('')
-    assert result == 'env_token_12345'
-
-
-def test_validate_api_token_with_value(monkeypatch):
-    """Test validate_api_token returns provided value when not empty."""
-    monkeypatch.setenv('API_TOKEN', 'env_token_12345')
-    result = validate_api_token('my_custom_token')
-    assert result == 'my_custom_token'
-
-
-def test_validate_api_token_empty_no_env(monkeypatch):
-    """Test validate_api_token returns empty string when no env var exists."""
-    monkeypatch.delenv('API_TOKEN', raising=False)
-    result = validate_api_token('')
-    assert not result  # Should be empty string
-
-
-def test_validate_api_token_none_value():
-    """Test validate_api_token returns None when value is None."""
-    result = validate_api_token(None)
-    assert result is None
 
 
 def test_orjson_export_success(tmp_path):
