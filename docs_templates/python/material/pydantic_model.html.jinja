@@ -1,0 +1,56 @@
+{#- Overrides griffe-pydantic's template: renders a Pydantic model's fields as one table
+    (Name, Type, Default, Description) instead of a summary list plus one heading per field. -#}
+{% extends "_base/pydantic_model.html.jinja" %}
+
+{#- Prefix the class docstring's first paragraph with "Description:"; other sections render as usual. -#}
+{% block docstring scoped %}
+  {% with docstring_sections = class.docstring.parsed %}
+    {% if docstring_sections and docstring_sections[0].kind.value == "text" %}
+      {{ ("**Description:** " ~ docstring_sections[0].value)|convert_markdown(heading_level, html_id) }}
+      {% with docstring_sections = docstring_sections[1:] %}{% include "docstring.html.jinja" with context %}{% endwith %}
+    {% else %}
+      {% include "docstring.html.jinja" with context %}
+    {% endif %}
+  {% endwith %}
+{% endblock docstring %}
+
+{% block config %}{% endblock config %}
+{% block validators %}{% endblock validators %}
+{% block children %}{% endblock children %}
+
+{% block fields scoped %}
+  {% with fields = class.extra.griffe_pydantic.fields() %}
+    {% if fields %}
+      <table>
+        <thead>
+          <tr>
+            <th>Name</th>
+            <th>Type</th>
+            <th>Default</th>
+            <th>Description</th>
+          </tr>
+        </thead>
+        <tbody>
+          {% for name, field in fields.items() %}
+            <tr>
+              <td><code>{{ name }}</code></td>
+              <td>
+                {% if field.annotation %}
+                  {% with expression = field.annotation %}<code>{% include "expression.html.jinja" with context %}</code>{% endwith %}
+                {% endif %}
+              </td>
+              <td>
+                {% if field.value is not none %}
+                  {% with expression = field.value %}<code>{% include "expression.html.jinja" with context %}</code>{% endwith %}
+                {% else %}
+                  required
+                {% endif %}
+              </td>
+              <td>{{ field.docstring.value if field.docstring else "" }}</td>
+            </tr>
+          {% endfor %}
+        </tbody>
+      </table>
+    {% endif %}
+  {% endwith %}
+{% endblock fields %}

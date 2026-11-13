@@ -24,6 +24,7 @@ nav = [
   { "Development" = [
     { "Database schema version" = "db_schema_version/README.md" },
     { "Bump the version" = "version_bump/README.md" },
+    { "Documentation site" = "docs_site/README.md" },
   ] },
 ]
 
@@ -110,6 +111,16 @@ repo_blob = "https://github.com/kenlhlui/pydatacuration-p/blob/main"
 
 # Lets docs/index.md pull in the repo README with {% include-markdown "../README.md" %}
 [project.plugins.include-markdown]
+
+# Renders Python objects from docstrings with ::: blocks; griffe_pydantic adds Pydantic field defaults and descriptions
+[project.plugins.mkdocstrings]
+# Overrides griffe-pydantic's template so Pydantic models render as a single fields table
+custom_templates = "docs_templates"
+
+[project.plugins.mkdocstrings.handlers.python.options]
+extensions = ["griffe_pydantic"]
+show_bases = false
+show_source = false
 
 # Builds llms.txt plus a Markdown copy of each page, used by "content.action.copy"
 [project.plugins.llmstxt.sections]
