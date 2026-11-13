@@ -13,7 +13,7 @@ The app version and the schema version change independently. Most releases don't
 
 ## Changing the Schema
 
-When you change a table model in [`sqlmodels.py`](../../pydatacuration/db/sqlmodels.py), for example by adding a column or changing a type:
+When you change a table model in [`sqlmodels.py`]({{ repo_blob }}/pydatacuration/db/sqlmodels.py), for example by adding a column or changing a type:
 
 1. **Edit the model** in `sqlmodels.py`.
 2. **Bump `SCHEMA_VERSION`** in the same file, e.g. from `2` to `3`. Add a line for the new version to the comment above it.
@@ -22,7 +22,7 @@ When you change a table model in [`sqlmodels.py`](../../pydatacuration/db/sqlmod
    just schema-snapshot
    ```
    This creates `tests/schema_snapshots/v3.duckdb.sql` and `v3.postgresql.sql`, then checks that they match the models.
-4. **Give existing databases a way to reach the new version.** Add a migration script for the step, e.g. `scripts/db_migration_v2_to_v3.py`, that migrates the data and records the new version when it's done. Use [`scripts/db_migration_v1_to_v2.py`](../../scripts/db_migration_v1_to_v2.py) as a model, and make it refuse to run unless `SCHEMA_VERSION` is its target version.
+4. **Give existing databases a way to reach the new version.** Add a migration script for the step, e.g. `scripts/db_migration_v2_to_v3.py`, that migrates the data and records the new version when it's done. Use [`scripts/db_migration_v1_to_v2.py`]({{ repo_blob }}/scripts/db_migration_v1_to_v2.py) as a model, and make it refuse to run unless `SCHEMA_VERSION` is its target version.
 5. **Commit the model change, the version bump and the snapshots together.**
 
 If you skip step 2, the test suite fails:
@@ -54,7 +54,7 @@ The database is at schema version 1, but this version of the app needs version 2
 Back up the database, then run scripts/db_migration_v1_to_v2.py and any later migration scripts, in order.
 ```
 
-Back up the database and run the migration script. See the [migration script guide](../../scripts/README.md) for the options. The script records the new version only after every project has been copied, so a failed run leaves the database at its old version.
+Back up the database and run the migration script. See the [migration script guide]({{ repo_blob }}/scripts/) for the options. The script records the new version only after every project has been copied, so a failed run leaves the database at its old version.
 
 If the database is newer than the app, for example after you roll the app back to an older release, the app stops and asks you to upgrade the app. Use the newer release, or restore a backup taken before the upgrade.
 
@@ -69,10 +69,10 @@ If the database is newer than the app, for example after you roll the app back t
 
 | Where | What |
 |---|---|
-| [`SCHEMA_VERSION`](../../pydatacuration/db/sqlmodels.py) | The layout this code expects. |
+| [`SCHEMA_VERSION`]({{ repo_blob }}/pydatacuration/db/sqlmodels.py) | The layout this code expects. |
 | `schema_version` table | The layout this database has. A single row with one `version` column. |
 
-[`DatabaseBackend.get_schema_version()`](../../pydatacuration/db/base.py) reads the database's version:
+[`DatabaseBackend.get_schema_version()`]({{ repo_blob }}/pydatacuration/db/base.py) reads the database's version:
 
 | What the database contains | Version |
 |---|---|
@@ -82,7 +82,7 @@ If the database is newer than the app, for example after you roll the app back t
 
 ### Checking on open
 
-[`get_database()`](../../pydatacuration/db/__init__.py) compares the two versions before it returns a backend:
+[`get_database()`]({{ repo_blob }}/pydatacuration/db/__init__.py) compares the two versions before it returns a backend:
 
 - **They match:** the database is remembered for the rest of the process, so later calls don't query it again.
 - **The database is empty:** the check passes. `create_tables()` records the version when it creates the tables.
@@ -104,7 +104,7 @@ Only the migration script turns the check off, with `get_database(..., check_sch
 
 ### Snapshot test
 
-[`tests/test_schema_snapshot.py`](../../tests/test_schema_snapshot.py) stops the layout from changing without a version bump:
+[`tests/test_schema_snapshot.py`]({{ repo_blob }}/tests/test_schema_snapshot.py) stops the layout from changing without a version bump:
 
 - It renders the `CREATE TABLE` statements from the models with SQLAlchemy, without connecting to a database.
 - It compares them with `tests/schema_snapshots/v{SCHEMA_VERSION}.{dialect}.sql`.
@@ -129,11 +129,11 @@ The snapshot covers everything that ends up in the SQL: table and column names, 
 
 | File | Purpose |
 |---|---|
-| [`pydatacuration/db/sqlmodels.py`](../../pydatacuration/db/sqlmodels.py) | `SCHEMA_VERSION` and the `SchemaVersion` table model |
-| [`pydatacuration/db/base.py`](../../pydatacuration/db/base.py) | `get_schema_version()`, `set_schema_version()`, and `create_tables()` recording the version |
-| [`pydatacuration/db/__init__.py`](../../pydatacuration/db/__init__.py) | The check in `get_database()` |
-| [`pydatacuration/exceptions.py`](../../pydatacuration/exceptions.py) | `SchemaVersionError` |
-| [`scripts/db_migration_v1_to_v2.py`](../../scripts/db_migration_v1_to_v2.py) | Migrates v1 databases to v2 and records the new version |
-| [`tests/test_schema_snapshot.py`](../../tests/test_schema_snapshot.py) | The snapshot test |
-| [`tests/schema_snapshots/`](../../tests/schema_snapshots/) | One SQL file per version and dialect |
-| [`tests/test_db_schema_version.py`](../../tests/test_db_schema_version.py) | Tests for the version check |
+| [`pydatacuration/db/sqlmodels.py`]({{ repo_blob }}/pydatacuration/db/sqlmodels.py) | `SCHEMA_VERSION` and the `SchemaVersion` table model |
+| [`pydatacuration/db/base.py`]({{ repo_blob }}/pydatacuration/db/base.py) | `get_schema_version()`, `set_schema_version()`, and `create_tables()` recording the version |
+| [`pydatacuration/db/__init__.py`]({{ repo_blob }}/pydatacuration/db/__init__.py) | The check in `get_database()` |
+| [`pydatacuration/exceptions.py`]({{ repo_blob }}/pydatacuration/exceptions.py) | `SchemaVersionError` |
+| [`scripts/db_migration_v1_to_v2.py`]({{ repo_blob }}/scripts/db_migration_v1_to_v2.py) | Migrates v1 databases to v2 and records the new version |
+| [`tests/test_schema_snapshot.py`]({{ repo_blob }}/tests/test_schema_snapshot.py) | The snapshot test |
+| [`tests/schema_snapshots/`]({{ repo_blob }}/tests/schema_snapshots/) | One SQL file per version and dialect |
+| [`tests/test_db_schema_version.py`]({{ repo_blob }}/tests/test_db_schema_version.py) | Tests for the version check |

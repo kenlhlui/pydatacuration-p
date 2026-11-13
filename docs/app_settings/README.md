@@ -2,7 +2,7 @@
 
 Configuration is loaded from a `.env` file in the working directory (or via environment variables). All variable names are case-insensitive, except for the values of `LOG_LEVEL`.
 
-See the (AppSettings model in `app_settings.py`)[pydatacuration/backend/models/app_settings.py] for the full list of available configuration options and their default values. 
+See the [AppSettings model in `app_settings.py`]({{ repo_blob }}/pydatacuration/backend/models/app_settings.py) for the full list of available configuration options and their default values. 
 
 Below is a summary of the key environment variables you can set to customize the behavior of the application.
 
@@ -17,7 +17,8 @@ Below is a summary of the key environment variables you can set to customize the
 | `LOG_LEVEL` | `INFO` | Logging verbosity (see values below) |
 
 ### `LOG_LEVEL` values
-See [loguru's documentation on severity levels]((https://loguru.readthedocs.io/en/stable/api/logger.html#logging-levels)) for more details:
+See [loguru's documentation on severity levels](https://loguru.readthedocs.io/en/stable/api/logger.html#logging-levels) for more details:
+
 | Value | Description |
 |---|---|
 | `TRACE` | Most verbose — low-level tracing |

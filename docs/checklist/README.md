@@ -34,8 +34,8 @@ Check the `pydatacuration/checklist/checklist_model.py` file for the full defini
 ## Prerequisites
 1. Ensure you have the dependencies installed:
    ```bash
-    pip install -e .
-    ```
+   pip install -e .
+   ```
 
 ## Validate the checklist YAML file
 Run the following command, replacing `${CHECKLIST_FILE_PATH}` with the path to your checklist YAML file:
