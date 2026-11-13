@@ -8,7 +8,7 @@ copyright = "Copyright &copy; 2026 Ken Lui"
 
 repo_url = "https://github.com/kenlhlui/pydatacuration-p"
 repo_name = "kenlhlui/pydatacuration-p"
-# edit_uri = "edit/main/docs/"
+edit_uri = "edit/main/docs/"
 
 nav = [
   { "Home" = "index.md" },
@@ -39,7 +39,7 @@ features = [
   "announce.dismiss",
   # "Copy as Markdown" button; needs the llmstxt plugin below
   "content.action.copy",
-  # "content.action.edit",
+  "content.action.edit",
   # "content.action.view",
   "content.code.annotate",
   "content.code.copy",
