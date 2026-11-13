@@ -79,7 +79,15 @@ This runs `uv sync`, then `uv run --env-file .env app.py`.
 
 ## Database
 
-The app uses DuckDB by default, and it needs no setup. The app creates the database file, `workdir/db/db.duckdb`, when you set up your first project.
+### DuckDB (default)
+
+This app uses [DuckDB](https://duckdb.org/) by default, and it needs no setup. The app creates the database file, `workdir/db/db.duckdb`, when you set up your first project.
+
+
+### PostgreSQL (alternative)
+
+> [!WARNING]
+> This has long been unmaintained and is not tested. Does not guarantee it will work.
 
 To use PostgreSQL instead, add the connection details of a running server to `.env`:
 

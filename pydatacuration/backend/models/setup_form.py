@@ -7,6 +7,7 @@ from uuid import UUID
 
 from pydantic import BaseModel
 from pydantic import EmailStr
+from pydantic import Field
 from pydantic import HttpUrl
 from pydantic import TypeAdapter
 from pydantic import ValidationError
@@ -23,19 +24,29 @@ from pydatacuration.utils.utils import validate_project_number
 class SetupBase(BaseModel):
     """Shared fields for setup models."""
 
-    base_url: HttpUrl | None = None
-    api_token: UUID | None = None
+    base_url: HttpUrl | None = Field(
+        None, description='URL of the Dataverse installation. Prefills Dataverse Base URL.'
+    )
+    api_token: UUID | None = Field(
+        None, description='Dataverse API token. Used whenever the API Token field is left blank.'
+    )
 
-    pid: str = ''
-    project_number: str = ''
-    collection_alias: str | None = None
+    pid: str = Field(
+        '', description='Dataset persistent identifier, e.g. doi:10.80240/FK2/FCZB4A. Prefills Dataset PID.'
+    )
+    project_number: str = Field(
+        '', description='Curation project ID, e.g. CUR-999. Letters, numbers, - and _ only. Prefills Project Number.'
+    )
+    collection_alias: str | None = Field(None, description='Prefills Dataverse Collection Alias.')
 
-    curator_name: str = ''
-    curator_email: EmailStr | None = None
+    curator_name: str = Field('', description='Prefills Curator Name.')
+    curator_email: EmailStr | None = Field(None, description='Prefills Curator Email.')
 
-    force_delete: bool = False
-    check_zip: bool = True
-    checklist: str = ''
+    force_delete: bool = Field(False, description='Prefills the "Replace existing project (if exists)" option.')
+    check_zip: bool = Field(True, description='Prefills the "Unzip archive files and check contents" option.')
+    checklist: str = Field(
+        '', description='File name of a checklist in RES_DIR, e.g. checklist-high.yaml. Prefills the checklist.'
+    )
 
     @field_validator('project_number')
     @classmethod
