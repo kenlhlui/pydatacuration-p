@@ -1,6 +1,6 @@
 # App Settings (Environment Variables)
 
-Configuration is loaded from a `.env` file in the working directory (or via environment variables). All variable names are case-insensitive, except for the values of `LOG_LEVEL`.
+Configuration is loaded from a `.env` file in the working directory (or via environment variables). Variable names are case-insensitive, and so are `LOG_LEVEL` values: `LOG_LEVEL=debug` works the same as `LOG_LEVEL=DEBUG`.
 
 ## Application
 
