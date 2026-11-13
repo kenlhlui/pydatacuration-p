@@ -237,17 +237,6 @@ def get_name_initials(fullname: str) -> str:
     return ''.join([x[0].upper() for x in fullname.split(' ')])
 
 
-def validate_api_token(value: str | None) -> str | None:
-    """Validate API token to prevent empty strings from overriding environment values.
-
-    Note: None values are treated as intentionally unset and are returned unchanged.
-    """
-    env_token = os.getenv('API_TOKEN')
-    if value == '' and env_token:
-        return env_token
-    return value
-
-
 def get_ymdhms_timestamp() -> str:
     """Get the current timestamp in YYYYMMDD_HHMMSS format.
 
