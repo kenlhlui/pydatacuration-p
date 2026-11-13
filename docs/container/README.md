@@ -5,6 +5,9 @@ using **Docker Compose**. Running the tool
 in a containerized environment ensures consistent dependencies, easier
 configuration, and simplified management.
 
+> [!CAUTION]
+> The container setup isn't covered by the automated tests and may be out of date.
+
 ------------------------------------------------------------------------
 
 ## Prerequisites
@@ -12,7 +15,9 @@ configuration, and simplified management.
 -   **Docker** installed on your machine.
     👉 [Get Docker](https://www.docker.com/get-started)
 -   **Docker Compose** installed.
-    > Note: Docker Desktop includes Docker Compose by default.
+    
+    > [!Note]
+    > Docker Desktop includes Docker Compose by default.
 
 ------------------------------------------------------------------------
 
@@ -69,7 +74,8 @@ POSTGRES_PORT=5432
 POSTGRES_DB=curation
 ```
 
-> **Note:** When using Docker Compose with the built-in `postgres` service, set
+> [!Note]
+> When using Docker Compose with the built-in `postgres` service, set
 > `POSTGRES_HOST=postgres` (the service name). If you connect to an external
 > PostgreSQL instance, replace it with the appropriate hostname or IP address.
 
@@ -142,6 +148,23 @@ docker compose down && \
 docker compose build && \
 docker compose up
 ```
+
+### With `just`
+
+If you have [just](https://github.com/casey/just) installed, you can simply run:
+
+```sh
+just docker-build-and-run -f           # The -f flag skips the confirmation prompts, including removing the existing './new_dir'
+just docker-build-and-run postgres -f  # To include the postgres profile
+```
+
+To clean up the folders, run:
+
+```sh
+just clean
+```
+
+This will delete the `./workdir`, `./new_dir/` and `./pgadmin/` folders.
 
 ## Accessing the Application
 Once the containers are running, you can access the dataset curation tool by navigating to `http://localhost:9005` in your web browser.

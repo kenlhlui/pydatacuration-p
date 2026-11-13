@@ -2,7 +2,7 @@
 
 The checklist supports user-defined status options via a configuration file. 
 
-If no file is found, the following defaults are used automatically, as defined in the [`StatusOptions` model](pydatacuration/frontend/models/status_options.py):
+If no file is found, the following defaults are used automatically, as defined in the [`StatusOptions` model]({{ repo_blob }}/pydatacuration/frontend/models/status_options.py):
 
 | Key | Label |
 |---|---|
@@ -43,6 +43,7 @@ Pending: Pending Review
 ```
 
 The format is a flat key-value mapping where:
+
 - **Key** — internal identifier (used in code/data)
 - **Value** — display label shown in the UI dropdown
 
