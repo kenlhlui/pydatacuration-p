@@ -9,6 +9,7 @@ from pydantic_settings import BaseSettings
 from pydantic_settings import SettingsConfigDict
 
 from pydatacuration.backend.models.directory_defaults import DirectoryDefaults
+from pydatacuration.i18n import available_locales
 
 
 allowed_logging_levels = Literal[
@@ -38,6 +39,11 @@ class AppSettings(BaseSettings, DirectoryDefaults):
     log_level: allowed_logging_levels = Field('INFO', description='The logging level for the application.')
     app_reload: bool = Field(False, description='Whether to enable auto-reload for the NiceGUI app.')
     app_reconnect_timeout: int = Field(60, description='The timeout for reconnection attempts.')
+    locale: str = Field(
+        'en',
+        description='The language of the text in the app, e.g. en. Must match a file in pydatacuration/locales/, '
+        'e.g. en.yaml.',
+    )
 
     @field_validator('log_level', mode='before')
     def validate_log_level(cls, v: str) -> str:
@@ -54,5 +60,22 @@ class AppSettings(BaseSettings, DirectoryDefaults):
 
         if v not in list(get_args(allowed_logging_levels)):
             msg = f'Invalid log level: {v}'
+            raise ValueError(msg)
+        return v
+
+    @field_validator('locale')
+    @classmethod
+    def validate_locale(cls, v: str) -> str:
+        """Validate that the locale has a message catalogue.
+
+        Args:
+            v (str): The locale to validate.
+
+        Returns:
+            str: The validated locale.
+
+        """
+        if v not in available_locales():
+            msg = f'Invalid locale: {v}. Available: {", ".join(available_locales())}'
             raise ValueError(msg)
         return v

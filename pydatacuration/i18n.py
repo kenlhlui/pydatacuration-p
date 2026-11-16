@@ -1,4 +1,4 @@
-"""Look up user-facing text in the message catalogue (pydatacuration/locales/en.yaml)."""
+"""Look up user-facing text in the message catalogue (pydatacuration/locales/<locale>.yaml)."""
 
 from functools import cache
 from pathlib import Path
@@ -7,6 +7,24 @@ import yaml
 
 
 LOCALES_DIR = Path(__file__).parent / 'locales'
+
+# The language messages are shown in; set at startup from the LOCALE setting
+_locale = 'en'
+
+
+def available_locales() -> list[str]:
+    """Return the locales that have a catalogue file, e.g. ['en', 'fr']."""
+    return sorted(path.stem for path in LOCALES_DIR.glob('*.yaml'))
+
+
+def set_locale(locale: str) -> None:
+    """Show messages from this locale's catalogue from now on. app.py calls it at startup.
+
+    Args:
+        locale (str): A locale from available_locales(); AppSettings checks the LOCALE setting is one.
+    """
+    global _locale  # noqa: PLW0603
+    _locale = locale
 
 
 @cache
@@ -17,7 +35,7 @@ def load_catalogue(locale: str = 'en') -> dict:
 
 
 def _lookup(key: str) -> str | dict | None:
-    node = load_catalogue()
+    node = load_catalogue(_locale)
     for part in key.split('.'):
         if not isinstance(node, dict) or part not in node:
             return None

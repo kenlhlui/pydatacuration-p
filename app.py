@@ -15,12 +15,18 @@ from pydatacuration.backend.models.setup_form import SetupDefaults
 
 # Import the utility function to mount static files for the frontend
 from pydatacuration.frontend.utils import mount_static_files
+
+# Import the function that sets the language of the app's text
+from pydatacuration.i18n import set_locale
 from pydatacuration.utils.custom_logging import setup_logging
 
 
 # Create global settings instance
 app_settings = AppSettings()
 setup_defaults = SetupDefaults()
+
+# Show the app's text in the configured language
+set_locale(app_settings.locale)
 
 # Include the API router in the NiceGUI app with a prefix of /api
 app.include_router(api_router, prefix='/api')

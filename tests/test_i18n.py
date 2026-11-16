@@ -6,9 +6,15 @@ import string
 from pathlib import Path
 
 import pytest
+from pydantic import ValidationError
 
+from pydatacuration import i18n
+from pydatacuration.backend.models.app_settings import AppSettings
+from pydatacuration.i18n import LOCALES_DIR
+from pydatacuration.i18n import available_locales
 from pydatacuration.i18n import has_message
 from pydatacuration.i18n import load_catalogue
+from pydatacuration.i18n import set_locale
 from pydatacuration.i18n import t
 
 
@@ -35,6 +41,7 @@ UI_TEXT_CALLS = {
     'HTTPException': {'detail'},
 }
 UI_TEXT_FILES = [*sorted((PACKAGE_DIR / 'frontend').rglob('*.py')), PACKAGE_DIR / 'backend' / 'api.py']
+TRANSLATIONS = sorted(path.stem for path in LOCALES_DIR.glob('*.yaml') if path.stem != 'en')
 
 
 # ---------------------------------------------------------------------------
@@ -217,6 +224,75 @@ def test_check_should_have_name_description_unit_and_found(check_id):
 @pytest.mark.parametrize('check_id', sorted(load_catalogue()['checks']))
 def test_check_found_message_should_use_only_count(check_id):
     assert _placeholders(load_catalogue()['checks'][check_id]['found']) == {'count'}
+
+
+# ---------------------------------------------------------------------------
+# Language setting
+# ---------------------------------------------------------------------------
+
+
+@pytest.fixture
+def two_locales(tmp_path, monkeypatch):
+    """Use a locales folder with a small English and French catalogue; English is active."""
+    (tmp_path / 'en.yaml').write_text('common:\n  cancel: "Cancel"\n', encoding='utf-8')
+    (tmp_path / 'fr.yaml').write_text('common:\n  cancel: "Annuler"\n', encoding='utf-8')
+    monkeypatch.setattr(i18n, 'LOCALES_DIR', tmp_path)
+    monkeypatch.setattr(i18n, '_locale', 'en')
+    load_catalogue.cache_clear()
+    yield tmp_path
+    load_catalogue.cache_clear()
+
+
+def test_available_locales_should_list_catalogue_files(two_locales):
+    assert available_locales() == ['en', 'fr']
+
+
+def test_t_should_use_english_by_default(two_locales):
+    assert t('common.cancel') == 'Cancel'
+
+
+def test_t_should_use_locale_set_with_set_locale(two_locales):
+    set_locale('fr')
+    assert t('common.cancel') == 'Annuler'
+
+
+def test_has_message_should_use_locale_set_with_set_locale(two_locales):
+    (two_locales / 'fr.yaml').write_text('other:\n  key: "Texte"\n', encoding='utf-8')
+    set_locale('fr')
+    assert has_message('other.key')
+
+
+def test_app_settings_locale_should_default_to_en(monkeypatch):
+    monkeypatch.delenv('LOCALE', raising=False)
+    assert AppSettings(_env_file=None).locale == 'en'
+
+
+def test_app_settings_should_accept_locale_with_catalogue():
+    assert AppSettings(_env_file=None, locale='en').locale == 'en'
+
+
+def test_app_settings_should_reject_locale_without_catalogue():
+    with pytest.raises(ValidationError, match='Available: en'):
+        AppSettings(_env_file=None, locale='xx')
+
+
+@pytest.mark.parametrize('locale', TRANSLATIONS)
+def test_translation_should_have_the_same_keys_as_english(locale):
+    english, translated = _leaves(load_catalogue('en')), _leaves(load_catalogue(locale))
+    assert sorted(set(english) - set(translated)) == [], 'missing'
+    assert sorted(set(translated) - set(english)) == [], 'not in en.yaml'
+
+
+@pytest.mark.parametrize('locale', TRANSLATIONS)
+def test_translation_should_have_the_same_placeholders_and_plural_forms_as_english(locale):
+    english, translated = _leaves(load_catalogue('en')), _leaves(load_catalogue(locale))
+    different = [
+        key
+        for key in english.keys() & translated.keys()
+        if _placeholders(translated[key]) != _placeholders(english[key])
+        or isinstance(translated[key], dict) != isinstance(english[key], dict)
+    ]
+    assert sorted(different) == []
 
 
 # ---------------------------------------------------------------------------
