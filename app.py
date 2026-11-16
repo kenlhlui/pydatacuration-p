@@ -25,15 +25,15 @@ from pydatacuration.utils.custom_logging import setup_logging
 app_settings = AppSettings()
 setup_defaults = SetupDefaults()
 
-# Show the app's text in the configured language
-set_locale(app_settings.locale)
-
 # Include the API router in the NiceGUI app with a prefix of /api
 app.include_router(api_router, prefix='/api')
 
 
 # Setup logging with your custom style
 setup_logging(log_file_dir=Path(app_settings.main_dir) / 'logs', log_level=app_settings.log_level)
+
+# Show the app's text in the configured language (after logging is set up, so its warning reaches the log file)
+set_locale(app_settings.locale)
 
 
 # ============================================================================

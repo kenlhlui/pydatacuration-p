@@ -3,9 +3,11 @@
 import ast
 import re
 import string
+import warnings
 from pathlib import Path
 
 import pytest
+from loguru import logger
 from pydantic import ValidationError
 
 from pydatacuration import i18n
@@ -14,6 +16,7 @@ from pydatacuration.i18n import LOCALES_DIR
 from pydatacuration.i18n import available_locales
 from pydatacuration.i18n import has_message
 from pydatacuration.i18n import load_catalogue
+from pydatacuration.i18n import missing_translations
 from pydatacuration.i18n import set_locale
 from pydatacuration.i18n import t
 
@@ -233,14 +236,25 @@ def test_check_found_message_should_use_only_count(check_id):
 
 @pytest.fixture
 def two_locales(tmp_path, monkeypatch):
-    """Use a locales folder with a small English and French catalogue; English is active."""
-    (tmp_path / 'en.yaml').write_text('common:\n  cancel: "Cancel"\n', encoding='utf-8')
+    """Use a locales folder with a small English and French catalogue; English is active.
+
+    common.back is only in English, as in an incomplete translation.
+    """
+    (tmp_path / 'en.yaml').write_text('common:\n  cancel: "Cancel"\n  back: "Back"\n', encoding='utf-8')
     (tmp_path / 'fr.yaml').write_text('common:\n  cancel: "Annuler"\n', encoding='utf-8')
     monkeypatch.setattr(i18n, 'LOCALES_DIR', tmp_path)
     monkeypatch.setattr(i18n, '_locale', 'en')
     load_catalogue.cache_clear()
     yield tmp_path
     load_catalogue.cache_clear()
+
+
+@pytest.fixture
+def warnings_logged():
+    messages: list[str] = []
+    sink_id = logger.add(messages.append, format='{message}', level='WARNING')
+    yield messages
+    logger.remove(sink_id)
 
 
 def test_available_locales_should_list_catalogue_files(two_locales):
@@ -262,6 +276,45 @@ def test_has_message_should_use_locale_set_with_set_locale(two_locales):
     assert has_message('other.key')
 
 
+def test_t_should_fall_back_to_english_for_key_missing_from_locale(two_locales):
+    set_locale('fr')
+    assert t('common.back') == 'Back'
+
+
+def test_missing_translations_should_list_keys_missing_from_locale(two_locales):
+    assert missing_translations('fr') == ['common.back']
+
+
+def test_set_locale_should_log_one_warning_listing_missing_keys(two_locales, warnings_logged):
+    set_locale('fr')
+    assert len(warnings_logged) == 1
+    assert 'common.back' in warnings_logged[0]
+
+
+def test_set_locale_should_not_warn_for_complete_translation(two_locales, warnings_logged):
+    (two_locales / 'fr.yaml').write_text('common:\n  cancel: "Annuler"\n  back: "Retour"\n', encoding='utf-8')
+    set_locale('fr')
+    assert warnings_logged == []
+
+
+def test_t_should_not_log_warning_when_falling_back_to_english(two_locales, warnings_logged):
+    set_locale('fr')
+    warnings_logged.clear()
+    t('common.back')
+    assert warnings_logged == []
+
+
+def test_t_should_raise_key_error_for_key_missing_from_locale_and_english(two_locales):
+    set_locale('fr')
+    with pytest.raises(KeyError):
+        t('common.unknown')
+
+
+def test_has_message_should_be_true_for_key_only_in_english(two_locales):
+    set_locale('fr')
+    assert has_message('common.back')
+
+
 def test_app_settings_locale_should_default_to_en(monkeypatch):
     monkeypatch.delenv('LOCALE', raising=False)
     assert AppSettings(_env_file=None).locale == 'en'
@@ -277,10 +330,14 @@ def test_app_settings_should_reject_locale_without_catalogue():
 
 
 @pytest.mark.parametrize('locale', TRANSLATIONS)
-def test_translation_should_have_the_same_keys_as_english(locale):
-    english, translated = _leaves(load_catalogue('en')), _leaves(load_catalogue(locale))
-    assert sorted(set(english) - set(translated)) == [], 'missing'
-    assert sorted(set(translated) - set(english)) == [], 'not in en.yaml'
+def test_translation_should_report_missing_and_unused_keys(locale):
+    """Incomplete translations are allowed (the app shows English for missing messages): report, don't fail."""
+    missing = missing_translations(locale)
+    unused = sorted(set(_leaves(load_catalogue(locale))) - set(_leaves(load_catalogue('en'))))
+    if missing:
+        warnings.warn(f'{locale}.yaml: {len(missing)} messages not translated yet: {", ".join(missing)}', stacklevel=1)
+    if unused:
+        warnings.warn(f'{locale}.yaml: {len(unused)} messages not in en.yaml: {", ".join(unused)}', stacklevel=1)
 
 
 @pytest.mark.parametrize('locale', TRANSLATIONS)

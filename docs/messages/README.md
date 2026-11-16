@@ -54,11 +54,17 @@ Edit the value in `en.yaml`, keeping the key and any placeholders, then restart 
 1. **Copy `en.yaml`** to a file named with the language code, e.g. `pydatacuration/locales/fr.yaml`.
 2. **Translate the values.** Leave the keys and the indentation as they are. You can translate the comments (lines starting with `#`) or leave them.
 3. **Follow the rules below.**
-4. **Check the file.** The tests compare it with `en.yaml` and list any missing keys and changed placeholders. Run them, or ask a developer to:
+4. **Check the file.** The tests compare it with `en.yaml`. They list the messages you haven't translated yet, as a warning, and fail only if a placeholder was changed or a message lost its `one`/`other` forms. Run them, or ask a developer to:
    ```sh
    uv run pytest tests/test_i18n.py
    ```
 5. **See it in the app:** set `LOCALE=fr` in `.env`, using your file's name, and restart the app.
+
+You can translate in stages. Messages your file doesn't have yet are shown in English. When the app starts, the log lists them in one warning:
+
+```
+WARNING | fr.yaml is missing 2 messages, so they are shown in English: common.back, errors.unexpected
+```
 
 ### Rules
 
@@ -104,7 +110,7 @@ ui.notify(t('checklist.status_updated', item_id=item.id))
 ui.label(t('projects.found', count=len(projects)))
 ```
 
-- `t(key, **params)` returns the message with its placeholders filled in, in the language set by `LOCALE`. It raises `KeyError` if the key isn't in that language's file.
+- `t(key, **params)` returns the message with its placeholders filled in, in the language set by `LOCALE`. If that language's file doesn't have the key, it returns the English text. It raises `KeyError` only if `en.yaml` doesn't have the key either.
 - Pass `count=` for messages with `one` and `other` forms. It picks the form and also fills in `{count}`.
 - `has_message(key)` tells you whether a key exists. You only need it for keys built at run time, such as [check results](#check-results).
 
@@ -220,14 +226,18 @@ The unused-message test skips `checks`. Instead, the tests check that the IDs un
 
 ### Languages
 
-The `LOCALE` setting in [`AppSettings`]({{ repo_blob }}/pydatacuration/backend/models/app_settings.py) picks the file, and defaults to `en`. The app refuses to start if there is no file for it, and lists the ones there are. At startup, `app.py` passes it to `set_locale()`, and from then on `t()` and `has_message()` read that file. There is no fallback to English, so a translation must have every key.
+The `LOCALE` setting in [`AppSettings`]({{ repo_blob }}/pydatacuration/backend/models/app_settings.py) picks the file, and defaults to `en`. The app refuses to start if there is no file for it, and lists the ones there are. At startup, `app.py` passes it to `set_locale()`, and from then on `t()` and `has_message()` read that file.
+
+If the file doesn't have a key, they fall back to `en.yaml`, so an incomplete translation shows some English text instead of breaking pages. `set_locale()` logs one warning at startup listing the missing keys, and `missing_translations(locale)` returns them. Lookups that fall back don't log anything.
+
+The fallback only covers missing keys. A translated message with different placeholders still raises an error when it's shown, so that's the one translation problem the tests fail on.
 
 Each translation is checked against `en.yaml` by two tests, which are skipped until a translation exists:
 
-| Problem | Test |
-|---|---|
-| A key is missing, or isn't in `en.yaml` | `test_translation_should_have_the_same_keys_as_english` |
-| A message has different placeholders, or lost its `one`/`other` forms | `test_translation_should_have_the_same_placeholders_and_plural_forms_as_english` |
+| Problem | Test | Result |
+|---|---|---|
+| Messages not translated yet, or not in `en.yaml` | `test_translation_should_report_missing_and_unused_keys` | Warning in the test summary; doesn't fail |
+| A message has different placeholders, or lost its `one`/`other` forms | `test_translation_should_have_the_same_placeholders_and_plural_forms_as_english` | Fails |
 
 When you add a language, also check:
 
