@@ -8,6 +8,7 @@ from pydantic import Field
 from pydantic import model_validator
 from pydantic_settings import BaseSettings
 from pydantic_settings import SettingsConfigDict
+from sqlalchemy import URL
 
 
 class DBType(BaseModel):
@@ -49,4 +50,11 @@ class DBSettings(BaseSettings, DBType):
         if not all([self.postgres_user, self.postgres_password, self.postgres_db]):
             msg = 'PostgreSQL backend requires either DATABASE_URL or POSTGRES_USER + POSTGRES_PASSWORD + POSTGRES_DB.'
             raise ValueError(msg)
-        return f'postgresql+psycopg://{self.postgres_user}:{self.postgres_password}@{self.postgres_host}:{self.postgres_port}/{self.postgres_db}'
+        return URL.create(
+            'postgresql+psycopg',
+            username=self.postgres_user,
+            password=self.postgres_password,
+            host=self.postgres_host,
+            port=self.postgres_port,
+            database=self.postgres_db,
+        ).render_as_string(hide_password=False)

@@ -15,9 +15,12 @@ services:
       - ./res:/app/res  # Configure the path for the res directory
     restart: unless-stopped
 
-  # NEED TO SET UP .env VARIABLES FOR POSTGRES IF USING THIS IN PRODUCTION
+  # FOR LOCAL DEVELOPMENT ONLY. For production or a database shared by several people, run a properly managed
+  # PostgreSQL server and point DATABASE_URL (or POSTGRES_HOST) at it instead of using these two services.
+  # Set POSTGRES_USER, POSTGRES_PASSWORD and POSTGRES_DB in .env. There are no defaults: Postgres won't start without a password.
+  # (They are read from env_file, not ${VAR:?}, because Compose checks ${VAR:?} even when the postgres profile is off.)
   # See https://github.com/docker/awesome-compose/tree/master/postgresql-pgadmin for more details
-  # Start with: docker compose --profile postgres up  (or: just docker-build-and-run profile=postgres)
+  # Start with: docker compose --profile postgres up  (or: just docker-build-and-run postgres)
   postgres:
     profiles: [postgres]
     container_name: postgres
@@ -25,13 +28,10 @@ services:
     user: "${UID:-1000}:${GID:-1000}"
     environment:
       - TZ=${TIMEZONE:-America/Toronto}
-      - POSTGRES_USER=${POSTGRES_USER:-curation}
-      - POSTGRES_PASSWORD=${POSTGRES_PASSWORD:-curation}
-      - POSTGRES_DB=${POSTGRES_DB:-curation}
     env_file:
       - ./.env  # Configure the path to your .env file if it's located elsewhere
     ports:
-      - "5432:5432"
+      - "127.0.0.1:5432:5432"  # Localhost only, for running the app outside Docker. Containers use the internal network.
     restart: always
 
   # Web-based database management tool, optional if you prefer using command line or other tools to manage your database
@@ -45,7 +45,7 @@ services:
     environment:
       - TZ=${TIMEZONE:-America/Toronto}
       - PGADMIN_DEFAULT_EMAIL=${PGADMIN_MAIL:-curation@example.com}
-      - PGADMIN_DEFAULT_PASSWORD=${PGADMIN_PW:-curation}
+      - PGADMIN_DEFAULT_PASSWORD=${PGADMIN_PW:-}  # Set PGADMIN_PW in .env. No default: pgAdmin won't start without it.
     ports:
       - "5050:80"
     restart: always
