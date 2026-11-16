@@ -1,6 +1,7 @@
 """The resume project page."""
 
 # ruff: noqa: PLR1702
+from html import escape
 from pathlib import Path
 
 from nicegui import ui
@@ -18,6 +19,9 @@ from pydatacuration.frontend.pages.project_table import render_project_table
 
 # Import styles and styled components
 from pydatacuration.frontend.styles import apply_pdc_styles
+
+# Import the message catalogue
+from pydatacuration.i18n import t
 
 
 # Create global settings instance
@@ -37,10 +41,10 @@ async def resume_work_page() -> None:
     with ui.column().classes('pdc-container'):
         # Logo and Header
         ui.html(
-            '<img src="/static/UTL.png" alt="University of Toronto Libraries Logo" class="utl-logo">',
+            f'<img src="/static/UTL.png" alt="{escape(t("common.logo_alt"))}" class="utl-logo">',
             sanitize=False,
         )
-        ui.label('Resume Project').classes('pdc-header')
+        ui.label(t('projects.resume_title')).classes('pdc-header')
 
         # Back button
         back_to_main_menu_button()

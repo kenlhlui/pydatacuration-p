@@ -1,6 +1,7 @@
 """Checklist page implementation for pydatacuration frontend."""
 
 # ruff: noqa: PLR1702
+from html import escape
 from pathlib import Path
 
 from nicegui import ui
@@ -32,6 +33,10 @@ from pydatacuration.frontend.styles import create_check_type_badge
 from pydatacuration.frontend.styles import create_info_grid
 from pydatacuration.frontend.styles import create_priority_badge
 from pydatacuration.frontend.styles import create_status_select
+
+# Import the message catalogue
+from pydatacuration.i18n import has_message
+from pydatacuration.i18n import t
 from pydatacuration.utils import open_folder
 
 # Import pydatacuration modules
@@ -93,10 +98,8 @@ async def checklist_page(project_number: str, view_only: bool = False) -> None:
             'border-radius: 0; margin: 0; display: flex; align-items: center; gap: 10px;'
         ) as view_only_banner
     ):
-        ui.label("🔒 You're in view-only mode \u2014 changes are disabled.").style('flex: 1').classes(
-            'text-lg font-semibold'
-        )
-        ui.button('Edit', icon='edit', on_click=lambda: toggle_view_only()).props('flat dense').style(  # noqa: PLW0108
+        ui.label(t('checklist.view_only_banner')).style('flex: 1').classes('text-lg font-semibold')
+        ui.button(t('common.edit'), icon='edit', on_click=lambda: toggle_view_only()).props('flat dense').style(  # noqa: PLW0108
             'color: #92400e;'
         )
     view_only_banner.set_visibility(view_only)
@@ -104,35 +107,35 @@ async def checklist_page(project_number: str, view_only: bool = False) -> None:
     with ui.column().classes('pdc-container'):
         # Logo
         ui.html(
-            '<img src="/static/UTL.png" alt="University of Toronto Libraries Logo" class="utl-logo">',
+            f'<img src="/static/UTL.png" alt="{escape(t("common.logo_alt"))}" class="utl-logo">',
             sanitize=False,
         )
         # Header using the checklist metadata name field (with fallback to "Unknown Checklist" if not available)
-        ui.label(f'{checklist_metadata.get("name", "Unknown Checklist")}').classes('pdc-header')
+        ui.label(f'{checklist_metadata.get("name", t("checklist.unknown_checklist"))}').classes('pdc-header')
 
         def _open_file_explorer(path: Path | str = '.') -> ui.button:
             """Open a folder in the system's file explorer."""
-            return action_button('Open files directory', on_click=lambda: open_folder(path))  # noqa: PLW0108
+            return action_button(t('checklist.open_files_directory'), on_click=lambda: open_folder(path))  # noqa: PLW0108
 
         # Metadata Display using our helper function
         with ui.row().classes('w-full justify-between items-center'):
             with ui.tabs() as tabs:
-                project_metadata_tab = ui.tab('Project Metadata')
-                checklist_metadata_tab = ui.tab('Checklist Metadata')
+                project_metadata_tab = ui.tab(t('checklist.tab_project_metadata'))
+                checklist_metadata_tab = ui.tab(t('checklist.tab_checklist_metadata'))
             _open_file_explorer(dir_manager.files_dir)
         with ui.tab_panels(tabs, value=project_metadata_tab).classes('w-full'):
             with ui.tab_panel(project_metadata_tab).classes('w-full'):
                 create_info_grid(
                     project_metadata,
                     [
-                        ('project_number', 'Project number'),
-                        ('curator_name', 'Curator name'),
-                        ('curator_email', 'Curator email'),
-                        ('dataset_title', 'Dataset title'),
-                        ('dataset_pid', 'Dataset persistent identifier'),
-                        ('dataset_id', 'Dataset ID (versioned)'),
-                        ('dataset_url', 'Dataset access URL'),
-                        ('dataset_path', 'Dataset path'),
+                        ('project_number', t('checklist.project_number')),
+                        ('curator_name', t('checklist.curator_name')),
+                        ('curator_email', t('checklist.curator_email')),
+                        ('dataset_title', t('checklist.dataset_title')),
+                        ('dataset_pid', t('checklist.dataset_pid')),
+                        ('dataset_id', t('checklist.dataset_id')),
+                        ('dataset_url', t('checklist.dataset_url')),
+                        ('dataset_path', t('checklist.dataset_path')),
                     ],
                 )
             with ui.tab_panel(checklist_metadata_tab).classes('w-full'):
@@ -140,21 +143,21 @@ async def checklist_page(project_number: str, view_only: bool = False) -> None:
                     created_by = checklist_metadata.get('created_by') or []
                     display_metadata = {
                         **checklist_metadata,
-                        'created_by': ', '.join(created_by) if created_by else 'N/A',
-                        'last_updated': str(checklist_metadata.get('last_updated', 'N/A')),
+                        'created_by': ', '.join(created_by) if created_by else t('common.not_available'),
+                        'last_updated': str(checklist_metadata.get('last_updated', t('common.not_available'))),
                     }
                     create_info_grid(
                         display_metadata,
                         [
-                            ('name', 'Checklist name'),
-                            ('version', 'Version'),
-                            ('created_by', 'Created by'),
-                            ('last_updated', 'Last updated'),
-                            ('status', 'Status'),
+                            ('name', t('checklist.checklist_name')),
+                            ('version', t('checklist.checklist_version')),
+                            ('created_by', t('checklist.checklist_created_by')),
+                            ('last_updated', t('checklist.checklist_last_updated')),
+                            ('status', t('checklist.checklist_status')),
                         ],
                     )
                 else:
-                    ui.label('No checklist metadata available.').classes('pdc-additional-info')
+                    ui.label(t('checklist.no_checklist_metadata')).classes('pdc-additional-info')
 
         # # Status Legend  # (commented out for cleaner UI); can be re-enabled for other content if needed
         # with ui.element('div').classes('pdc-status-legend'):
@@ -178,7 +181,7 @@ async def checklist_page(project_number: str, view_only: bool = False) -> None:
         def toggle_view_only() -> None:
             is_view_only['value'] = not is_view_only['value']
             active = is_view_only['value']
-            toggle_btn.set_text('Edit' if active else 'Switch to view only')
+            toggle_btn.set_text(t('common.edit') if active else t('checklist.switch_to_view_only'))
             toggle_btn.props('icon=edit' if active else 'icon=lock')
             view_only_banner.set_visibility(active)
             for el in interactive_elements:
@@ -200,7 +203,7 @@ async def checklist_page(project_number: str, view_only: bool = False) -> None:
                         ui.label(helpers.get_total_time_str()).classes(
                             'text-5xl font-bold text-center w-full tabular-nums'
                         )
-                    ui.label(f'Total Time Spent ({helpers._get_time_spent_input_count()})').classes(
+                    ui.label(t('checklist.total_time_spent', counter=helpers._get_time_spent_input_count())).classes(
                         'text-sm text-center'
                     )
 
@@ -209,23 +212,23 @@ async def checklist_page(project_number: str, view_only: bool = False) -> None:
         def _render_toggle_btn() -> None:
             _btn_ref.append(
                 action_button(
-                    'Edit' if view_only else 'Switch to view only',
+                    t('common.edit') if view_only else t('checklist.switch_to_view_only'),
                     icon='edit' if view_only else 'lock',
                     on_click=toggle_view_only,
                 )
             )
 
-        with form_section('Status and time dashboard', header_slot=_render_toggle_btn):
+        with form_section(t('checklist.dashboard'), header_slot=_render_toggle_btn):
             status_progress_ui()
 
         toggle_btn = _btn_ref[0]
 
         # Filters Section
-        with form_section('Filters'), ui.row().classes('gap-4').style('align-items: flex-end;'):
-            status_filter = dropdown_menu('Filter by Status', status_options)
-            priority_filter = dropdown_menu('Filter by Priority', priority_options)
+        with form_section(t('common.filters')), ui.row().classes('gap-4').style('align-items: flex-end;'):
+            status_filter = dropdown_menu(t('checklist.filter_by_status'), status_options)
+            priority_filter = dropdown_menu(t('checklist.filter_by_priority'), priority_options)
             # Clear filters button
-            action_button('Clear filters', lambda: clear_filters())  # noqa: PLW0108
+            action_button(t('common.clear_filters'), lambda: clear_filters())  # noqa: PLW0108
 
         # Dicts populated by render_checklist_table for visibility-based filtering
         # item_rows: {item_id: (row_element, item)}
@@ -284,11 +287,11 @@ async def checklist_page(project_number: str, view_only: bool = False) -> None:
         # Floating menu
         floating_menu(
             {
-                'Download Curation Log (Word)': lambda: NiceGUIHelper.export_word(db, dir_manager),
-                'Export YAML': lambda: NiceGUIHelper.export_yaml_button(db, dir_manager),
-                'New Dataset': helpers.confirm_new_dataset,
+                t('checklist.menu_download_word'): lambda: NiceGUIHelper.export_word(db, dir_manager),
+                t('checklist.menu_export_yaml'): lambda: NiceGUIHelper.export_yaml_button(db, dir_manager),
+                t('checklist.menu_new_dataset'): helpers.confirm_new_dataset,
             },
-            'Actions',
+            t('checklist.menu_actions'),
             position='bottom',
             y_offset=20,
             direction='up',
@@ -336,13 +339,13 @@ async def render_checklist_table(  # noqa: PLR0913, PLR0912, PLR0915, C901, PLR0
         # Table Header
         with ui.element('thead'), ui.element('tr'):
             for header in [
-                'ID',
-                'Action Item',
-                'Information Location',
-                'Priority',
-                "Curator's Comments",
-                'Status',
-                'Time Spent',
+                t('checklist.col_id'),
+                t('checklist.col_action_item'),
+                t('checklist.col_information_location'),
+                t('checklist.col_priority'),
+                t('checklist.col_comments'),
+                t('checklist.col_status'),
+                t('checklist.col_time_spent'),
             ]:
                 with ui.element('th'):
                     ui.label(header)
@@ -375,7 +378,7 @@ async def render_checklist_table(  # noqa: PLR0913, PLR0912, PLR0915, C901, PLR0
                         if item.instructions:
                             with ui.element('div').classes('pdc-instructions-header'):
                                 ui.markdown('--')
-                                ui.markdown('**Guidance**')
+                                ui.markdown(f'**{t("checklist.guidance")}**')
                             ui.markdown(item.instructions).classes('pdc-instructions')
 
                     # Information Location
@@ -407,17 +410,19 @@ async def render_checklist_table(  # noqa: PLR0913, PLR0912, PLR0915, C901, PLR0
 
                                 # Display Tool Checks header with check names
                                 with ui.element('div').classes('pdc-instructions-header'):
-                                    ui.markdown('**Tool Checks:**')
+                                    ui.markdown(f'**{t("checklist.tool_checks")}**')
                                 if checks_info:
                                     check_names = [
-                                        f'- {info["check_name"]}' for info in checks_info if info.get('check_name')
+                                        f'- {check_text(info, "name", info["check_name"])}'
+                                        for info in checks_info
+                                        if info.get('check_name')
                                     ]
                                     checklist = '\n'.join(check_names)
                                     ui.markdown(checklist).classes('pdc-static-curator-check-item')
                                 elif tool_explanation:
                                     ui.markdown(tool_explanation).classes('pdc-static-curator-check-item')
                                 else:
-                                    ui.markdown('*No automated checks configured*').classes(
+                                    ui.markdown(f'*{t("checklist.no_automated_checks")}*').classes(
                                         'pdc-static-curator-check-item'
                                     )
 
@@ -433,13 +438,13 @@ async def render_checklist_table(  # noqa: PLR0913, PLR0912, PLR0915, C901, PLR0
                                 # Show "no applicable result" if checks exist but no results
                                 if not results_displayed:
                                     with ui.element('div').classes('pdc-dynamic-check-results'):
-                                        ui.markdown('*No applicable results*')
+                                        ui.markdown(f'*{t("checklist.no_applicable_results")}*')
 
                         # 4. Finally, show any manually entered information location
                         curator_check_item = getattr(item, 'curator_check_item', None)
                         if curator_check_item:
                             with ui.element('div').classes('pdc-instructions-header'):
-                                ui.markdown('**Curator Checks:**')
+                                ui.markdown(f'**{t("checklist.curator_checks")}**')
                             ui.markdown(curator_check_item).classes('pdc-static-curator-check-item')
 
                     # Priority
@@ -449,9 +454,9 @@ async def render_checklist_table(  # noqa: PLR0913, PLR0912, PLR0915, C901, PLR0
                     # Comments
                     with ui.element('td'):
                         comments_input = ui.textarea(
-                            value=item.comments or '', placeholder="Curator's comments..."
+                            value=item.comments or '', placeholder=t('checklist.comments_placeholder')
                         ).classes('pdc-comments-input')
-                        comments_input.props(f'aria-label="Comments for item {item.id}"')
+                        comments_input.props(f'aria-label="{t("checklist.comments_aria", item_id=item.id)}"')
                         if view_only:
                             comments_input.props('readonly')
                         comments_input.on(
@@ -481,10 +486,10 @@ async def render_checklist_table(  # noqa: PLR0913, PLR0912, PLR0915, C901, PLR0
                     ):
                         time_input = (
                             ui
-                            .input(value=item.time_spent or '', placeholder='MM:SS')
+                            .input(value=item.time_spent or '', placeholder=t('checklist.time_placeholder'))
                             .classes('pdc-time-input')
                             .on('change', lambda e, iid=item.id: helpers.handle_time_change(iid, e.sender.value))
-                            .props(f'maxlength=5 aria-label="Time spent on item {item.id}"')
+                            .props(f'maxlength=5 aria-label="{t("checklist.time_aria", item_id=item.id)}"')
                             .style('flex: 1; min-width: 60px;')
                         )
                         if view_only:
@@ -495,9 +500,12 @@ async def render_checklist_table(  # noqa: PLR0913, PLR0912, PLR0915, C901, PLR0
                             timer_btn = (
                                 ui
                                 .button(icon='play_arrow', color=None)
-                                .props(f'flat dense round size=sm aria-label="Start timer for item {item_id}"')
+                                .props(
+                                    f'flat dense round size=sm '
+                                    f'aria-label="{t("checklist.start_timer_aria", item_id=item_id)}"'
+                                )
                                 .style('color: #556B2F;')
-                                .tooltip('Start/Stop Timer')
+                                .tooltip(t('checklist.timer_tooltip'))
                             )
                             timer_btn.on('click', lambda: helpers.toggle_timer(item_id, time_inp, timer_btn))
                             return timer_btn
@@ -514,6 +522,24 @@ async def render_checklist_table(  # noqa: PLR0913, PLR0912, PLR0915, C901, PLR0
                     item_rows[item.id] = (item_row, item)
 
 
+def check_text(result: dict, field: str, stored: str | None, **params: object) -> str | None:
+    """Return a check's text from the catalogue (checks.<check_id>.<field>).
+
+    Checks no longer in the catalogue (projects created by older versions) fall back to the stored text.
+
+    Args:
+        result (dict): The check result row.
+        field (str): 'name', 'description' or 'found'.
+        stored (str | None): The fallback text.
+        **params: Values for the message's placeholders, e.g. count for 'found'.
+
+    Returns:
+        str | None: The text.
+    """
+    key = f'checks.{result.get("check_id")}.{field}'
+    return t(key, **params) if has_message(key) else stored
+
+
 def render_check_results(results: dict) -> None:
     """Render check results based on their type (list, dict, or other).
 
@@ -521,10 +547,15 @@ def render_check_results(results: dict) -> None:
         results (dict): The results data to render (can be list, dict, or other types).
 
     """
-    check_name = results.get('check_name') or results.get('check_id', 'Unknown Check')
-    check_description = results.get('description')
-    result_name = results.get('unit', 'result')
+    result_row = results
+    check_name = check_text(
+        result_row, 'name', results.get('check_name') or results.get('check_id', t('checklist.unknown_check'))
+    )
+    check_description = check_text(result_row, 'description', results.get('description'))
     results = results.get('results', {})
+
+    def found_text(count: int) -> str:
+        return check_text(result_row, 'found', t('checklist.results_found', count=count), count=count)
 
     # Use the pdc-check-result class from nicegui_styles.py instead of inline styles
     with ui.element('div').classes('pdc-check-result'):
@@ -535,7 +566,7 @@ def render_check_results(results: dict) -> None:
 
         if isinstance(results, list):
             # Show count description
-            ui.label(f'{len(results)} {result_name} found').classes('pdc-check-description')
+            ui.label(found_text(len(results))).classes('pdc-check-description')
 
             # Use pdc-check-details-list class for the numbered list
             with ui.element('ol').classes('pdc-check-details-list'):
@@ -552,7 +583,7 @@ def render_check_results(results: dict) -> None:
 
         elif isinstance(results, dict):
             # Show count description
-            ui.label(f'{len(results)} {result_name} found').classes('pdc-check-description')
+            ui.label(found_text(len(results))).classes('pdc-check-description')
 
             # Use pdc-check-details-list class for the numbered list
             with ui.element('ol').classes('pdc-check-details-list'):

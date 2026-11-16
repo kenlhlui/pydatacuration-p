@@ -22,6 +22,7 @@ from tenacity import RetryError
 from pydatacuration.exceptions import DatasetAccessError
 from pydatacuration.exceptions import DatasetNotFoundError
 from pydatacuration.exceptions import DatasetUnauthorizedError
+from pydatacuration.i18n import t
 from pydatacuration.services.api_calls.dataverse_client import DataverseClient
 from pydatacuration.services.api_calls.httpx_client import HTTPXClient
 from pydatacuration.utils.search_ds_meta import get_file_name_from_file_list_metadata
@@ -256,7 +257,7 @@ def validate_project_number(value: str) -> str:
         str: The validated project number.
     """
     if value and not re.fullmatch(r'^[A-Za-z0-9_-]+$', value):
-        msg = 'Project number must only contain letters, numbers, hyphens, and underscores.'
+        msg = t('setup.project_number_invalid')
         raise ValueError(msg)
     return value
 

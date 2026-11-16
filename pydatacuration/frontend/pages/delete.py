@@ -1,6 +1,7 @@
 """The delete project page."""
 
 # ruff: noqa: PLR1702
+from html import escape
 from pathlib import Path
 
 from nicegui import ui
@@ -20,6 +21,9 @@ from pydatacuration.frontend.reusable_elements import scroll_to_top_button
 
 # Import styles and styled components
 from pydatacuration.frontend.styles import apply_pdc_styles
+
+# Import the message catalogue
+from pydatacuration.i18n import t
 
 
 # Create global settings instance
@@ -44,19 +48,17 @@ async def delete_project_page() -> None:
     with container:
         # Logo and Header
         ui.html(
-            '<img src="/static/UTL.png" alt="University of Toronto Libraries Logo" class="utl-logo">',
+            f'<img src="/static/UTL.png" alt="{escape(t("common.logo_alt"))}" class="utl-logo">',
             sanitize=False,
         )
-        ui.label('Delete Project').classes('pdc-header')
+        ui.label(t('projects.delete_title')).classes('pdc-header')
 
         # Back button
         back_to_main_menu_button()
 
         # Warning banner
         with ui.element('div').classes('warning-banner'):
-            ui.label('⚠️ Warning: Deleting a project is permanent and cannot be undone!').classes(
-                'text-lg font-semibold'
-            )
+            ui.label(t('projects.delete_warning')).classes('text-lg font-semibold')
 
         # Project list container (for dynamic updates)
         project_list_container = ui.column()

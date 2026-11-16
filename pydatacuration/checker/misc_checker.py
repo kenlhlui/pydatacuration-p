@@ -5,6 +5,7 @@ from loguru import logger
 
 from pydatacuration.checker.check_result_writer import CheckResultWriter
 from pydatacuration.checker.services.spell_checker import SpellCheckerCustomized
+from pydatacuration.i18n import t
 from pydatacuration.services.api_calls.dataverse_client import DataverseClient
 from pydatacuration.utils.search_ds_meta import get_depositor_record
 from pydatacuration.utils.search_ds_meta import get_metadata_cm_field
@@ -52,15 +53,18 @@ class MiscChecker:
 
                 # Extend the string to the depositor_history list
                 depositor_history.extend(
-                    f'{depositor}: {dataset.get("name")} ({dataset.get("url")}) - Dataverse Name: {dataset.get("name_of_dataverse")}'  # noqa: E501
+                    t(
+                        'checks.depositor_history.entry',
+                        depositor=depositor,
+                        dataset_name=dataset.get('name'),
+                        dataset_url=dataset.get('url'),
+                        dataverse_name=dataset.get('name_of_dataverse'),
+                    )
                     for dataset in dataset_publish_history
                 )
 
         self.check_result_writer.write(
             check_id='depositor_history',
-            check_name='Depositor history',
-            description='Previous datasets depositor in this Dataverse collection',
-            unit='depositor record',
             results=depositor_history,
         )
 
@@ -93,9 +97,6 @@ class MiscChecker:
                         )
 
         self.check_result_writer.write(
-            check_name='Fields for Title, Subtitle, Alternative Title, Description, and Notes',
             check_id='potential_typos',
-            description='Fields for Title, Subtitle, Alternative Title, Description, and Notes',  # noqa: E501
-            unit='typo',
             results=potential_typos,
         )

@@ -113,8 +113,5 @@ class FileFormatChecker:
 
         self.check_result_writer.write(
             check_id='uncommon_file_formats',
-            check_name='Files with uncommon formats',
-            description='Files using uncommon or proprietary file formats',
-            unit='file',
             results=uncommon_format_files,
         )

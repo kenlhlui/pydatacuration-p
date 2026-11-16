@@ -18,6 +18,7 @@ from pydantic_settings import SettingsConfigDict
 
 from pydatacuration.backend.models.directory_defaults import MainDir
 from pydatacuration.backend.models.directory_defaults import ResDir
+from pydatacuration.i18n import t
 from pydatacuration.utils.utils import validate_project_number
 
 
@@ -95,19 +96,29 @@ class SetupDefaults(SetupBase, BaseSettings):
 
 
 def validate_setup_form_input(
-    model_cls: type[BaseModel], field_name: str, *, required: bool = False
+    model_cls: type[BaseModel], field_name: str, *, required: bool = False, invalid_message: str | None = None
 ) -> Callable[[Any], str | None]:
-    """Shortcut for a standalone field validator."""
+    """Shortcut for a standalone field validator.
+
+    Args:
+        model_cls (type[BaseModel]): The model that defines the field.
+        field_name (str): The field to validate.
+        required (bool): Whether an empty value is an error.
+        invalid_message (str | None): Message for a value that fails validation; defaults to a generic message.
+
+    Returns:
+        Callable[[Any], str | None]: A rule returning the error message, or None if the value is valid.
+    """
     field = model_cls.model_fields[field_name]
     adapter = TypeAdapter(field.annotation)
 
     def rule(value: Any) -> str | None:  # noqa: ANN401
         if required and not value:
-            return 'This field is required'
+            return t('common.required_field')
         try:
             adapter.validate_python(value)
             return None
-        except ValidationError as e:
-            return e.errors()[0].get('msg', 'Invalid value') if e.errors() else 'Invalid value'
+        except ValidationError:
+            return invalid_message or t('common.invalid_value')
 
     return rule

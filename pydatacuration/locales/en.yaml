@@ -1,0 +1,339 @@
+# User-facing text for pydatacuration (English).
+#
+# - Change wording here, not in the Python code. The code refers to each message by its dotted key,
+#   e.g. t('setup.form_reset').
+# - Keep {placeholders} as they are; the code fills them in.
+# - Messages with "one" and "other" forms are picked by a count: "1 file found", "3 files found".
+# - Quote every value, so YAML doesn't read words such as No or Off as true/false.
+# - Log messages are not in this file; they stay in the code, in English.
+# - To add a language, copy this file (e.g. to fr.yaml) and translate the values, keeping the keys.
+
+common:
+  logo_alt: "University of Toronto Libraries Logo"
+  back: "← Back"
+  cancel: "Cancel"
+  continue: "Continue"
+  edit: "Edit"
+  filters: "Filters"
+  clear_filters: "Clear filters"
+  not_available: "N/A"
+  unknown: "Unknown"
+  required_field: "This field is required"
+  invalid_value: "Invalid value"
+
+errors:
+  reference: "Reference: {error_id}"
+  unexpected: "Something went wrong."
+  dataset_access: "Couldn't check access to the dataset. Check the base URL and your internet connection, then try again."
+  dataset_unauthorized: "Unauthorized dataset access. Check API token/permissions."
+  dataset_not_found: "Dataset not found. Verify PID and base URL."
+  project_exists: "Project {project_number} already exists. To overwrite it, tick “Replace existing project (if exists)”."
+  file_mismatch: "File verification failed: downloaded files do not match metadata checksums."
+  project_not_found: "Project directory for project '{project_number}' not found."
+
+home:
+  new_project_title: "New Project"
+  new_project_description: "Start a new curation process for a new project"
+  delete_project_title: "Delete Project"
+  delete_project_description: "Delete a project from the database"
+  resume_project_title: "Resume Project"
+  resume_project_description: "Continue working on an existing project"
+
+setup:
+  section_dataset: "Dataset Information"
+  section_curator: "Curator Information"
+  section_checklist: "Checklist Selection"
+  section_processing: "Processing Options"
+  pid_label: "Dataset PID *"
+  pid_placeholder: "doi:10.5683/SP2/... or hdl:1902.1/..."
+  pid_helper: "Persistent identifier for the dataset (DOI or Handle)"
+  base_url_label: "Dataverse Base URL *"
+  base_url_placeholder: "https://demo.borealisdata.ca/"
+  base_url_helper: "Base URL of the Dataverse installation (e.g., https://demo.borealisdata.ca/)"
+  base_url_invalid: "Enter a full URL, e.g. https://demo.borealisdata.ca/"
+  api_token_label: "API Token"
+  api_token_placeholder: "Enter your Dataverse API token"
+  api_token_placeholder_prefilled: "Leave blank to use pre-filled token ({token_hint})"
+  api_token_helper: "The API token from the Dataverse instance. The value is hidden by default."
+  api_token_helper_prefilled: "Leave blank to use the API token from the environment."
+  api_token_invalid: "Enter a valid API token, e.g. xxxxxxxx-xxxx-xxxx-xxxx-xxxxxxxxxxxx"
+  project_number_label: "Project Number *"
+  project_number_placeholder: "PROJECT-123"
+  project_number_helper: "Curation project ID (e.g., CUR-999). Use only letters, numbers, -, and _. No spaces or other characters."
+  project_number_invalid: "Project number must only contain letters, numbers, hyphens, and underscores."
+  curator_name_label: "Curator Name *"
+  curator_name_placeholder: "Enter your name"
+  curator_name_helper: "The name of the curator responsible for this curation project."
+  curator_email_label: "Curator Email *"
+  curator_email_placeholder: "Enter your email"
+  curator_email_helper: "The email of the curator responsible for this curation project."
+  curator_email_invalid: "Enter a valid email address, e.g. name@example.com"
+  checklist_label: "Checklist"
+  checklist_placeholder: "Select checklist"
+  checklist_helper: "Checklist used for this curation project"
+  replace_existing: "Replace existing project (if exists)"
+  check_zip: "Unzip archive files and check contents"
+  collection_alias_label: "Dataverse Collection Alias"
+  collection_alias_placeholder: "Enter dataverse collection alias"
+  collection_alias_helper: "Dataverse collection alias for checking dataset author and depositor history"
+  fix_form_errors: "Please fix the errors in the form"
+  select_checklist: "Please select a valid checklist"
+  generating_report: "Generating the curation report..."
+  running: "Running curation process... ({elapsed}s)"
+  form_reset: "Form reset to defaults"
+  back: "Back"
+  reset_form: "Reset Form"
+  start: "Start Curation Process"
+
+projects:
+  resume_title: "Resume Project"
+  delete_title: "Delete Project"
+  delete_warning: "⚠️ Warning: Deleting a project is permanent and cannot be undone!"
+  none_found: "No projects found"
+  search_label: "Search"
+  search_placeholder: "Search Project Number, Title, PID, ID (Versioned)"
+  curator_filter: "Select Curator"
+  found:
+    one: "Found {count} project"
+    other: "Found {count} projects"
+  col_project_number: "Project Number"
+  col_dataset_information: "Dataset Information"
+  col_curator: "Curator"
+  col_last_modified: "Project Last Modified"
+  col_action: "Action"
+  dataset_title: "Title:"
+  dataset_pid: "PID:"
+  dataset_id: "ID (Versioned):"
+  dataset_url: "URL:"
+  delete_button: "🗑️ Delete"
+  confirm_delete_title: 'Delete project "{project_number}"?'
+  confirm_delete_warning: "This action cannot be undone. All data will be permanently deleted."
+  confirm_delete_button: "Delete"
+  invalid_project_number: "Invalid project number"
+  deleted: "Project {project_number} deleted successfully"
+
+checklist:
+  view_only_banner: "🔒 You're in view-only mode — changes are disabled."
+  switch_to_view_only: "Switch to view only"
+  unknown_checklist: "Unknown Checklist"
+  open_files_directory: "Open files directory"
+  tab_project_metadata: "Project Metadata"
+  tab_checklist_metadata: "Checklist Metadata"
+  project_number: "Project number"
+  curator_name: "Curator name"
+  curator_email: "Curator email"
+  dataset_title: "Dataset title"
+  dataset_pid: "Dataset persistent identifier"
+  dataset_id: "Dataset ID (versioned)"
+  dataset_url: "Dataset access URL"
+  dataset_path: "Dataset path"
+  checklist_name: "Checklist name"
+  checklist_version: "Version"
+  checklist_created_by: "Created by"
+  checklist_last_updated: "Last updated"
+  checklist_status: "Status"
+  no_checklist_metadata: "No checklist metadata available."
+  dashboard: "Status and time dashboard"
+  total_time_spent: "Total Time Spent ({counter})"
+  items_with_comments: "Items with comments"
+  no_status: "No Status"
+  filter_by_status: "Filter by Status"
+  filter_by_priority: "Filter by Priority"
+  menu_actions: "Actions"
+  menu_download_word: "Download Curation Log (Word)"
+  menu_export_yaml: "Export YAML"
+  menu_new_dataset: "New Dataset"
+  confirm_new_dataset: "This will redirect to the new dataset page. Continue?"
+  col_id: "ID"
+  col_action_item: "Action Item"
+  col_information_location: "Information Location"
+  col_priority: "Priority"
+  col_comments: "Curator's Comments"
+  col_status: "Status"
+  col_time_spent: "Time Spent"
+  guidance: "Guidance"
+  tool_checks: "Tool Checks:"
+  curator_checks: "Curator Checks:"
+  no_automated_checks: "No automated checks configured"
+  no_applicable_results: "No applicable results"
+  unknown_check: "Unknown Check"
+  # Used for checks that are no longer in the "checks" section below (projects created by older versions).
+  results_found:
+    one: "{count} result found"
+    other: "{count} results found"
+  comments_placeholder: "Curator's comments..."
+  comments_aria: "Comments for item {item_id}"
+  time_placeholder: "MM:SS"
+  time_aria: "Time spent on item {item_id}"
+  timer_tooltip: "Start/Stop Timer"
+  start_timer_aria: "Start timer for item {item_id}"
+  stop_timer_aria: "Stop timer for item {item_id}"
+  status_updated: "Status updated for {item_id}"
+  comments_updated: "Comments updated for {item_id}"
+  time_cleared: "Time cleared for {item_id}"
+  time_updated: "Time updated for {item_id}"
+  time_format_invalid: "Enter time as MM:SS"
+  timer_already_running: "Timer already running for {item_id}"
+  timer_started: "Timer started for {item_id}"
+  timer_not_running: "No timer running for {item_id}"
+  timer_stopped: "Timer stopped for {item_id}: {time}"
+  report_saved: "Curation report saved successfully!"
+  yaml_exported: "YAML exported successfully!"
+
+priority:
+  required: "Required"
+  recommended: "Recommended"
+  info: "Info"
+
+check_type:
+  fully_automated: "Automated Check"
+  manual: "Manual Review"
+  semi_automated: "Hybrid Check & Review"
+
+# Automated check results, keyed by check ID. Keep the IDs: they are stored with each project's results.
+#   name, description: shown above the results.
+#   unit: stored in the database with each result.
+#   found: the count line shown above the results.
+checks:
+  missing_required_fields:
+    name: "Missing Required Metadata Fields"
+    description: "Required metadata fields that are empty or missing"
+    unit: "field"
+    found:
+      one: "{count} field found"
+      other: "{count} fields found"
+  authors_missing_affiliation:
+    name: "Author affiliation field"
+    description: "Authors missing institutional affiliation information"
+    unit: "author"
+    found:
+      one: "{count} author found"
+      other: "{count} authors found"
+  authors_missing_identifier:
+    name: "Author Research ID field"
+    description: "Authors missing personal identifier (ORCID, etc.)"
+    unit: "author"
+    found:
+      one: "{count} author found"
+      other: "{count} authors found"
+  authors_missing_scheme:
+    name: "Authors Research Identifier Scheme"
+    description: "Authors missing identifier scheme information"
+    unit: "author"
+    found:
+      one: "{count} author found"
+      other: "{count} authors found"
+  related_datasets_entries:
+    name: "Related Datasets"
+    description: "Check if related datasets are present in the dataset metadata"
+    unit: "related dataset"
+    found:
+      one: "{count} related dataset found"
+      other: "{count} related datasets found"
+  data_sources_entries:
+    name: "Data Sources"
+    description: "Check if data sources are present in the dataset metadata"
+    unit: "data source"
+    found:
+      one: "{count} data source found"
+      other: "{count} data sources found"
+  related_publications_entries:
+    name: "Related Publications"
+    description: "Check if related publications are present in the dataset"
+    unit: "publication"
+    found:
+      one: "{count} publication found"
+      other: "{count} publications found"
+  keywords_existence:
+    name: "Keywords"
+    description: "Check if keywords are present in the dataset"
+    unit: "keyword"
+    found:
+      one: "{count} keyword found"
+      other: "{count} keywords found"
+  license:
+    name: "License of the Dataset"
+    description: "License information in the dataset"
+    unit: "license"
+    found:
+      one: "{count} license found"
+      other: "{count} licenses found"
+  termsOfAccess:
+    name: "Terms of Access of the Dataset"
+    description: "Terms of Access information in the dataset"
+    unit: "term of access"
+    found:
+      one: "{count} term of access found"
+      other: "{count} terms of access found"
+  termsOfUse:
+    name: "Terms of Use of the Dataset"
+    description: "Terms of Use information in the dataset"
+    unit: "terms of use"
+    found:
+      one: "{count} terms of use found"
+      other: "{count} terms of use found"
+  restricted_files:
+    name: "Restricted file names"
+    description: "files with access restrictions in the dataset"
+    unit: "file"
+    found:
+      one: "{count} file found"
+      other: "{count} files found"
+  filename_special_chars:
+    name: "File names with Special Characters"
+    description: "Files containing special characters in filename"
+    unit: "file"
+    found:
+      one: "{count} file found"
+      other: "{count} files found"
+  missing_file_extensions:
+    name: "File names missing extensions"
+    description: "Files without proper file extensions"
+    unit: "file"
+    found:
+      one: "{count} file found"
+      other: "{count} files found"
+  readme_files:
+    name: "File names for README"
+    description: "README files detected in the dataset"
+    unit: "file"
+    found:
+      one: "{count} file found"
+      other: "{count} files found"
+  depositor_history:
+    name: "Depositor history"
+    description: "Previous datasets depositor in this Dataverse collection"
+    unit: "depositor record"
+    found:
+      one: "{count} depositor record found"
+      other: "{count} depositor records found"
+    # One line per earlier dataset; stored with the results when the checks run.
+    entry: "{depositor}: {dataset_name} ({dataset_url}) - Dataverse Name: {dataverse_name}"
+  potential_typos:
+    name: "Fields for Title, Subtitle, Alternative Title, Description, and Notes"
+    description: "Fields for Title, Subtitle, Alternative Title, Description, and Notes"
+    unit: "typo"
+    found:
+      one: "{count} typo found"
+      other: "{count} typos found"
+  uncommon_file_formats:
+    name: "Files with uncommon formats"
+    description: "Files using uncommon or proprietary file formats"
+    unit: "file"
+    found:
+      one: "{count} file found"
+      other: "{count} files found"
+  file_openability:
+    name: "File openability report"
+    description: "Files that cannot be opened or read by the validation tool"
+    unit: "file"
+    found:
+      one: "{count} file found"
+      other: "{count} files found"
+  unsupported_files:
+    name: "Unsupported file formats report"
+    description: "Files in formats not supported by the validation tool"
+    unit: "file"
+    found:
+      one: "{count} file found"
+      other: "{count} files found"

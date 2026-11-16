@@ -1,10 +1,13 @@
 """The home page of the application, providing options to start a new project, resume work, or delete a project."""
 
+from html import escape
+
 from nicegui import ui
 
 from pydatacuration.backend.models.app_settings import AppSettings
 from pydatacuration.frontend.styles import MAIN_PAGE_HEAD_CSS
 from pydatacuration.frontend.styles import apply_pdc_styles
+from pydatacuration.i18n import t
 
 
 # ============================================================================
@@ -26,7 +29,7 @@ async def main_page() -> None:
     with ui.column().classes('main-container'):
         # Logo and Header
         ui.html(
-            '<img src="/static/UTL.png" alt="University of Toronto Libraries Logo" class="utl-logo">',
+            f'<img src="/static/UTL.png" alt="{escape(t("common.logo_alt"))}" class="utl-logo">',
             sanitize=False,
         )
         ui.label(
@@ -38,16 +41,16 @@ async def main_page() -> None:
             # New Project Option
             with ui.element('div').classes('option-card').on('click', lambda: ui.navigate.to('/new')):
                 ui.markdown('📁').classes('icon')
-                ui.markdown('New Project').classes('option-title')
+                ui.markdown(t('home.new_project_title')).classes('option-title')
                 ui.markdown(
-                    'Start a new curation process for a new project',
+                    t('home.new_project_description'),
                 ).classes('option-description')
 
             # Delete Project Option
             with ui.element('div').classes('option-card').on('click', lambda: ui.navigate.to('/delete')):
                 ui.markdown('🗑️').classes('icon')
-                ui.markdown('Delete Project').classes('option-title')
-                ui.markdown('Delete a project from the database').classes('option-description')
+                ui.markdown(t('home.delete_project_title')).classes('option-title')
+                ui.markdown(t('home.delete_project_description')).classes('option-description')
 
         # Resume Work Option (centered)
         with (
@@ -55,5 +58,5 @@ async def main_page() -> None:
             ui.element('div').classes('option-card resume-card').on('click', lambda: ui.navigate.to('/resume')),
         ):
             ui.markdown('✏️').classes('icon')
-            ui.markdown('Resume Project').classes('option-title')
-            ui.markdown('Continue working on an existing project').classes('option-description')
+            ui.markdown(t('home.resume_project_title')).classes('option-title')
+            ui.markdown(t('home.resume_project_description')).classes('option-description')

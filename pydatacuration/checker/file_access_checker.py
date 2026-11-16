@@ -30,8 +30,5 @@ class FileAccessChecker:
 
         self.check_result_writer.write(
             check_id='restricted_files',
-            check_name='Restricted file names',
-            description='files with access restrictions in the dataset',
-            unit='file',
             results=restricted_files,
         )

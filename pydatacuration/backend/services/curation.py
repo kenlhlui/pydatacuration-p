@@ -38,7 +38,7 @@ def init_curation(body: SetupForm) -> None:
     if dir_manager_instance.project_dir.exists() and not body.force_delete:
         msg = f"Directory {dir_manager_instance.project_dir} already exists. Use 'force_delete=True' to overwrite."
         logger.error(msg)
-        raise DirectoryExistsError(msg)
+        raise DirectoryExistsError(msg, project_number=body.project_number)
 
     dir_manager_instance.delete_dir(dir_manager_instance.project_dir)
     dir_manager_instance.make_project_dir()
@@ -59,8 +59,7 @@ def _ensure_dataset_read_access(body: SetupForm) -> None:
     except (DatasetUnauthorizedError, DatasetNotFoundError, DatasetAccessError):
         raise
     except Exception as exc:
-        error_message = f'Failed to access dataset {body.pid}. Error: {exc}'
-        logger.error(error_message)
+        error_message = f'Failed to access dataset {body.pid}.'
         raise DatasetAccessError(error_message) from exc
 
 
@@ -127,8 +126,7 @@ def check_curation(body: SetupForm) -> None:
     except Exception as exc:
         db.delete_project(body.project_number)
         dir_manager_instance.delete_dir(dir_manager_instance.project_dir)
-        error_message = f'Error occurred during checks: {exc}'
-        logger.error(error_message)
+        error_message = 'Error occurred during checks.'
         raise Exception(error_message) from exc
 
 
