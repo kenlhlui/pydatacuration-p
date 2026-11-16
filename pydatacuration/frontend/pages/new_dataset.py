@@ -183,13 +183,11 @@ async def new_dataset_page() -> None:  # noqa: PLR0914
                 helper_text=t('setup.base_url_helper'),
             )
 
-            _env_token = str(setup_defaults.api_token) if setup_defaults.api_token else None
+            _has_env_token = setup_defaults.api_token is not None
             _token_placeholder = (
-                t('setup.api_token_placeholder_prefilled', token_hint=f'{_env_token[:4]}...{_env_token[-4:]}')
-                if _env_token
-                else t('setup.api_token_placeholder')
+                t('setup.api_token_placeholder_prefilled') if _has_env_token else t('setup.api_token_placeholder')
             )
-            _helper = t('setup.api_token_helper_prefilled') if _env_token else t('setup.api_token_helper')
+            _helper = t('setup.api_token_helper_prefilled') if _has_env_token else t('setup.api_token_helper')
             _api_token_rule = validate_setup_form_input(
                 SetupForm, 'api_token', invalid_message=t('setup.api_token_invalid')
             )

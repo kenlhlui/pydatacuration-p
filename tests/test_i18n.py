@@ -201,6 +201,10 @@ def test_exception_message_key_should_exist_in_catalogue(key):
     assert has_message(key)
 
 
+def test_api_token_prefilled_placeholder_should_not_take_any_part_of_the_token():
+    assert _placeholders(load_catalogue()['setup']['api_token_placeholder_prefilled']) == set()
+
+
 def test_every_catalogue_message_should_be_used():
     used = {call.args[0].value for _, call in _literal_t_calls()} | _exception_message_keys()
     # checks.* is looked up by check ID (see the check ID tests below)
