@@ -7,6 +7,8 @@ from collections.abc import Callable
 
 from nicegui import ui
 
+from pydatacuration.i18n import t
+
 
 # ============================================================================
 # Complete CSS - Direct port from your styles.css
@@ -1067,7 +1069,7 @@ def create_info_grid(metadata: dict, columns: list[tuple[str, str]]) -> None:
     """
     with ui.element('div').classes('pdc-info-section'), ui.grid().classes('pdc-info-grid w-full'):
         for key, label in columns:
-            value = metadata.get(key, 'N/A')
+            value = metadata.get(key, t('common.not_available'))
 
             with ui.element('div').classes('pdc-info-item'):
                 ui.label(label).classes('pdc-info-label')
@@ -1086,9 +1088,9 @@ def create_priority_badge(priority: str) -> ui.label:
 
     """
     priority_map = {
-        'required': ('Required', 'pdc-priority-required'),
-        'recommended': ('Recommended', 'pdc-priority-recommended'),
-        'info': ('Info', 'pdc-priority-info'),
+        'required': (t('priority.required'), 'pdc-priority-required'),
+        'recommended': (t('priority.recommended'), 'pdc-priority-recommended'),
+        'info': (t('priority.info'), 'pdc-priority-info'),
     }
 
     text, css_class = priority_map.get(priority.lower(), (priority.title(), 'pdc-priority-info'))
@@ -1105,9 +1107,9 @@ def create_check_type_badge(check_type: str) -> ui.label:
         NiceGUI label element with appropriate styling
     """
     check_type_map = {
-        'fully-automated': ('Automated Check', 'pdc-check-type-automated'),
-        'manual': ('Manual Review', 'pdc-check-type-manual'),
-        'semi-automated': ('Hybrid Check & Review', 'pdc-check-type-hybrid'),
+        'fully-automated': (t('check_type.fully_automated'), 'pdc-check-type-automated'),
+        'manual': (t('check_type.manual'), 'pdc-check-type-manual'),
+        'semi-automated': (t('check_type.semi_automated'), 'pdc-check-type-hybrid'),
     }
 
     text, css_class = check_type_map.get(check_type.lower(), (check_type.title(), 'pdc-check-type-manual'))

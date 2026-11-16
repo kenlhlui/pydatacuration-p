@@ -14,11 +14,21 @@ from pydatacuration.exceptions import DatasetAccessError
 from pydatacuration.exceptions import DatasetNotFoundError
 from pydatacuration.exceptions import DatasetUnauthorizedError
 from pydatacuration.exceptions import DirectoryExistsError
+from pydatacuration.exceptions import describe_error
+from pydatacuration.i18n import t
 from pydatacuration.services.exporter import Exporter
 from pydatacuration.utils.directory_manager import DirectoryManager
 
 
 router = APIRouter()
+
+# HTTP status for each known error; subclasses before their parent class. Other errors are 500.
+ERROR_STATUS_CODES: dict[type[Exception], int] = {
+    DirectoryExistsError: 409,
+    DatasetUnauthorizedError: 401,
+    DatasetNotFoundError: 404,
+    DatasetAccessError: 503,
+}
 
 # Note: the endpoint is with /api prefix. So to trigger the endpoint the URL should be , for example, http://localhost:8000/api/run-curation.
 
@@ -33,14 +43,9 @@ async def run_curation_endpoint(body: SetupForm) -> dict[str, str]:
     try:
         await run_curation(body)
         return {'status': 'ok'}
-    except DirectoryExistsError as exc:
-        raise HTTPException(status_code=409, detail=str(exc)) from exc
-    except DatasetUnauthorizedError as exc:
-        raise HTTPException(status_code=401, detail=str(exc)) from exc
-    except DatasetNotFoundError as exc:
-        raise HTTPException(status_code=404, detail=str(exc)) from exc
-    except DatasetAccessError as exc:
-        raise HTTPException(status_code=503, detail=str(exc)) from exc
+    except Exception as exc:
+        status_code = next((code for cls, code in ERROR_STATUS_CODES.items() if isinstance(exc, cls)), 500)
+        raise HTTPException(status_code=status_code, detail=describe_error(exc)) from exc
 
 
 @router.post('/export-word')
@@ -58,7 +63,7 @@ async def export_word_endpoint(
     """
     dirs = DirectoryManager.get_dir_manager_instance(project_number, Path(main_dir).resolve())
     if not dirs.project_dir.exists():
-        raise HTTPException(status_code=404, detail=f'Project directory for project {project_number!r} not found.')
+        raise HTTPException(status_code=404, detail=t('errors.project_not_found', project_number=project_number))
 
     db = get_database(db_file=dirs.db_path, project_number=project_number)
     exporter = Exporter(db, dirs)

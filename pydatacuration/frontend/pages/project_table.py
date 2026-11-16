@@ -15,6 +15,7 @@ from pydatacuration.frontend.pages.utils import confirm_delete_project
 from pydatacuration.frontend.reusable_elements import action_button
 from pydatacuration.frontend.reusable_elements import dropdown_menu
 from pydatacuration.frontend.reusable_elements import form_section
+from pydatacuration.i18n import t
 
 
 async def browser_time_zone() -> ZoneInfo:
@@ -29,7 +30,7 @@ async def browser_time_zone() -> ZoneInfo:
 def format_last_modified(value: datetime | None, tz: ZoneInfo) -> str:
     """Format a naive UTC datetime from the database as local time in tz, e.g. '2026-01-15 12:00:00 EST'."""
     if value is None:
-        return 'Unknown'
+        return t('common.unknown')
     return value.replace(tzinfo=UTC).astimezone(tz).strftime('%Y-%m-%d %H:%M:%S')
 
 
@@ -47,19 +48,19 @@ async def render_project_table(
     """
     if not schemas:
         with ui.element('div').classes('no-projects'):
-            ui.label('No projects found').classes('text-xl')
+            ui.label(t('projects.none_found')).classes('text-xl')
         return
 
     tz = await browser_time_zone()
 
     # Filters
-    with form_section('Filters'), ui.row().classes('gap-4').style('align-items: flex-end;'):
+    with form_section(t('common.filters')), ui.row().classes('gap-4').style('align-items: flex-end;'):
         # Search filter
         with ui.element('div').classes('pdc-form-group').style('flex: 1 1 240px; margin-bottom: 0;'):
-            ui.label('Search').classes('pdc-form-label')
+            ui.label(t('projects.search_label')).classes('pdc-form-label')
             search_input: Input = (
                 ui
-                .input(placeholder='Search Project Number, Title, PID, ID (Versioned), URL')
+                .input(placeholder=t('projects.search_placeholder'))
                 .classes('pdc-input')
                 .style('width: 100%;')
             )
@@ -67,10 +68,10 @@ async def render_project_table(
         # Curator filter
         with ui.element('div').classes('pdc-form-group').style('flex: 1 1 240px; margin-bottom: 0;'):
             curators = [''] + sorted({s['curator_name'] for s in schemas if s.get('curator_name')})
-            curator_filter = dropdown_menu('Select Curator', curators)
+            curator_filter = dropdown_menu(t('projects.curator_filter'), curators)
 
         # Clear filters button
-        action_button('Clear Filters', lambda: clear_filters(search_input, curator_filter))
+        action_button(t('common.clear_filters'), lambda: clear_filters(search_input, curator_filter))
 
     # Table container
     table_container = ui.column().style('width: 100%;')
@@ -94,7 +95,7 @@ async def render_project_table(
 
         table_container.clear()
         with table_container:
-            ui.label(f'Found {len(filtered_schemas)} project(s)').classes('pdc-form-section-title').style(
+            ui.label(t('projects.found', count=len(filtered_schemas))).classes('pdc-form-section-title').style(
                 'margin: 20px 0;'
             )
 
@@ -102,9 +103,14 @@ async def render_project_table(
             with ui.element('table').classes('pdc-checklist-table pdc-project-table'):
                 # Table Header
                 with ui.element('thead'), ui.element('tr'):
-                    headers = ['Project Number', 'Dataset Information', 'Curator', 'Project Last Modified']
+                    headers = [
+                        t('projects.col_project_number'),
+                        t('projects.col_dataset_information'),
+                        t('projects.col_curator'),
+                        t('projects.col_last_modified'),
+                    ]
                     if mode == 'delete':
-                        headers.append('Action')
+                        headers.append(t('projects.col_action'))
                     for header in headers:
                         with ui.element('th'):
                             ui.markdown(header)
@@ -115,7 +121,7 @@ async def render_project_table(
                         row_classes = 'clickable-row' if mode == 'resume' else ''
                         with ui.element('tr').classes(row_classes):
                             # Project Number
-                            with ui.element('td').props('data-label="Project Number"'):
+                            with ui.element('td').props(f'data-label="{t("projects.col_project_number")}"'):
                                 if mode == 'resume':
                                     href = ui.element('a').props(
                                         f'href="/checklist?project_number={quote(schema["project_number"])}"'
@@ -131,37 +137,42 @@ async def render_project_table(
                             with ui.element('td').props('data-label="Dataset Information"'):
                                 with ui.element('div'):
                                     ui.markdown(
-                                        f'**Title:** {schema.get("dataset_title", "N/A")}',
+                                        f'**{t("projects.dataset_title")}** '
+                                        f'{schema.get("dataset_title", t("common.not_available"))}',
                                     )
                                 with ui.element('div'):
-                                    ui.markdown(f'**PID:** {schema.get("dataset_pid", "N/A")} ').style(
-                                        'display: inline;'
-                                    )
+                                    ui.markdown(
+                                        f'**{t("projects.dataset_pid")}** '
+                                        f'{schema.get("dataset_pid", t("common.not_available"))} '
+                                    ).style('display: inline;')
 
                                 with ui.element('div'):
                                     ui.markdown(
-                                        f'**ID (Versioned):** {schema.get("dataset_id", "N/A")}',
+                                        f'**{t("projects.dataset_id")}** '
+                                        f'{schema.get("dataset_id", t("common.not_available"))}',
                                     ).style('display: inline;')
                                 with ui.element('div'):
-                                    dataset_url = schema.get('dataset_url', 'N/A')
+                                    dataset_url = schema.get('dataset_url', t('common.not_available'))
                                     parsed = urlparse(dataset_url)
                                     if parsed.scheme in {'http', 'https'}:
                                         # Use proper HTML escaping or NiceGUI's built-in link component
-                                        ui.html('URL: ', sanitize=False).style('display: inline; font-weight: bold;')
+                                        ui.label(f'{t("projects.dataset_url")} ').style(
+                                            'display: inline; font-weight: bold;'
+                                        )
                                         ui.link(dataset_url, dataset_url, new_tab=True).style('display: inline;')
                             # Curator
-                            with ui.element('td').props('data-label="Curator"'):
-                                ui.label(schema.get('curator_name', 'N/A'))
+                            with ui.element('td').props(f'data-label="{t("projects.col_curator")}"'):
+                                ui.label(schema.get('curator_name', t('common.not_available')))
 
                             # Last Modified
-                            with ui.element('td').props('data-label="Project Last Modified"'):
+                            with ui.element('td').props(f'data-label="{t("projects.col_last_modified")}"'):
                                 ui.label(format_last_modified(schema.get('last_modified_datetime'), tz))
 
                             # Action column (only for delete mode)
                             if mode == 'delete':
                                 with ui.element('td').style('text-align: center; vertical-align: middle;'):
                                     action_button(
-                                        '🗑️ Delete',
+                                        t('projects.delete_button'),
                                         on_click=lambda s=schema: confirm_delete_project(s, refresh_callback),
                                         color='red',
                                     )

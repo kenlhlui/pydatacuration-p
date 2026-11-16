@@ -17,6 +17,7 @@ from pydatacuration.db import get_db_type
 from pydatacuration.db.sqlmodels import Checklist
 from pydatacuration.frontend.models.status_options import StatusOptions
 from pydatacuration.frontend.reusable_elements import action_button
+from pydatacuration.i18n import t
 from pydatacuration.services.exporter import Exporter
 from pydatacuration.utils.directory_manager import DirectoryManager
 from pydatacuration.utils.utils import validate_project_number
@@ -68,14 +69,18 @@ class NiceGUIHelper:  # noqa: PLR0904
     def handle_status_change(self, item_id: str, new_status: str) -> None:
         """Handle status change with auto-save."""
         self.db.update_checklist_item(item_id=item_id, status=new_status)
-        ui.notify(f'Status updated for {item_id}', type='positive', position='top-right', close_button=True)
+        ui.notify(
+            t('checklist.status_updated', item_id=item_id), type='positive', position='top-right', close_button=True
+        )
         if self.refresh_callback:
             self.refresh_callback()
 
     def handle_comments_change(self, item_id: str, new_comments: str) -> None:
         """Handle comments change."""
         self.db.update_checklist_item(item_id=item_id, comments=new_comments)
-        ui.notify(f'Comments updated for {item_id}', type='positive', position='top-right', close_button=True)
+        ui.notify(
+            t('checklist.comments_updated', item_id=item_id), type='positive', position='top-right', close_button=True
+        )
         if self.refresh_callback:
             self.refresh_callback()
 
@@ -83,18 +88,22 @@ class NiceGUIHelper:  # noqa: PLR0904
         """Handle time change with validation."""
         if not time_spent_input:
             self.db.update_checklist_item(item_id=item_id, clear_time_spent=True)
-            ui.notify(f'Time cleared for {item_id}', type='positive', position='top-right', close_button=True)
+            ui.notify(
+                t('checklist.time_cleared', item_id=item_id), type='positive', position='top-right', close_button=True
+            )
             if self.refresh_callback:
                 self.refresh_callback()
         elif self.validate_time_format(time_spent_input):
             parts = time_spent_input.split(':')
             time_spent_delta: timedelta = timedelta(minutes=int(parts[0]), seconds=int(parts[1]))
             self.db.update_checklist_item(item_id=item_id, time_spent=time_spent_delta)
-            ui.notify(f'Time updated for {item_id}', type='positive', position='top-right', close_button=True)
+            ui.notify(
+                t('checklist.time_updated', item_id=item_id), type='positive', position='top-right', close_button=True
+            )
             if self.refresh_callback:
                 self.refresh_callback()
         else:
-            ui.notify('Enter time as MM:SS', type='negative')
+            ui.notify(t('checklist.time_format_invalid'), type='negative')
 
     def render_status_progress(self, color_map: dict[str, str] | None = None) -> None:
         """Render circular progress indicators for each status count."""
@@ -109,7 +118,7 @@ class NiceGUIHelper:  # noqa: PLR0904
         logger.debug(f'The status_counts are: {status_counts}')
 
         for status, count in status_counts.items():
-            label = status or 'No Status'
+            label = status or t('checklist.no_status')
             value = round((count / total * 100), 1) if total > 0 else 0
             color = color_map[label] if (color_map and label in color_map) else 'primary'
             with ui.column().classes('flex-1 items-center gap-1'):
@@ -136,7 +145,7 @@ class NiceGUIHelper:  # noqa: PLR0904
         with ui.column().classes('flex-1 items-center gap-1'):
             with ui.element('div').classes('flex items-center justify-center').style('height: 120px'):
                 ui.label(f'{comment_input_counter}').classes('text-5xl font-bold text-center w-full')
-            ui.label('Items with comments').classes('text-sm text-center')
+            ui.label(t('checklist.items_with_comments')).classes('text-sm text-center')
 
     def _get_time_spent_input_count(self) -> str:
         """Get count of checklist items that have time spent input.
@@ -191,11 +200,13 @@ class NiceGUIHelper:  # noqa: PLR0904
             time_input (ui.input | None): Optional input field to update in real-time.
         """
         if item_id in self.timers:
-            ui.notify(f'Timer already running for {item_id}', type='warning')
+            ui.notify(t('checklist.timer_already_running', item_id=item_id), type='warning')
             return
 
         self.timers[item_id] = {'start_time': time.time(), 'elapsed': 0, 'input': time_input}
-        ui.notify(f'Timer started for {item_id}', type='positive', position='top-right', close_button=True)
+        ui.notify(
+            t('checklist.timer_started', item_id=item_id), type='positive', position='top-right', close_button=True
+        )
 
         # Start a background timer to update the display every second
         if time_input:
@@ -230,7 +241,7 @@ class NiceGUIHelper:  # noqa: PLR0904
             time_input (ui.input | None): The input field to update with the elapsed time.
         """
         if item_id not in self.timers:
-            ui.notify(f'No timer running for {item_id}', type='warning')
+            ui.notify(t('checklist.timer_not_running', item_id=item_id), type='warning')
             return
 
         timer_data = self.timers[item_id]
@@ -252,7 +263,12 @@ class NiceGUIHelper:  # noqa: PLR0904
         # Remove from active timers
         del self.timers[item_id]
 
-        ui.notify(f'Timer stopped for {item_id}: {time_str}', type='positive', position='top-right', close_button=True)
+        ui.notify(
+            t('checklist.timer_stopped', item_id=item_id, time=time_str),
+            type='positive',
+            position='top-right',
+            close_button=True,
+        )
         if self.refresh_callback:
             self.refresh_callback()
 
@@ -268,7 +284,7 @@ class NiceGUIHelper:  # noqa: PLR0904
             # Stop the timer
             self.stop_timer(item_id, time_input)
             # Update button to "Start" state
-            button.props(f'icon=play_arrow aria-label="Start timer for item {item_id}"')
+            button.props(f'icon=play_arrow aria-label="{t("checklist.start_timer_aria", item_id=item_id)}"')
             button.style(replace='color: #556B2F;')
             button._props['icon'] = 'play_arrow'
             button.update()
@@ -276,7 +292,7 @@ class NiceGUIHelper:  # noqa: PLR0904
             # Start the timer
             self.start_timer(item_id, time_input)
             # Update button to "Stop" state
-            button.props(f'icon=stop aria-label="Stop timer for item {item_id}"')
+            button.props(f'icon=stop aria-label="{t("checklist.stop_timer_aria", item_id=item_id)}"')
             button.style(replace='color: #C8102E;')
             button._props['icon'] = 'stop'
             button.update()
@@ -304,10 +320,10 @@ class NiceGUIHelper:  # noqa: PLR0904
             ui.navigate.to('/')
 
         with ui.dialog() as dialog, ui.card().style('min-width: min(400px, 90vw);'):
-            ui.label('This will redirect to the new dataset page. Continue?').classes('text-xl font-semibold')
+            ui.label(t('checklist.confirm_new_dataset')).classes('text-xl font-semibold')
             with ui.row().classes('w-full justify-end gap-2').style('margin-top: 20px;'):
-                action_button('Continue', on_click=lambda: [dialog.close(), handle_confirm()], color='red')
-                action_button('Cancel', on_click=dialog.close)
+                action_button(t('common.continue'), on_click=lambda: [dialog.close(), handle_confirm()], color='red')
+                action_button(t('common.cancel'), on_click=dialog.close)
         dialog.open()
 
     @staticmethod
@@ -351,7 +367,7 @@ class NiceGUIHelper:  # noqa: PLR0904
 
         """
         if not project_number:
-            return False, 'Invalid project number'
+            return False, t('projects.invalid_project_number')
 
         def delete_project_records(project_number: str) -> tuple[bool, str]:
             """Delete a specific project's records from the database.
@@ -397,7 +413,7 @@ class NiceGUIHelper:  # noqa: PLR0904
 
         delete_project_directory(project_number)
         delete_project_records(project_number)
-        return True, f'Project {project_number} deleted successfully'
+        return True, t('projects.deleted', project_number=project_number)
 
     @staticmethod
     def export_word(db: DatabaseBackend, dir_manager: DirectoryManager, word_template_name: str | None = None) -> None:
@@ -411,7 +427,7 @@ class NiceGUIHelper:  # noqa: PLR0904
             docx_file_name,
         )
 
-        ui.notify('Curation report saved successfully!', type='positive')
+        ui.notify(t('checklist.report_saved'), type='positive')
 
     @staticmethod
     def export_yaml_button(db: DatabaseBackend, dir_manager: DirectoryManager) -> None:
@@ -419,7 +435,7 @@ class NiceGUIHelper:  # noqa: PLR0904
         exporter = Exporter(db, dir_manager)
         exporter.export_yaml()
 
-        ui.notify('YAML exported successfully!', type='positive')
+        ui.notify(t('checklist.yaml_exported'), type='positive')
 
 
 # ============================================================================
@@ -437,13 +453,13 @@ def checklist_options(res_dir: Path) -> dict[str, str]:
     options = discover_checklist_files(res_dir)
 
     # Add blank option as the first option
-    return {'': 'Select checklist', **options}
+    return {'': t('setup.checklist_placeholder'), **options}
 
 
 def back_to_main_menu_button() -> None:
     """Create a centered 'Back to Main Menu' button."""
     with ui.row().classes('justify-left my-4'):
-        action_button('← Back', on_click=lambda: ui.navigate.to('/'))
+        action_button(t('common.back'), on_click=lambda: ui.navigate.to('/'))
 
 
 def create_checklist_select(res_dir: Path, current_value: str, on_change=None) -> ui.select:
@@ -459,7 +475,7 @@ def create_checklist_select(res_dir: Path, current_value: str, on_change=None) -
     """
     # TODO: consider whether this should be read from a database, rather than a yaml file.
     # Create label outside the select
-    ui.label('Checklist').classes('pdc-form-label')
+    ui.label(t('setup.checklist_label')).classes('pdc-form-label')
 
     # Create select without internal label - display capitalized but use lowercase values
     select = (
@@ -488,7 +504,7 @@ def project_number_rule(v: str) -> str | None:
         str | None: An error message if validation fails, or None if validation passes.
     """
     if not v:
-        return 'This field is required'
+        return t('common.required_field')
     try:
         validate_project_number(v)
         return None

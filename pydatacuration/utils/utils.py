@@ -22,6 +22,7 @@ from tenacity import RetryError
 from pydatacuration.exceptions import DatasetAccessError
 from pydatacuration.exceptions import DatasetNotFoundError
 from pydatacuration.exceptions import DatasetUnauthorizedError
+from pydatacuration.i18n import t
 from pydatacuration.services.api_calls.dataverse_client import DataverseClient
 from pydatacuration.services.api_calls.httpx_client import HTTPXClient
 from pydatacuration.utils.search_ds_meta import get_file_name_from_file_list_metadata
@@ -163,19 +164,16 @@ def check_ds_read_access(pid: str, base_url: str, api_token: str) -> None:
 
         if response.status_code in {httpx2.codes.UNAUTHORIZED, httpx2.codes.FORBIDDEN}:
             msg = 'You do not have read access to the dataset. Please check your API token or permissions.'
-            logger.error(f'❌{msg}')
             raise DatasetUnauthorizedError(msg)
 
         if response.status_code == httpx2.codes.NOT_FOUND:
             msg = 'The dataset does not exist. Please check the PID input.'
-            logger.error(f'❌{msg}')
             raise DatasetNotFoundError(msg)
 
         if response.is_success:
             logger.info('✅ Dataset access verified.')
         else:
             msg = f'Unexpected response (HTTP {response.status_code}) while checking dataset access.'
-            logger.error(f'❌{msg}')
             raise DatasetAccessError(msg)
 
     except RetryError as e:
@@ -183,7 +181,6 @@ def check_ds_read_access(pid: str, base_url: str, api_token: str) -> None:
             'The retry limit has been reached for checking dataset access. '
             'Check your input of `base_url` and `pid`. Or check your internet connection.'
         )
-        logger.error(error_msg)
         raise DatasetAccessError(error_msg) from e
 
 
@@ -256,7 +253,7 @@ def validate_project_number(value: str) -> str:
         str: The validated project number.
     """
     if value and not re.fullmatch(r'^[A-Za-z0-9_-]+$', value):
-        msg = 'Project number must only contain letters, numbers, hyphens, and underscores.'
+        msg = t('setup.project_number_invalid')
         raise ValueError(msg)
     return value
 

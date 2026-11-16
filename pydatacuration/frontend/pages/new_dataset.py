@@ -1,6 +1,7 @@
 """The new dataset setup page."""
 
 import asyncio
+from html import escape
 from pathlib import Path
 from urllib.parse import quote
 
@@ -11,11 +12,8 @@ from pydatacuration.backend.models.setup_form import SetupDefaults
 from pydatacuration.backend.models.setup_form import SetupForm
 from pydatacuration.backend.models.setup_form import validate_setup_form_input
 from pydatacuration.backend.services.curation import run_curation
-from pydatacuration.exceptions import DatasetAccessError
-from pydatacuration.exceptions import DatasetNotFoundError
-from pydatacuration.exceptions import DatasetUnauthorizedError
 from pydatacuration.exceptions import DirectoryExistsError
-from pydatacuration.exceptions import FileMatchError
+from pydatacuration.exceptions import describe_error
 from pydatacuration.frontend.helpers import create_checklist_select
 from pydatacuration.frontend.helpers import project_number_rule
 from pydatacuration.frontend.reusable_elements import action_button
@@ -27,6 +25,9 @@ from pydatacuration.frontend.reusable_elements import text_input_box
 
 # Import styles and custom components
 from pydatacuration.frontend.styles import apply_pdc_styles
+
+# Import the message catalogue
+from pydatacuration.i18n import t
 
 
 app_settings = AppSettings()
@@ -53,7 +54,6 @@ def handle_back_navigation(back_button: ui.button) -> None:
 async def handle_setup_submit(  # noqa: PLR0913, PLR0917
     form_data: dict,
     validated_inputs: list[ui.input],
-    error_msg: ui.label,
     success_msg: ui.label,
     loading_section: ui.element,
     loading_label: ui.label,
@@ -65,12 +65,12 @@ async def handle_setup_submit(  # noqa: PLR0913, PLR0917
     # Validate all inputs and block if any fail
     # FIXME: This should combine with the checklist check below.
     if not all(i.validate() for i in validated_inputs):
-        ui.notify('Please fix the errors in the form', type='negative', position='top-right', close_button=True)
+        ui.notify(t('setup.fix_form_errors'), type='negative', position='top-right', close_button=True)
         return
 
     # FIXME: This should algin with the validation logic above.
     if not form_data.get('checklist'):
-        ui.notify('Please select a valid checklist', type='negative', position='top-right', close_button=True)
+        ui.notify(t('setup.select_checklist'), type='negative', position='top-right', close_button=True)
         return
 
     # Disable all buttons and show loading
@@ -78,7 +78,6 @@ async def handle_setup_submit(  # noqa: PLR0913, PLR0917
     reset_button.set_enabled(False)
     back_button.set_enabled(False)
     loading_section.set_visibility(True)
-    error_msg.classes(add='hidden')
     success_msg.classes(add='hidden')
 
     # Run curation as a background task so the WebSocket connection stays alive
@@ -99,31 +98,21 @@ async def handle_setup_submit(  # noqa: PLR0913, PLR0917
         if not task.done():
             # Update label each tick — this sends a WebSocket message to keep the connection alive
             elapsed = int(asyncio.get_running_loop().time() - start_time[0])
-            loading_label.set_text(f'Running curation process... ({elapsed}s)')
+            loading_label.set_text(t('setup.running', elapsed=elapsed))
             return
         poll_timer[0].cancel()
         exc = task.exception()
         if exc is None:
             ui.navigate.to(f'/checklist?project_number={quote(form_data["project_number"])}')
-        elif isinstance(exc, DirectoryExistsError):
-            ui.notify(str(exc), type='warning')
-            restore_buttons()
-        elif isinstance(exc, DatasetUnauthorizedError):
-            ui.notify('Unauthorized dataset access. Check API token/permissions.', type='negative')
-            restore_buttons()
-        elif isinstance(exc, DatasetNotFoundError):
-            ui.notify('Dataset not found. Verify PID and base URL.', type='negative')
-            restore_buttons()
-        elif isinstance(exc, DatasetAccessError):
-            ui.notify(str(exc), type='negative')
-            restore_buttons()
-        elif isinstance(exc, FileMatchError):
-            ui.notify('File verification failed: downloaded files do not match metadata checksums.', type='negative')
-            restore_buttons()
-        else:
-            error_msg.set_text(f'Error: {exc}')
-            error_msg.classes(remove='hidden', add='pdc-error')
-            restore_buttons()
+            return
+        # Stays until closed, so the reference ID can be read and reported
+        ui.notify(
+            describe_error(exc),
+            type='warning' if isinstance(exc, DirectoryExistsError) else 'negative',
+            timeout=0,
+            close_button=True,
+        )
+        restore_buttons()
 
     poll_timer.append(ui.timer(1.0, check_task))
 
@@ -133,7 +122,7 @@ def reset_form(form_data: dict, default_form_data: dict, reset_button: ui.button
     # Disable button during reset
     reset_button.set_enabled(False)
     form_data.update(default_form_data)
-    ui.notify('Form reset to defaults', type='info')
+    ui.notify(t('setup.form_reset'), type='info')
     # Re-enable button
     reset_button.set_enabled(True)
 
@@ -156,14 +145,13 @@ async def new_dataset_page() -> None:  # noqa: PLR0914
     with ui.column().classes('pdc-container-narrow'):
         # Logo
         ui.html(
-            '<img src="/static/UTL.png" alt="University of Toronto Libraries Logo" class="utl-logo">',
+            f'<img src="/static/UTL.png" alt="{escape(t("common.logo_alt"))}" class="utl-logo">',
             sanitize=False,
         )
         # Header
         ui.label(app_settings.app_title).classes('pdc-header')
 
         # Messages
-        error_msg = ui.label().classes('hidden')
         success_msg = ui.label().classes('hidden')
 
         # Form state - fresh defaults on every visit to this page.
@@ -174,42 +162,43 @@ async def new_dataset_page() -> None:  # noqa: PLR0914
         form_data = dict(default_form_data)
 
         # Dataset Information Section
-        with form_section('Dataset Information'):
+        with form_section(t('setup.section_dataset')):
             _input_pid = text_input_box(
-                label='Dataset PID *',
+                label=t('setup.pid_label'),
                 form_data=form_data,
                 key='pid',
-                placeholder='doi:10.5683/SP2/... or hdl:1902.1/...',
+                placeholder=t('setup.pid_placeholder'),
                 validation=validate_setup_form_input(SetupForm, 'pid', required=True),
-                helper_text='Persistent identifier for the dataset (DOI or Handle)',
+                helper_text=t('setup.pid_helper'),
             )
 
             _input_base_url = text_input_box(
-                label='Dataverse Base URL *',
+                label=t('setup.base_url_label'),
                 form_data=form_data,
                 key='base_url',
-                placeholder='https://demo.borealisdata.ca/',
-                validation=validate_setup_form_input(SetupForm, 'base_url', required=True),
-                helper_text='Base URL of the Dataverse installation (e.g., https://demo.borealisdata.ca/)',
+                placeholder=t('setup.base_url_placeholder'),
+                validation=validate_setup_form_input(
+                    SetupForm, 'base_url', required=True, invalid_message=t('setup.base_url_invalid')
+                ),
+                helper_text=t('setup.base_url_helper'),
             )
 
             _env_token = str(setup_defaults.api_token) if setup_defaults.api_token else None
             _token_placeholder = (
-                f'Leave blank to use pre-filled token ({_env_token[:4]}...{_env_token[-4:]})'
+                t('setup.api_token_placeholder_prefilled', token_hint=f'{_env_token[:4]}...{_env_token[-4:]}')
                 if _env_token
-                else 'Enter your Dataverse API token'
+                else t('setup.api_token_placeholder')
             )
-            _helper = (
-                'Leave blank to use the API token from the environment.'
-                if _env_token
-                else 'The API token from the Dataverse instance. The value is hidden by default.'
+            _helper = t('setup.api_token_helper_prefilled') if _env_token else t('setup.api_token_helper')
+            _api_token_rule = validate_setup_form_input(
+                SetupForm, 'api_token', invalid_message=t('setup.api_token_invalid')
             )
             _input_api_token = text_input_box(
-                label='API Token',
+                label=t('setup.api_token_label'),
                 form_data=form_data,
                 key='api_token',
                 placeholder=_token_placeholder,
-                validation=lambda v: validate_setup_form_input(SetupForm, 'api_token')(v) if v else None,
+                validation=lambda v: _api_token_rule(v) if v else None,
                 helper_text=_helper,
                 props='autocorrect=off autocapitalize=off spellcheck=false',
                 password=True,
@@ -217,32 +206,34 @@ async def new_dataset_page() -> None:  # noqa: PLR0914
             )
 
             _input_project_number = text_input_box(
-                label='Project Number *',
+                label=t('setup.project_number_label'),
                 form_data=form_data,
                 key='project_number',
-                placeholder='PROJECT-123',
+                placeholder=t('setup.project_number_placeholder'),
                 validation=project_number_rule,
-                helper_text='Curation project ID (e.g., CUR-999). Use only letters, numbers, -, and _. No spaces or other characters.',  # noqa: E501
+                helper_text=t('setup.project_number_helper'),
             )
 
         # Curator Information Section
-        with form_section('Curator Information'):
+        with form_section(t('setup.section_curator')):
             _input_curator_name = text_input_box(
-                label='Curator Name *',
+                label=t('setup.curator_name_label'),
                 form_data=form_data,
                 key='curator_name',
-                placeholder='Enter your name',
+                placeholder=t('setup.curator_name_placeholder'),
                 validation=validate_setup_form_input(SetupForm, 'curator_name', required=True),
-                helper_text='The name of the curator responsible for this curation project.',
+                helper_text=t('setup.curator_name_helper'),
             )
 
             _input_curator_email = text_input_box(
-                label='Curator Email *',
+                label=t('setup.curator_email_label'),
                 form_data=form_data,
                 key='curator_email',
-                placeholder='Enter your email',
-                validation=validate_setup_form_input(SetupForm, 'curator_email', required=True),
-                helper_text='The email of the curator responsible for this curation project.',
+                placeholder=t('setup.curator_email_placeholder'),
+                validation=validate_setup_form_input(
+                    SetupForm, 'curator_email', required=True, invalid_message=t('setup.curator_email_invalid')
+                ),
+                helper_text=t('setup.curator_email_helper'),
                 props='type=email autocomplete=email',
             )
 
@@ -256,54 +247,55 @@ async def new_dataset_page() -> None:  # noqa: PLR0914
         ]
 
         # Checklist Selection Section
-        with form_section('Checklist Selection'), ui.element('div').classes('pdc-form-group'):
+        with form_section(t('setup.section_checklist')), ui.element('div').classes('pdc-form-group'):
             # Use our custom checklist select with styling
             create_checklist_select(
                 res_dir=RES_DIR,
                 current_value=form_data.get('checklist', 'default'),
                 on_change=lambda e: form_data.update({'checklist': e.value}),
             ).bind_value(form_data, 'checklist').style('width: 100%')
-            ui.label('Checklist used for this curation project').classes('pdc-form-helper')
+            ui.label(t('setup.checklist_helper')).classes('pdc-form-helper')
 
         # Processing Options Section
-        with form_section('Processing Options'):
+        with form_section(t('setup.section_processing')):
             with ui.row().classes('gap-4'):
-                ui.checkbox(
-                    'Replace existing project (if exists)', value=form_data.get('force_delete', False)
-                ).bind_value(form_data, 'force_delete')
-                ui.checkbox(
-                    'Unzip archive files and check contents', value=form_data.get('check_zip', True)
-                ).bind_value(form_data, 'check_zip')
+                ui.checkbox(t('setup.replace_existing'), value=form_data.get('force_delete', False)).bind_value(
+                    form_data, 'force_delete'
+                )
+                ui.checkbox(t('setup.check_zip'), value=form_data.get('check_zip', True)).bind_value(
+                    form_data, 'check_zip'
+                )
 
             text_input_box(
-                label='Dataverse Collection Alias',
+                label=t('setup.collection_alias_label'),
                 form_data=form_data,
                 key='collection_alias',
-                placeholder='Enter dataverse collection alias',
-                helper_text='Dataverse collection alias for checking dataset author and depositor history',
+                placeholder=t('setup.collection_alias_placeholder'),
+                helper_text=t('setup.collection_alias_helper'),
             )
 
         # Loading indicator (hidden by default)
         with ui.column().classes('w-full items-center') as loading_section:
             with ui.row().classes('items-center justify-center gap-2'):
                 ui.spinner(size='lg').classes('')
-            loading_label = ui.label('Generating the curation report...').classes('text-lg')
+            loading_label = ui.label(t('setup.generating_report')).classes('text-lg')
         loading_section.set_visibility(False)
 
         # Action buttons
         with ui.element('div').classes('pdc-actions'):
-            back_button = action_button('Back', on_click=lambda: handle_back_navigation(back_button), color='red')
+            back_button = action_button(
+                t('setup.back'), on_click=lambda: handle_back_navigation(back_button), color='red'
+            )
 
             reset_button = action_button(
-                'Reset Form', on_click=lambda: reset_form(form_data, default_form_data, reset_button)
+                t('setup.reset_form'), on_click=lambda: reset_form(form_data, default_form_data, reset_button)
             )
 
             start_button = action_button(
-                'Start Curation Process',
+                t('setup.start'),
                 on_click=lambda: handle_setup_submit(
                     form_data,
                     validated_inputs,
-                    error_msg,
                     success_msg,
                     loading_section,
                     loading_label,

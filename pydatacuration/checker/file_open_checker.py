@@ -76,16 +76,10 @@ class FileOpenChecker:
 
         self.check_result_writer.write(
             check_id='file_openability',
-            check_name='File openability report',
-            description='Files that cannot be opened or read by the validation tool',
-            unit='file',
             results=inaccessible_files,
         )
 
         self.check_result_writer.write(
             check_id='unsupported_files',
-            check_name='Unsupported file formats report',
-            description='Files in formats not supported by the validation tool',
-            unit='file',
             results=unsupported_files,
         )

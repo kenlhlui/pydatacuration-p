@@ -43,13 +43,10 @@ class MetadataChecker:
 
         self.check_result_writer.write(
             check_id='missing_required_fields',
-            check_name='Missing Required Metadata Fields',
-            description='Required metadata fields that are empty or missing',
-            unit='field',
             results=missing_required_fields,
         )
 
-    def _check_missing_author_field(self, field: str, check_id: str, check_name: str, description: str) -> None:
+    def _check_missing_author_field(self, field: str, check_id: str) -> None:
         authors_missing_field = []
 
         for item in self.author_info_dict:
@@ -60,9 +57,6 @@ class MetadataChecker:
 
         self.check_result_writer.write(
             check_id=check_id,
-            check_name=check_name,
-            description=description,
-            unit='author',
             results=authors_missing_field,
         )
 
@@ -71,8 +65,6 @@ class MetadataChecker:
         self._check_missing_author_field(
             field='authorAffiliation',
             check_id='authors_missing_affiliation',
-            check_name='Author affiliation field',
-            description='Authors missing institutional affiliation information',
         )
 
     def check_missing_author_identifier(self) -> None:
@@ -80,8 +72,6 @@ class MetadataChecker:
         self._check_missing_author_field(
             field='authorIdentifier',
             check_id='authors_missing_identifier',
-            check_name='Author Research ID field',
-            description='Authors missing personal identifier (ORCID, etc.)',
         )
 
     def check_missing_author_identifier_scheme(self) -> None:
@@ -89,8 +79,6 @@ class MetadataChecker:
         self._check_missing_author_field(
             field='authorIdentifierScheme',
             check_id='authors_missing_scheme',
-            check_name='Authors Research Identifier Scheme',
-            description='Authors missing identifier scheme information',
         )
 
     def check_missing_institutional_affiliation(self) -> None:
@@ -117,10 +105,7 @@ class MetadataChecker:
             logger.info(f'Related datasets found in the metadata: {related_datasets}')
         try:
             self.check_result_writer.write(
-                check_name='Related Datasets',
                 check_id='related_datasets_entries',
-                description='Check if related datasets are present in the dataset metadata',  # noqa: E501
-                unit='related dataset',
                 results=related_datasets,
             )
         except Exception as e:
@@ -133,10 +118,7 @@ class MetadataChecker:
             logger.info(f'Data sources found in the metadata: {data_sources}')
         try:
             self.check_result_writer.write(
-                check_name='Data Sources',
                 check_id='data_sources_entries',
-                description='Check if data sources are present in the dataset metadata',  # noqa: E501
-                unit='data source',
                 results=data_sources,
             )
         except Exception as e:
@@ -149,10 +131,7 @@ class MetadataChecker:
             logger.info(f'Related publications found in the metadata: {related_publications}')
         try:
             self.check_result_writer.write(
-                check_name='Related Publications',
                 check_id='related_publications_entries',
-                description='Check if related publications are present in the dataset',
-                unit='publication',
                 results=related_publications,
             )
         except Exception as e:
@@ -166,10 +145,7 @@ class MetadataChecker:
             logger.info(f'Keywords found in the metadata: {keyword_list}')
 
         self.check_result_writer.write(
-            check_name='Keywords',
             check_id='keywords_existence',
-            description='Check if keywords are present in the dataset',
-            unit='keyword',
             results=keyword_list,
         )
 
@@ -179,9 +155,6 @@ class MetadataChecker:
 
         self.check_result_writer.write(
             check_id='license',
-            check_name='License of the Dataset',
-            description='License information in the dataset',
-            unit='license',
             results=[license_name] if license_name is not None else None,
         )
 
@@ -191,9 +164,6 @@ class MetadataChecker:
 
         self.check_result_writer.write(
             check_id='termsOfAccess',
-            check_name='Terms of Access of the Dataset',
-            description='Terms of Access information in the dataset',
-            unit='term of access',
             results=[terms_of_access] if terms_of_access is not None else None,
         )
 
@@ -203,8 +173,5 @@ class MetadataChecker:
 
         self.check_result_writer.write(
             check_id='termsOfUse',
-            check_name='Terms of Use of the Dataset',
-            description='Terms of Use information in the dataset',
-            unit='terms of use',
             results=[terms_of_use] if terms_of_use is not None else None,
         )

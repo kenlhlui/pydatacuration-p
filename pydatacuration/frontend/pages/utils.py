@@ -7,6 +7,7 @@ from nicegui import ui
 from pydatacuration.backend.models.app_settings import AppSettings
 from pydatacuration.frontend.helpers import NiceGUIHelper
 from pydatacuration.frontend.reusable_elements import action_button
+from pydatacuration.i18n import t
 
 
 # Create global settings instance
@@ -29,11 +30,13 @@ def confirm_delete_project(schema: dict, refresh_callback) -> None:
             ui.notify(message, type='negative')
 
     with ui.dialog() as dialog, ui.card().style('min-width: min(400px, 90vw);'):
-        ui.label(f'Delete project "{schema["project_number"]}"?').classes('text-xl font-semibold')
-        ui.label('This action cannot be undone. All data will be permanently deleted.').classes('text-red-600')
+        ui.label(t('projects.confirm_delete_title', project_number=schema['project_number'])).classes(
+            'text-xl font-semibold'
+        )
+        ui.label(t('projects.confirm_delete_warning')).classes('text-red-600')
 
         with ui.row().classes('w-full justify-end gap-2').style('margin-top: 20px;'):
-            action_button('Delete', on_click=handle_delete, color='red')
-            action_button('Cancel', on_click=dialog.close)
+            action_button(t('projects.confirm_delete_button'), on_click=handle_delete, color='red')
+            action_button(t('common.cancel'), on_click=dialog.close)
 
     dialog.open()

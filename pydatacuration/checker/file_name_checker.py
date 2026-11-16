@@ -140,9 +140,6 @@ class FileNameChecker:
         # Check special characters in file names and write to db
         self.check_result_writer.write(
             check_id='filename_special_chars',
-            check_name='File names with Special Characters',
-            description='Files containing special characters in filename',
-            unit='file',
             results=special_char_files,
         )
 
@@ -161,9 +158,6 @@ class FileNameChecker:
         # Check missing file extension and write to db
         self.check_result_writer.write(
             check_id='missing_file_extensions',
-            check_name='File names missing extensions',
-            description='Files without proper file extensions',
-            unit='file',
             results=missing_ext_files,
         )
 
@@ -183,8 +177,5 @@ class FileNameChecker:
         # Check README files and write to db
         self.check_result_writer.write(
             check_id='readme_files',
-            check_name='File names for README',
-            description='README files detected in the dataset',
-            unit='file',
             results=readme_files,
         )

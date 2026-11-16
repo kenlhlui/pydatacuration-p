@@ -2,6 +2,7 @@
 
 from pydatacuration.db.base import DatabaseBackend
 from pydatacuration.db.sqlmodels import CheckResult
+from pydatacuration.i18n import t
 
 
 class CheckResultWriter:
@@ -11,31 +12,20 @@ class CheckResultWriter:
         """Initialize the ChecklistResultWriter with a database instance."""
         self.db_instance = db_instance
 
-    def write(
-        self,
-        *,
-        check_id: str,
-        check_name: str,
-        description: str,
-        unit: str,
-        results: list[str] | list[dict] | None,
-    ) -> None:
-        """Write the result to the database.
+    def write(self, *, check_id: str, results: list[str] | list[dict] | None) -> None:
+        """Write the result to the database, with the check's name, description and unit from the catalogue.
 
         Args:
-        check_id (str): The unique identifier for the checklist item.
-        check_name (str): The name of the checklist item.
-        description (str): A description of the checklist item.
-        unit (str): The unit of measurement for the checklist results.
+        check_id (str): The unique identifier for the check; its text is under checks.<check_id> in en.yaml.
         results (list[str] | list[dict] | None): The results of the checklist item, which can be a list of strings, a list of dictionaries, or None.
 
         """  # noqa: E501
         record = CheckResult(
             project_number=self.db_instance.project_number,
             check_id=check_id,
-            check_name=check_name,
-            description=description,
-            unit=unit,
+            check_name=t(f'checks.{check_id}.name'),
+            description=t(f'checks.{check_id}.description'),
+            unit=t(f'checks.{check_id}.unit'),
             results=results or [],
         )
         self.db_instance.merge_records_to_table(record)

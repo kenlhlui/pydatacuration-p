@@ -15,6 +15,9 @@ from pydatacuration.backend.models.setup_form import SetupDefaults
 
 # Import the utility function to mount static files for the frontend
 from pydatacuration.frontend.utils import mount_static_files
+
+# Import the function that sets the language of the app's text
+from pydatacuration.i18n import set_locale
 from pydatacuration.utils.custom_logging import setup_logging
 
 
@@ -28,6 +31,9 @@ app.include_router(api_router, prefix='/api')
 
 # Setup logging with your custom style
 setup_logging(log_file_dir=Path(app_settings.main_dir) / 'logs', log_level=app_settings.log_level)
+
+# Show the app's text in the configured language (after logging is set up, so its warning reaches the log file)
+set_locale(app_settings.locale)
 
 
 # ============================================================================
