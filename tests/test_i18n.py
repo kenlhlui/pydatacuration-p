@@ -7,6 +7,7 @@ import warnings
 from pathlib import Path
 
 import pytest
+import yaml
 from loguru import logger
 from pydantic import ValidationError
 
@@ -16,6 +17,7 @@ from pydatacuration.i18n import LOCALES_DIR
 from pydatacuration.i18n import available_locales
 from pydatacuration.i18n import has_message
 from pydatacuration.i18n import load_catalogue
+from pydatacuration.i18n import mismatched_translations
 from pydatacuration.i18n import missing_translations
 from pydatacuration.i18n import set_locale
 from pydatacuration.i18n import t
@@ -234,14 +236,39 @@ def test_check_found_message_should_use_only_count(check_id):
 # ---------------------------------------------------------------------------
 
 
+ENGLISH = {
+    'common': {
+        'cancel': 'Cancel',
+        'back': 'Back',
+        'updated': 'Updated {item_id}',
+        'found': {'one': '{count} file found', 'other': '{count} files found'},
+    }
+}
+FRENCH = {
+    'common': {
+        'cancel': 'Annuler',
+        'updated': '{item_id} mis à jour',
+        'found': {'one': '{count} fichier trouvé', 'other': '{count} fichiers trouvés'},
+    }
+}
+
+
+def _write_catalogue(folder: Path, locale: str, catalogue: dict) -> None:
+    (folder / f'{locale}.yaml').write_text(yaml.safe_dump(catalogue, allow_unicode=True), encoding='utf-8')
+
+
+def _french_with(**messages: object) -> dict:
+    return {'common': {**FRENCH['common'], **messages}}
+
+
 @pytest.fixture
 def two_locales(tmp_path, monkeypatch):
     """Use a locales folder with a small English and French catalogue; English is active.
 
     common.back is only in English, as in an incomplete translation.
     """
-    (tmp_path / 'en.yaml').write_text('common:\n  cancel: "Cancel"\n  back: "Back"\n', encoding='utf-8')
-    (tmp_path / 'fr.yaml').write_text('common:\n  cancel: "Annuler"\n', encoding='utf-8')
+    _write_catalogue(tmp_path, 'en', ENGLISH)
+    _write_catalogue(tmp_path, 'fr', FRENCH)
     monkeypatch.setattr(i18n, 'LOCALES_DIR', tmp_path)
     monkeypatch.setattr(i18n, '_locale', 'en')
     load_catalogue.cache_clear()
@@ -292,9 +319,45 @@ def test_set_locale_should_log_one_warning_listing_missing_keys(two_locales, war
 
 
 def test_set_locale_should_not_warn_for_complete_translation(two_locales, warnings_logged):
-    (two_locales / 'fr.yaml').write_text('common:\n  cancel: "Annuler"\n  back: "Retour"\n', encoding='utf-8')
+    _write_catalogue(two_locales, 'fr', _french_with(back='Retour'))
     set_locale('fr')
     assert warnings_logged == []
+
+
+def test_t_should_use_translation_whose_placeholders_match_english(two_locales):
+    set_locale('fr')
+    assert t('common.updated', item_id='1.1') == '1.1 mis à jour'
+
+
+@pytest.mark.parametrize(
+    ('key', 'translation', 'params', 'english'),
+    [
+        ('updated', 'Mis à jour {item}', {'item_id': '1.1'}, 'Updated 1.1'),  # placeholder renamed
+        ('updated', 'Mis à jour {item_id', {'item_id': '1.1'}, 'Updated 1.1'),  # broken brace
+        ('updated', 'Mis à jour {}', {'item_id': '1.1'}, 'Updated 1.1'),  # unnamed placeholder
+        ('updated', 'Mis à jour', {'item_id': '1.1'}, 'Updated 1.1'),  # placeholder left out
+        ('found', '{count} fichiers trouvés', {'count': 3}, '3 files found'),  # one/other forms lost
+    ],
+)
+def test_t_should_use_english_when_translation_cannot_be_filled_in_like_english(
+    two_locales, key, translation, params, english
+):
+    _write_catalogue(two_locales, 'fr', _french_with(**{key: translation}))
+    set_locale('fr')
+    assert t(f'common.{key}', **params) == english
+
+
+def test_mismatched_translations_should_list_keys_whose_placeholders_differ(two_locales):
+    _write_catalogue(two_locales, 'fr', _french_with(updated='Mis à jour {item}', found='{count} trouvés'))
+    assert mismatched_translations('fr') == ['common.found', 'common.updated']
+
+
+def test_set_locale_should_list_missing_and_mismatched_keys_in_one_warning(two_locales, warnings_logged):
+    _write_catalogue(two_locales, 'fr', _french_with(updated='Mis à jour {item}'))
+    set_locale('fr')
+    assert len(warnings_logged) == 1
+    assert 'common.back' in warnings_logged[0]
+    assert 'common.updated' in warnings_logged[0]
 
 
 def test_t_should_not_log_warning_when_falling_back_to_english(two_locales, warnings_logged):
@@ -330,26 +393,16 @@ def test_app_settings_should_reject_locale_without_catalogue():
 
 
 @pytest.mark.parametrize('locale', TRANSLATIONS)
-def test_translation_should_report_missing_and_unused_keys(locale):
-    """Incomplete translations are allowed (the app shows English for missing messages): report, don't fail."""
-    missing = missing_translations(locale)
-    unused = sorted(set(_leaves(load_catalogue(locale))) - set(_leaves(load_catalogue('en'))))
-    if missing:
-        warnings.warn(f'{locale}.yaml: {len(missing)} messages not translated yet: {", ".join(missing)}', stacklevel=1)
-    if unused:
-        warnings.warn(f'{locale}.yaml: {len(unused)} messages not in en.yaml: {", ".join(unused)}', stacklevel=1)
-
-
-@pytest.mark.parametrize('locale', TRANSLATIONS)
-def test_translation_should_have_the_same_placeholders_and_plural_forms_as_english(locale):
-    english, translated = _leaves(load_catalogue('en')), _leaves(load_catalogue(locale))
-    different = [
-        key
-        for key in english.keys() & translated.keys()
-        if _placeholders(translated[key]) != _placeholders(english[key])
-        or isinstance(translated[key], dict) != isinstance(english[key], dict)
-    ]
-    assert sorted(different) == []
+def test_translation_should_report_problems(locale):
+    """Translation problems don't break the app (it shows English for those messages): report them, don't fail."""
+    problems = {
+        'not translated yet': missing_translations(locale),
+        'whose placeholders or one/other forms differ from English': mismatched_translations(locale),
+        'not in en.yaml': sorted(set(_leaves(load_catalogue(locale))) - set(_leaves(load_catalogue('en')))),
+    }
+    for problem, keys in problems.items():
+        if keys:
+            warnings.warn(f'{locale}.yaml: {len(keys)} messages {problem}: {", ".join(keys)}', stacklevel=1)
 
 
 # ---------------------------------------------------------------------------

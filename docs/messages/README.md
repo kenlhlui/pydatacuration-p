@@ -54,16 +54,16 @@ Edit the value in `en.yaml`, keeping the key and any placeholders, then restart 
 1. **Copy `en.yaml`** to a file named with the language code, e.g. `pydatacuration/locales/fr.yaml`.
 2. **Translate the values.** Leave the keys and the indentation as they are. You can translate the comments (lines starting with `#`) or leave them.
 3. **Follow the rules below.**
-4. **Check the file.** The tests compare it with `en.yaml`. They list the messages you haven't translated yet, as a warning, and fail only if a placeholder was changed or a message lost its `one`/`other` forms. Run them, or ask a developer to:
+4. **Check the file.** The tests compare it with `en.yaml` and list, as warnings, the messages you haven't translated yet and any whose placeholders don't match the English ones. They don't fail. Run them, or ask a developer to:
    ```sh
    uv run pytest tests/test_i18n.py
    ```
 5. **See it in the app:** set `LOCALE=fr` in `.env`, using your file's name, and restart the app.
 
-You can translate in stages. Messages your file doesn't have yet are shown in English. When the app starts, the log lists them in one warning:
+You can translate in stages. Messages your file doesn't have yet are shown in English, and so are messages whose placeholders don't match the English ones (see the rules below). When the app starts, the log lists them in one warning:
 
 ```
-WARNING | fr.yaml is missing 2 messages, so they are shown in English: common.back, errors.unexpected
+WARNING | fr.yaml: 3 messages are shown in English. Missing (2): common.back, errors.unexpected. Placeholders or one/other forms differ from English (1): checklist.status_updated
 ```
 
 ### Rules
@@ -76,7 +76,8 @@ WARNING | fr.yaml is missing 2 messages, so they are shown in English: common.ba
   # fr.yaml
   timer_stopped: "Minuteur arrêté pour {item_id} : {time}"
   ```
-- **Translate both `one` and `other`** for messages that have them.
+  If a name is changed or left out, e.g. `{item}` instead of `{item_id}`, the app shows the English text for that message instead.
+- **Translate both `one` and `other`** for messages that have them. A message written as a single sentence instead is shown in English.
 - **Keep the double quotes around each value.** Without them, YAML reads some words, such as `No` and `Off`, as true or false.
 - **Inside the text, use your language's quotation marks** (« », “ ”, „ “), not straight double quotes (`"`). Some messages go inside HTML attributes, where a straight double quote breaks the page. A few English values are wrapped in single quotes (`'…'`) because they contain straight double quotes; your translation can use double quotes like the rest.
 - **Indent with spaces, never tabs.**
@@ -228,16 +229,14 @@ The unused-message test skips `checks`. Instead, the tests check that the IDs un
 
 The `LOCALE` setting in [`AppSettings`]({{ repo_blob }}/pydatacuration/backend/models/app_settings.py) picks the file, and defaults to `en`. The app refuses to start if there is no file for it, and lists the ones there are. At startup, `app.py` passes it to `set_locale()`, and from then on `t()` and `has_message()` read that file.
 
-If the file doesn't have a key, they fall back to `en.yaml`, so an incomplete translation shows some English text instead of breaking pages. `set_locale()` logs one warning at startup listing the missing keys, and `missing_translations(locale)` returns them. Lookups that fall back don't log anything.
+They fall back to the English message when the translation:
 
-The fallback only covers missing keys. A translated message with different placeholders still raises an error when it's shown, so that's the one translation problem the tests fail on.
+- doesn't have the key (`missing_translations(locale)` lists these), or
+- can't be filled in like the English message (`mismatched_translations(locale)` lists these): its placeholder names differ, a brace is broken, or it has `one`/`other` forms when the English doesn't, or the other way round. The code passes the English message's placeholders, so filling in such a translation would raise an error.
 
-Each translation is checked against `en.yaml` by two tests, which are skipped until a translation exists:
+So a translation problem shows some English text instead of breaking a page. `set_locale()` logs one warning at startup listing both kinds; lookups that fall back don't log anything.
 
-| Problem | Test | Result |
-|---|---|---|
-| Messages not translated yet, or not in `en.yaml` | `test_translation_should_report_missing_and_unused_keys` | Warning in the test summary; doesn't fail |
-| A message has different placeholders, or lost its `one`/`other` forms | `test_translation_should_have_the_same_placeholders_and_plural_forms_as_english` | Fails |
+For the same reason, `test_translation_should_report_problems` doesn't fail. For each translation it adds a warning to the test summary for messages not translated yet, messages whose placeholders or forms differ, and messages not in `en.yaml`. It's skipped until a translation exists.
 
 When you add a language, also check:
 
