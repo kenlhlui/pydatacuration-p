@@ -1,6 +1,7 @@
 """Tests for showing errors to users: generic text from the catalogue, with a reference ID that is in the log."""
 
 import re
+from types import SimpleNamespace
 
 import pytest
 from fastapi import FastAPI
@@ -18,6 +19,7 @@ from pydatacuration.exceptions import DirectoryExistsError
 from pydatacuration.exceptions import FileMatchError
 from pydatacuration.exceptions import describe_error
 from pydatacuration.i18n import t
+from pydatacuration.utils import utils
 
 
 SECRET_DETAIL = 'connection to /srv/private/path failed: token=abc123'
@@ -28,6 +30,14 @@ REFERENCE = re.compile(r'\b[0-9a-f]{8}\b')
 def log_messages():
     messages: list[str] = []
     sink_id = logger.add(messages.append, format='{message}', level='DEBUG')
+    yield messages
+    logger.remove(sink_id)
+
+
+@pytest.fixture
+def error_log_messages():
+    messages: list[str] = []
+    sink_id = logger.add(messages.append, format='{message}', level='ERROR')
     yield messages
     logger.remove(sink_id)
 
@@ -133,6 +143,48 @@ def test_directory_exists_error_should_carry_project_number(tmp_path):
     with pytest.raises(DirectoryExistsError) as exc_info:
         curation.init_curation(SetupForm(project_number='CUR-1', main_dir=tmp_path))
     assert exc_info.value.params == {'project_number': 'CUR-1'}
+
+
+# ---------------------------------------------------------------------------
+# Each error is logged once, by describe_error, under its reference
+# ---------------------------------------------------------------------------
+
+
+def test_init_curation_should_not_log_project_exists_error_itself(tmp_path, error_log_messages):
+    (tmp_path / 'projects' / 'CUR-1').mkdir(parents=True)
+    with pytest.raises(DirectoryExistsError):
+        curation.init_curation(SetupForm(project_number='CUR-1', main_dir=tmp_path))
+    assert error_log_messages == []
+
+
+def _fake_dataverse_client(response=None, exc=None):
+    class FakeDataverseClient:
+        def __init__(self, _httpx_client):
+            pass
+
+        def get_ds_access_status(self, _pid):
+            if exc:
+                raise exc
+            return response
+
+    return FakeDataverseClient
+
+
+@pytest.mark.parametrize(
+    ('client', 'expected'),
+    [
+        (_fake_dataverse_client(SimpleNamespace(status_code=401, is_success=False)), DatasetUnauthorizedError),
+        (_fake_dataverse_client(SimpleNamespace(status_code=403, is_success=False)), DatasetUnauthorizedError),
+        (_fake_dataverse_client(SimpleNamespace(status_code=404, is_success=False)), DatasetNotFoundError),
+        (_fake_dataverse_client(SimpleNamespace(status_code=500, is_success=False)), DatasetAccessError),
+        (_fake_dataverse_client(exc=utils.RetryError(None)), DatasetAccessError),
+    ],
+)
+def test_check_ds_read_access_should_not_log_error_itself(monkeypatch, error_log_messages, client, expected):
+    monkeypatch.setattr(utils, 'DataverseClient', client)
+    with pytest.raises(expected):
+        utils.check_ds_read_access('doi:10.1/X', 'https://dataverse.example', '')
+    assert error_log_messages == []
 
 
 # ---------------------------------------------------------------------------

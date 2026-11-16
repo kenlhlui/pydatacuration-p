@@ -37,7 +37,6 @@ def init_curation(body: SetupForm) -> None:
 
     if dir_manager_instance.project_dir.exists() and not body.force_delete:
         msg = f"Directory {dir_manager_instance.project_dir} already exists. Use 'force_delete=True' to overwrite."
-        logger.error(msg)
         raise DirectoryExistsError(msg, project_number=body.project_number)
 
     dir_manager_instance.delete_dir(dir_manager_instance.project_dir)

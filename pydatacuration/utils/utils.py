@@ -164,19 +164,16 @@ def check_ds_read_access(pid: str, base_url: str, api_token: str) -> None:
 
         if response.status_code in {httpx2.codes.UNAUTHORIZED, httpx2.codes.FORBIDDEN}:
             msg = 'You do not have read access to the dataset. Please check your API token or permissions.'
-            logger.error(f'❌{msg}')
             raise DatasetUnauthorizedError(msg)
 
         if response.status_code == httpx2.codes.NOT_FOUND:
             msg = 'The dataset does not exist. Please check the PID input.'
-            logger.error(f'❌{msg}')
             raise DatasetNotFoundError(msg)
 
         if response.is_success:
             logger.info('✅ Dataset access verified.')
         else:
             msg = f'Unexpected response (HTTP {response.status_code}) while checking dataset access.'
-            logger.error(f'❌{msg}')
             raise DatasetAccessError(msg)
 
     except RetryError as e:
@@ -184,7 +181,6 @@ def check_ds_read_access(pid: str, base_url: str, api_token: str) -> None:
             'The retry limit has been reached for checking dataset access. '
             'Check your input of `base_url` and `pid`. Or check your internet connection.'
         )
-        logger.error(error_msg)
         raise DatasetAccessError(error_msg) from e
 
 
