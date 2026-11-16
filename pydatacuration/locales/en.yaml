@@ -53,7 +53,7 @@ setup:
   base_url_invalid: "Enter a full URL, e.g. https://demo.borealisdata.ca/"
   api_token_label: "API Token"
   api_token_placeholder: "Enter your Dataverse API token"
-  api_token_placeholder_prefilled: "Leave blank to use pre-filled token ({token_hint})"
+  api_token_placeholder_prefilled: "Enter a different API token (optional)"
   api_token_helper: "The API token from the Dataverse instance. The value is hidden by default."
   api_token_helper_prefilled: "Leave blank to use the API token from the environment."
   api_token_invalid: "Enter a valid API token, e.g. xxxxxxxx-xxxx-xxxx-xxxx-xxxxxxxxxxxx"
