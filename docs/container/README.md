@@ -60,24 +60,43 @@ To use PostgreSQL, set `DB_TYPE=postgresql` and provide the connection details.
 When running with **Docker Compose**, a PostgreSQL service is available via the
 `postgres` profile (see [Running with Docker Compose](#running-with-docker-compose)).
 
+> [!WARNING]
+> The bundled `postgres` and `pgAdmin` services are for local development only.
+> For production, or a database shared by several people, set up a properly
+> managed PostgreSQL server (with backups, access control and TLS) and point
+> `DATABASE_URL` or `POSTGRES_HOST` at it instead.
+
 ```dotenv
 DB_TYPE=postgresql
 
 # Option A — single connection URL (takes priority over individual variables below)
-DATABASE_URL=postgresql+psycopg://curation:curation@postgres:5432/curation
+DATABASE_URL=postgresql+psycopg://curation:YOUR_PASSWORD@postgres:5432/curation
 
 # Option B — individual connection parameters
 POSTGRES_USER=curation
-POSTGRES_PASSWORD=curation
+POSTGRES_PASSWORD=YOUR_PASSWORD
 POSTGRES_HOST=postgres   # use 'localhost' if connecting to an external instance
 POSTGRES_PORT=5432
 POSTGRES_DB=curation
+
+# pgAdmin login (only for the bundled pgAdmin service)
+PGADMIN_MAIL=curation@example.com  # optional, this is the default
+PGADMIN_PW=YOUR_PGADMIN_PASSWORD
 ```
 
 > [!Note]
 > When using Docker Compose with the built-in `postgres` service, set
 > `POSTGRES_HOST=postgres` (the service name). If you connect to an external
 > PostgreSQL instance, replace it with the appropriate hostname or IP address.
+
+> [!Important]
+> The bundled `postgres` and `pgAdmin` services have no default passwords. They
+> read `POSTGRES_USER`, `POSTGRES_PASSWORD`, `POSTGRES_DB` and `PGADMIN_PW` from
+> `.env`, and won't start without a password. Set these variables even if you use
+> `DATABASE_URL`.
+>
+> The app escapes special characters in `POSTGRES_USER` and `POSTGRES_PASSWORD`
+> for you. In `DATABASE_URL`, percent-encode them yourself (for example, `@` as `%40`).
 
 ### `docker-compose.yml` File
 
@@ -133,8 +152,9 @@ POSTGRES_DB=curation
     docker compose --profile postgres up -d
     ```
 
-    pgAdmin will be available at `http://localhost:5050` (default credentials:
-    `curation@example.com` / `curation`).
+    pgAdmin will be available at `http://localhost:5050`. Log in with
+    `PGADMIN_MAIL` and `PGADMIN_PW` from your `.env`. PostgreSQL listens on
+    `localhost:5432` only, so it can't be reached from other machines.
 
 5.  To stop the container:
 
