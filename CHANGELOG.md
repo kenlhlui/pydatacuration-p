@@ -1,3 +1,10 @@
+## 0.5.1 (2026-11-26)
+
+### Fix
+
+- **ci**: install ffmpeg from static build in e2e job (#566)
+- update ffmpeg installation version and improve validation check (#563)
+
 ## 0.5.0 (2026-11-26)
 
 ### Feat
