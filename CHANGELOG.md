@@ -1,3 +1,19 @@
+## 0.5.0 (2026-11-26)
+
+### Feat
+
+- add internationalization options to UI (#561)
+
+### Fix
+
+- dont show the part of the api token (#562)
+- docker-compose.yml (#559)
+
+### Refactor
+
+- **utils**: remove unused functions (#554)
+- **api**: update API call parameters to use query strings for better readability and maintainability (#549)
+
 ## 0.4.1 (2026-11-10)
 
 ### Fix
