@@ -30,18 +30,7 @@ To restart the U of T Dataverse Curation Tool on a Windows local machine, follow
 
       Git may show a message about being in a 'detached HEAD' state. This is expected: the tool is on a release rather than a branch.
 
-4. Run the following command in the PowerShell terminal to start VS Code in the current directory:
-   ```powershell
-   code .
-   ```
-
-      ![Enter VS Code](assets/images/enter-vs-code.gif){ width="800" }
-
-5. Open the `.env` file in VS Code using the left panel. Change the value of `API_TOKEN` to your latest API token, especially if you have revoked or generated a new one. Also change the `CURATOR_NAME` and `CURATOR_EMAIL` if necessary.
-
-      ![Change Environment Variables](assets/images/change-env.gif){ width="800" }
-
-6. Finally, run the application in the PowerShell terminal using the following command:
+4. Finally, run the application in the PowerShell terminal using the following command:
    ```powershell
    uv run --env-file .env app.py
    ```
