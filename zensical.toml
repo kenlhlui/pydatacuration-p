@@ -21,6 +21,19 @@ nav = [
     { "Custom status options" = "custom_status_options/README.md" },
     { "Checklist" = "checklist/README.md" },
   ] },
+  { "U of T user guide" = [
+    { "Overview" = "uoft_guide/README.md" },
+    { "Install on Windows" = "uoft_guide/installation.md" },
+    { "Restart the tool" = "uoft_guide/restart.md" },
+    { "Review a dataset" = "uoft_guide/review_dataset.md" },
+    { "Tool pages" = [
+      { "Landing page" = "uoft_guide/features/landing.md" },
+      { "New dataset page" = "uoft_guide/features/new_dataset.md" },
+      { "Checklist page" = "uoft_guide/features/checklist.md" },
+      { "Resume project page" = "uoft_guide/features/resume.md" },
+      { "Delete project page" = "uoft_guide/features/delete.md" },
+    ] },
+  ] },
   { "Development" = [
     { "Testing" = "testing/README.md" },
     { "Database schema version" = "db_schema_version/README.md" },
