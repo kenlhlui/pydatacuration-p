@@ -10,6 +10,14 @@ This repository has set up [Commitizen](https://commitizen-tools.github.io/commi
 cz bump
 ```
 
+Then push the bump commit and its tag:
+
+```sh
+git push --follow-tags
+```
+
+Pushing the `bump:` commit to `main` triggers the release workflow, which publishes a GitHub Release for the pushed tag.
+
 Test the version bumping by running:
 
 ```sh
