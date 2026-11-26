@@ -58,13 +58,17 @@ jobs:
 
       - name: Install ffmpeg (cached)
         # The cache key is packages + version; bump the version when ubuntu-latest moves to a new Ubuntu release.
+        # A failed apt install still saves an empty cache under that key, so bump the version to recover from one.
         uses: awalsh128/cache-apt-pkgs-action@553a35bb8ebd9fcabcb1c9451aa4c98e1b4ca8a9 # v1.6.3
         with:
           packages: ffmpeg
-          version: ubuntu-26.04-v1
+          version: ubuntu-26.04-v2
 
       - name: Check ffmpeg
-        run: ffmpeg -version | head -n 1
+        # Fails the job if the install above silently left ffmpeg missing.
+        run: |
+          command -v ffmpeg
+          ffmpeg -version | head -n 1
 
       - name: Install dependencies
         run: uv sync --dev --locked
