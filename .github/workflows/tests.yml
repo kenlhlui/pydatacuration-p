@@ -56,13 +56,18 @@ jobs:
       - name: Set up uv
         uses: astral-sh/setup-uv@v10.3.3
 
-      - name: Install ffmpeg (cached)
-        # The cache key is packages + version; bump the version when ubuntu-latest moves to a new Ubuntu release.
-        # A failed apt install still saves an empty cache under that key, so bump the version to recover from one.
-        uses: awalsh128/cache-apt-pkgs-action@553a35bb8ebd9fcabcb1c9451aa4c98e1b4ca8a9 # v1.6.3
-        with:
-          packages: ffmpeg
-          version: ubuntu-26.04-v2
+      - name: Install ffmpeg (static build)
+        # Prebuilt binary from BtbN/FFmpeg-Builds: faster than apt and independent of the Ubuntu mirrors.
+        # The n8.1 build gets bug-fix rebuilds but stays on the 8.1 release line.
+        env:
+          FFMPEG_BUILD: ffmpeg-n8.1-latest-linux64-gpl-8.1
+        run: |
+          base=https://github.com/BtbN/FFmpeg-Builds/releases/download/latest
+          cd "$RUNNER_TEMP"
+          curl -fsSLO "$base/$FFMPEG_BUILD.tar.xz"
+          curl -fsSL "$base/checksums.sha256" | grep " $FFMPEG_BUILD.tar.xz\$" | sha256sum -c -
+          tar -xf "$FFMPEG_BUILD.tar.xz"
+          echo "$RUNNER_TEMP/$FFMPEG_BUILD/bin" >> "$GITHUB_PATH"
 
       - name: Check ffmpeg
         # Fails the job if the install above silently left ffmpeg missing.
